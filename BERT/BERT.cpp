@@ -3,20 +3,374 @@
 
 #include "stdafx.h"
 #include "BERT.h"
+#include "ExcelFunctions.h"
+#include "ThreadLocalStorage.h"
 
+#include "RInterface.h"
 
-// This is an example of an exported variable
-BERT_API int nBERT=0;
+std::vector < double > functionEntries;
 
-// This is an example of an exported function.
-BERT_API int fnBERT(void)
-{
-	return 42;
+LPXLOPER12 BERTFunctionCall( 
+	int index
+	, LPXLOPER12 input_0
+	, LPXLOPER12 input_1
+	, LPXLOPER12 input_2
+	, LPXLOPER12 input_3
+	, LPXLOPER12 input_4
+	, LPXLOPER12 input_5
+	, LPXLOPER12 input_6
+	, LPXLOPER12 input_7
+	, LPXLOPER12 input_8
+	, LPXLOPER12 input_9
+	, LPXLOPER12 input_10
+	, LPXLOPER12 input_11
+	, LPXLOPER12 input_12
+	, LPXLOPER12 input_13
+	, LPXLOPER12 input_14
+	, LPXLOPER12 input_15
+	){
+
+	XLOPER12 * rslt = get_thread_local_xloper12();
+
+	rslt->xltype = xltypeErr;
+	rslt->val.err = xlerrName;
+
+	if (index < 0 || index >= RFunctions.size()) return rslt;
+
+	SVECTOR func = RFunctions[index];
+
+	std::vector< LPXLOPER12 > args;
+
+	if (func.size() > 1) args.push_back(input_0);
+	if (func.size() > 2) args.push_back(input_1);
+	if (func.size() > 3) args.push_back(input_2);
+	if (func.size() > 4) args.push_back(input_3);
+	if (func.size() > 5) args.push_back(input_4);
+	if (func.size() > 6) args.push_back(input_5);
+	if (func.size() > 7) args.push_back(input_6);
+	if (func.size() > 8) args.push_back(input_7);
+	if (func.size() > 9) args.push_back(input_8);
+	if (func.size() > 10) args.push_back(input_9);
+	if (func.size() > 11) args.push_back(input_10);
+	if (func.size() > 12) args.push_back(input_11);
+	if (func.size() > 13) args.push_back(input_12);
+	if (func.size() > 14) args.push_back(input_13);
+	if (func.size() > 15) args.push_back(input_14);
+	if (func.size() > 16) args.push_back(input_15);
+
+	RExec2(rslt, func[0], args);
+
+	return rslt;
 }
 
-// This is the constructor of a class that has been exported.
-// see BERT.h for the class definition
-CBERT::CBERT()
+LPXLOPER12 UpdateScript(LPXLOPER12 script)
 {
-	return;
+	XLOPER12 * rslt = get_thread_local_xloper12();
+
+	rslt->xltype = xltypeErr;
+	rslt->val.err = xlerrValue;
+
+	if (script->xltype == xltypeStr)
+	{
+		std::string str;
+		int len = script->val.str[0];
+		for (int i = 0; i < len; i++) str += (script->val.str[i + 1] & 0xff);
+
+		if (!UpdateR(str))
+		{
+			rslt->xltype = xltypeBool;
+			rslt->val.xbool = true;
+			MapFunctions();
+			RegisterAddinFunctions();
+		}
+		else
+		{
+			rslt->val.err = xlerrValue;
+		}
+	}
+
+	return rslt;
 }
+
+
+void UnregisterFunctions()
+{
+	XLOPER xlRegisterID;
+
+	for (std::vector< double > ::iterator iter = functionEntries.begin(); iter != functionEntries.end(); iter++ )
+	{
+		xlRegisterID.xltype = xltypeNum;
+		xlRegisterID.val.num = *iter;
+		Excel4(xlfUnregister, 0, 1, &xlRegisterID);
+	}
+
+	functionEntries.clear();
+
+}
+
+
+bool RegisterBasicFunctions()
+{
+	LPXLOPER xlParm[32];
+	XLOPER xlRegisterID;
+
+	int err;
+
+	static bool fRegisteredOnce = false;
+
+	char szHelpBuffer[512] = " ";
+	bool fExcel12 = false;
+
+	// init memory
+
+	for (int i = 0; i< 32; i++) xlParm[i] = new XLOPER;
+
+	// get the library; store as the first entry in our parameter list
+
+	Excel4(xlGetName, xlParm[0], 0);
+
+	// UnregisterFunctions();
+
+	// { "BERTFunctionCall", "UU", "BERTTest", "Input", "1", "BERT", "", "100", "Test function", "", "", "", "", "", "", "" },
+
+	// int fcount = RFunctions.size();
+
+	for (int i = 0; funcTemplates[i][0]; i++)
+	{
+		for (int j = 0; j < 15; j++)
+		{
+			int len = strlen(funcTemplates[i][j]);
+			xlParm[j + 1]->xltype = xltypeStr;
+			xlParm[j + 1]->val.str = new char[len + 2];
+			strcpy_s(xlParm[j + 1]->val.str + 1, len + 1, funcTemplates[i][j]);
+			xlParm[j + 1]->val.str[0] = len;
+		}
+
+		xlRegisterID.xltype = xltypeMissing;
+		err = Excel4v(xlfRegister, &xlRegisterID, 16, xlParm);
+		/*
+		if (xlRegisterID.xltype == xltypeNum)
+		{
+			functionEntries.push_back(xlRegisterID.val.num);
+		}
+		*/
+		Excel4(xlFree, 0, 1, &xlRegisterID);
+
+		for (int j = 0; j < 15; j++)
+		{
+			delete[] xlParm[j + 1]->val.str;
+		}
+
+	}
+
+	// clean up (don't forget to free the retrieved dll xloper in parm 0)
+
+	Excel4(xlFree, 0, 1, xlParm[0]);
+
+	for (int i = 0; i< 32; i++) delete xlParm[i];
+
+
+	// debugLogf("Exit registerAddinFunctions\n");
+
+	// set state and return
+
+	// CRASHER for crash (recovery) testing // Excel4( xlFree, 0, 1, 1000 );
+
+	fRegisteredOnce = true;
+	return true;
+}
+
+bool RegisterAddinFunctions()
+{
+	LPXLOPER xlParm[32];
+	XLOPER xlRegisterID;
+
+	int err;
+
+	static bool fRegisteredOnce = false;
+
+	char szHelpBuffer[512] = " ";
+	bool fExcel12 = false;
+
+	// init memory
+
+	for (int i = 0; i< 32; i++) xlParm[i] = new XLOPER;
+
+	// get the library; store as the first entry in our parameter list
+
+	Excel4( xlGetName, xlParm[0], 0 );
+
+	UnregisterFunctions();
+
+	// { "BERTFunctionCall", "UU", "BERTTest", "Input", "1", "BERT", "", "100", "Test function", "", "", "", "", "", "", "" },
+
+	int fcount = RFunctions.size();
+
+	for (int i = 0; i< fcount && i< MAX_FUNCTION_COUNT; i++)
+	{
+		SVECTOR func = RFunctions[i];
+		for (int j = 0; j < 15; j++)
+		{
+			switch (j)
+			{
+			case 0: sprintf_s(szHelpBuffer, 256, "BERTFunctionCall%04d", 1000 + i); break;
+			case 1: 
+				for (int k = 0; k < func.size(); k++) szHelpBuffer[k] = 'U';
+				szHelpBuffer[func.size()] = 0;
+				break;
+			case 2: sprintf_s(szHelpBuffer, 256, "R.%s", func[0].c_str()); break;
+			case 3: 
+				szHelpBuffer[0] = 0;
+				for (int k = 1; k < func.size(); k++)
+				{
+					if (strlen(szHelpBuffer)) strcat_s(szHelpBuffer, 256, ",");
+					strcat_s(szHelpBuffer, 256, func[k].c_str());
+				}
+				break;
+			case 4: sprintf_s(szHelpBuffer, 256, "1"); break;
+			case 5: sprintf_s(szHelpBuffer, 256, ""); break;
+			case 6: sprintf_s(szHelpBuffer, 256, "%d", 100 + i); break;
+			case 7: sprintf_s(szHelpBuffer, 256, "Exported R function"); break;
+			default: sprintf_s(szHelpBuffer, 256, ""); break;
+			}
+			
+			int len = strlen(szHelpBuffer);
+			xlParm[j + 1]->xltype = xltypeStr ;
+			xlParm[j + 1]->val.str = new char[len + 2];
+			strcpy_s(xlParm[j + 1]->val.str + 1, len + 1, szHelpBuffer);
+			xlParm[j + 1]->val.str[0] = len;
+		}
+
+		xlRegisterID.xltype = xltypeMissing;
+		err = Excel4v(xlfRegister, &xlRegisterID, 16, xlParm);
+		if (xlRegisterID.xltype == xltypeNum)
+		{
+			functionEntries.push_back(xlRegisterID.val.num);
+		}
+		Excel4(xlFree, 0, 1, &xlRegisterID);
+
+		for (int j = 0; j < 15; j++)
+		{
+			delete[] xlParm[j + 1]->val.str;
+		}
+
+	}
+	
+	// clean up (don't forget to free the retrieved dll xloper in parm 0)
+
+	Excel4(xlFree, 0, 1, xlParm[0]);
+
+	for (int i = 0; i< 32; i++) delete xlParm[i];
+	
+
+	// debugLogf("Exit registerAddinFunctions\n");
+
+	// set state and return
+
+	// CRASHER for crash (recovery) testing // Excel4( xlFree, 0, 1, 1000 );
+
+	fRegisteredOnce = true;
+	return true;
+}
+
+BFC(1000);
+BFC(1001);
+BFC(1002);
+BFC(1003);
+BFC(1004);
+BFC(1005);
+BFC(1006);
+BFC(1007);
+BFC(1008);
+BFC(1009);
+BFC(1010);
+BFC(1011);
+BFC(1012);
+BFC(1013);
+BFC(1014);
+BFC(1015);
+BFC(1016);
+BFC(1017);
+BFC(1018);
+BFC(1019);
+BFC(1020);
+BFC(1021);
+BFC(1022);
+BFC(1023);
+BFC(1024);
+BFC(1025);
+BFC(1026);
+BFC(1027);
+BFC(1028);
+BFC(1029);
+BFC(1030);
+BFC(1031);
+BFC(1032);
+BFC(1033);
+BFC(1034);
+BFC(1035);
+BFC(1036);
+BFC(1037);
+BFC(1038);
+BFC(1039);
+BFC(1040);
+BFC(1041);
+BFC(1042);
+BFC(1043);
+BFC(1044);
+BFC(1045);
+BFC(1046);
+BFC(1047);
+BFC(1048);
+BFC(1049);
+BFC(1050);
+BFC(1051);
+BFC(1052);
+BFC(1053);
+BFC(1054);
+BFC(1055);
+BFC(1056);
+BFC(1057);
+BFC(1058);
+BFC(1059);
+BFC(1060);
+BFC(1061);
+BFC(1062);
+BFC(1063);
+BFC(1064);
+BFC(1065);
+BFC(1066);
+BFC(1067);
+BFC(1068);
+BFC(1069);
+BFC(1070);
+BFC(1071);
+BFC(1072);
+BFC(1073);
+BFC(1074);
+BFC(1075);
+BFC(1076);
+BFC(1077);
+BFC(1078);
+BFC(1079);
+BFC(1080);
+BFC(1081);
+BFC(1082);
+BFC(1083);
+BFC(1084);
+BFC(1085);
+BFC(1086);
+BFC(1087);
+BFC(1088);
+BFC(1089);
+BFC(1090);
+BFC(1091);
+BFC(1092);
+BFC(1093);
+BFC(1094);
+BFC(1095);
+BFC(1096);
+BFC(1097);
+BFC(1098);
+BFC(1099);
+
