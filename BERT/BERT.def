@@ -27,9 +27,10 @@ xlAddInManagerInfo12
 ; Functions
 ;
 
-;SetRHome
-;SetRUser
 UpdateScript
+RExec
+Configure
+Console
 
 BERTFunctionCall1000
 BERTFunctionCall1001

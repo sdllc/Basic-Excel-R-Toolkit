@@ -13,10 +13,24 @@
 
 #define DLLEX extern "C" __declspec(dllexport)
 
+extern HMODULE ghModule;
+
 static LPSTR funcTemplates[][16] = {
-	{ "UpdateScript", "UU", "UpdateScript", "R Code", "1", "BERT", "", "99", "Update Script", "", "", "", "", "", "", "" },
+	{ "UpdateScript", "UU#", "BERT.UpdateScript", "R Code", "1", "BERT", "", "99", "Update Script", "", "", "", "", "", "", "" },
+	{ "RExec", "UU", "BERT.Exec#", "R Code", "1", "BERT", "", "98", "Exec R Code", "", "", "", "", "", "", "" },
+	{ "Configure", "A#", "BERT.Configure", "", "1", "BERT", "", "97", "", "", "", "", "", "", "", "" },
+	{ "Console", "A#", "BERT.Console", "", "1", "BERT", "", "96", "", "", "", "", "", "", "", "" },
 	{ 0 }
 };
+
+/** 
+ * convenience macro for setting an XLOPER12 string.  
+ * sets first char to length.  DOES NOT COPY STRING.
+ */
+#define XLOPER12STR( x, s )			\
+	x.xltype = xltypeStr;			\
+	s[0] = wcslen((WCHAR*)s + 1);	\
+	x.val.str = s; 
 
 #define MAX_FUNCTION_COUNT 100
 
@@ -27,7 +41,17 @@ LPXLOPER12 UpdateScript(LPXLOPER12 script);
  */
 void UnregisterFunctions();
 
+/** register internal (non-dynamic) functions */
 bool RegisterBasicFunctions();
+
+/** add or remove the menu (old-school menu style) */
+void SetBERTMenu( bool add = true );
+
+/** run configuration */
+short Configure();
+
+/** show console (log) */
+short Console();
 
 /**
 * register functions (dynamic)

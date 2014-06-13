@@ -17,6 +17,7 @@
 
 #include "RInterface.h"
 #include "resource.h"
+#include "RegistryUtils.h"
 
 FDVECTOR RFunctions;
 
@@ -97,7 +98,7 @@ std::string trim(const std::string& str, const std::string& whitespace = " \t\r\
 	return str.substr(strBegin, strRange);
 }
 
-int UpdateR(std::string str)
+int UpdateR(std::string &str)
 {
 	std::stringstream ss(str);
 	std::string line;
@@ -179,7 +180,10 @@ void RInit()
 {
 	structRstart rp;
 	Rstart Rp = &rp;
-	char Rversion[25], *RHome;
+	char Rversion[25];
+
+	char RHome[MAX_PATH];
+	char RUser[MAX_PATH];
 
 	sprintf_s(Rversion, 25, "%s.%s", R_MAJOR, R_MINOR);
 	if (strcmp(getDLLVersion(), Rversion) != 0) {
@@ -190,6 +194,16 @@ void RInit()
 
 	R_setStartTime();
 	R_DefParams(Rp);
+
+	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, RHome, MAX_PATH - 1, "Software\\BERT", "R_HOME"))
+	{
+		// err
+	}
+	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, RUser, MAX_PATH - 1, "Software\\BERT", "R_USER"))
+	{
+	}
+
+	/*
 	if ((RHome = get_R_HOME()) == NULL) {
 		fprintf(stderr, "R_HOME must be set in the environment or Registry\n");
 		//exit(1);
@@ -197,6 +211,11 @@ void RInit()
 	}
 	Rp->rhome = RHome;
 	Rp->home = getRUser();
+	*/
+
+	Rp->rhome = RHome;
+	Rp->home = RUser;
+
 	Rp->CharacterMode = LinkDLL;
 	Rp->ReadConsole = myReadConsole;
 	Rp->WriteConsole = myWriteConsole;
@@ -207,8 +226,8 @@ void RInit()
 	Rp->YesNoCancel = askyesnocancel;
 	Rp->Busy = myBusy;
 
-	Rp->R_Quiet = TRUE;        /* Default is FALSE */
-	Rp->R_Interactive = FALSE; /* Default is TRUE */
+	Rp->R_Quiet = FALSE;// TRUE;        /* Default is FALSE */
+	Rp->R_Interactive = TRUE;// FALSE; /* Default is TRUE */
 	Rp->RestoreAction = SA_RESTORE;
 	Rp->SaveAction = SA_NOSAVE;
 	R_SetParams(Rp);
@@ -218,7 +237,7 @@ void RInit()
 
 	signal(SIGBREAK, my_onintr);
 	GA_initapp(0, 0);
-	//	readconsolecfg();
+	//readconsolecfg();
 	setup_Rmainloop();
 	R_ReplDLLinit();
 
@@ -261,6 +280,32 @@ void RInit()
 			*/
 		}
 	}
+
+	// if there is a startup script, load that now
+
+	char path[MAX_PATH];
+	char buffer[MAX_PATH];
+	std::string contents;
+
+	if (CRegistryUtils::GetRegString(HKEY_CURRENT_USER, buffer, MAX_PATH, "Software\\BERT", "StartupFile")
+		&& strlen(buffer))
+	{
+		sprintf_s(path, MAX_PATH, "%s\\%s", RUser, buffer);
+		HANDLE file = ::CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+		if (file != INVALID_HANDLE_VALUE)
+		{
+			DWORD read = 0;
+			while (::ReadFile(file, buffer, MAX_PATH-1, &read, NULL))
+			{
+				if (read <= 0) break;
+				buffer[read - 1] = 0;
+				contents += buffer;
+			}
+			::CloseHandle(file);
+		}
+	}
+
+	if (contents.length() > 0) UpdateR(contents);
 
 	MapFunctions();
 
@@ -380,6 +425,25 @@ SEXP ExecR(std::vector < std::string > &vec, int *err, ParseStatus *pStatus )
 
 }
 
+void ParseResult(LPXLOPER12 rslt, SEXP ans)
+{
+	if (!ans)
+	{
+		rslt->xltype = xltypeErr;
+		rslt->val.err = xlerrValue;
+	}
+	else if (Rf_isReal(ans) || Rf_isInteger(ans) || Rf_isNumber(ans))
+	{
+		rslt->xltype = xltypeNum;
+		rslt->val.num = Rf_asReal(ans);
+	}
+	else if (Rf_isString(ans))
+	{
+		//result.xltype = xltypeStr | xlbitDLLFree;
+		//result.val.str = pstr;
+	}
+}
+
 LPXLOPER12 RExec(LPXLOPER12 code)
 {
 	// not thread safe!
@@ -406,28 +470,8 @@ LPXLOPER12 RExec(LPXLOPER12 code)
 
 	if (sz) delete [] sz;
 
-	if (!ans) return &result;
+	ParseResult(&result, ans);
 
-	if (Rf_isReal(ans) || Rf_isInteger(ans) || Rf_isNumber(ans))
-	{
-		result.xltype = xltypeNum;
-		result.val.num = Rf_asReal(ans);
-	}
-	else if (Rf_isValidString(ans))
-	{
-		/*
-		int len = length(ans);
-		if (pstr) delete[] pstr;
-		pstr = new XCHAR[len + 1];
-		pstr[0] = len;
-
-		const char *c = CHAR(ans);
-		for (int i = 0; i < len; i++) pstr[i + 1] = c[i];
-
-		result.xltype = xltypeStr;
-		result.val.str = pstr;
-		*/
-	}
 
 	return &result;
 }
@@ -464,21 +508,7 @@ bool RExec2(LPXLOPER12 rslt, std::string &funcname, std::vector< LPXLOPER12 > &a
 	SEXP lns = PROTECT(Rf_lang3(Rf_install("do.call"), Rf_mkString(funcname.c_str()), sargs));
 	PROTECT(ans = R_tryEval(lns, R_GlobalEnv, &errorOccurred));
 
-	if (!ans)
-	{
-		rslt->xltype = xltypeErr;
-		rslt->val.err = xlerrValue;
-	}
-	else if (Rf_isReal(ans) || Rf_isInteger(ans) || Rf_isNumber(ans))
-	{
-		rslt->xltype = xltypeNum;
-		rslt->val.num = Rf_asReal(ans);
-	}
-	else if (Rf_isValidString(ans))
-	{
-		//result.xltype = xltypeStr | xlbitDLLFree;
-		//result.val.str = pstr;
-	}
+	ParseResult(rslt, ans);
 
 	UNPROTECT(3);
 	return true;

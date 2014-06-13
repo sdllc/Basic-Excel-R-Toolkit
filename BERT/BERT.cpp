@@ -7,6 +7,7 @@
 #include "ThreadLocalStorage.h"
 
 #include "RInterface.h"
+#include "Dialogs.h"
 
 std::vector < double > functionEntries;
 
@@ -61,6 +62,80 @@ LPXLOPER12 BERTFunctionCall(
 	RExec2(rslt, func[0], args);
 
 	return rslt;
+}
+
+short Configure()
+{
+	::MessageBox(0, L"No", L"Options", MB_OKCANCEL | MB_ICONINFORMATION);
+	return 1;
+}
+
+short Console()
+{
+	// ::MessageBox(0, L"No", L"Console", MB_OKCANCEL | MB_ICONINFORMATION);
+	ConsoleDlg(ghModule);
+	return 1;
+}
+
+void SetBERTMenu(bool add )
+{
+	XLOPER12 xl1, xlMenuName, xlMenu;
+	XCHAR menuName[] = L" BERT";
+
+	static bool menuInstalled = false;
+
+	xl1.xltype = xltypeInt;
+	xl1.val.w = 1;
+
+	if (add)
+	{
+		if (menuInstalled) return;
+
+		XCHAR menuEmpty[] = L" ";
+		XCHAR menuEntry1[] = L" Options";
+		XCHAR menuMacro1[] = L" BERT.Configure";
+		XCHAR menuStatus1[] = L" Show configuration options";
+
+		XCHAR menuEntry2[] = L" R Console";
+		XCHAR menuMacro2[] = L" BERT.Console";
+		XCHAR menuStatus2[] = L" Open the console";
+
+		xlMenu.xltype = xltypeMulti;
+		xlMenu.val.array.columns = 4;
+		xlMenu.val.array.rows = 3;
+		xlMenu.val.array.lparray = new XLOPER12[ xlMenu.val.array.rows * xlMenu.val.array.columns ];
+
+		int idx = 0;
+
+		XLOPER12STR(xlMenu.val.array.lparray[0], menuName);
+		XLOPER12STR(xlMenu.val.array.lparray[1], menuEmpty);
+		XLOPER12STR(xlMenu.val.array.lparray[2], menuEmpty);
+		XLOPER12STR(xlMenu.val.array.lparray[3], menuEmpty);
+
+		XLOPER12STR(xlMenu.val.array.lparray[4], menuEntry1);
+		XLOPER12STR(xlMenu.val.array.lparray[5], menuMacro1);
+		XLOPER12STR(xlMenu.val.array.lparray[6], menuEmpty);
+		XLOPER12STR(xlMenu.val.array.lparray[7], menuStatus1);
+
+		XLOPER12STR(xlMenu.val.array.lparray[8], menuEntry2);
+		XLOPER12STR(xlMenu.val.array.lparray[9], menuMacro2);
+		XLOPER12STR(xlMenu.val.array.lparray[10], menuEmpty);
+		XLOPER12STR(xlMenu.val.array.lparray[11], menuStatus2);
+
+		Excel12( xlfAddMenu, 0, 2, &xl1, &xlMenu );
+
+		delete[] xlMenu.val.array.lparray;
+		menuInstalled = true;
+	}
+	else
+	{
+		if (!menuInstalled) return;
+
+		XLOPER12STR(xlMenuName, menuName);
+		Excel12(xlfDeleteMenu, 0, 2, &xl1, &xlMenuName);
+
+		menuInstalled = false;
+	}
 }
 
 LPXLOPER12 UpdateScript(LPXLOPER12 script)

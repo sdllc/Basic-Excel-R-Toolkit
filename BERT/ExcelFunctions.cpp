@@ -5,7 +5,6 @@
 #include "ExcelFunctions.h"
 #include "RInterface.h"
 
-
 DLLEX BOOL WINAPI xlAutoOpen(void)
 {
 	// debugLogf("Enter xlAutoOpen\n");
@@ -17,6 +16,8 @@ DLLEX BOOL WINAPI xlAutoOpen(void)
 	RegisterAddinFunctions();
 
 	// debugLogf("Exit xlAutoOpen\n");
+
+	SetBERTMenu(true);
 
 	return true;
 
@@ -63,10 +64,11 @@ DLLEX void WINAPI xlAutoFree12(LPXLOPER12 pxFree)
 DLLEX BOOL WINAPI xlAutoClose(void)
 {
 	// debugLogf("Enter xlAutoClose\n");
+	SetBERTMenu(false);
 
 	// clean up...
 	RShutdown();
-
+	
 	return true;
 }
 
