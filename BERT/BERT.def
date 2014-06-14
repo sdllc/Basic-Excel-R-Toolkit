@@ -31,6 +31,7 @@ UpdateScript
 RExec
 Configure
 Console
+Reload
 
 BERTFunctionCall1000
 BERTFunctionCall1001

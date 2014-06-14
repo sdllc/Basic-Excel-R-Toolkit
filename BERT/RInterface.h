@@ -20,5 +20,7 @@ LPXLOPER12 RExec(LPXLOPER12 code);
 bool RExec2(LPXLOPER12 rslt, std::string &funcname, std::vector< LPXLOPER12 > &args);
 int UpdateR(std::string &str);
 void MapFunctions();
+void LoadStartupFile();
+
 
 #endif // #ifndef __RINTERFACE_H

@@ -20,6 +20,7 @@ static LPSTR funcTemplates[][16] = {
 	{ "RExec", "UU", "BERT.Exec#", "R Code", "1", "BERT", "", "98", "Exec R Code", "", "", "", "", "", "", "" },
 	{ "Configure", "A#", "BERT.Configure", "", "1", "BERT", "", "97", "", "", "", "", "", "", "", "" },
 	{ "Console", "A#", "BERT.Console", "", "1", "BERT", "", "96", "", "", "", "", "", "", "", "" },
+	{ "Reload", "A#", "BERT.Reload", "", "1", "BERT", "", "95", "", "", "", "", "", "", "", "" },
 	{ 0 }
 };
 
@@ -37,6 +38,12 @@ static LPSTR funcTemplates[][16] = {
 LPXLOPER12 UpdateScript(LPXLOPER12 script);
 
 /**
+ * static (or thread-local) XLOPERs may have
+ * allocated data, we need to clean it up
+ */
+void resetXlOper( LPXLOPER12 x );
+
+/**
  * de-register any functions we have previously registered, via the local vector
  */
 void UnregisterFunctions();
@@ -52,6 +59,9 @@ short Configure();
 
 /** show console (log) */
 short Console();
+
+/** show console (log) */
+short Reload();
 
 /**
 * register functions (dynamic)

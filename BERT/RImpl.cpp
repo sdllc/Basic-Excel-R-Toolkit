@@ -18,6 +18,7 @@
 #include "RInterface.h"
 #include "resource.h"
 #include "RegistryUtils.h"
+#include "BERT.h"
 
 FDVECTOR RFunctions;
 
@@ -35,6 +36,8 @@ FDVECTOR RFunctions;
 SEXP ExecR(const char *code, int *err = 0, ParseStatus *pStatus = 0);
 SEXP ExecR(std::string &str, int *err = 0, ParseStatus *pStatus = 0);
 SEXP ExecR(std::vector< std::string > &vec, int *err = 0, ParseStatus *pStatus = 0);
+
+SEXP XLOPER2SEXP(LPXLOPER12 px, int depth = 0);
 
 ///
 
@@ -56,7 +59,7 @@ int myReadConsole(const char *prompt, char *buf, int len, int addtohistory)
 
 void myWriteConsole(const char *buf, int len)
 {
-	std::string str = "BERT: ";
+	std::string str = ""; //  "BERT: ";
 	str += buf;
 	OutputDebugStringA(str.c_str());
 	printf("%s", buf);
@@ -176,6 +179,38 @@ void MapFunctions()
 
 }
 
+void LoadStartupFile()
+{
+	// if there is a startup script, load that now
+
+	char RUser[MAX_PATH];
+
+	char path[MAX_PATH];
+	char buffer[MAX_PATH];
+	std::string contents;
+
+	if ( CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, RUser, MAX_PATH - 1, "Software\\BERT", "R_USER")
+		&& CRegistryUtils::GetRegString(HKEY_CURRENT_USER, buffer, MAX_PATH, "Software\\BERT", "StartupFile")
+		&& strlen(buffer))
+	{
+		sprintf_s(path, MAX_PATH, "%s\\%s", RUser, buffer);
+		HANDLE file = ::CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+		if (file != INVALID_HANDLE_VALUE)
+		{
+			DWORD read = 0;
+			while (::ReadFile(file, buffer, MAX_PATH - 1, &read, NULL))
+			{
+				if (read <= 0) break;
+				buffer[read - 1] = 0;
+				contents += buffer;
+			}
+			::CloseHandle(file);
+		}
+	}
+
+	if (contents.length() > 0) UpdateR(contents);
+}
+
 void RInit()
 {
 	structRstart rp;
@@ -201,6 +236,7 @@ void RInit()
 	}
 	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, RUser, MAX_PATH - 1, "Software\\BERT", "R_USER"))
 	{
+		// err
 	}
 
 	/*
@@ -281,32 +317,7 @@ void RInit()
 		}
 	}
 
-	// if there is a startup script, load that now
-
-	char path[MAX_PATH];
-	char buffer[MAX_PATH];
-	std::string contents;
-
-	if (CRegistryUtils::GetRegString(HKEY_CURRENT_USER, buffer, MAX_PATH, "Software\\BERT", "StartupFile")
-		&& strlen(buffer))
-	{
-		sprintf_s(path, MAX_PATH, "%s\\%s", RUser, buffer);
-		HANDLE file = ::CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-		if (file != INVALID_HANDLE_VALUE)
-		{
-			DWORD read = 0;
-			while (::ReadFile(file, buffer, MAX_PATH-1, &read, NULL))
-			{
-				if (read <= 0) break;
-				buffer[read - 1] = 0;
-				contents += buffer;
-			}
-			::CloseHandle(file);
-		}
-	}
-
-	if (contents.length() > 0) UpdateR(contents);
-
+	LoadStartupFile();
 	MapFunctions();
 
 }
@@ -432,15 +443,87 @@ void ParseResult(LPXLOPER12 rslt, SEXP ans)
 		rslt->xltype = xltypeErr;
 		rslt->val.err = xlerrValue;
 	}
-	else if (Rf_isReal(ans) || Rf_isInteger(ans) || Rf_isNumber(ans))
+	else if (Rf_isMatrix(ans))
+	{
+		// if is matrix, guaranteed to be 2x2 and we 
+		// can use the convenient functions to get r/c
+
+		int nc = Rf_ncols(ans);
+		int nr = Rf_nrows(ans);
+		int len = nc*nr;
+		int type = TYPEOF(ans);
+
+		rslt->xltype = xltypeMulti;
+		rslt->val.array.rows = nr;
+		rslt->val.array.columns = nc;
+		rslt->val.array.lparray = new XLOPER12[len];
+
+		char sz[64];
+		sprintf_s(sz, 64, "is mat; %dx%d; type %d\n", nr, nc, type);
+		OutputDebugStringA(sz);
+
+		// from the header file:
+
+		/* Under the generational allocator the data for vector nodes comes
+		immediately after the node structure, so the data address is a
+		known offset from the node SEXP. */
+
+		// which means handling this type-specific, I guess...
+		// also: have to swap r/c order 
+
+		// FIXME: LOOP ON THE INSIDE (CHECK OPTIM)
+
+		int idx = 0;
+		for (int i = 0; i < nc; i++)
+		{
+			for (int j = 0; j < nr; j++)
+			{
+				switch (type)
+				{
+				case INTSXP:	//  13	  /* integer vectors */
+					rslt->val.array.lparray[j*nc + i].xltype = xltypeInt;
+					rslt->val.array.lparray[j*nc + i].val.w = (INTEGER(ans))[idx];
+					break;
+
+				case REALSXP:	//  14	  /* real variables */  
+					rslt->val.array.lparray[j*nc + i].xltype = xltypeNum;
+					rslt->val.array.lparray[j*nc + i].val.num = (REAL(ans))[idx];
+					break;
+
+				case STRSXP:	//  16	  /* string vectors */ 
+					ParseResult(&(rslt->val.array.lparray[j*nc + i]), STRING_ELT(ans, idx)); // this is lazy
+					break;
+
+				case VECSXP:	//  19	  /* generic vectors */
+					ParseResult(&(rslt->val.array.lparray[j*nc + i]), VECTOR_ELT(ans, idx));
+					break;
+				}
+
+				idx++;
+			}
+		}
+
+
+
+	}
+	else if (Rf_isInteger(ans) )
+	{
+		rslt->xltype = xltypeInt;
+		rslt->val.num = Rf_asInteger(ans);
+	}
+	else if (Rf_isReal(ans) || Rf_isNumber(ans))
 	{
 		rslt->xltype = xltypeNum;
 		rslt->val.num = Rf_asReal(ans);
 	}
 	else if (Rf_isString(ans))
 	{
-		//result.xltype = xltypeStr | xlbitDLLFree;
-		//result.val.str = pstr;
+		rslt->xltype = xltypeStr;
+		const char *sz = CHAR(Rf_asChar(ans));
+		int i, len = strlen(sz);
+		rslt->val.str = new XCHAR[len + 2];
+		rslt->val.str[0] = len;
+		for (i = 0; i < len; i++) rslt->val.str[i + 1] = sz[i];
 	}
 }
 
@@ -448,11 +531,12 @@ LPXLOPER12 RExec(LPXLOPER12 code)
 {
 	// not thread safe!
 	static XLOPER12 result;
-	static XCHAR *pstr = 0;
 
 	ParseStatus status;
 	SEXP cmdSexp, cmdexpr = R_NilValue;
 	int i, errorOccurred;
+
+	resetXlOper(&result);
 
 	char *sz = 0;
 	if (code->xltype == xltypeStr)
@@ -476,33 +560,104 @@ LPXLOPER12 RExec(LPXLOPER12 code)
 	return &result;
 }
 
+void NarrowString(std::string &out, LPXLOPER12 pxl)
+{
+	int i, len = pxl->val.str[0];
+	out = "";
+	for (i = 0; i < len; i++) out += (pxl->val.str[i + 1] & 0xff);
+}
+
+/**
+ * convert a (rectangular) range to a matrix
+ */
+SEXP Multi2SEXP(LPXLOPER12 px)
+{
+	int rows = px->val.array.rows;
+	int cols = px->val.array.columns;
+
+	// fixme: want to protect this?
+	SEXP s = Rf_allocMatrix(VECSXP, rows, cols);
+
+	// so it looks like a matrix is just a list (same as 
+	// Excel, as it happens); but the order is inverse of Excel.
+
+	int idx = 0;
+	for ( int i = 0; i < cols; i++)
+	{
+		for (int j = 0; j < rows; j++)
+		{
+			SET_VECTOR_ELT(s, idx, XLOPER2SEXP(&(px->val.array.lparray[j*cols+i]), 0));
+			idx++; // not macro friendly with opt
+		}
+	}
+
+	return s;
+}
+
+/**
+ * convert an arbitrary excel value to a SEXP
+ */
+SEXP XLOPER2SEXP( LPXLOPER12 px, int depth )
+{
+	XLOPER12 xlArg;
+	std::string str;
+	SEXP result;
+
+	if (depth >= 2)
+	{
+		OutputDebugStringA("WARNING: deep recursion\n");
+		return R_NilValue;
+	}
+
+	switch (px->xltype)
+	{
+	case xltypeMulti:
+		return Multi2SEXP(px);
+		break;
+
+	case xltypeRef:
+	case xltypeSRef:
+		Excel12(xlCoerce, &xlArg, 1, px);
+		result = XLOPER2SEXP(&xlArg, depth++);
+		Excel12(xlFree, 0, 1, (LPXLOPER12)&xlArg);
+		return result;
+		break;
+
+	case xltypeStr:
+		NarrowString(str, px);
+		return Rf_mkString(str.c_str());
+		break;
+
+	case xltypeNum:
+		return Rf_ScalarReal(px->val.num);
+		break;
+
+	case xltypeInt:
+		return Rf_ScalarInteger(px->val.w);
+		break;
+
+	case xltypeNil:
+	default:
+		return R_NilValue;
+		break;
+	}
+
+}
+
 bool RExec2(LPXLOPER12 rslt, std::string &funcname, std::vector< LPXLOPER12 > &args)
 {
 	ParseStatus status;
 	SEXP arg, sargs;
 	SEXP ans = 0;
 	int i, errorOccurred;
+	
+
+	resetXlOper(rslt);
 
 	PROTECT(sargs = Rf_allocVector(VECSXP, args.size()));
 	for (i = 0; i < args.size(); i++)
 	{
-		XLOPER12 xlArg;
-		Excel12(xlCoerce, &xlArg, 1, args[i]);
-		switch (xlArg.xltype)
-		{
-		case xltypeNil:
-			SET_VECTOR_ELT(sargs, i, R_NilValue);
-			break;
-
-		case xltypeNum:
-			SET_VECTOR_ELT(sargs, i, Rf_ScalarReal(xlArg.val.num));
-			break;
-
-		case xltypeInt:
-			SET_VECTOR_ELT(sargs, i, Rf_ScalarInteger(xlArg.val.w));
-			break;
-		}
-		Excel12(xlFree, 0, 1, (LPXLOPER12)&xlArg);
+		SET_VECTOR_ELT(sargs, i, XLOPER2SEXP(args[i]));
 	}
 
 	SEXP lns = PROTECT(Rf_lang3(Rf_install("do.call"), Rf_mkString(funcname.c_str()), sargs));

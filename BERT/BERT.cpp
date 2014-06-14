@@ -32,6 +32,7 @@ LPXLOPER12 BERTFunctionCall(
 	){
 
 	XLOPER12 * rslt = get_thread_local_xloper12();
+	resetXlOper( rslt );
 
 	rslt->xltype = xltypeErr;
 	rslt->val.err = xlerrName;
@@ -62,6 +63,37 @@ LPXLOPER12 BERTFunctionCall(
 	RExec2(rslt, func[0], args);
 
 	return rslt;
+}
+
+void resetXlOper(LPXLOPER12 x)
+{
+	if (x->xltype == xltypeStr && x->val.str)
+	{
+		delete[] x->val.str;
+		x->val.str = 0;
+	}
+	else if (x->xltype == xltypeMulti && x->val.array.lparray)
+	{
+		// have to consider the case that there are strings
+		// in the array, or even nested multis (not that that
+		// is a useful thing to do, but it could happen)
+
+		int len = x->val.array.columns * x->val.array.rows;
+		for (int i = 0; i < len; i++) resetXlOper(&(x->val.array.lparray[i]));
+
+		delete[] x->val.array.lparray;
+		x->val.array.lparray = 0;
+	}
+	x->val.err = xlerrNull;
+	x->xltype = xltypeNil;
+}
+
+short Reload()
+{
+	LoadStartupFile();
+	MapFunctions();
+	RegisterAddinFunctions();
+	return 1;
 }
 
 short Configure()
@@ -100,9 +132,13 @@ void SetBERTMenu(bool add )
 		XCHAR menuMacro2[] = L" BERT.Console";
 		XCHAR menuStatus2[] = L" Open the console";
 
+		XCHAR menuEntry3[] = L" Reload Startup File";
+		XCHAR menuMacro3[] = L" BERT.Reload";
+		XCHAR menuStatus3[] = L" Reload Startup File";
+
 		xlMenu.xltype = xltypeMulti;
 		xlMenu.val.array.columns = 4;
-		xlMenu.val.array.rows = 3;
+		xlMenu.val.array.rows = 4;
 		xlMenu.val.array.lparray = new XLOPER12[ xlMenu.val.array.rows * xlMenu.val.array.columns ];
 
 		int idx = 0;
@@ -121,6 +157,11 @@ void SetBERTMenu(bool add )
 		XLOPER12STR(xlMenu.val.array.lparray[9], menuMacro2);
 		XLOPER12STR(xlMenu.val.array.lparray[10], menuEmpty);
 		XLOPER12STR(xlMenu.val.array.lparray[11], menuStatus2);
+
+		XLOPER12STR(xlMenu.val.array.lparray[12], menuEntry3);
+		XLOPER12STR(xlMenu.val.array.lparray[13], menuMacro3);
+		XLOPER12STR(xlMenu.val.array.lparray[14], menuEmpty);
+		XLOPER12STR(xlMenu.val.array.lparray[15], menuStatus3);
 
 		Excel12( xlfAddMenu, 0, 2, &xl1, &xlMenu );
 
