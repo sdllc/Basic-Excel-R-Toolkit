@@ -217,7 +217,7 @@ void UnregisterFunctions()
 	{
 		xlRegisterID.xltype = xltypeNum;
 		xlRegisterID.val.num = *iter;
-		Excel4(xlfUnregister, 0, 1, &xlRegisterID);
+		Excel12(xlfUnregister, 0, 1, &xlRegisterID);
 	}
 
 	functionEntries.clear();
@@ -227,8 +227,8 @@ void UnregisterFunctions()
 
 bool RegisterBasicFunctions()
 {
-	LPXLOPER xlParm[32];
-	XLOPER xlRegisterID;
+	LPXLOPER12 xlParm[32];
+	XLOPER12 xlRegisterID;
 
 	int err;
 
@@ -239,11 +239,11 @@ bool RegisterBasicFunctions()
 
 	// init memory
 
-	for (int i = 0; i< 32; i++) xlParm[i] = new XLOPER;
+	for (int i = 0; i< 32; i++) xlParm[i] = new XLOPER12;
 
 	// get the library; store as the first entry in our parameter list
 
-	Excel4(xlGetName, xlParm[0], 0);
+	Excel12(xlGetName, xlParm[0], 0);
 
 	// UnregisterFunctions();
 
@@ -257,20 +257,24 @@ bool RegisterBasicFunctions()
 		{
 			int len = strlen(funcTemplates[i][j]);
 			xlParm[j + 1]->xltype = xltypeStr;
-			xlParm[j + 1]->val.str = new char[len + 2];
-			strcpy_s(xlParm[j + 1]->val.str + 1, len + 1, funcTemplates[i][j]);
+			xlParm[j + 1]->val.str = new XCHAR[len + 2];
+
+			//strcpy_s(xlParm[j + 1]->val.str + 1, len + 1, funcTemplates[i][j]);
+			for (int k = 0; k < len; k++) xlParm[j + 1]->val.str[k + 1] = funcTemplates[i][j][k];
+
 			xlParm[j + 1]->val.str[0] = len;
 		}
 
 		xlRegisterID.xltype = xltypeMissing;
-		err = Excel4v(xlfRegister, &xlRegisterID, 16, xlParm);
+		err = Excel12v(xlfRegister, &xlRegisterID, 16, xlParm);
+
 		/*
 		if (xlRegisterID.xltype == xltypeNum)
 		{
 			functionEntries.push_back(xlRegisterID.val.num);
 		}
 		*/
-		Excel4(xlFree, 0, 1, &xlRegisterID);
+		Excel12(xlFree, 0, 1, &xlRegisterID);
 
 		for (int j = 0; j < 15; j++)
 		{
@@ -281,7 +285,7 @@ bool RegisterBasicFunctions()
 
 	// clean up (don't forget to free the retrieved dll xloper in parm 0)
 
-	Excel4(xlFree, 0, 1, xlParm[0]);
+	Excel12(xlFree, 0, 1, xlParm[0]);
 
 	for (int i = 0; i< 32; i++) delete xlParm[i];
 
@@ -298,8 +302,8 @@ bool RegisterBasicFunctions()
 
 bool RegisterAddinFunctions()
 {
-	LPXLOPER xlParm[32];
-	XLOPER xlRegisterID;
+	LPXLOPER12 xlParm[32];
+	XLOPER12 xlRegisterID;
 
 	int err;
 
@@ -310,11 +314,11 @@ bool RegisterAddinFunctions()
 
 	// init memory
 
-	for (int i = 0; i< 32; i++) xlParm[i] = new XLOPER;
+	for (int i = 0; i< 32; i++) xlParm[i] = new XLOPER12;
 
 	// get the library; store as the first entry in our parameter list
 
-	Excel4( xlGetName, xlParm[0], 0 );
+	Excel12( xlGetName, xlParm[0], 0 );
 
 	UnregisterFunctions();
 
@@ -352,18 +356,21 @@ bool RegisterAddinFunctions()
 			
 			int len = strlen(szHelpBuffer);
 			xlParm[j + 1]->xltype = xltypeStr ;
-			xlParm[j + 1]->val.str = new char[len + 2];
-			strcpy_s(xlParm[j + 1]->val.str + 1, len + 1, szHelpBuffer);
+			xlParm[j + 1]->val.str = new XCHAR[len + 2];
+
+			//strcpy_s(xlParm[j + 1]->val.str + 1, len + 1, szHelpBuffer);
+			for (int k = 0; k < len; k++) xlParm[j + 1]->val.str[k + 1] = szHelpBuffer[k];
+
 			xlParm[j + 1]->val.str[0] = len;
 		}
 
 		xlRegisterID.xltype = xltypeMissing;
-		err = Excel4v(xlfRegister, &xlRegisterID, 16, xlParm);
+		err = Excel12v(xlfRegister, &xlRegisterID, 16, xlParm);
 		if (xlRegisterID.xltype == xltypeNum)
 		{
 			functionEntries.push_back(xlRegisterID.val.num);
 		}
-		Excel4(xlFree, 0, 1, &xlRegisterID);
+		Excel12(xlFree, 0, 1, &xlRegisterID);
 
 		for (int j = 0; j < 15; j++)
 		{
@@ -374,7 +381,7 @@ bool RegisterAddinFunctions()
 	
 	// clean up (don't forget to free the retrieved dll xloper in parm 0)
 
-	Excel4(xlFree, 0, 1, xlParm[0]);
+	Excel12(xlFree, 0, 1, xlParm[0]);
 
 	for (int i = 0; i< 32; i++) delete xlParm[i];
 	

@@ -126,7 +126,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>ExcelLib;..\RLIB</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>BERT.def</ModuleDefinitionFile>
-      <AdditionalDependencies>XLCALL-13-32.LIB;R32.lib;RGraphApp32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>R32.lib;RGraphApp32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>BERT-13-32-D.xll</OutputFile>
     </Link>
   </ItemDefinitionGroup>
@@ -193,7 +193,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>EXCEL13;Win32;WIN32;NDEBUG;_WINDOWS;_USRDLL;BERT_EXPORTS;EXCEL13;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;BERT_EXPORTS;EXCEL13;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>ExcelLib;C:\Program Files\R\R-3.1.0\include</AdditionalIncludeDirectories>
     </ClCompile>
@@ -203,7 +203,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>ExcelLib;..\RLIB</AdditionalLibraryDirectories>
-      <AdditionalDependencies>XLCALL-13-32.LIB;R32.lib;RGraphApp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>R32.lib;RGraphApp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>BERT.def</ModuleDefinitionFile>
       <OutputFile>BERT-13-32.xll</OutputFile>
     </Link>
@@ -235,7 +235,7 @@
     <ClInclude Include="BERT.h" />
     <ClInclude Include="Dialogs.h" />
     <ClInclude Include="ExcelFunctions.h" />
-    <ClInclude Include="ExcelLib\XLCALL-13.H" />
+    <ClInclude Include="ExcelLib\XLCALL.H" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="RInterface.h" />
     <ClInclude Include="stdafx.h" />
@@ -266,19 +266,7 @@
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="ExcelFunctions.cpp" />
-    <ClCompile Include="ExcelLib\XLCALL-12-32.CPP">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release13|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="ExcelLib\XLCALL-12-64.CPP">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release13|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="ExcelLib\XLCALL-13-32.CPP" />
-    <ClCompile Include="ExcelLib\XLCALL-13-64.CPP">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release13|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="ExcelLib\XLCALL.CPP" />
     <ClCompile Include="RImpl.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
     </ClCompile>

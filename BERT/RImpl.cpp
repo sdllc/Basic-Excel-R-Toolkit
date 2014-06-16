@@ -4,6 +4,7 @@
 #include <vector>
 
 #define Win32
+
 #include <windows.h>
 #include <stdio.h>
 #include <Rversion.h>
@@ -436,31 +437,72 @@ SEXP ExecR(std::vector < std::string > &vec, int *err, ParseStatus *pStatus )
 
 }
 
+__inline void STRSXP2XLOPER( LPXLOPER12 result, SEXP str )
+{
+	// this is just for our reference, as we do not call
+	// xlFree on this object (also, don't call xlFree on
+	// this object).
+
+	result->xltype = xltypeStr | xlbitDLLFree;
+
+	const char *sz = CHAR(Rf_asChar(str));
+	int i, len = strlen(sz);
+
+	result->val.str = new XCHAR[len + 2];
+	result->val.str[0] = len;
+
+	for (i = 0; i < len; i++) result->val.str[i + 1] = sz[i];
+
+}
+
 void ParseResult(LPXLOPER12 rslt, SEXP ans)
 {
+	// R values (ignoring data frames) are vectors of typed
+	// values.  in some cases they are matrices, but these appear
+	// to be just lists with some extra attributes.
+
+	// for our purposes the controlling feature should be 
+	// length, which affects whether we return 1 value or multiple 
+	// values.
+
 	if (!ans)
 	{
+		OutputDebugStringA("Null value in ans\n");
+
 		rslt->xltype = xltypeErr;
 		rslt->val.err = xlerrValue;
+		return;
 	}
-	else if (Rf_isMatrix(ans))
+
+	int len = Rf_length(ans);
+	int type = TYPEOF(ans);
+
+	char sz[64];
+	sprintf_s(sz, 64, "Type %d, len %d\n", type, len);
+	OutputDebugStringA(sz);
+
+	// else if (Rf_isMatrix(ans))
+	if ( len > 1 )
 	{
-		// if is matrix, guaranteed to be 2x2 and we 
+		// for normal vector, use rows
+
+		int nc = 1, nr = len;
+
+		// for matrix, guaranteed to be 2 dimensions and we 
 		// can use the convenient functions to get r/c
 
-		int nc = Rf_ncols(ans);
-		int nr = Rf_nrows(ans);
-		int len = nc*nr;
-		int type = TYPEOF(ans);
+		if (Rf_isMatrix(ans))
+		{
+			nc = Rf_ncols(ans);
+			nr = Rf_nrows(ans);
+			//int len = nc*nr;
+			//int type = TYPEOF(ans);
+		}
 
 		rslt->xltype = xltypeMulti;
 		rslt->val.array.rows = nr;
 		rslt->val.array.columns = nc;
 		rslt->val.array.lparray = new XLOPER12[len];
-
-		char sz[64];
-		sprintf_s(sz, 64, "is mat; %dx%d; type %d\n", nr, nc, type);
-		OutputDebugStringA(sz);
 
 		// from the header file:
 
@@ -491,7 +533,8 @@ void ParseResult(LPXLOPER12 rslt, SEXP ans)
 					break;
 
 				case STRSXP:	//  16	  /* string vectors */ 
-					ParseResult(&(rslt->val.array.lparray[j*nc + i]), STRING_ELT(ans, idx)); // this is lazy
+					STRSXP2XLOPER(&(rslt->val.array.lparray[j*nc + i]), STRING_ELT(ans, idx));
+					// ParseResult(&(rslt->val.array.lparray[j*nc + i]), STRING_ELT(ans, idx)); // this is lazy
 					break;
 
 				case VECSXP:	//  19	  /* generic vectors */
@@ -502,28 +545,33 @@ void ParseResult(LPXLOPER12 rslt, SEXP ans)
 				idx++;
 			}
 		}
-
-
-
 	}
-	else if (Rf_isInteger(ans) )
+	else
 	{
-		rslt->xltype = xltypeInt;
-		rslt->val.num = Rf_asInteger(ans);
-	}
-	else if (Rf_isReal(ans) || Rf_isNumber(ans))
-	{
-		rslt->xltype = xltypeNum;
-		rslt->val.num = Rf_asReal(ans);
-	}
-	else if (Rf_isString(ans))
-	{
-		rslt->xltype = xltypeStr;
-		const char *sz = CHAR(Rf_asChar(ans));
-		int i, len = strlen(sz);
-		rslt->val.str = new XCHAR[len + 2];
-		rslt->val.str[0] = len;
-		for (i = 0; i < len; i++) rslt->val.str[i + 1] = sz[i];
+		// single value
+
+		if (Rf_isInteger(ans))
+		{
+			rslt->xltype = xltypeInt;
+			rslt->val.num = Rf_asInteger(ans);
+		}
+		else if (Rf_isReal(ans) || Rf_isNumber(ans))
+		{
+			rslt->xltype = xltypeNum;
+			rslt->val.num = Rf_asReal(ans);
+		}
+		else if (Rf_isString(ans))
+		{
+			/*
+			rslt->xltype = xltypeStr;
+			const char *sz = CHAR(Rf_asChar(ans));
+			int i, len = strlen(sz);
+			rslt->val.str = new XCHAR[len + 2];
+			rslt->val.str[0] = len;
+			for (i = 0; i < len; i++) rslt->val.str[i + 1] = sz[i];
+			*/
+			STRSXP2XLOPER(rslt, ans);
+		}
 	}
 }
 

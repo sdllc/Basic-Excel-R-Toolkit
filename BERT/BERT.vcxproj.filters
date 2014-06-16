@@ -24,9 +24,6 @@
     <ClInclude Include="BERT.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ExcelLib\XLCALL-13.H">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ExcelFunctions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -40,6 +37,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Dialogs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ExcelLib\XLCALL.H">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -59,22 +59,13 @@
     <ClCompile Include="ThreadLocalStorage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ExcelLib\XLCALL-12-32.CPP">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ExcelLib\XLCALL-12-64.CPP">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ExcelLib\XLCALL-13-32.CPP">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ExcelLib\XLCALL-13-64.CPP">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="RImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Dialogs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ExcelLib\XLCALL.CPP">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

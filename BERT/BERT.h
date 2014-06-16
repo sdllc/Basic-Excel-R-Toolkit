@@ -5,11 +5,7 @@
 #include <string>
 #include <vector>
 
-#ifdef EXCEL13
-#include "XLCALL-13.H"
-#else
-#include "XLCALL-12.H"
-#endif // #ifdef EXCEL13
+#include "XLCALL.H"
 
 #define DLLEX extern "C" __declspec(dllexport)
 

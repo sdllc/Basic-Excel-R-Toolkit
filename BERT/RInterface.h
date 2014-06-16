@@ -2,11 +2,7 @@
 #ifndef __RINTERFACE_H
 #define __RINTERFACE_H
 
-#ifdef EXCEL13
-#include "XLCALL-13.H"
-#else
-#include "XLCALL-12.H"
-#endif // #ifdef EXCEL13
+#include "XLCALL.H"
 
 typedef std::vector< std::string > SVECTOR;
 typedef std::vector< SVECTOR > FDVECTOR;
