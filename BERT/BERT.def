@@ -33,6 +33,7 @@ Configure
 Console
 Reload
 InstallPackages
+HomeDirectory
 
 BERTFunctionCall1000
 BERTFunctionCall1001

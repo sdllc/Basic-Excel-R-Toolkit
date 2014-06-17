@@ -130,6 +130,11 @@ short Reload()
 	return 1;
 }
 
+short HomeDirectory()
+{
+	return 1;
+}
+
 short Configure()
 {
 	// ::MessageBox(0, L"No", L"Options", MB_OKCANCEL | MB_ICONINFORMATION);

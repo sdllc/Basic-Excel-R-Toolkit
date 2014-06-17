@@ -159,8 +159,10 @@ void MapFunctions()
 
 	// get the environment, if there's one specified
 
-	if (CRegistryUtils::GetRegString(HKEY_CURRENT_USER, env, MAX_PATH, REGISTRY_KEY, REGISTRY_VALUE_ENVIRONMENT)
-		&& strlen(env) > 0)
+	if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, env, MAX_PATH, REGISTRY_KEY, REGISTRY_VALUE_ENVIRONMENT))
+		strcpy_s(env, MAX_PATH, DEFAULT_ENVIRONMENT);
+
+	if( strlen(env) > 0)
 	{
 		SEXP sargs;
 		PROTECT(sargs = Rf_allocVector(VECSXP, 1));
@@ -235,14 +237,17 @@ void LoadStartupFile()
 	// if there is a startup script, load that now
 
 	char RUser[MAX_PATH];
-
 	char path[MAX_PATH];
 	char buffer[MAX_PATH];
 	std::string contents;
 
-	if (CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, RUser, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_R_USER)
-		&& CRegistryUtils::GetRegString(HKEY_CURRENT_USER, buffer, MAX_PATH, REGISTRY_KEY, REGISTRY_VALUE_STARTUP)
-		&& strlen(buffer))
+	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, RUser, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_R_USER))
+		ExpandEnvironmentStringsA( DEFAULT_R_USER, RUser, MAX_PATH );
+
+	if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, buffer, MAX_PATH, REGISTRY_KEY, REGISTRY_VALUE_STARTUP))
+		strcpy_s(buffer, MAX_PATH, DEFAULT_R_STARTUP);
+
+	if (strlen(buffer) && strlen(RUser))
 	{
 		sprintf_s(path, MAX_PATH, "%s\\%s", RUser, buffer);
 		HANDLE file = ::CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -294,11 +299,11 @@ void RInit()
 
 	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, RHome, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_R_HOME))
 	{
-		// err
+		ExpandEnvironmentStringsA(DEFAULT_R_HOME, RHome, MAX_PATH);
 	}
 	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, RUser, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_R_USER))
 	{
-		// err
+		ExpandEnvironmentStringsA(DEFAULT_R_USER, RUser, MAX_PATH);
 	}
 
 	/*
