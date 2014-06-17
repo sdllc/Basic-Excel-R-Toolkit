@@ -240,6 +240,7 @@
     <ClInclude Include="Dialogs.h" />
     <ClInclude Include="ExcelFunctions.h" />
     <ClInclude Include="ExcelLib\XLCALL.H" />
+    <ClInclude Include="RegistryUtils.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="RInterface.h" />
     <ClInclude Include="stdafx.h" />
