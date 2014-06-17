@@ -21,7 +21,6 @@ DLLEX BOOL WINAPI xlAutoClose();
 /**
  * free array memory that we manage
  */
-DLLEX void WINAPI xlAutoFree(LPXLOPER pxFree);
 DLLEX void WINAPI xlAutoFree12(LPXLOPER12 pxFree);
 
 /**

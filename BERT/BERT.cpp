@@ -8,8 +8,13 @@
 
 #include "RInterface.h"
 #include "Dialogs.h"
+#include "resource.h"
+#include <Richedit.h>
 
 std::vector < double > functionEntries;
+std::list< std::string > loglist;
+
+HWND hWndConsole = 0;
 
 LPXLOPER12 BERTFunctionCall( 
 	int index
@@ -65,6 +70,35 @@ LPXLOPER12 BERTFunctionCall(
 	return rslt;
 }
 
+void logMessage(const char *buf, int len)
+{
+	std::string entry(buf);
+	loglist.push_back(entry);
+	while (loglist.size() > MAX_LOGLIST_SIZE) loglist.pop_front();
+
+	if (hWndConsole)
+	{
+		/*
+		std::string consolidated;
+		for (std::list< std::string > ::iterator iter = loglist.begin(); iter != loglist.end(); iter++)
+		{
+			consolidated += iter->c_str();
+			consolidated += "\r\n";
+		}
+
+		HWND hWnd = ::GetDlgItem(hWndConsole, IDC_LOG_WINDOW);
+		if (hWnd)
+		{
+			::SetWindowTextA(hWnd, consolidated.c_str());
+			::SendMessage(hWnd, WM_VSCROLL, SB_BOTTOM, (LPARAM)NULL);
+		}
+		*/
+
+		AppendLog(buf);
+
+	}
+}
+
 void resetXlOper(LPXLOPER12 x)
 {
 	if (x->xltype == xltypeStr && x->val.str)
@@ -98,14 +132,121 @@ short Reload()
 
 short Configure()
 {
-	::MessageBox(0, L"No", L"Options", MB_OKCANCEL | MB_ICONINFORMATION);
+	// ::MessageBox(0, L"No", L"Options", MB_OKCANCEL | MB_ICONINFORMATION);
+
+	XLOPER12 xWnd;
+	Excel12(xlGetHwnd, &xWnd, 0);
+
+	// InitRichEdit();
+
+	::DialogBox(ghModule,
+		MAKEINTRESOURCE(IDD_DIALOG2),
+		(HWND)xWnd.val.w,
+		(DLGPROC)OptionsDlgProc);
+
+	Excel12(xlFree, 0, 1, (LPXLOPER12)&xWnd);
+
 	return 1;
+}
+
+void ExcelStatus(const char *message)
+{
+	XLOPER12 xlUpdate;
+	XLOPER12 xlMessage;
+
+	xlUpdate.xltype = xltypeBool;
+
+	if (!message)
+	{
+		xlUpdate.val.xbool = false;
+		Excel12(xlcMessage, 0, 1, &xlUpdate );
+	}
+	else
+	{
+		int len = strlen(message) + 2;
+
+		xlUpdate.val.xbool = true;
+
+		xlMessage.xltype = xltypeStr | xlbitXLFree;
+		xlMessage.val.str = new XCHAR[len];
+
+		xlMessage.val.str[0] = len;
+		for (int i = 0; i < len; i++) xlMessage.val.str[i + 1] = message[i];
+
+		Excel12(xlcMessage, 0, 2, &xlUpdate, &xlMessage);
+	}
+
+}
+
+void getLogText(std::string &str)
+{
+	str = "";
+	for (std::list< std::string > ::iterator iter = loglist.begin(); iter != loglist.end(); iter++)
+	{
+		str += iter->c_str();
+		str += "\r\n";
+	}
+}
+
+void RExecStringBuffered(const char *buffer)
+{
+	PARSE_STATUS_2 ps2;
+	int err;
+
+	RExecString(buffer, &err, &ps2);
+	if (ps2 == PARSE2_ERROR)
+	{
+		AppendLog("(parse error)\r\n");
+	}
 }
 
 short Console()
 {
-	// ::MessageBox(0, L"No", L"Console", MB_OKCANCEL | MB_ICONINFORMATION);
-	ConsoleDlg(ghModule);
+	/*
+	if (!hWndConsole)
+	{
+		XLOPER12 xWnd;
+		Excel12(xlGetHwnd, &xWnd, 0);
+
+		hWndConsole = ::CreateDialog(ghModule,
+			MAKEINTRESOURCE(IDD_DIALOG1),
+			(HWND)xWnd.val.w,
+			(DLGPROC)ConsoleDlgProc);
+
+		std::string consolidated;
+		for (std::list< std::string > ::iterator iter = loglist.begin(); iter != loglist.end(); iter++)
+		{
+			consolidated += iter->c_str();
+			consolidated += "\r\n";
+		}
+
+		HWND hWnd = ::GetDlgItem(hWndConsole, IDC_LOG_WINDOW);
+		if (hWnd)
+		{
+			::SetWindowTextA(hWnd, consolidated.c_str());
+			::SendMessage(hWnd, WM_VSCROLL, SB_BOTTOM, (LPARAM)NULL);
+		}
+		Excel12(xlFree, 0, 1, (LPXLOPER12)&xWnd);
+	}
+	ShowWindow(hWndConsole, SW_SHOW);
+	*/
+
+	// ConsoleDlg(ghModule);
+
+	XLOPER12 xWnd;
+	Excel12(xlGetHwnd, &xWnd, 0);
+
+	// InitRichEdit();
+
+	::DialogBox( ghModule,
+		MAKEINTRESOURCE(IDD_DIALOG1),
+		(HWND)xWnd.val.w,
+		(DLGPROC)ConsoleDlgProc);
+
+	hWndConsole = 0;
+
+	Excel12(xlFree, 0, 1, (LPXLOPER12)&xWnd);
+
 	return 1;
 }
 
@@ -136,9 +277,13 @@ void SetBERTMenu(bool add )
 		XCHAR menuMacro3[] = L" BERT.Reload";
 		XCHAR menuStatus3[] = L" Reload Startup File";
 
+		XCHAR menuEntry4[] = L" Install Packages";
+		XCHAR menuMacro4[] = L" BERT.InstallPackages";
+		XCHAR menuStatus4[] = L" Install Packages";
+
 		xlMenu.xltype = xltypeMulti;
 		xlMenu.val.array.columns = 4;
-		xlMenu.val.array.rows = 4;
+		xlMenu.val.array.rows = 5;
 		xlMenu.val.array.lparray = new XLOPER12[ xlMenu.val.array.rows * xlMenu.val.array.columns ];
 
 		int idx = 0;
@@ -162,6 +307,11 @@ void SetBERTMenu(bool add )
 		XLOPER12STR(xlMenu.val.array.lparray[13], menuMacro3);
 		XLOPER12STR(xlMenu.val.array.lparray[14], menuEmpty);
 		XLOPER12STR(xlMenu.val.array.lparray[15], menuStatus3);
+
+		XLOPER12STR(xlMenu.val.array.lparray[16], menuEntry4);
+		XLOPER12STR(xlMenu.val.array.lparray[17], menuMacro4);
+		XLOPER12STR(xlMenu.val.array.lparray[18], menuEmpty);
+		XLOPER12STR(xlMenu.val.array.lparray[19], menuStatus4);
 
 		Excel12( xlfAddMenu, 0, 2, &xl1, &xlMenu );
 
@@ -245,12 +395,6 @@ bool RegisterBasicFunctions()
 
 	Excel12(xlGetName, xlParm[0], 0);
 
-	// UnregisterFunctions();
-
-	// { "BERTFunctionCall", "UU", "BERTTest", "Input", "1", "BERT", "", "100", "Test function", "", "", "", "", "", "", "" },
-
-	// int fcount = RFunctions.size();
-
 	for (int i = 0; funcTemplates[i][0]; i++)
 	{
 		for (int j = 0; j < 15; j++)
@@ -268,12 +412,6 @@ bool RegisterBasicFunctions()
 		xlRegisterID.xltype = xltypeMissing;
 		err = Excel12v(xlfRegister, &xlRegisterID, 16, xlParm);
 
-		/*
-		if (xlRegisterID.xltype == xltypeNum)
-		{
-			functionEntries.push_back(xlRegisterID.val.num);
-		}
-		*/
 		Excel12(xlFree, 0, 1, &xlRegisterID);
 
 		for (int j = 0; j < 15; j++)

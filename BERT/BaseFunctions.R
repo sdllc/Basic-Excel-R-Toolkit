@@ -1,10 +1,10 @@
 
-.listfunctionargs <- function(){
+.listfunctionargs <- function(env = .GlobalEnv){
 	rval = list();
-	funclist <- lsf.str(.GlobalEnv);
+	funclist <- lsf.str(env);
 	for( func in funclist )
 	{
-		arglist <- formals(func); # returns a pairlist
+		arglist <- formals(get(func, env)); # returns a pairlist
 		if( length( arglist ) > 0 ){
 			rval[[func]] = names(arglist);
 		}

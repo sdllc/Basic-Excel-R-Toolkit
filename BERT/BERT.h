@@ -4,6 +4,7 @@
 
 #include <string>
 #include <vector>
+#include <list>
 
 #include "XLCALL.H"
 
@@ -11,12 +12,19 @@
 
 extern HMODULE ghModule;
 
+#define REGISTRY_KEY					"Software\\BERT"
+#define REGISTRY_VALUE_ENVIRONMENT		"Environment"
+#define REGISTRY_VALUE_R_USER			"R_USER"
+#define REGISTRY_VALUE_R_HOME			"R_HOME"
+#define REGISTRY_VALUE_STARTUP			"StartupFile"
+
 static LPSTR funcTemplates[][16] = {
 	{ "UpdateScript", "UU#", "BERT.UpdateScript", "R Code", "1", "BERT", "", "99", "Update Script", "", "", "", "", "", "", "" },
-	{ "RExec", "UU", "BERT.Exec#", "R Code", "1", "BERT", "", "98", "Exec R Code", "", "", "", "", "", "", "" },
+	{ "RExec", "UU", "BERT.Exec", "R Code", "1", "BERT", "", "98", "Exec R Code", "", "", "", "", "", "", "" },
 	{ "Configure", "A#", "BERT.Configure", "", "1", "BERT", "", "97", "", "", "", "", "", "", "", "" },
 	{ "Console", "A#", "BERT.Console", "", "1", "BERT", "", "96", "", "", "", "", "", "", "", "" },
-	{ "Reload", "A#", "BERT.Reload", "", "1", "BERT", "", "95", "", "", "", "", "", "", "", "" },
+	{ "InstallPackages", "A#", "BERT.InstallPackages", "", "1", "BERT", "", "95", "", "", "", "", "", "", "", "" },
+	{ "Reload", "A#", "BERT.Reload", "", "1", "BERT", "", "94", "", "", "", "", "", "", "", "" },
 	{ 0 }
 };
 
@@ -56,8 +64,18 @@ short Configure();
 /** show console (log) */
 short Console();
 
-/** show console (log) */
+/** */
 short Reload();
+
+void RExecStringBuffered(const char *buffer);
+
+/** */
+void ExcelStatus(const char *message);
+
+/** */
+void logMessage(const char *buf, int len);
+
+void getLogText(std::string &str);
 
 /**
 * register functions (dynamic)

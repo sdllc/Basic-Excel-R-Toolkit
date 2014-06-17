@@ -40,6 +40,8 @@ SEXP ExecR(std::vector< std::string > &vec, int *err = 0, ParseStatus *pStatus =
 
 SEXP XLOPER2SEXP(LPXLOPER12 px, int depth = 0);
 
+
+
 ///
 
 extern HMODULE ghModule;
@@ -48,6 +50,8 @@ extern HMODULE ghModule;
 
 bool _init = false;
 const char *programName = "BERT";
+
+SEXP g_Environment = 0;
 
 ///
 
@@ -58,12 +62,9 @@ int myReadConsole(const char *prompt, char *buf, int len, int addtohistory)
 	if (fgets(buf, len, stdin)) return 1; else return 0;
 }
 
-void myWriteConsole(const char *buf, int len)
+void R_WriteConsole(const char *buf, int len)
 {
-	std::string str = ""; //  "BERT: ";
-	str += buf;
-	OutputDebugStringA(str.c_str());
-	printf("%s", buf);
+	logMessage(buf, len);
 }
 
 void myCallBack(void)
@@ -76,14 +77,22 @@ void myBusy(int which)
 	/* set a busy cursor ... if which = 1, unset if which = 0 */
 }
 
-
-void myAskOk(const char *info) {
+/** 
+ * "ask ok" has no return value.
+ */
+void R_AskOk(const char *info) {
+	
+	::MessageBoxA(0, info, "Message from R", MB_OK);
 
 }
 
-int myAskYesNoCancel(const char *question) {
-	const int yes = 1;
-	return yes;
+/** 
+ * 1 (yes) or -1 (no), I believe (based on #defines)
+ */
+int R_AskYesNoCancel(const char *question) {
+
+	return (IDYES == ::MessageBoxA(0, question, "Message from R", MB_YESNOCANCEL)) ? 1 : -1;
+
 }
 
 static void my_onintr(int sig) { UserBreak = 1; }
@@ -132,12 +141,51 @@ void MapFunctions()
 	SEXP s = 0;
 	ParseStatus status;
 	int err;
-	
+	char env[MAX_PATH];
+	char buffer[MAX_PATH];
+
 	RFunctions.clear();
 
 	SVECTOR fnames;
 
-	s = PROTECT(ExecR("names(.listfunctionargs())", &err, &status));
+	// if we were holding a pointer to the environment,
+	// release it here so we can update (if necessary)
+
+	if (g_Environment)
+	{
+		UNPROTECT_PTR(g_Environment);
+		g_Environment = 0;
+	}
+
+	// get the environment, if there's one specified
+
+	if (CRegistryUtils::GetRegString(HKEY_CURRENT_USER, env, MAX_PATH, REGISTRY_KEY, REGISTRY_VALUE_ENVIRONMENT)
+		&& strlen(env) > 0)
+	{
+		SEXP sargs;
+		PROTECT(sargs = Rf_allocVector(VECSXP, 1));
+		SET_VECTOR_ELT(sargs, 0, Rf_mkString(env));
+		
+		SEXP lns = PROTECT(Rf_lang3(Rf_install("do.call"), Rf_mkString("get"), sargs));
+		g_Environment = R_tryEval(lns, R_GlobalEnv, &err );
+		UNPROTECT(2);
+
+		PROTECT(g_Environment);
+
+		/*
+		if (g_Environment)
+		{
+			int type = TYPEOF(g_Environment);
+			sprintf_s(buffer, MAX_PATH, "Type? %d (%s)\n", type, Rf_isEnvironment(g_Environment) ? "is environment" : "not environment");
+			OutputDebugStringA(buffer);
+		}
+		else OutputDebugStringA("get env returned null\n");
+		*/
+	}
+
+	if (g_Environment) sprintf_s(buffer, "names(.listfunctionargs(%s))", env );
+	else sprintf_s(buffer, "names(.listfunctionargs())");
+	s = PROTECT(ExecR(buffer, &err, &status));
 	if (s)
 	{
 		int i, len = Rf_length(s);
@@ -151,7 +199,9 @@ void MapFunctions()
 	}
 	UNPROTECT(1);
 
-	s = PROTECT(ExecR(".listfunctionargs()", &err, &status));
+	if (g_Environment) sprintf_s(buffer, ".listfunctionargs(%s)", env);
+	else sprintf_s(buffer, ".listfunctionargs()");
+	s = PROTECT(ExecR(buffer, &err, &status));
 	if (s)
 	{
 		int i, j, len = Rf_length(s);
@@ -190,8 +240,8 @@ void LoadStartupFile()
 	char buffer[MAX_PATH];
 	std::string contents;
 
-	if ( CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, RUser, MAX_PATH - 1, "Software\\BERT", "R_USER")
-		&& CRegistryUtils::GetRegString(HKEY_CURRENT_USER, buffer, MAX_PATH, "Software\\BERT", "StartupFile")
+	if (CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, RUser, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_R_USER)
+		&& CRegistryUtils::GetRegString(HKEY_CURRENT_USER, buffer, MAX_PATH, REGISTRY_KEY, REGISTRY_VALUE_STARTUP)
 		&& strlen(buffer))
 	{
 		sprintf_s(path, MAX_PATH, "%s\\%s", RUser, buffer);
@@ -202,14 +252,25 @@ void LoadStartupFile()
 			while (::ReadFile(file, buffer, MAX_PATH - 1, &read, NULL))
 			{
 				if (read <= 0) break;
-				buffer[read - 1] = 0;
+				buffer[read] = 0;
 				contents += buffer;
 			}
 			::CloseHandle(file);
 		}
 	}
 
-	if (contents.length() > 0) UpdateR(contents);
+	if (contents.length() > 0)
+	{
+		int rslt = UpdateR(contents);
+		if (!rslt) ExcelStatus(0);
+		else ExcelStatus("Error reading startup file; check R log");
+	}
+}
+
+short InstallPackages()
+{
+	ExecR("install.packages()");
+	return 1;
 }
 
 void RInit()
@@ -231,11 +292,11 @@ void RInit()
 	R_setStartTime();
 	R_DefParams(Rp);
 
-	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, RHome, MAX_PATH - 1, "Software\\BERT", "R_HOME"))
+	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, RHome, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_R_HOME))
 	{
 		// err
 	}
-	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, RUser, MAX_PATH - 1, "Software\\BERT", "R_USER"))
+	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, RUser, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_R_USER))
 	{
 		// err
 	}
@@ -255,12 +316,10 @@ void RInit()
 
 	Rp->CharacterMode = LinkDLL;
 	Rp->ReadConsole = myReadConsole;
-	Rp->WriteConsole = myWriteConsole;
+	Rp->WriteConsole = R_WriteConsole;
 	Rp->CallBack = myCallBack;
-//	Rp->ShowMessage = myAskOk;
-//	Rp->YesNoCancel = myAskYesNoCancel;
-	Rp->ShowMessage = askok;
-	Rp->YesNoCancel = askyesnocancel;
+	Rp->ShowMessage = R_AskOk;
+	Rp->YesNoCancel = R_AskYesNoCancel;
 	Rp->Busy = myBusy;
 
 	Rp->R_Quiet = FALSE;// TRUE;        /* Default is FALSE */
@@ -274,7 +333,7 @@ void RInit()
 
 	signal(SIGBREAK, my_onintr);
 	GA_initapp(0, 0);
-	//readconsolecfg();
+	readconsolecfg();
 	setup_Rmainloop();
 	R_ReplDLLinit();
 
@@ -616,7 +675,72 @@ void NarrowString(std::string &out, LPXLOPER12 pxl)
 }
 
 /**
- * convert a (rectangular) range to a matrix
+ * this version of the function checks the values first and, if
+ * they are all numeric, returns a Real matrix.  this should 
+ * simplify function calls on the R side, but check how expensive
+ * this is.
+ */
+SEXP Multi2SEXP2(LPXLOPER12 px)
+{
+	int rows = px->val.array.rows;
+	int cols = px->val.array.columns;
+
+	// pass 1: check.  for now we only accept types num
+	// and integer, although in theory booleans and nils
+	// could be coerced to numbers as well.
+
+	// FIXME: the check for Integers may be a waste, as this
+	// type seems to be pretty rare these days.
+
+	int idx = 0;
+	bool numeric = true;
+
+	for (int i = 0; numeric && i < cols; i++)
+	{
+		for (int j = 0; numeric && j < rows; j++)
+		{
+			numeric = numeric &&
+				(px->val.array.lparray[j*cols + i].xltype == xltypeNum
+				|| px->val.array.lparray[j*cols + i].xltype == xltypeInt);
+		}
+	}
+
+	if (numeric)
+	{
+		SEXP s = Rf_allocMatrix(REALSXP, rows, cols);
+		for (int i = 0; i < cols; i++)
+		{
+			double *mat = REAL(s);
+			for (int j = 0; j < rows; j++)
+			{
+				if (px->val.array.lparray[j*cols + i].xltype == xltypeNum) mat[idx] = px->val.array.lparray[j*cols + i].val.num;
+				else // if (px->val.array.lparray[j*cols + i].xltype == xltypeInt) 
+					mat[idx] = px->val.array.lparray[j*cols + i].val.w;
+				idx++; 
+			}
+		}
+		return s;
+	}
+	else
+	{
+		SEXP s = Rf_allocMatrix(VECSXP, rows, cols);
+		for (int i = 0; i < cols; i++)
+		{
+			for (int j = 0; j < rows; j++)
+			{
+				SET_VECTOR_ELT(s, idx, XLOPER2SEXP(&(px->val.array.lparray[j*cols + i]), 0));
+				idx++; // not macro friendly with opt
+			}
+		}
+		return s;
+	}
+
+}
+
+/**
+ * convert a (rectangular) range to a matrix.
+ * perhaps we should convert 1-width ranges
+ * to vectors... probably not a big deal.
  */
 SEXP Multi2SEXP(LPXLOPER12 px)
 {
@@ -628,6 +752,9 @@ SEXP Multi2SEXP(LPXLOPER12 px)
 
 	// so it looks like a matrix is just a list (same as 
 	// Excel, as it happens); but the order is inverse of Excel.
+
+	// TODO: if there are no strings in there, it might
+	// be useful to use a Real matrix instead.
 
 	int idx = 0;
 	for ( int i = 0; i < cols; i++)
@@ -660,7 +787,7 @@ SEXP XLOPER2SEXP( LPXLOPER12 px, int depth )
 	switch (px->xltype)
 	{
 	case xltypeMulti:
-		return Multi2SEXP(px);
+		return Multi2SEXP2(px);
 		break;
 
 	case xltypeRef:
@@ -692,14 +819,38 @@ SEXP XLOPER2SEXP( LPXLOPER12 px, int depth )
 
 }
 
+void RExecString( const char *buffer, int *err, PARSE_STATUS_2 *status )
+{
+	ParseStatus ps;
+	SEXP rslt = PROTECT(ExecR(buffer, err, &ps));
+
+	if (status)
+	{
+		switch (ps)
+		{
+		case PARSE_OK: *status = PARSE2_OK; break;
+		case PARSE_INCOMPLETE: *status = PARSE2_INCOMPLETE; break;
+		case PARSE_ERROR: *status = PARSE2_ERROR; break;
+		case PARSE_EOF: *status = PARSE2_EOF; break;
+		default:
+		case PARSE_NULL: 
+			*status = PARSE2_NULL; break;
+		}
+	}
+
+
+
+	UNPROTECT(1);
+
+}
+
 bool RExec2(LPXLOPER12 rslt, std::string &funcname, std::vector< LPXLOPER12 > &args)
 {
 	ParseStatus status;
-	SEXP arg, sargs;
-	SEXP ans = 0;
+	SEXP arg, quot, env, sargs;
+	SEXP lns, ans = 0;
 	int i, errorOccurred;
 	
-
 	resetXlOper(rslt);
 
 	PROTECT(sargs = Rf_allocVector(VECSXP, args.size()));
@@ -708,7 +859,14 @@ bool RExec2(LPXLOPER12 rslt, std::string &funcname, std::vector< LPXLOPER12 > &a
 		SET_VECTOR_ELT(sargs, i, XLOPER2SEXP(args[i]));
 	}
 
-	SEXP lns = PROTECT(Rf_lang3(Rf_install("do.call"), Rf_mkString(funcname.c_str()), sargs));
+	if (g_Environment)
+	{
+		lns = PROTECT(Rf_lang5(Rf_install("do.call"), Rf_mkString(funcname.c_str()), sargs, R_MissingArg, g_Environment));
+	}
+	else
+	{
+		lns = PROTECT(Rf_lang3(Rf_install("do.call"), Rf_mkString(funcname.c_str()), sargs));
+	}
 	PROTECT(ans = R_tryEval(lns, R_GlobalEnv, &errorOccurred));
 
 	ParseResult(rslt, ans);
