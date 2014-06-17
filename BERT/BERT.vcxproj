@@ -233,9 +233,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Text Include="README.md" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="BERT.h" />
     <ClInclude Include="Dialogs.h" />
     <ClInclude Include="ExcelFunctions.h" />

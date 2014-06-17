@@ -73,9 +73,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="README.md" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="BERT.def">
       <Filter>Source Files</Filter>
     </None>
