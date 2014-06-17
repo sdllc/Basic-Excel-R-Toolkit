@@ -32,28 +32,14 @@ FDVECTOR RFunctions;
 	#undef clear
 #endif
 
-///
+extern HMODULE ghModule;
+SEXP g_Environment = 0;
 
 SEXP ExecR(const char *code, int *err = 0, ParseStatus *pStatus = 0);
 SEXP ExecR(std::string &str, int *err = 0, ParseStatus *pStatus = 0);
 SEXP ExecR(std::vector< std::string > &vec, int *err = 0, ParseStatus *pStatus = 0);
 
 SEXP XLOPER2SEXP(LPXLOPER12 px, int depth = 0);
-
-
-
-///
-
-extern HMODULE ghModule;
-
-///
-
-bool _init = false;
-const char *programName = "BERT";
-
-SEXP g_Environment = 0;
-
-///
 
 int myReadConsole(const char *prompt, char *buf, int len, int addtohistory)
 {

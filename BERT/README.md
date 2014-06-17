@@ -21,7 +21,7 @@ The binary installer includes some simple example functions.
  2. Open a new spreadsheet
 
  3. Select a cell and type `=R.Fibonacci(10)`
- 
+
 Construction
 ------------
 
@@ -154,8 +154,6 @@ there is no magic in here.  We do use some (non-standard) Microsoft string funct
 
 #### Build Dependencies ####
 
-(Requirements for building from source, not necessary if you use the binary installer)
-
  * [Microsoft Excel Developer's Toolkit Version 15.0] [1].
 
 The project expects the files `XLCALL.h` and `XLCALL.cpp` in the ExcelLib
@@ -170,7 +168,17 @@ the user PATH, depending on your Excel bitness (not Windows bitness).
 
 #### Running / Debugging ####
 
+BERT needs a binary R base directory, as well as a home directory, and a startup
+script (in that home directory).  Defaults are `%APPDATA%\BERT` and can be
+changed via the registry (see `BERT.h`).
 
+Default values:
 
+    Home directory:  %APPDATA%\BERT
+    R Bin directory: %APPDATA%\BERT\R-3.1.0
+    Startup file:    Functions.R
+
+Also the R DLLs must be on the user PATH.  R DLLs are in the binary R
+installation under `bin\i386` or `bin\x64`.
 
 [1]: http://msdn.microsoft.com/en-us/library/office/bb687883(v=office.15).aspx
