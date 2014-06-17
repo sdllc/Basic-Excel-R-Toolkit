@@ -11,6 +11,10 @@
 #include "resource.h"
 #include <Richedit.h>
 
+#include "RegistryUtils.h"
+
+#include <shellapi.h>
+
 std::vector < double > functionEntries;
 std::list< std::string > loglist;
 
@@ -132,6 +136,10 @@ short Reload()
 
 short HomeDirectory()
 {
+	char buffer[MAX_PATH];
+	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, buffer, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_R_USER))
+		ExpandEnvironmentStringsA(DEFAULT_R_USER, buffer, MAX_PATH);
+	::ShellExecuteA(NULL, "open", buffer, NULL, NULL, SW_SHOWDEFAULT);
 	return 1;
 }
 
@@ -278,17 +286,21 @@ void SetBERTMenu(bool add )
 		XCHAR menuMacro2[] = L" BERT.Console";
 		XCHAR menuStatus2[] = L" Open the console";
 
-		XCHAR menuEntry3[] = L" Reload Startup File";
-		XCHAR menuMacro3[] = L" BERT.Reload";
-		XCHAR menuStatus3[] = L" Reload Startup File";
+		XCHAR menuEntry3[] = L" Home Directory";
+		XCHAR menuMacro3[] = L" BERT.Home";
+		XCHAR menuStatus3[] = L" Open the Home Directory";
 
-		XCHAR menuEntry4[] = L" Install Packages";
-		XCHAR menuMacro4[] = L" BERT.InstallPackages";
-		XCHAR menuStatus4[] = L" Install Packages";
+		XCHAR menuEntry4[] = L" Reload Startup File";
+		XCHAR menuMacro4[] = L" BERT.Reload";
+		XCHAR menuStatus4[] = L" Reload Startup File";
+
+		XCHAR menuEntry5[] = L" Install Packages";
+		XCHAR menuMacro5[] = L" BERT.InstallPackages";
+		XCHAR menuStatus5[] = L" Install Packages";
 
 		xlMenu.xltype = xltypeMulti;
 		xlMenu.val.array.columns = 4;
-		xlMenu.val.array.rows = 5;
+		xlMenu.val.array.rows = 6;
 		xlMenu.val.array.lparray = new XLOPER12[ xlMenu.val.array.rows * xlMenu.val.array.columns ];
 
 		int idx = 0;
@@ -317,6 +329,11 @@ void SetBERTMenu(bool add )
 		XLOPER12STR(xlMenu.val.array.lparray[17], menuMacro4);
 		XLOPER12STR(xlMenu.val.array.lparray[18], menuEmpty);
 		XLOPER12STR(xlMenu.val.array.lparray[19], menuStatus4);
+
+		XLOPER12STR(xlMenu.val.array.lparray[20], menuEntry5);
+		XLOPER12STR(xlMenu.val.array.lparray[21], menuMacro5);
+		XLOPER12STR(xlMenu.val.array.lparray[22], menuEmpty);
+		XLOPER12STR(xlMenu.val.array.lparray[23], menuStatus5);
 
 		Excel12( xlfAddMenu, 0, 2, &xl1, &xlMenu );
 
