@@ -267,6 +267,7 @@ void SetBERTMenu(bool add )
 {
 	XLOPER12 xl1, xlMenuName, xlMenu;
 	XCHAR menuName[] = L" BERT";
+	XCHAR menuEmpty[] = L" ";
 
 	static bool menuInstalled = false;
 
@@ -277,65 +278,42 @@ void SetBERTMenu(bool add )
 	{
 		if (menuInstalled) return;
 
-		XCHAR menuEmpty[] = L" ";
-		XCHAR menuEntry1[] = L" Options";
-		XCHAR menuMacro1[] = L" BERT.Configure";
-		XCHAR menuStatus1[] = L" Show configuration options";
-
-		XCHAR menuEntry2[] = L" R Console";
-		XCHAR menuMacro2[] = L" BERT.Console";
-		XCHAR menuStatus2[] = L" Open the console";
-
-		XCHAR menuEntry3[] = L" Home Directory";
-		XCHAR menuMacro3[] = L" BERT.Home";
-		XCHAR menuStatus3[] = L" Open the Home Directory";
-
-		XCHAR menuEntry4[] = L" Reload Startup File";
-		XCHAR menuMacro4[] = L" BERT.Reload";
-		XCHAR menuStatus4[] = L" Reload Startup File";
-
-		XCHAR menuEntry5[] = L" Install Packages";
-		XCHAR menuMacro5[] = L" BERT.InstallPackages";
-		XCHAR menuStatus5[] = L" Install Packages";
+		int rows;
+		for (rows = 0; menuTemplates[rows][0]; rows++);
 
 		xlMenu.xltype = xltypeMulti;
 		xlMenu.val.array.columns = 4;
-		xlMenu.val.array.rows = 6;
+		xlMenu.val.array.rows = rows + 1;
 		xlMenu.val.array.lparray = new XLOPER12[ xlMenu.val.array.rows * xlMenu.val.array.columns ];
 
-		int idx = 0;
+		int len, idx = 0;
 
 		XLOPER12STR(xlMenu.val.array.lparray[0], menuName);
 		XLOPER12STR(xlMenu.val.array.lparray[1], menuEmpty);
 		XLOPER12STR(xlMenu.val.array.lparray[2], menuEmpty);
 		XLOPER12STR(xlMenu.val.array.lparray[3], menuEmpty);
 
-		XLOPER12STR(xlMenu.val.array.lparray[4], menuEntry1);
-		XLOPER12STR(xlMenu.val.array.lparray[5], menuMacro1);
-		XLOPER12STR(xlMenu.val.array.lparray[6], menuEmpty);
-		XLOPER12STR(xlMenu.val.array.lparray[7], menuStatus1);
-
-		XLOPER12STR(xlMenu.val.array.lparray[8], menuEntry2);
-		XLOPER12STR(xlMenu.val.array.lparray[9], menuMacro2);
-		XLOPER12STR(xlMenu.val.array.lparray[10], menuEmpty);
-		XLOPER12STR(xlMenu.val.array.lparray[11], menuStatus2);
-
-		XLOPER12STR(xlMenu.val.array.lparray[12], menuEntry3);
-		XLOPER12STR(xlMenu.val.array.lparray[13], menuMacro3);
-		XLOPER12STR(xlMenu.val.array.lparray[14], menuEmpty);
-		XLOPER12STR(xlMenu.val.array.lparray[15], menuStatus3);
-
-		XLOPER12STR(xlMenu.val.array.lparray[16], menuEntry4);
-		XLOPER12STR(xlMenu.val.array.lparray[17], menuMacro4);
-		XLOPER12STR(xlMenu.val.array.lparray[18], menuEmpty);
-		XLOPER12STR(xlMenu.val.array.lparray[19], menuStatus4);
-
-		XLOPER12STR(xlMenu.val.array.lparray[20], menuEntry5);
-		XLOPER12STR(xlMenu.val.array.lparray[21], menuMacro5);
-		XLOPER12STR(xlMenu.val.array.lparray[22], menuEmpty);
-		XLOPER12STR(xlMenu.val.array.lparray[23], menuStatus5);
+		for (int i = 0; i < rows; i++)
+		{
+			for (int j = 0; j < 4; j++)
+			{
+				len = wcslen(menuTemplates[i][j]);
+				xlMenu.val.array.lparray[4 * (i + 1) + j].xltype = xltypeStr;
+				xlMenu.val.array.lparray[4 * (i + 1) + j].val.str = new XCHAR[len + 2];
+				wcscpy_s(xlMenu.val.array.lparray[4 * (i + 1) + j].val.str + 1, len+1, menuTemplates[i][j]);
+				xlMenu.val.array.lparray[4 * (i + 1) + j].val.str[0] = len;
+			}
+		}
 
 		Excel12( xlfAddMenu, 0, 2, &xl1, &xlMenu );
+
+		for (int i = 0; i < rows; i++)
+		{
+			for (int j = 0; j < 4; j++)
+			{
+				delete [] xlMenu.val.array.lparray[4 * (i + 1) + j].val.str;
+			}
+		}
 
 		delete[] xlMenu.val.array.lparray;
 		menuInstalled = true;

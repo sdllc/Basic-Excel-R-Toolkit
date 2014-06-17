@@ -34,6 +34,15 @@ static LPSTR funcTemplates[][16] = {
 	{ 0 }
 };
 
+static LPWSTR menuTemplates[][4] = {
+	{ L"Options",				L"BERT.Configure",			L"",	L"Show configuration options" },
+	{ L"R Console",				L"BERT.Console",			L"",	L"Open the console" },
+	{ L"Home Directory",		L"BERT.Home",				L"",	L"Open the home directory" },
+	{ L"Reload Startup File",	L"BERT.Reload",				L"",	L"Reload startup R code" },
+	{ L"Install Packages",		L"BERT.InstallPackages",	L"",	L"Install packages via the R GUI" },
+	{ 0 }
+};
+
 /** 
  * convenience macro for setting an XLOPER12 string.  
  * sets first char to length.  DOES NOT COPY STRING.
