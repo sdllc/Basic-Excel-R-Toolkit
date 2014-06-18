@@ -324,7 +324,7 @@ void RInit()
 
 	signal(SIGBREAK, my_onintr);
 	GA_initapp(0, 0);
-	readconsolecfg();
+	//readconsolecfg();
 	setup_Rmainloop();
 	R_ReplDLLinit();
 
