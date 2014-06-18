@@ -22,6 +22,18 @@ The binary installer includes some simple example functions.
 
  3. Select a cell and type `=R.Fibonacci(10)`
 
+That's pretty much it.  Next step is to add your own functions:
+
+ 1. From the **Add-ins** tab in Excel, click the **BERT** menu and
+    **Home Directory**.
+
+ 2. Add your code to the `Functions.R` file and save it
+
+ 3. From the **Add-ins** tab again, click the **BERT** menu and
+    **Reload Startup File**.  Your functions should now be available in Excel.
+    If there's been an error in reading your file, it will show up in Excel's
+    status bar.
+
 Construction
 ------------
 
