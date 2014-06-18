@@ -1,0 +1,22 @@
+LIBRARY
+
+;==========================================================
+;
+; Copyright (c) 2014 Structured Data, LLC.
+; All rights reserved.
+;
+;==========================================================
+
+LIBRARY      "BERTMGR.xll"
+
+EXPORTS
+
+;-------------------------------------------------------
+;
+; Excel Interface Functions
+;
+
+xlAutoOpen
+xlAutoClose
+xlAddInManagerInfo12
+

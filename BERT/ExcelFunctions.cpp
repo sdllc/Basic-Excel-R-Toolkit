@@ -75,7 +75,7 @@ DLLEX BOOL WINAPI xlAutoClose(void)
 DLLEX LPXLOPER12 WINAPI xlAddInManagerInfo12(LPXLOPER12 xAction)
 {
 	static XLOPER12 xInfo, xIntAction;
-	static XCHAR szAddInStr[128] = L" Basic Excel R Toolkit (REPLACEME)";
+	static XCHAR szAddInStr[128] = L" Basic Excel R Toolkit (Internal)";
 
 	// debugLogf("Enter xlAddInManagerInfo12\n");
 

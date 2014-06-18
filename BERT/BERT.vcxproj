@@ -237,6 +237,7 @@
     <ClInclude Include="Dialogs.h" />
     <ClInclude Include="ExcelFunctions.h" />
     <ClInclude Include="ExcelLib\XLCALL.H" />
+    <ClInclude Include="RegistryConstants.h" />
     <ClInclude Include="RegistryUtils.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="RInterface.h" />

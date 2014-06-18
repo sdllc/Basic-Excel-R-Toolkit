@@ -20,6 +20,25 @@ std::list< std::string > loglist;
 
 HWND hWndConsole = 0;
 
+short Startup(){
+
+	RInit();
+	// RegisterBasicFunctions();
+	RegisterAddinFunctions();
+	SetBERTMenu(true);
+
+	return 1;
+}
+
+short Shutdown(){
+
+	SetBERTMenu(false);
+	RShutdown();
+
+	return 1;
+}
+
+
 LPXLOPER12 BERTFunctionCall( 
 	int index
 	, LPXLOPER12 input_0
