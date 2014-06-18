@@ -1,3 +1,22 @@
+/*
+ * Basic Excel R Toolkit (BERT)
+ * Copyright (C) 2014 Structured Data, LLC
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ */
 
 #pragma once
 
@@ -166,15 +185,28 @@ public:
 	}
 
 	/** store a string in the registry.  */
-	static void SetRegString( HKEY hkeyProgramRoot, const char *szCode, const char *szKey, const char *szValName = 0)
+	static void SetRegString(HKEY hkeyProgramRoot, const char *szCode, const char *szKey, const char *szValName = 0)
 	{
 		// root: HKLM or HKCU?
 		HKEY hKey = 0;
-		if( ERROR_SUCCESS == RegCreateKeyExA( hkeyProgramRoot, szKey, 0, 0, REG_OPTION_NON_VOLATILE, 
-											 KEY_ALL_ACCESS, 0, &hKey, 0 ))
+		if (ERROR_SUCCESS == RegCreateKeyExA(hkeyProgramRoot, szKey, 0, 0, REG_OPTION_NON_VOLATILE,
+			KEY_ALL_ACCESS, 0, &hKey, 0))
 		{
-			RegSetValueExA( hKey, szValName, 0, REG_SZ, (LPBYTE)szCode, (DWORD)(strlen(szCode)));
-			::RegCloseKey( hKey );
+			RegSetValueExA(hKey, szValName, 0, REG_SZ, (LPBYTE)szCode, (DWORD)(strlen(szCode)));
+			::RegCloseKey(hKey);
+		}
+	}
+
+	/** store a string in the registry.  */
+	static void SetRegExpandString(HKEY hkeyProgramRoot, const char *szCode, const char *szKey, const char *szValName = 0)
+	{
+		// root: HKLM or HKCU?
+		HKEY hKey = 0;
+		if (ERROR_SUCCESS == RegCreateKeyExA(hkeyProgramRoot, szKey, 0, 0, REG_OPTION_NON_VOLATILE,
+			KEY_ALL_ACCESS, 0, &hKey, 0))
+		{
+			RegSetValueExA(hKey, szValName, 0, REG_EXPAND_SZ, (LPBYTE)szCode, (DWORD)(strlen(szCode)));
+			::RegCloseKey(hKey);
 		}
 	}
 

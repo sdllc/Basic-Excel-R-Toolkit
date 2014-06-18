@@ -1,3 +1,22 @@
+/*
+ * Basic Excel R Toolkit (BERT)
+ * Copyright (C) 2014 Structured Data, LLC
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ */
 
 #ifndef __BERT_H
 #define __BERT_H
@@ -6,6 +25,7 @@
 #include <vector>
 #include <list>
 
+#include "BERT_Version.h"
 #include "RegistryConstants.h"
 
 #include "XLCALL.H"
@@ -22,15 +42,18 @@ static LPSTR funcTemplates[][16] = {
 	{ "HomeDirectory", "A#", "BERT.Home", "", "1", "BERT", "", "95", "", "", "", "", "", "", "", "" },
 	{ "InstallPackages", "A#", "BERT.InstallPackages", "", "1", "BERT", "", "94", "", "", "", "", "", "", "", "" },
 	{ "Reload", "A#", "BERT.Reload", "", "1", "BERT", "", "93", "", "", "", "", "", "", "", "" },
+	{ "About", "A#", "BERT.About", "", "1", "BERT", "", "92", "", "", "", "", "", "", "", "" },
 	{ 0 }
 };
 
 static LPWSTR menuTemplates[][4] = {
-	{ L"Options",				L"BERT.Configure",			L"",	L"Show configuration options" },
 	{ L"R Console",				L"BERT.Console",			L"",	L"Open the console" },
 	{ L"Home Directory",		L"BERT.Home",				L"",	L"Open the home directory" },
 	{ L"Reload Startup File",	L"BERT.Reload",				L"",	L"Reload startup R code" },
 	{ L"Install Packages",		L"BERT.InstallPackages",	L"",	L"Install packages via the R GUI" },
+	{ L"-", L"", L"", L"" },
+	{ L"Configuration",			L"BERT.Configure",			L"",	L"Show configuration options" },
+	{ L"About",					L"BERT.About",				L"",	L"About Basic Excel R Toolkit (BERT)" },
 	{ 0 }
 };
 
