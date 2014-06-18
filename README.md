@@ -51,6 +51,23 @@ be used instead.
 Return values work the same way; single values are mapped directly to types,
 and any result with length > 1 is returned as an Excel Array (see below).
 
+Workspace and R Installation
+----------------------------
+
+BERT uses its own R installation and its own workspace.  It's designed to not
+affect or interact with any other R installation on your machine.  That does
+mean you will need to separately install any modules you need, although you
+only have to do that once.
+
+#### Can I use my existing R installation? ####
+
+It is possible, although we don't recommend it.  Have a look at the sources
+and figure out how to do that.  Also if you use a different version of R than
+the one used to build it (currently 3.1.0), it will break.
+
+If you just want to reuse existing R code, you can `source` it from the BERT
+startup file.
+
 Performance
 -----------
 
@@ -91,19 +108,6 @@ which can handle them.  For example, the function `=SUM( R.Identity(4))`.
 
 Limitations / Issues
 --------------------
-
-#### PATH ####
-
-The BERT installer appends to your user `%PATH%` environment variable.
-Specifically, it writes the path to its R binary directory (containing the
-R DLLs and executables).
-
-This can cause problems if you already have an R binary directory in your
-path.  In that event, there is a workaround, but it requires Administrator
-permissions.
-
-Note that BERT does not impact any environment settings you have for `R_HOME`
-or `R_USER`; when BERT R runs it uses its own registry values for these.
 
 #### (Not) Threading ####
 
@@ -172,13 +176,17 @@ BERT needs a binary R base directory, as well as a home directory, and a startup
 script (in that home directory).  Defaults are `%APPDATA%\BERT` and can be
 changed via the registry (see `BERT.h`).
 
+There's an additional registry value, bitness, which controls which DLL gets
+loaded at runtime.  This should be either 32 or 64 and match the bitness of
+your Excel installation (not your Windows installation).
+
 Default values:
 
     Home directory:  %APPDATA%\BERT
     R Bin directory: %APPDATA%\BERT\R-3.1.0
     Startup file:    Functions.R
+    Bitness:         32
 
-Also the R DLLs must be on the user PATH.  R DLLs are in the binary R
-installation under `bin\i386` or `bin\x64`.
+
 
 [1]: http://msdn.microsoft.com/en-us/library/office/bb687883(v=office.15).aspx
