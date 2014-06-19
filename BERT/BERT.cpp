@@ -302,43 +302,31 @@ short Console()
 	}
 
 	/*
+
+	this would be nice, but Excel steals all key messages,
+	so non-modal is no-go.  perhaps there's a way to control 
+	that behavior.
+
 	if (!hWndConsole)
 	{
-
 		hWndConsole = ::CreateDialog(ghModule,
 			MAKEINTRESOURCE(IDD_DIALOG1),
 			(HWND)xWnd.val.w,
 			(DLGPROC)ConsoleDlgProc);
-
-		std::string consolidated;
-		for (std::list< std::string > ::iterator iter = loglist.begin(); iter != loglist.end(); iter++)
-		{
-			consolidated += iter->c_str();
-			consolidated += "\r\n";
-		}
-
-		HWND hWnd = ::GetDlgItem(hWndConsole, IDC_LOG_WINDOW);
-		if (hWnd)
-		{
-			::SetWindowTextA(hWnd, consolidated.c_str());
-			::SendMessage(hWnd, WM_VSCROLL, SB_BOTTOM, (LPARAM)NULL);
-		}
-
 	}
 	ShowWindow(hWndConsole, SW_SHOW);
+
 	*/
 
-	// ConsoleDlg(ghModule);
+	// back to modal
 
 	::DialogBox( ghModule,
 		MAKEINTRESOURCE(IDD_DIALOG1),
 		(HWND)xWnd.val.w,
 		(DLGPROC)ConsoleDlgProc);
-
 	hWndConsole = 0;
 
 	Excel12(xlFree, 0, 1, (LPXLOPER12)&xWnd);
-
 	return 1;
 }
 

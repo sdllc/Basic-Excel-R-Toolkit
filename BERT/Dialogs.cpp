@@ -181,7 +181,11 @@ void Prompt( const char *prompt = DEFAULT_PROMPT )
 void ProcessCommand()
 {
 	int len = fn(ptr, SCI_GETLENGTH, 0, 0);
-	int pos = fn(ptr, SCI_GETCURRENTPOS, 0, 0);
+	//int pos = fn(ptr, SCI_GETCURRENTPOS, 0, 0);
+
+	/*
+
+	don't do this, it's wicked annoying
 
 	if (len != pos)
 	{
@@ -190,8 +194,9 @@ void ProcessCommand()
 		fn(ptr, SCI_SETSEL, pos, len);
 		fn(ptr, SCI_REPLACESEL, 0, (sptr_t)(""));
 	}
+	*/
 
-	int linelen = pos - minCaret;
+	int linelen = len - minCaret;
 	std::string cmd;
 
 	if (linelen == 0)
@@ -202,7 +207,7 @@ void ProcessCommand()
 	{
 		Sci_TextRange str;
 		str.chrg.cpMin = minCaret;
-		str.chrg.cpMax = pos;
+		str.chrg.cpMax = len;
 		str.lpstrText = new char[linelen + 1];
 		fn(ptr, SCI_GETTEXTRANGE, 0, (sptr_t)(&str));
 
@@ -217,7 +222,7 @@ void ProcessCommand()
 		// why do this twice?
 		Sci_TextRange str;
 		str.chrg.cpMin = minCaret - 2;
-		str.chrg.cpMax = pos;
+		str.chrg.cpMax = len;
 		str.lpstrText = new char[str.chrg.cpMax - str.chrg.cpMin + 2];
 		fn(ptr, SCI_GETTEXTRANGE, 0, (sptr_t)(&str));
 		int len = strlen(str.lpstrText);
