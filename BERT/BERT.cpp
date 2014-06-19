@@ -111,33 +111,14 @@ LPXLOPER12 BERTFunctionCall(
 	return rslt;
 }
 
-void logMessage(const char *buf, int len)
+void logMessage(const char *buf, int len, bool console)
 {
 	std::string entry(buf);
 	loglist.push_back(entry);
 	while (loglist.size() > MAX_LOGLIST_SIZE) loglist.pop_front();
 
-	if (hWndConsole)
-	{
-		/*
-		std::string consolidated;
-		for (std::list< std::string > ::iterator iter = loglist.begin(); iter != loglist.end(); iter++)
-		{
-			consolidated += iter->c_str();
-			consolidated += "\r\n";
-		}
+	if (console && hWndConsole) AppendLog(buf); 
 
-		HWND hWnd = ::GetDlgItem(hWndConsole, IDC_LOG_WINDOW);
-		if (hWnd)
-		{
-			::SetWindowTextA(hWnd, consolidated.c_str());
-			::SendMessage(hWnd, WM_VSCROLL, SB_BOTTOM, (LPARAM)NULL);
-		}
-		*/
-
-		AppendLog(buf);
-
-	}
 }
 
 void resetXlOper(LPXLOPER12 x)
@@ -243,35 +224,73 @@ void ExcelStatus(const char *message)
 
 }
 
+std::string trim(const std::string& str, const std::string& whitespace )
+{
+	const auto strBegin = str.find_first_not_of(whitespace);
+	if (strBegin == std::string::npos)
+		return ""; // no content
+
+	const auto strEnd = str.find_last_not_of(whitespace);
+	const auto strRange = strEnd - strBegin + 1;
+
+	return str.substr(strBegin, strRange);
+}
+
 void getLogText(std::string &str)
 {
 	str = "";
 	for (std::list< std::string > ::iterator iter = loglist.begin(); iter != loglist.end(); iter++)
 	{
 		str += iter->c_str();
-		str += "\r\n";
+		// str += "\n";
 	}
 }
 
-void RExecStringBuffered(const char *buffer)
+PARSE_STATUS_2 RExecVectorBuffered(std::vector<std::string> &cmd )
 {
 	PARSE_STATUS_2 ps2;
 	int err;
-
-	RExecString(buffer, &err, &ps2);
-	if (ps2 == PARSE2_ERROR)
-	{
-		AppendLog("(parse error)\r\n");
-	}
+	RExecVector(cmd, &err, &ps2, true);
+	return ps2;
 }
 
 short Console()
 {
+	static HANDLE hModScintilla = 0;
+
+	XLOPER12 xWnd;
+	Excel12(xlGetHwnd, &xWnd, 0);
+
+	if (!hModScintilla)
+	{
+		char buffer[MAX_PATH];
+		if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, buffer, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_R_USER))
+			ExpandEnvironmentStringsA(DEFAULT_R_USER, buffer, MAX_PATH);
+		if (strlen(buffer) > 0)
+		{
+			if (buffer[strlen(buffer) - 1] != '\\') strcat_s(buffer, MAX_PATH, "\\");
+		}
+
+#ifdef _WIN64
+		strcat_s( buffer, MAX_PATH, "SciLexer64.DLL");
+#else // #ifdef _WIN64
+		strcat_s(buffer, MAX_PATH, "SciLexer32.DLL");
+#endif // #ifdef _WIN64
+		hModScintilla = LoadLibraryA(buffer);
+		if (!hModScintilla)
+		{
+			sprintf_s(buffer, MAX_PATH, "Failed to load scintilla module: 0x%x\n", ::GetLastError());
+			OutputDebugStringA(buffer);
+		}
+		else
+		{
+			OutputDebugStringA("Scintilla loaded OK\n");
+		}
+	}
+
 	/*
 	if (!hWndConsole)
 	{
-		XLOPER12 xWnd;
-		Excel12(xlGetHwnd, &xWnd, 0);
 
 		hWndConsole = ::CreateDialog(ghModule,
 			MAKEINTRESOURCE(IDD_DIALOG1),
@@ -291,15 +310,13 @@ short Console()
 			::SetWindowTextA(hWnd, consolidated.c_str());
 			::SendMessage(hWnd, WM_VSCROLL, SB_BOTTOM, (LPARAM)NULL);
 		}
-		Excel12(xlFree, 0, 1, (LPXLOPER12)&xWnd);
+
 	}
 	ShowWindow(hWndConsole, SW_SHOW);
 	*/
 
 	// ConsoleDlg(ghModule);
 
-	XLOPER12 xWnd;
-	Excel12(xlGetHwnd, &xWnd, 0);
 
 	// InitRichEdit();
 

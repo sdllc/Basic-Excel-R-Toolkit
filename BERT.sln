@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BERT", "BERT\BERT.vcxproj", "{82277CDB-4EEB-4E64-A248-0F6D6C6AA2F4}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BERTMGR", "BERTMGR\BERTMGR.vcxproj", "{8E7216E4-0796-4DA1-9710-6613C4C9BF4F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{82277CDB-4EEB-4E64-A248-0F6D6C6AA2F4} = {82277CDB-4EEB-4E64-A248-0F6D6C6AA2F4}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

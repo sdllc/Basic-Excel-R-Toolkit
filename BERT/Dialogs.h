@@ -35,6 +35,11 @@ DIALOG_RESULT_TYPE CALLBACK AboutDlgProc(HWND hwndDlg, UINT message, WPARAM wPar
 	"Includes R version 3.1.0 (2014-04-10) -- \"Spring Dance\"\r\n" \
 	"Copyright (C) 2014 The R Foundation for Statistical Computing"
 
+#define PARSE_ERROR_MESSAGE "(parse error)\n"
+
+#define SCINTILLA_FONT_NAME		"Courier New"
+#define SCINTILLA_FONT_SIZE		10
+
 void ConsoleDlg(HINSTANCE hInst);
 void AppendLog(const char *buffer); 
 

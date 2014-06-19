@@ -27,6 +27,7 @@
 
 #include "BERT_Version.h"
 #include "RegistryConstants.h"
+#include "util.h"
 
 #include "XLCALL.H"
 
@@ -57,6 +58,7 @@ static LPWSTR menuTemplates[][4] = {
 	{ 0 }
 };
 
+
 /** 
  * convenience macro for setting an XLOPER12 string.  
  * sets first char to length.  DOES NOT COPY STRING.
@@ -69,6 +71,8 @@ static LPWSTR menuTemplates[][4] = {
 #define MAX_FUNCTION_COUNT 100
 
 LPXLOPER12 UpdateScript(LPXLOPER12 script);
+
+std::string trim(const std::string& str, const std::string& whitespace = " \t\r\n");
 
 /**
  * static (or thread-local) XLOPERs may have
@@ -99,13 +103,13 @@ short HomeDirectory();
 /** */
 short Reload();
 
-void RExecStringBuffered(const char *buffer);
+PARSE_STATUS_2 RExecVectorBuffered(std::vector<std::string> &cmd );
 
 /** */
 void ExcelStatus(const char *message);
 
 /** */
-void logMessage(const char *buf, int len);
+void logMessage(const char *buf, int len, bool console = true);
 
 void getLogText(std::string &str);
 

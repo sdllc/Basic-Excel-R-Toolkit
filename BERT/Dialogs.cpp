@@ -26,9 +26,25 @@
 #include "Dialogs.h"
 #include "RegistryUtils.h"
 
-#include <RichEdit.h>
+#include "Scintilla.h"
+#include <string>
+#include <vector>
+
+typedef std::vector< std::string> SVECTOR;
+typedef SVECTOR::iterator SITER;
+
+SVECTOR cmdVector;
+SVECTOR historyVector;
+int historyPointer = 0;
+std::string historyCurrentLine;
 
 extern HWND hWndConsole;
+extern HMODULE ghModule;
+
+int minCaret = 0;
+WNDPROC lpfnEditWndProc = 0;
+int(*fn)(void*, int, int, int);
+void * ptr;
 
 void CenterWindow(HWND hWnd, HWND hParent, int offsetX = 0, int offsetY = 0)
 {
@@ -52,25 +68,6 @@ void CenterWindow(HWND hWnd, HWND hParent, int offsetX = 0, int offsetY = 0)
 		rectWnd.top + offsetY + (iPHeight - iHeight) / 2,
 		0, 0, SWP_NOSIZE);
 }
-
-void AppendLog(const char *buffer)
-{
-	HWND hWnd = ::GetDlgItem(hWndConsole, IDC_LOG_WINDOW);
-	if (hWnd)
-	{
-		CHARRANGE cr;
-		cr.cpMin = -1;
-		cr.cpMax = -1;
-
-		std::string fmt = buffer;
-		fmt += "\r\n";
-
-		::SendMessageA(hWnd, EM_EXSETSEL, 0, (LPARAM)&cr);
-		::SendMessageA(hWnd, EM_REPLACESEL, 0, (LPARAM)fmt.c_str());
-		::SendMessage(hWnd, WM_VSCROLL, SB_BOTTOM, (LPARAM)NULL);
-	}
-}
-
 
 DIALOG_RESULT_TYPE CALLBACK AboutDlgProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -154,148 +151,259 @@ DIALOG_RESULT_TYPE CALLBACK OptionsDlgProc(HWND hwndDlg, UINT message, WPARAM wP
 	return FALSE;
 }
 
+
+void AppendLog(const char *buffer)
+{
+	// TODO: if there's a current prompt, then
+	// need to carry it over (and hide it, maybe)
+
+	int len = strlen(buffer);
+
+	fn(ptr, SCI_SETSEL, -1, -1);
+	fn(ptr, SCI_APPENDTEXT, len, (int)buffer);
+	// fn(ptr, SCI_APPENDTEXT, 1, (int)"\n");
+
+}
+
+void Prompt( const char *prompt = "> " )
+{
+	fn(ptr, SCI_APPENDTEXT, strlen(prompt), (int)prompt);
+	fn(ptr, SCI_SETSEL, -1, -1);
+	minCaret = fn(ptr, SCI_GETCURRENTPOS, 0, 0);
+	historyPointer = 0;
+}
+
+void ProcessCommand()
+{
+	int len = fn(ptr, SCI_GETLENGTH, 0, 0);
+	int pos = fn(ptr, SCI_GETCURRENTPOS, 0, 0);
+
+	if (len != pos)
+	{
+		// scrub remainder of line
+		// ...
+		fn(ptr, SCI_SETSEL, pos, len);
+		fn(ptr, SCI_REPLACESEL, 0, (int)(""));
+	}
+
+	int linelen = pos - minCaret;
+	std::string cmd;
+
+	if (linelen == 0)
+	{
+		// do nothing
+	}
+	else
+	{
+		Sci_TextRange str;
+		str.chrg.cpMin = minCaret;
+		str.chrg.cpMax = pos;
+		str.lpstrText = new char[linelen + 1];
+		fn(ptr, SCI_GETTEXTRANGE, 0, (int)(&str));
+
+		cmd = str.lpstrText;
+		cmd = trim(cmd);
+		if (cmd.length() > 0) historyVector.push_back(cmd);
+
+		delete[] str.lpstrText;
+	}
+
+	{
+		// why do this twice?
+		Sci_TextRange str;
+		str.chrg.cpMin = minCaret - 2;
+		str.chrg.cpMax = pos;
+		str.lpstrText = new char[str.chrg.cpMax - str.chrg.cpMin + 2];
+		fn(ptr, SCI_GETTEXTRANGE, 0, (int)(&str));
+		int len = strlen(str.lpstrText);
+		str.lpstrText[len] = '\n';
+		str.lpstrText[len + 1] = 0;
+		logMessage(str.lpstrText, len+1, false);
+		delete[] str.lpstrText;
+	}
+
+	fn(ptr, SCI_APPENDTEXT, 1, (int)"\n");
+
+	if (cmd.length() > 0)
+	{
+		cmdVector.push_back(cmd);
+		PARSE_STATUS_2 ps = RExecVectorBuffered(cmdVector);
+
+		switch (ps)
+		{
+		case PARSE2_ERROR:
+			logMessage(PARSE_ERROR_MESSAGE, strlen(PARSE_ERROR_MESSAGE), true);
+			break;
+
+		case PARSE2_INCOMPLETE:
+			Prompt("| ");
+			return;
+		}
+	}
+	cmdVector.clear();
+	Prompt();
+
+}
+
+void CmdHistory(int scrollBy)
+{
+	int to = historyPointer + scrollBy;
+	if (to > 0) return; // can't go to future
+	if (-to > historyVector.size()) return; // too far back
+	int end = fn(ptr, SCI_GETLENGTH, 0, 0);
+	std::string repl;
+
+	// ok, it's valid.  one thing to check: if on line 0, store it
+
+	if (historyPointer == 0)
+	{
+		int linelen = end - minCaret;
+
+		Sci_TextRange str;
+		str.chrg.cpMin = minCaret;
+		str.chrg.cpMax = end;
+		str.lpstrText = new char[linelen + 1];
+		fn(ptr, SCI_GETTEXTRANGE, 0, (int)(&str));
+		historyCurrentLine = str.lpstrText;
+		delete[] str.lpstrText;
+	}
+
+	if (to == 0) repl = historyCurrentLine.c_str();
+	else
+	{
+		int check = historyVector.size() + to;
+		repl = historyVector[check];
+	}
+
+	fn(ptr, SCI_SETSEL, minCaret, end);
+	fn(ptr, SCI_REPLACESEL, 0, (int)(repl.c_str()));
+	fn(ptr, SCI_SETSEL, -1, -1);
+
+	historyPointer = to;
+
+}
+
+
+LRESULT CALLBACK SubClassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+	static int p;
+
+	switch (msg)
+	{
+	case WM_CHAR:
+		switch (wParam)
+		{
+		case 13:
+			ProcessCommand();
+			return 0;
+
+		default:
+			p = fn(ptr, SCI_GETCURRENTPOS, 0, 0);
+			if (p <= minCaret) fn(ptr, SCI_SETSEL, -1, -1);
+		}
+		break;
+
+	case WM_KEYUP:
+
+		switch (wParam)
+		{
+		case VK_UP:
+		case VK_DOWN:
+		case VK_RETURN:
+			return 0;
+		}
+		break;
+
+	case WM_KEYDOWN:
+
+		switch (wParam)
+		{
+		case VK_LEFT:
+			p = fn(ptr, SCI_GETCURRENTPOS, 0, 0);
+			if (p <= minCaret) return 0;
+			break;
+
+		case VK_UP:
+			CmdHistory(-1);
+			return 0;
+
+		case VK_DOWN:
+			CmdHistory(1);
+			return 0;
+
+		case VK_RETURN:
+			return 0;
+		}
+
+		break;
+
+	}
+
+	return CallWindowProc(lpfnEditWndProc, hwnd, msg, wParam, lParam);
+}
+
 DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam )
 {
+	const int borderedge = 8;
+	static HWND hwndScintilla = 0;
 	HWND hWnd = 0;
 	char *szBuffer = 0;
-
-	static POINT offsetsRE;
-	static POINT offsetsButton;
-	static POINT offsetsCmd[2];
+	RECT rect;
 
 	switch (message)
 	{
+	//case WM_CREATE:
 	case WM_INITDIALOG:
-		CenterWindow(hwndDlg, ::GetParent(hwndDlg));
+
+		::GetClientRect(hwndDlg, &rect);
+		hwndScintilla = CreateWindowExA(0,
+			"Scintilla", "", WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_CLIPCHILDREN,
+			borderedge, borderedge, rect.right - 2 * borderedge, rect.bottom - 2 * borderedge, hwndDlg, 0, ghModule, NULL);
+
+		if (hwndScintilla)
 		{
-			RECT rectInner;
-			RECT rectOuter;
-			POINT p;
+			lpfnEditWndProc = (WNDPROC)SetWindowLong(hwndScintilla, GWLP_WNDPROC, (DWORD)SubClassProc);
+			::SetFocus(hwndScintilla);
+			fn = (int(__cdecl *)(void *, int, int, int))SendMessage(hwndScintilla, SCI_GETDIRECTFUNCTION, 0, 0);
+			ptr = (void *)SendMessage(hwndScintilla, SCI_GETDIRECTPOINTER, 0, 0);
 
-			hWnd = ::GetDlgItem(hwndDlg, IDC_LOG_WINDOW);
-			::GetWindowRect(hwndDlg, &rectOuter);
+			fn(ptr, SCI_STYLESETFONT, STYLE_DEFAULT, (int)SCINTILLA_FONT_NAME);
+			fn(ptr, SCI_STYLESETSIZE, STYLE_DEFAULT, SCINTILLA_FONT_SIZE);
 
-			::GetWindowRect(hWnd, &rectInner);
-			offsetsRE.x = (rectOuter.right - rectOuter.left) - (rectInner.right - rectInner.left);
-			offsetsRE.y = (rectOuter.bottom - rectOuter.top) - (rectInner.bottom - rectInner.top);
+			std::string prev;
+			getLogText(prev);
+			fn(ptr, SCI_APPENDTEXT, prev.length(), (int)(prev.c_str()));
 
-			std::string logtext;
-			getLogText(logtext);
-			::SetWindowTextA(hWnd, logtext.c_str());
-			::SendMessage(hWnd, WM_VSCROLL, SB_BOTTOM, (LPARAM)NULL);
-
-			hWnd = ::GetDlgItem(hwndDlg, IDC_COMMAND);
-			::SendMessage(hWnd, EM_SETEVENTMASK, 0, ENM_KEYEVENTS);
-			::GetWindowRect(hWnd, &rectInner);
-
-			offsetsCmd[0].x = offsetsCmd[1].x = rectInner.left;
-			offsetsCmd[0].y = offsetsCmd[1].y = rectInner.top;
-			::ScreenToClient(hwndDlg, &offsetsCmd[0]);
-			::ScreenToClient(hwndDlg, &offsetsCmd[1]);
-
-			offsetsCmd[0].y = rectInner.bottom - rectInner.top;
-
-			hWnd = ::GetDlgItem(hwndDlg, IDOK);
-			::GetWindowRect(hWnd, &rectInner);
-					
-			offsetsButton.x = rectInner.left;
-			offsetsButton.y = rectInner.top;
-
-			p.x = rectOuter.right;
-			p.y = rectOuter.bottom;
-
-			::ScreenToClient(hwndDlg, &p);
-
-			::ScreenToClient(hwndDlg, &offsetsButton);
-			offsetsButton.x -= p.x;
-			offsetsButton.y -= p.y;
-
-			offsetsCmd[1].x -= p.x;
-			offsetsCmd[1].y -= p.y;
-
-			hWndConsole = hwndDlg;
+			Prompt();
 		}
+		else
+		{
+			DWORD dwErr = ::GetLastError();
+			char sz[64];
+			sprintf_s(sz, 64, "FAILED: 0x%x", dwErr);
+			OutputDebugStringA(sz);
+		}
+		hWndConsole = hwndDlg;
+		CenterWindow(hwndDlg, ::GetParent(hwndDlg));
 		break;
 
+
 	case WM_SIZING:
-		{
-			RECT rctl;
-			RECT rectOuter;
-			POINT p;
-			RECT *prect = (RECT*)lParam;
-			
-			hWnd = ::GetDlgItem(hwndDlg, IDC_LOG_WINDOW);
-			::GetWindowRect(hWnd, &rctl);
-			::SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, (prect->right - prect->left) - offsetsRE.x, (prect->bottom - prect->top) - offsetsRE.y,
-				SWP_NOMOVE | SWP_NOZORDER | SWP_DEFERERASE );
-			
-			hWnd = ::GetDlgItem(hwndDlg, IDOK);
-
-			p.x = prect->right;
-			p.y = prect->bottom;
-			::ScreenToClient(hwndDlg, &p);
-
-			::SetWindowPos(hWnd, HWND_NOTOPMOST, p.x + offsetsButton.x, p.y + offsetsButton.y, 0, 0,
-				SWP_NOSIZE | SWP_NOZORDER | SWP_DEFERERASE);
-
-			hWnd = ::GetDlgItem(hwndDlg, IDC_COMMAND);
-			::SetWindowPos(hWnd, HWND_NOTOPMOST, offsetsCmd[0].x, p.y + offsetsCmd[1].y, (prect->right - prect->left) - offsetsRE.x, offsetsCmd[0].y,
-				SWP_NOZORDER | SWP_DEFERERASE);
-
-		}
+		::GetClientRect(hwndDlg, &rect);
+		::SetWindowPos(hwndScintilla, HWND_TOP, borderedge, borderedge, rect.right - 2 * borderedge, rect.bottom - 2 * borderedge,
+			SWP_NOMOVE | SWP_NOZORDER | SWP_DEFERERASE);
 		break;
 
 	case WM_ERASEBKGND:
-		// return TRUE;
 		break;
 
 	case WM_NOTIFY:
-		if(((LPNMHDR)lParam)->idFrom == IDC_COMMAND )
-		{ 
-			if (((LPNMHDR)lParam)->code == EN_MSGFILTER)
-			{
-				MSGFILTER* filter = (MSGFILTER*)lParam;
-				if ( filter->wParam == '\r' || filter->wParam == '\n' )
-				{
-					if (filter->msg == WM_KEYUP)
-					{
-						int len = ::GetWindowTextLengthA(filter->nmhdr.hwndFrom);
-						char *text = new char[len + 1];
-						::GetWindowTextA(filter->nmhdr.hwndFrom, text, len + 1);
-						::SetWindowTextA(filter->nmhdr.hwndFrom, "");
-
-						std::string tmp = "> ";
-						tmp += text;
-						AppendLog(tmp.c_str());
-
-						tmp = text;
-						tmp.erase(tmp.find_last_not_of(" \n\r\t") + 1);
-
-						RExecStringBuffered(tmp.c_str());
-						delete[] text;
-					}
-					return TRUE;
-				}
-			}
-		}
 		break;
 
 	case WM_COMMAND:
 
 		switch (LOWORD(wParam))
 		{
-			/*
-		case IDC_COMMAND:
-			if (HIWORD(wParam) == EN_CHANGE)
-			{
-				return FALSE;
-			}
-			if (HIWORD(wParam) == EN_UPDATE)
-			{
-				return FALSE;
-			}
-			break;
-			*/
 		case IDOK:
 		case IDCANCEL:
 			EndDialog(hwndDlg, wParam);
@@ -306,12 +414,10 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM w
 	return FALSE;
 }
 
+/*
 void ConsoleDlg(HINSTANCE hInst)
 {
-	XLOPER12 xWnd;
-	Excel12(xlGetHwnd, &xWnd, 0);
 	
-	// InitRichEdit();
 
 	::DialogBox(hInst,
 		MAKEINTRESOURCE(IDD_DIALOG1),
@@ -321,3 +427,4 @@ void ConsoleDlg(HINSTANCE hInst)
 	Excel12(xlFree, 0, 1, (LPXLOPER12)&xWnd);
 
 }
+*/

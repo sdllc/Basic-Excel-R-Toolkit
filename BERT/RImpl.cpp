@@ -105,17 +105,6 @@ static void my_onintr(int sig) { UserBreak = 1; }
 
 ///
 
-std::string trim(const std::string& str, const std::string& whitespace = " \t\r\n")
-{
-	const auto strBegin = str.find_first_not_of(whitespace);
-	if (strBegin == std::string::npos)
-		return ""; // no content
-
-	const auto strEnd = str.find_last_not_of(whitespace);
-	const auto strRange = strEnd - strBegin + 1;
-
-	return str.substr(strBegin, strRange);
-}
 
 int UpdateR(std::string &str)
 {
@@ -830,10 +819,10 @@ SEXP XLOPER2SEXP( LPXLOPER12 px, int depth )
 
 }
 
-void RExecString( const char *buffer, int *err, PARSE_STATUS_2 *status )
+void RExecVector(std::vector<std::string> &vec, int *err, PARSE_STATUS_2 *status, bool printResult)
 {
 	ParseStatus ps;
-	SEXP rslt = PROTECT(ExecR(buffer, err, &ps));
+	SEXP rslt = PROTECT(ExecR(vec, err, &ps));
 
 	if (status)
 	{
@@ -844,15 +833,20 @@ void RExecString( const char *buffer, int *err, PARSE_STATUS_2 *status )
 		case PARSE_ERROR: *status = PARSE2_ERROR; break;
 		case PARSE_EOF: *status = PARSE2_EOF; break;
 		default:
-		case PARSE_NULL: 
+		case PARSE_NULL:
 			*status = PARSE2_NULL; break;
 		}
 	}
 
-
+	if (ps == PARSE_OK && printResult && rslt)
+	{
+		int perr;
+		SEXP pRslt = PROTECT(Rf_lang2(Rf_install("print"), rslt));
+		R_tryEval(pRslt, R_GlobalEnv, &perr);
+		UNPROTECT(1);
+	}
 
 	UNPROTECT(1);
-
 }
 
 bool RExec2(LPXLOPER12 rslt, std::string &funcname, std::vector< LPXLOPER12 > &args)
