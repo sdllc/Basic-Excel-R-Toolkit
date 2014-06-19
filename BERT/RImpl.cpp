@@ -28,8 +28,12 @@
 #include <windows.h>
 #include <stdio.h>
 #include <Rversion.h>
-#define LibExtern __declspec(dllimport) extern
+// #define LibExtern __declspec(dllimport) extern
+//#define USE_RINTERNALS
+
 #include <Rinternals.h>
+
+
 #include <Rembedded.h>
 #include <graphapp.h>
 #include <R_ext/RStartup.h>
@@ -42,6 +46,7 @@
 #include "BERT.h"
 
 FDVECTOR RFunctions;
+
 
 // who does this?
 #ifdef length
@@ -57,7 +62,7 @@ SEXP g_Environment = 0;
 
 SEXP ExecR(const char *code, int *err = 0, ParseStatus *pStatus = 0);
 SEXP ExecR(std::string &str, int *err = 0, ParseStatus *pStatus = 0);
-SEXP ExecR(std::vector< std::string > &vec, int *err = 0, ParseStatus *pStatus = 0);
+SEXP ExecR(std::vector< std::string > &vec, int *err = 0, ParseStatus *pStatus = 0, bool withVisible = false);
 
 SEXP XLOPER2SEXP(LPXLOPER12 px, int depth = 0);
 
@@ -443,10 +448,10 @@ SEXP ExecR(const char *code, int *err, ParseStatus *pStatus)
 
 }
 
-SEXP ExecR(std::vector < std::string > &vec, int *err, ParseStatus *pStatus )
+SEXP ExecR(std::vector < std::string > &vec, int *err, ParseStatus *pStatus, bool withVisible )
 {
-	ParseStatus status;
-	SEXP cmdSexp, cmdexpr = R_NilValue;
+	ParseStatus status ;
+	SEXP cmdSexp, wv = R_NilValue, cmdexpr = R_NilValue;
 	SEXP ans = 0;
 	int i, errorOccurred;
 
@@ -463,14 +468,24 @@ SEXP ExecR(std::vector < std::string > &vec, int *err, ParseStatus *pStatus )
 	switch (status){
 	case PARSE_OK:
 
-		// Loop is needed here as EXPSEXP might be of length > 1
-		for (i = 0; i < Rf_length(cmdexpr); i++){
-			SEXP cmd = VECTOR_ELT(cmdexpr, i);
-			ans = R_tryEval(cmd, R_GlobalEnv, &errorOccurred);
-			if (errorOccurred) {
-				if (err) *err = errorOccurred;
-				UNPROTECT(2);
-				return 0;
+		if (withVisible)
+		{
+			wv = PROTECT(Rf_lang2(Rf_install("withVisible"), Rf_lang2(Rf_install("eval"), cmdexpr)));
+			ans = R_tryEval(wv, R_GlobalEnv, &errorOccurred);
+			if (err && errorOccurred) *err = errorOccurred;
+			UNPROTECT(1);
+		}
+		else
+		{
+			// Loop is needed here as EXPSEXP might be of length > 1
+			for (i = 0; i < Rf_length(cmdexpr); i++){
+				SEXP cmd = VECTOR_ELT(cmdexpr, i);
+				ans = R_tryEval(cmd, R_GlobalEnv, &errorOccurred);
+				if (errorOccurred) {
+					if (err) *err = errorOccurred;
+					UNPROTECT(2);
+					return 0;
+				}
 			}
 		}
 		break;
@@ -614,12 +629,14 @@ void ParseResult(LPXLOPER12 rslt, SEXP ans)
 			rslt->xltype = xltypeInt;
 			rslt->val.num = Rf_asInteger(ans);
 		}
-		else if (Rf_isReal(ans) || Rf_isNumber(ans))
+		//else if (Rf_isReal(ans) || Rf_isNumber(ans))
+		else if (isReal(ans) || Rf_isNumber(ans))
 		{
 			rslt->xltype = xltypeNum;
 			rslt->val.num = Rf_asReal(ans);
 		}
-		else if (Rf_isString(ans))
+		//else if (Rf_isString(ans))
+		else if (isString(ans))
 		{
 			/*
 			rslt->xltype = xltypeStr;
@@ -822,7 +839,7 @@ SEXP XLOPER2SEXP( LPXLOPER12 px, int depth )
 void RExecVector(std::vector<std::string> &vec, int *err, PARSE_STATUS_2 *status, bool printResult)
 {
 	ParseStatus ps;
-	SEXP rslt = PROTECT(ExecR(vec, err, &ps));
+	SEXP rslt = PROTECT(ExecR(vec, err, &ps, true));
 
 	if (status)
 	{
@@ -840,10 +857,14 @@ void RExecVector(std::vector<std::string> &vec, int *err, PARSE_STATUS_2 *status
 
 	if (ps == PARSE_OK && printResult && rslt)
 	{
-		int perr;
-		SEXP pRslt = PROTECT(Rf_lang2(Rf_install("print"), rslt));
-		R_tryEval(pRslt, R_GlobalEnv, &perr);
-		UNPROTECT(1);
+		SEXP elt = VECTOR_ELT(rslt, 1);
+		int *pVisible = LOGICAL(elt);
+
+		//char sz[64];
+		//sprintf_s(sz, 64, "len %d; logical[1] %d\n", Rf_length(rslt), pVisible[0]);
+		//OutputDebugStringA(sz);
+
+		if (*pVisible ) Rf_PrintValue(VECTOR_ELT(rslt,0));
 	}
 
 	UNPROTECT(1);

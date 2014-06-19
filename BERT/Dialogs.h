@@ -37,8 +37,13 @@ DIALOG_RESULT_TYPE CALLBACK AboutDlgProc(HWND hwndDlg, UINT message, WPARAM wPar
 
 #define PARSE_ERROR_MESSAGE "(parse error)\n"
 
-#define SCINTILLA_FONT_NAME		"Courier New"
-#define SCINTILLA_FONT_SIZE		10
+#define SCINTILLA_FONT_NAME			"Courier New"
+#define SCINTILLA_FONT_SIZE			10
+#define SCINTILLA_R_TEXT_COLOR		RGB(0, 0, 128)
+#define SCINTILLA_USER_TEXT_COLOR	RGB(255, 0, 0)
+
+#define DEFAULT_PROMPT		"> "
+#define CONTINUATION_PROMPT	"+ "
 
 void ConsoleDlg(HINSTANCE hInst);
 void AppendLog(const char *buffer); 

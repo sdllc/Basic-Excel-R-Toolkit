@@ -58,6 +58,8 @@ static LPWSTR menuTemplates[][4] = {
 	{ 0 }
 };
 
+const char WRAP_ERR[] = "Error in eval(expr, envir, enclos) :";
+
 
 /** 
  * convenience macro for setting an XLOPER12 string.  

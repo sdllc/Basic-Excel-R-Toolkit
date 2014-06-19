@@ -151,21 +151,23 @@ DIALOG_RESULT_TYPE CALLBACK OptionsDlgProc(HWND hwndDlg, UINT message, WPARAM wP
 	return FALSE;
 }
 
-
 void AppendLog(const char *buffer)
 {
 	// TODO: if there's a current prompt, then
 	// need to carry it over (and hide it, maybe)
 
 	int len = strlen(buffer);
+	int start = fn(ptr, SCI_GETLENGTH, 0, 0);
 
 	fn(ptr, SCI_SETSEL, -1, -1);
 	fn(ptr, SCI_APPENDTEXT, len, (int)buffer);
-	// fn(ptr, SCI_APPENDTEXT, 1, (int)"\n");
+
+	fn(ptr, SCI_STARTSTYLING, start, 0x31);
+	fn(ptr, SCI_SETSTYLING, len, 1);
 
 }
 
-void Prompt( const char *prompt = "> " )
+void Prompt( const char *prompt = DEFAULT_PROMPT )
 {
 	fn(ptr, SCI_APPENDTEXT, strlen(prompt), (int)prompt);
 	fn(ptr, SCI_SETSEL, -1, -1);
@@ -236,9 +238,14 @@ void ProcessCommand()
 			break;
 
 		case PARSE2_INCOMPLETE:
-			Prompt("| ");
+			Prompt(CONTINUATION_PROMPT);
 			return;
 		}
+	}
+	else if (cmdVector.size() > 0)
+	{
+		Prompt(CONTINUATION_PROMPT);
+		return;
 	}
 	cmdVector.clear();
 	Prompt();
@@ -319,6 +326,7 @@ LRESULT CALLBACK SubClassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		switch (wParam)
 		{
 		case VK_LEFT:
+		case VK_BACK:
 			p = fn(ptr, SCI_GETCURRENTPOS, 0, 0);
 			if (p <= minCaret) return 0;
 			break;
@@ -369,10 +377,13 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM w
 
 			fn(ptr, SCI_STYLESETFONT, STYLE_DEFAULT, (int)SCINTILLA_FONT_NAME);
 			fn(ptr, SCI_STYLESETSIZE, STYLE_DEFAULT, SCINTILLA_FONT_SIZE);
+			fn(ptr, SCI_STYLESETFORE, 1, SCINTILLA_R_TEXT_COLOR);
+			fn(ptr, SCI_STYLESETFORE, 0, SCINTILLA_USER_TEXT_COLOR);
 
 			std::string prev;
 			getLogText(prev);
-			fn(ptr, SCI_APPENDTEXT, prev.length(), (int)(prev.c_str()));
+
+			AppendLog(prev.c_str());
 
 			Prompt();
 		}

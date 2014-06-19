@@ -113,11 +113,19 @@ LPXLOPER12 BERTFunctionCall(
 
 void logMessage(const char *buf, int len, bool console)
 {
-	std::string entry(buf);
+	std::string entry;
+
+	if (!strncmp(buf, WRAP_ERR, sizeof(WRAP_ERR)-1))
+	{
+		entry = "Error:";
+		entry += (buf + sizeof(WRAP_ERR)-1);
+	}
+	else entry = buf;
+
 	loglist.push_back(entry);
 	while (loglist.size() > MAX_LOGLIST_SIZE) loglist.pop_front();
 
-	if (console && hWndConsole) AppendLog(buf); 
+	if (console && hWndConsole) AppendLog(entry.c_str()); 
 
 }
 
