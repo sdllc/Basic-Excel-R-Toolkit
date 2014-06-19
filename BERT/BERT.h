@@ -113,7 +113,8 @@ void ExcelStatus(const char *message);
 /** */
 void logMessage(const char *buf, int len, bool console = true);
 
-void getLogText(std::string &str);
+/** */
+std::list< std::string > * getLogText();
 
 /**
 * register functions (dynamic)

@@ -244,14 +244,17 @@ std::string trim(const std::string& str, const std::string& whitespace )
 	return str.substr(strBegin, strRange);
 }
 
-void getLogText(std::string &str)
+std::list< std::string > * getLogText()
 {
+	/*
 	str = "";
 	for (std::list< std::string > ::iterator iter = loglist.begin(); iter != loglist.end(); iter++)
 	{
 		str += iter->c_str();
 		// str += "\n";
 	}
+	*/
+	return &loglist;
 }
 
 PARSE_STATUS_2 RExecVectorBuffered(std::vector<std::string> &cmd )
@@ -274,6 +277,7 @@ short Console()
 		char buffer[MAX_PATH];
 		if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, buffer, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_R_USER))
 			ExpandEnvironmentStringsA(DEFAULT_R_USER, buffer, MAX_PATH);
+
 		if (strlen(buffer) > 0)
 		{
 			if (buffer[strlen(buffer) - 1] != '\\') strcat_s(buffer, MAX_PATH, "\\");
@@ -289,10 +293,11 @@ short Console()
 		{
 			sprintf_s(buffer, MAX_PATH, "Failed to load scintilla module: 0x%x\n", ::GetLastError());
 			OutputDebugStringA(buffer);
+			::MessageBoxA(0, buffer, "ERR", MB_OK);
 		}
 		else
 		{
-			OutputDebugStringA("Scintilla loaded OK\n");
+			//OutputDebugStringA("Scintilla loaded OK\n");
 		}
 	}
 
@@ -324,9 +329,6 @@ short Console()
 	*/
 
 	// ConsoleDlg(ghModule);
-
-
-	// InitRichEdit();
 
 	::DialogBox( ghModule,
 		MAKEINTRESOURCE(IDD_DIALOG1),

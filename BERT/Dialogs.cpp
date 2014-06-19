@@ -28,6 +28,7 @@
 
 #include "Scintilla.h"
 #include <string>
+#include <list>
 #include <vector>
 
 typedef std::vector< std::string> SVECTOR;
@@ -43,8 +44,8 @@ extern HMODULE ghModule;
 
 int minCaret = 0;
 WNDPROC lpfnEditWndProc = 0;
-int(*fn)(void*, int, int, int);
-void * ptr;
+sptr_t(*fn)(sptr_t*, int, uptr_t, sptr_t);
+sptr_t* ptr;
 
 void CenterWindow(HWND hWnd, HWND hParent, int offsetX = 0, int offsetY = 0)
 {
@@ -151,7 +152,7 @@ DIALOG_RESULT_TYPE CALLBACK OptionsDlgProc(HWND hwndDlg, UINT message, WPARAM wP
 	return FALSE;
 }
 
-void AppendLog(const char *buffer)
+void AppendLog(const char *buffer, int style)
 {
 	// TODO: if there's a current prompt, then
 	// need to carry it over (and hide it, maybe)
@@ -160,16 +161,18 @@ void AppendLog(const char *buffer)
 	int start = fn(ptr, SCI_GETLENGTH, 0, 0);
 
 	fn(ptr, SCI_SETSEL, -1, -1);
-	fn(ptr, SCI_APPENDTEXT, len, (int)buffer);
+	fn(ptr, SCI_APPENDTEXT, len, (sptr_t)buffer);
 
-	fn(ptr, SCI_STARTSTYLING, start, 0x31);
-	fn(ptr, SCI_SETSTYLING, len, 1);
-
+	if (style != 0)
+	{
+		fn(ptr, SCI_STARTSTYLING, start, 0x31);
+		fn(ptr, SCI_SETSTYLING, len, style);
+	}
 }
 
 void Prompt( const char *prompt = DEFAULT_PROMPT )
 {
-	fn(ptr, SCI_APPENDTEXT, strlen(prompt), (int)prompt);
+	fn(ptr, SCI_APPENDTEXT, strlen(prompt), (sptr_t)prompt);
 	fn(ptr, SCI_SETSEL, -1, -1);
 	minCaret = fn(ptr, SCI_GETCURRENTPOS, 0, 0);
 	historyPointer = 0;
@@ -185,7 +188,7 @@ void ProcessCommand()
 		// scrub remainder of line
 		// ...
 		fn(ptr, SCI_SETSEL, pos, len);
-		fn(ptr, SCI_REPLACESEL, 0, (int)(""));
+		fn(ptr, SCI_REPLACESEL, 0, (sptr_t)(""));
 	}
 
 	int linelen = pos - minCaret;
@@ -201,7 +204,7 @@ void ProcessCommand()
 		str.chrg.cpMin = minCaret;
 		str.chrg.cpMax = pos;
 		str.lpstrText = new char[linelen + 1];
-		fn(ptr, SCI_GETTEXTRANGE, 0, (int)(&str));
+		fn(ptr, SCI_GETTEXTRANGE, 0, (sptr_t)(&str));
 
 		cmd = str.lpstrText;
 		cmd = trim(cmd);
@@ -216,7 +219,7 @@ void ProcessCommand()
 		str.chrg.cpMin = minCaret - 2;
 		str.chrg.cpMax = pos;
 		str.lpstrText = new char[str.chrg.cpMax - str.chrg.cpMin + 2];
-		fn(ptr, SCI_GETTEXTRANGE, 0, (int)(&str));
+		fn(ptr, SCI_GETTEXTRANGE, 0, (sptr_t)(&str));
 		int len = strlen(str.lpstrText);
 		str.lpstrText[len] = '\n';
 		str.lpstrText[len + 1] = 0;
@@ -224,7 +227,7 @@ void ProcessCommand()
 		delete[] str.lpstrText;
 	}
 
-	fn(ptr, SCI_APPENDTEXT, 1, (int)"\n");
+	fn(ptr, SCI_APPENDTEXT, 1, (sptr_t)"\n");
 
 	if (cmd.length() > 0)
 	{
@@ -270,7 +273,7 @@ void CmdHistory(int scrollBy)
 		str.chrg.cpMin = minCaret;
 		str.chrg.cpMax = end;
 		str.lpstrText = new char[linelen + 1];
-		fn(ptr, SCI_GETTEXTRANGE, 0, (int)(&str));
+		fn(ptr, SCI_GETTEXTRANGE, 0, (sptr_t)(&str));
 		historyCurrentLine = str.lpstrText;
 		delete[] str.lpstrText;
 	}
@@ -283,7 +286,7 @@ void CmdHistory(int scrollBy)
 	}
 
 	fn(ptr, SCI_SETSEL, minCaret, end);
-	fn(ptr, SCI_REPLACESEL, 0, (int)(repl.c_str()));
+	fn(ptr, SCI_REPLACESEL, 0, (sptr_t)(repl.c_str()));
 	fn(ptr, SCI_SETSEL, -1, -1);
 
 	historyPointer = to;
@@ -362,7 +365,7 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM w
 	{
 	//case WM_CREATE:
 	case WM_INITDIALOG:
-
+		
 		::GetClientRect(hwndDlg, &rect);
 		hwndScintilla = CreateWindowExA(0,
 			"Scintilla", "", WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_CLIPCHILDREN,
@@ -370,21 +373,28 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM w
 
 		if (hwndScintilla)
 		{
-			lpfnEditWndProc = (WNDPROC)SetWindowLong(hwndScintilla, GWLP_WNDPROC, (DWORD)SubClassProc);
+			
+			lpfnEditWndProc = (WNDPROC)SetWindowLongPtr(hwndScintilla, GWLP_WNDPROC, (LONG_PTR)SubClassProc);
 			::SetFocus(hwndScintilla);
-			fn = (int(__cdecl *)(void *, int, int, int))SendMessage(hwndScintilla, SCI_GETDIRECTFUNCTION, 0, 0);
-			ptr = (void *)SendMessage(hwndScintilla, SCI_GETDIRECTPOINTER, 0, 0);
 
-			fn(ptr, SCI_STYLESETFONT, STYLE_DEFAULT, (int)SCINTILLA_FONT_NAME);
+			fn = (sptr_t(__cdecl *)(sptr_t*, int, uptr_t, sptr_t))SendMessage(hwndScintilla, SCI_GETDIRECTFUNCTION, 0, 0);
+			ptr = (sptr_t*)SendMessage(hwndScintilla, SCI_GETDIRECTPOINTER, 0, 0);
+
+			fn(ptr, SCI_STYLESETFONT, STYLE_DEFAULT, (sptr_t)SCINTILLA_FONT_NAME);
 			fn(ptr, SCI_STYLESETSIZE, STYLE_DEFAULT, SCINTILLA_FONT_SIZE);
 			fn(ptr, SCI_STYLESETFORE, 1, SCINTILLA_R_TEXT_COLOR);
 			fn(ptr, SCI_STYLESETFORE, 0, SCINTILLA_USER_TEXT_COLOR);
 
-			std::string prev;
-			getLogText(prev);
-
-			AppendLog(prev.c_str());
-
+			std::list< std::string > *loglist = getLogText();
+			for (std::list< std::string >::iterator iter = loglist->begin(); iter != loglist->end(); iter++)
+			{
+				if (!strncmp(iter->c_str(), DEFAULT_PROMPT, 2)
+					|| !strncmp(iter->c_str(), CONTINUATION_PROMPT, 2))
+				{
+					AppendLog(iter->c_str(), 0);
+				}
+				else AppendLog(iter->c_str());
+			}
 			Prompt();
 		}
 		else
@@ -393,6 +403,9 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM w
 			char sz[64];
 			sprintf_s(sz, 64, "FAILED: 0x%x", dwErr);
 			OutputDebugStringA(sz);
+			::MessageBoxA(0, sz, "ERR", MB_OK);
+			EndDialog(hwndDlg, IDCANCEL);
+			return TRUE;
 		}
 		hWndConsole = hwndDlg;
 		CenterWindow(hwndDlg, ::GetParent(hwndDlg));

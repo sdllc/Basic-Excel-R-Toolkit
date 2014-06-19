@@ -46,7 +46,7 @@ DIALOG_RESULT_TYPE CALLBACK AboutDlgProc(HWND hwndDlg, UINT message, WPARAM wPar
 #define CONTINUATION_PROMPT	"+ "
 
 void ConsoleDlg(HINSTANCE hInst);
-void AppendLog(const char *buffer); 
+void AppendLog(const char *buffer, int style = 1); 
 
 
 

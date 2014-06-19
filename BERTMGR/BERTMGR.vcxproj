@@ -106,7 +106,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <OutputFile>BERTMGR-32-D.xll</OutputFile>
+      <OutputFile>..\bert\BERTMGR-64-D.xll</OutputFile>
       <AdditionalLibraryDirectories>
       </AdditionalLibraryDirectories>
       <ModuleDefinitionFile>BERTMGR.def</ModuleDefinitionFile>
