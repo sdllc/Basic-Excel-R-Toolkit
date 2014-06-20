@@ -37,23 +37,18 @@ xlAddInManagerInfo12
 
 ;-------------------------------------------------------
 ;
-
-Startup
-Shutdown
-
-;-------------------------------------------------------
-;
 ; Functions
 ;
 
-UpdateScript
-RExec
-Configure
-Console
-Reload
-InstallPackages
-HomeDirectory
-About
+BERT_UpdateScript
+BERT_RExec
+BERT_Configure
+BERT_Console
+BERT_Reload
+BERT_InstallPackages
+BERT_HomeDirectory
+BERT_About
+BERT_Callback
 
 BERTFunctionCall1000
 BERTFunctionCall1001

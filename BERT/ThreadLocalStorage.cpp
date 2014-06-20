@@ -21,7 +21,6 @@
 #include "stdafx.h"
 #include "BERT.h"
 #include "XLCALL.h"
-#include "ExcelFunctions.h"
 #include "ThreadLocalStorage.h"
 
 #include <stdlib.h>

@@ -20,7 +20,6 @@
 
 #include "stdafx.h"
 #include "BERT.h"
-#include "ExcelFunctions.h"
 #include "ThreadLocalStorage.h"
 #include "resource.h"
 #include "Dialogs.h"
@@ -46,6 +45,8 @@ int minCaret = 0;
 WNDPROC lpfnEditWndProc = 0;
 sptr_t(*fn)(sptr_t*, int, uptr_t, sptr_t);
 sptr_t* ptr;
+
+RECT rectConsole = { 0, 0, 0, 0 };
 
 void CenterWindow(HWND hWnd, HWND hParent, int offsetX = 0, int offsetY = 0)
 {
@@ -181,7 +182,6 @@ void Prompt( const char *prompt = DEFAULT_PROMPT )
 void ProcessCommand()
 {
 	int len = fn(ptr, SCI_GETLENGTH, 0, 0);
-	//int pos = fn(ptr, SCI_GETCURRENTPOS, 0, 0);
 
 	/*
 
@@ -194,6 +194,7 @@ void ProcessCommand()
 		fn(ptr, SCI_SETSEL, pos, len);
 		fn(ptr, SCI_REPLACESEL, 0, (sptr_t)(""));
 	}
+
 	*/
 
 	int linelen = len - minCaret;
@@ -314,7 +315,7 @@ LRESULT CALLBACK SubClassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		default:
 			p = fn(ptr, SCI_GETCURRENTPOS, 0, 0);
-			if (p <= minCaret) fn(ptr, SCI_SETSEL, -1, -1);
+			if (p < minCaret) fn(ptr, SCI_SETSEL, -1, -1);
 		}
 		break;
 
@@ -368,7 +369,6 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM w
 
 	switch (message)
 	{
-	//case WM_CREATE:
 	case WM_INITDIALOG:
 		
 		::GetClientRect(hwndDlg, &rect);
@@ -413,7 +413,19 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM w
 			return TRUE;
 		}
 		hWndConsole = hwndDlg;
-		CenterWindow(hwndDlg, ::GetParent(hwndDlg));
+
+		if ( rectConsole.right == rectConsole.left )
+			CenterWindow(hwndDlg, ::GetParent(hwndDlg));
+		else
+		{
+			::SetWindowPos(hwndDlg, HWND_TOP, rectConsole.left, rectConsole.top,
+				rectConsole.right - rectConsole.left, rectConsole.bottom - rectConsole.top,
+				SWP_NOZORDER);
+			::GetClientRect(hwndDlg, &rect);
+			::SetWindowPos(hwndScintilla, HWND_TOP, borderedge, borderedge, rect.right - 2 * borderedge, rect.bottom - 2 * borderedge,
+				SWP_NOMOVE | SWP_NOZORDER | SWP_DEFERERASE);
+		}
+
 		break;
 
 
@@ -433,8 +445,10 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM w
 
 		switch (LOWORD(wParam))
 		{
+		case WM_CLOSE_CONSOLE:
 		case IDOK:
 		case IDCANCEL:
+			::GetWindowRect(hwndDlg, &rectConsole);
 			EndDialog(hwndDlg, wParam);
 			return TRUE;
 		}

@@ -45,6 +45,9 @@ DIALOG_RESULT_TYPE CALLBACK AboutDlgProc(HWND hwndDlg, UINT message, WPARAM wPar
 #define DEFAULT_PROMPT		"> "
 #define CONTINUATION_PROMPT	"+ "
 
+#define WM_CLOSE_CONSOLE		(WM_USER + 1001)
+
+
 void ConsoleDlg(HINSTANCE hInst);
 void AppendLog(const char *buffer, int style = 1); 
 

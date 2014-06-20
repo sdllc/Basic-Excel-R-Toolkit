@@ -24,9 +24,6 @@
     <ClInclude Include="BERT.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ExcelFunctions.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ThreadLocalStorage.h">
       <Filter>Header Files</Filter>
     </ClInclude>

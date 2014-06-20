@@ -127,7 +127,7 @@
       <AdditionalLibraryDirectories>ExcelLib;..\RLIB</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>BERT.def</ModuleDefinitionFile>
       <AdditionalDependencies>R32.lib;RGraphApp32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>BERT-32-D.xll</OutputFile>
+      <OutputFile>BERT32D.xll</OutputFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -145,7 +145,7 @@
       <AdditionalLibraryDirectories>ExcelLib;..\RLIB</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>BERT.def</ModuleDefinitionFile>
       <AdditionalDependencies>R64.lib;RGraphApp64.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>BERT-64-D.xll</OutputFile>
+      <OutputFile>BERT64D.xll</OutputFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -166,7 +166,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>ExcelLib;..\RLIB</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>BERT.def</ModuleDefinitionFile>
-      <OutputFile>BERT-32.xll</OutputFile>
+      <OutputFile>BERT32.xll</OutputFile>
       <AdditionalDependencies>R32.lib;RGraphApp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -189,7 +189,7 @@
       <AdditionalLibraryDirectories>ExcelLib;..\RLIB</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>BERT.def</ModuleDefinitionFile>
       <AdditionalDependencies>R64.lib;RGraphApp64.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>BERT-64.xll</OutputFile>
+      <OutputFile>BERT64.xll</OutputFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release13|Win32'">
@@ -238,7 +238,6 @@
     <ClInclude Include="BERT.h" />
     <ClInclude Include="BERT_Version.h" />
     <ClInclude Include="Dialogs.h" />
-    <ClInclude Include="ExcelFunctions.h" />
     <ClInclude Include="ExcelLib\XLCALL.H" />
     <ClInclude Include="RegistryConstants.h" />
     <ClInclude Include="RegistryUtils.h" />

@@ -101,9 +101,9 @@ DLLEX BOOL WINAPI xlAutoOpen(void)
 	// load xll
 
 #ifdef _DEBUG
-	swprintf_s(BERTXLL, MAX_PATH, L"BERT-%d-D.xll", bitness);
+	swprintf_s(BERTXLL, MAX_PATH, L"BERT%d" L"D.xll", bitness);
 #else
-	swprintf_s(BERTXLL, MAX_PATH, L"BERT-%d.xll", bitness);
+	swprintf_s(BERTXLL, MAX_PATH, L"BERT%d.xll", bitness);
 #endif
 
 	registerSecondXLL(true, (LPWSTR)BERTXLL);

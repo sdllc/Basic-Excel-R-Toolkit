@@ -39,6 +39,7 @@
 #include <R_ext/RStartup.h>
 #include <signal.h>
 #include <R_ext\Parse.h>
+#include <R_ext\Rdynload.h>
 
 #include "RInterface.h"
 #include "resource.h"
@@ -65,6 +66,8 @@ SEXP ExecR(std::string &str, int *err = 0, ParseStatus *pStatus = 0);
 SEXP ExecR(std::vector< std::string > &vec, int *err = 0, ParseStatus *pStatus = 0, bool withVisible = false);
 
 SEXP XLOPER2SEXP(LPXLOPER12 px, int depth = 0);
+
+std::string dllpath;
 
 int myReadConsole(const char *prompt, char *buf, int len, int addtohistory)
 {
@@ -185,8 +188,8 @@ void MapFunctions()
 		*/
 	}
 
-	if (g_Environment) sprintf_s(buffer, "names(.listfunctionargs(%s))", env );
-	else sprintf_s(buffer, "names(.listfunctionargs())");
+	if (g_Environment) sprintf_s(buffer, "names(BERT$.listfunctionargs(%s))", env );
+	else sprintf_s(buffer, "names(BERT$.listfunctionargs())");
 	s = PROTECT(ExecR(buffer, &err, &status));
 	if (s)
 	{
@@ -201,8 +204,8 @@ void MapFunctions()
 	}
 	UNPROTECT(1);
 
-	if (g_Environment) sprintf_s(buffer, ".listfunctionargs(%s)", env);
-	else sprintf_s(buffer, ".listfunctionargs()");
+	if (g_Environment) sprintf_s(buffer, "BERT$.listfunctionargs(%s)", env);
+	else sprintf_s(buffer, "BERT$.listfunctionargs()");
 	s = PROTECT(ExecR(buffer, &err, &status));
 	if (s)
 	{
@@ -272,7 +275,7 @@ void LoadStartupFile()
 	}
 }
 
-short InstallPackages()
+short BERT_InstallPackages()
 {
 	ExecR("install.packages()");
 	return 1;
@@ -341,6 +344,14 @@ void RInit()
 	//readconsolecfg();
 	setup_Rmainloop();
 	R_ReplDLLinit();
+
+
+	{
+		int errorOccurred;
+		SEXP s = PROTECT(Rf_lang2(Rf_install("dyn.load"), Rf_mkString(dllpath.c_str())));
+		if ( s ) R_tryEval( s, R_GlobalEnv, &errorOccurred );
+		UNPROTECT(1);
+	}
 
 	// run embedded code (if any)
 
@@ -651,7 +662,7 @@ void ParseResult(LPXLOPER12 rslt, SEXP ans)
 	}
 }
 
-LPXLOPER12 RExec(LPXLOPER12 code)
+LPXLOPER12 BERT_RExec(LPXLOPER12 code)
 {
 	// not thread safe!
 	static XLOPER12 result;
@@ -901,3 +912,31 @@ bool RExec2(LPXLOPER12 rslt, std::string &funcname, std::vector< LPXLOPER12 > &a
 	return true;
 }
 
+void R_init_BERT(DllInfo *info){
+
+	int i = 13;
+
+}
+
+void R_init_BERT32(DllInfo *info){ R_init_BERT(info); }
+void R_init_BERT32D(DllInfo *info){ R_init_BERT(info); }
+void R_init_BERT64(DllInfo *info){ R_init_BERT(info); }
+void R_init_BERT64D(DllInfo *info){ R_init_BERT(info); }
+
+SEXP BERT_Callback(SEXP cmd, SEXP data, SEXP data2)
+{
+	int command = 0;
+	if (Rf_length(cmd) > 0)
+	{
+		if (isReal(cmd)) command = (REAL(cmd))[0];
+		else if (isInteger(cmd)) command = (INTEGER(cmd))[0];
+	}
+	switch (command)
+	{
+	case 1023:
+		CloseConsole();
+		break;
+	}
+
+	return R_NilValue;
+}

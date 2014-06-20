@@ -21,12 +21,21 @@
 #include "stdafx.h"
 #include "BERT.h"
 #include "XLCALL.h"
-#include "ExcelFunctions.h"
 #include "RInterface.h"
 
 DLLEX BOOL WINAPI xlAutoOpen(void)
 {
 	// debugLogf("Enter xlAutoOpen\n");
+
+	{
+		XLOPER12 xlName;
+		if (!Excel12(xlGetName, &xlName, 0))
+		{
+			int i, len = xlName.val.str[0];
+			for (i = 0; i < len; i++) dllpath += ( xlName.val.str[i + 1] & 0xff );
+			Excel12(xlFree, 0, 1, &xlName);
+		}
+	}
 
 	RInit();
 

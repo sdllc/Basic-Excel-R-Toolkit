@@ -89,7 +89,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <OutputFile>..\BERT\BERTMGR-32-D.xll</OutputFile>
+      <OutputFile>..\BERT\BERTMGR32D.xll</OutputFile>
       <AdditionalLibraryDirectories>
       </AdditionalLibraryDirectories>
       <ModuleDefinitionFile>BERTMGR.def</ModuleDefinitionFile>
@@ -106,7 +106,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <OutputFile>..\bert\BERTMGR-64-D.xll</OutputFile>
+      <OutputFile>..\bert\BERTMGR64D.xll</OutputFile>
       <AdditionalLibraryDirectories>
       </AdditionalLibraryDirectories>
       <ModuleDefinitionFile>BERTMGR.def</ModuleDefinitionFile>
@@ -128,7 +128,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <OutputFile>BERTMGR-32.xll</OutputFile>
+      <OutputFile>BERTMGR32.xll</OutputFile>
       <ModuleDefinitionFile>BERTMGR.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
@@ -148,7 +148,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <OutputFile>BERTMGR-64.xll</OutputFile>
+      <OutputFile>BERTMGR64.xll</OutputFile>
       <ModuleDefinitionFile>BERTMGR.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>

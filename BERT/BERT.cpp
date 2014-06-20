@@ -21,7 +21,6 @@
 
 #include "stdafx.h"
 #include "BERT.h"
-#include "ExcelFunctions.h"
 #include "ThreadLocalStorage.h"
 
 #include "RInterface.h"
@@ -38,6 +37,7 @@ std::list< std::string > loglist;
 
 HWND hWndConsole = 0;
 
+/*
 short Startup(){
 
 	RInit();
@@ -55,7 +55,7 @@ short Shutdown(){
 
 	return 1;
 }
-
+*/
 
 LPXLOPER12 BERTFunctionCall( 
 	int index
@@ -152,7 +152,7 @@ void resetXlOper(LPXLOPER12 x)
 	x->xltype = xltypeNil;
 }
 
-short Reload()
+short BERT_Reload()
 {
 	LoadStartupFile();
 	MapFunctions();
@@ -160,7 +160,7 @@ short Reload()
 	return 1;
 }
 
-short HomeDirectory()
+short BERT_HomeDirectory()
 {
 	char buffer[MAX_PATH];
 	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, buffer, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_R_USER))
@@ -169,7 +169,7 @@ short HomeDirectory()
 	return 1;
 }
 
-short Configure()
+short BERT_Configure()
 {
 	// ::MessageBox(0, L"No", L"Options", MB_OKCANCEL | MB_ICONINFORMATION);
 
@@ -188,8 +188,15 @@ short Configure()
 	return 1;
 }
 
+void CloseConsole()
+{
+	if (hWndConsole)
+	{
+		::PostMessageA(hWndConsole, WM_COMMAND, MAKEWPARAM(WM_CLOSE_CONSOLE,0), 0);
+	}
+}
 
-short About()
+DLLEX short BERT_About()
 {
 	XLOPER12 xWnd;
 	Excel12(xlGetHwnd, &xWnd, 0);
@@ -265,7 +272,7 @@ PARSE_STATUS_2 RExecVectorBuffered(std::vector<std::string> &cmd )
 	return ps2;
 }
 
-short Console()
+short BERT_Console()
 {
 	static HANDLE hModScintilla = 0;
 
@@ -396,7 +403,7 @@ void SetBERTMenu(bool add )
 	}
 }
 
-LPXLOPER12 UpdateScript(LPXLOPER12 script)
+LPXLOPER12 BERT_UpdateScript(LPXLOPER12 script)
 {
 	XLOPER12 * rslt = get_thread_local_xloper12();
 

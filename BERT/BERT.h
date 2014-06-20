@@ -36,14 +36,14 @@
 extern HMODULE ghModule;
 
 static LPSTR funcTemplates[][16] = {
-	{ "UpdateScript", "UU#", "BERT.UpdateScript", "R Code", "1", "BERT", "", "99", "Update Script", "", "", "", "", "", "", "" },
-	{ "RExec", "UU", "BERT.Exec", "R Code", "1", "BERT", "", "98", "Exec R Code", "", "", "", "", "", "", "" },
-	{ "Configure", "A#", "BERT.Configure", "", "1", "BERT", "", "97", "", "", "", "", "", "", "", "" },
-	{ "Console", "A#", "BERT.Console", "", "1", "BERT", "", "96", "", "", "", "", "", "", "", "" },
-	{ "HomeDirectory", "A#", "BERT.Home", "", "1", "BERT", "", "95", "", "", "", "", "", "", "", "" },
-	{ "InstallPackages", "A#", "BERT.InstallPackages", "", "1", "BERT", "", "94", "", "", "", "", "", "", "", "" },
-	{ "Reload", "A#", "BERT.Reload", "", "1", "BERT", "", "93", "", "", "", "", "", "", "", "" },
-	{ "About", "A#", "BERT.About", "", "1", "BERT", "", "92", "", "", "", "", "", "", "", "" },
+	{ "BERT_UpdateScript", "UU#", "BERT.UpdateScript", "R Code", "1", "BERT", "", "99", "Update Script", "", "", "", "", "", "", "" },
+	{ "BERT_RExec", "UU", "BERT.Exec", "R Code", "1", "BERT", "", "98", "Exec R Code", "", "", "", "", "", "", "" },
+	{ "BERT_Configure", "A#", "BERT.Configure", "", "1", "BERT", "", "97", "", "", "", "", "", "", "", "" },
+	{ "BERT_Console", "A#", "BERT.Console", "", "1", "BERT", "", "96", "", "", "", "", "", "", "", "" },
+	{ "BERT_HomeDirectory", "A#", "BERT.Home", "", "1", "BERT", "", "95", "", "", "", "", "", "", "", "" },
+	{ "BERT_InstallPackages", "A#", "BERT.InstallPackages", "", "1", "BERT", "", "94", "", "", "", "", "", "", "", "" },
+	{ "BERT_Reload", "A#", "BERT.Reload", "", "1", "BERT", "", "93", "", "", "", "", "", "", "", "" },
+	{ "BERT_About", "A#", "BERT.About", "", "1", "BERT", "", "92", "", "", "", "", "", "", "", "" },
 	{ 0 }
 };
 
@@ -72,7 +72,7 @@ const char WRAP_ERR[] = "Error in eval(expr, envir, enclos) :";
 
 #define MAX_FUNCTION_COUNT 100
 
-LPXLOPER12 UpdateScript(LPXLOPER12 script);
+DLLEX LPXLOPER12 BERT_UpdateScript(LPXLOPER12 script);
 
 std::string trim(const std::string& str, const std::string& whitespace = " \t\r\n");
 
@@ -94,16 +94,18 @@ bool RegisterBasicFunctions();
 void SetBERTMenu( bool add = true );
 
 /** run configuration */
-short Configure();
+short BERT_Configure();
 
 /** show console (log) */
-short Console();
+short BERT_Console();
 
 /** */
-short HomeDirectory();
+short BERT_HomeDirectory();
 
 /** */
-short Reload();
+short BERT_Reload();
+
+void CloseConsole();
 
 PARSE_STATUS_2 RExecVectorBuffered(std::vector<std::string> &cmd );
 

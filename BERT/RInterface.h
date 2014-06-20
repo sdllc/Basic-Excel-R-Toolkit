@@ -29,18 +29,20 @@
 typedef std::vector< std::string > SVECTOR;
 typedef std::vector< SVECTOR > FDVECTOR;
 
+extern std::string dllpath;
+
 extern FDVECTOR RFunctions;
 
 void RInit();
 void RShutdown();
 
-LPXLOPER12 RExec(LPXLOPER12 code);
+LPXLOPER12 BERT_RExec(LPXLOPER12 code);
 bool RExec2(LPXLOPER12 rslt, std::string &funcname, std::vector< LPXLOPER12 > &args);
 void RExecVector(std::vector < std::string > &vec, int *err = 0, PARSE_STATUS_2 *parseErr = 0, bool printResult = true);
 int UpdateR(std::string &str);
 void MapFunctions();
 void LoadStartupFile();
 
-short InstallPackages();
+short BERT_InstallPackages();
 
 #endif // #ifndef __RINTERFACE_H
