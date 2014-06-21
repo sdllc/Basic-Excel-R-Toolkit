@@ -89,6 +89,40 @@ LPXLOPER12 BERTFunctionCall(
 
 	std::vector< LPXLOPER12 > args;
 
+	// in order to support (...) args, we should allow
+	// any number of args.  register every function with 
+	// the maximum, and check here for null rather than
+	// checking the arity.
+
+	// check for xltypeMissing, not null, although there might 
+	// be omitted arguments... 
+	
+	// we could handle functions with (...) specially, rather
+	// than requiring this work for every function.  still
+	// it shouldn't be that expensive... although there are
+	// better ways to handle it (count and remove >1)
+
+	args.push_back(input_0);
+	args.push_back(input_1);
+	args.push_back(input_2);
+	args.push_back(input_3);
+	args.push_back(input_4);
+	args.push_back(input_5);
+	args.push_back(input_6);
+	args.push_back(input_7);
+	args.push_back(input_8);
+	args.push_back(input_9);
+	args.push_back(input_10);
+	args.push_back(input_11);
+	args.push_back(input_12);
+	args.push_back(input_13);
+	args.push_back(input_14);
+	args.push_back(input_15);
+
+	while (args.size() > 0 && args[args.size() - 1]->xltype == xltypeMissing) args.pop_back();
+
+
+	/*
 	if (func.size() > 1) args.push_back(input_0);
 	if (func.size() > 2) args.push_back(input_1);
 	if (func.size() > 3) args.push_back(input_2);
@@ -105,6 +139,7 @@ LPXLOPER12 BERTFunctionCall(
 	if (func.size() > 14) args.push_back(input_13);
 	if (func.size() > 15) args.push_back(input_14);
 	if (func.size() > 16) args.push_back(input_15);
+	*/
 
 	RExec2(rslt, func[0].first, args);
 
@@ -567,8 +602,9 @@ bool RegisterAddinFunctions()
 			{
 			case 0: sprintf_s(szHelpBuffer, 256, "BERTFunctionCall%04d", 1000 + i); break;
 			case 1: 
-				for (int k = 0; k < func.size(); k++) szHelpBuffer[k] = 'U';
-				szHelpBuffer[func.size()] = 0;
+				//for (int k = 0; k < func.size(); k++) szHelpBuffer[k] = 'U';
+				//szHelpBuffer[func.size()] = 0;
+				sprintf_s(szHelpBuffer, 256, "UUUUUUUUUUUUUUUUU");
 				break;
 			case 2: sprintf_s(szHelpBuffer, 256, "R.%s", func[0].first.c_str()); break;
 			case 3: 
