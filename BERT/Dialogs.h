@@ -47,9 +47,12 @@ DIALOG_RESULT_TYPE CALLBACK AboutDlgProc(HWND hwndDlg, UINT message, WPARAM wPar
 
 #define WM_CLOSE_CONSOLE		(WM_USER + 1001)
 
+#define MIN_WORD_LENGTH				3
+#define MAX_AUTOCOMPLETE_LIST_LEN	10
 
 void ConsoleDlg(HINSTANCE hInst);
 void AppendLog(const char *buffer, int style = 1); 
+
 
 
 

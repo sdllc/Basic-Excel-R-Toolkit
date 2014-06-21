@@ -570,6 +570,20 @@ __inline void STRSXP2XLOPER( LPXLOPER12 result, SEXP str )
 
 }
 
+SVECTOR & getWordList(SVECTOR &wordList)
+{
+	SEXP rslt = PROTECT(ExecR(std::string("BERTXLL$WordList()")));
+	if (rslt)
+	{
+		// int type = TYPEOF(rslt);
+		int len = Rf_length(rslt);
+		for (int i = 0; i < len; i++) wordList.push_back(std::string(CHAR(STRING_ELT(rslt, i))));
+	}
+	UNPROTECT(1);
+	return wordList;
+
+}
+
 void ParseResult(LPXLOPER12 rslt, SEXP ans)
 {
 	// R values (ignoring data frames) are vectors of typed

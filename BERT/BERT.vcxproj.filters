@@ -89,4 +89,7 @@
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="RWordlist.txt" />
+  </ItemGroup>
 </Project>

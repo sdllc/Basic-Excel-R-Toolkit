@@ -47,6 +47,8 @@ int UpdateR(std::string &str);
 void MapFunctions();
 void LoadStartupFile();
 
+SVECTOR & getWordList( SVECTOR &wordList );
+
 short BERT_InstallPackages();
 
 #endif // #ifndef __RINTERFACE_H

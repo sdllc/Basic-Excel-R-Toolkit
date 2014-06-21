@@ -29,12 +29,19 @@
 #include <string>
 #include <list>
 #include <vector>
+#include <sstream>
+#include <algorithm>
 
 typedef std::vector< std::string> SVECTOR;
 typedef SVECTOR::iterator SITER;
 
 SVECTOR cmdVector;
 SVECTOR historyVector;
+
+SVECTOR wordList;
+SVECTOR baseWordList;
+bool wlInit = false;
+
 int historyPointer = 0;
 std::string historyCurrentLine;
 
@@ -46,7 +53,61 @@ WNDPROC lpfnEditWndProc = 0;
 sptr_t(*fn)(sptr_t*, int, uptr_t, sptr_t);
 sptr_t* ptr;
 
+extern SVECTOR & getWordList(SVECTOR &wordList);
+
 RECT rectConsole = { 0, 0, 0, 0 };
+
+SVECTOR & split(const std::string &s, char delim, int minLength, SVECTOR &elems)
+{
+	std::stringstream ss(s);
+	std::string item;
+	while (std::getline(ss, item, delim)) 
+	{
+		if( !item.empty() && item.length() >= minLength ) elems.push_back(item);
+	}
+	return elems;
+}
+
+void initWordList()
+{
+	// fuck it we'll do it live
+
+	wordList.clear();
+
+	if (!wlInit)
+	{
+		HRSRC handle = ::FindResource(ghModule, MAKEINTRESOURCE(IDR_RCDATA2), RT_RCDATA);
+		if (handle != 0)
+		{
+			DWORD len = ::SizeofResource(ghModule, handle);
+			HGLOBAL global = ::LoadResource(ghModule, handle);
+			if (global != 0 && len > 0)
+			{
+				char *str = (char*)::LockResource(global);
+				std::stringstream ss(str);
+				std::string line;
+
+				while (std::getline(ss, line))
+				{
+					line = trim(line);
+					if (line.length() > 0 && line.c_str()[0] != '#')
+					{
+						split(line, ' ', MIN_WORD_LENGTH, baseWordList);
+					}
+				}
+			}
+			wlInit = true;
+		}
+	}
+
+	wordList.insert(wordList.end(), baseWordList.begin(), baseWordList.end());
+	getWordList(wordList);
+
+
+	std::sort(wordList.begin(), wordList.end());
+	wordList.erase(std::unique(wordList.begin(), wordList.end()), wordList.end());
+
+}
 
 void CenterWindow(HWND hWnd, HWND hParent, int offsetX = 0, int offsetY = 0)
 {
@@ -316,6 +377,7 @@ LRESULT CALLBACK SubClassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		default:
 			p = fn(ptr, SCI_GETCURRENTPOS, 0, 0);
 			if (p < minCaret) fn(ptr, SCI_SETSEL, -1, -1);
+
 		}
 		break;
 
@@ -335,8 +397,12 @@ LRESULT CALLBACK SubClassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		switch (wParam)
 		{
 		case VK_ESCAPE:
-			::PostMessage(::GetParent(hwnd), WM_COMMAND, WM_CLOSE_CONSOLE, 0);
-			return 0;
+			if (!fn(ptr, SCI_AUTOCACTIVE, 0, 0))
+			{
+				::PostMessage(::GetParent(hwnd), WM_COMMAND, WM_CLOSE_CONSOLE, 0);
+				return 0;
+			}
+			break;
 
 		case VK_LEFT:
 		case VK_BACK:
@@ -345,14 +411,23 @@ LRESULT CALLBACK SubClassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case VK_UP:
-			CmdHistory(-1);
-			return 0;
+			if (!fn(ptr, SCI_AUTOCACTIVE, 0, 0))
+			{
+				CmdHistory(-1);
+				return 0;
+			}
+			break;
 
 		case VK_DOWN:
-			CmdHistory(1);
-			return 0;
+			if (!fn(ptr, SCI_AUTOCACTIVE, 0, 0))
+			{
+				CmdHistory(1);
+				return 0;
+			}
+			break;
 
 		case VK_RETURN:
+			fn(ptr, SCI_AUTOCCANCEL, 0, 0);
 			return 0;
 		}
 
@@ -361,6 +436,56 @@ LRESULT CALLBACK SubClassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	}
 
 	return CallWindowProc(lpfnEditWndProc, hwnd, msg, wParam, lParam);
+}
+
+bool isWordChar(char c)
+{
+	return (((c >= 'a') && (c <= 'z'))
+		|| ((c >= 'A') && (c <= 'Z'))
+		|| (c == '_') 
+		|| (c == '.')
+		);
+}
+
+void testAutocomplete()
+{
+	int len = fn(ptr, SCI_GETCURLINE, 0, 0);
+	if (len <= 2) return;
+	char *c = new char[len + 1];
+	int caret = fn(ptr, SCI_GETCURLINE, len + 1, (sptr_t)c);
+	std::string part;
+
+	// FOR NOW, require that caret is at eol
+
+	if (caret == len-1)
+	{
+		for (--caret; caret >= 2 && isWordChar(c[caret]); caret--);
+		caret++;
+		int slen = strlen(&(c[caret]));
+		if (slen > 1)
+		{
+			std::string str = &(c[caret]);
+			SVECTOR::iterator iter = std::lower_bound(wordList.begin(), wordList.end(), str);
+			c[len - 2]++;
+			str = &(c[caret]);
+			SVECTOR::iterator iter2 = std::lower_bound(wordList.begin(), wordList.end(), str);
+			int count = iter2 - iter;
+
+			str = "";
+			if (count > 0 && count <= MAX_AUTOCOMPLETE_LIST_LEN)
+			{
+				for (count = 0; iter < iter2; iter++, count++)
+				{
+					if( count ) str += " ";
+					str += iter->c_str();
+				}
+
+				fn(ptr, SCI_AUTOCSHOW, slen, (sptr_t)(str.c_str()));
+			}
+		}
+	}
+
+	delete [] c;
 }
 
 DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam )
@@ -405,6 +530,10 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM w
 				else AppendLog(iter->c_str());
 			}
 			Prompt();
+
+			//if (!wlInit) 
+			initWordList();
+
 		}
 		else
 		{
@@ -443,6 +572,12 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM w
 		break;
 
 	case WM_NOTIFY:
+		switch (((LPNMHDR)lParam)->code)
+		{
+		case SCN_CHARADDED:
+			testAutocomplete();
+			break;
+		}
 		break;
 
 	case WM_COMMAND:
