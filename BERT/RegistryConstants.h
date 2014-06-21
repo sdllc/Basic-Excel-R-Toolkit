@@ -27,6 +27,7 @@
 #define REGISTRY_VALUE_R_HOME			"R_HOME"
 #define REGISTRY_VALUE_STARTUP			"StartupFile"
 #define REGISTRY_VALUE_BITNESS			"Bitness"
+#define REGISTRY_VALUE_HIDE_MENU		"HideMenu"
 
 #define DEFAULT_ENVIRONMENT				""
 #define DEFAULT_R_USER					"%APPDATA%\\BERT"

@@ -1,7 +1,16 @@
 
-BERT = new.env();
+#
+# constants
+#
 
-BERT$.listfunctionargs <- function(env = .GlobalEnv){
+BERTXLL$CLOSE <- 1023;
+BERTXLL$CALLBACK <- "BERT_Callback";
+
+#
+# methods
+#
+
+BERTXLL$.listfunctionargs <- function(env = .GlobalEnv){
 	rval = list();
 	funclist <- lsf.str(env);
 	for( func in funclist )
@@ -18,15 +27,13 @@ BERT$.listfunctionargs <- function(env = .GlobalEnv){
 	rval;
 }
 
+BERTXLL$CloseConsole <- function(){ invisible(.Call(BERTXLL$CALLBACK, BERTXLL$CLOSE, 0, PACKAGE=BERTXLL$MODULE )); };
 
-#BERT$DLL <- "BERT-32-D.xll";
-BERT$CLOSE <- 1023;
-BERT$CALLBACK <- "BERT_Callback";
+#
+# overload quit methods or it will stop the excel process
+#
 
-#BERT$q <- function(){ invisible(.Call(BERT$CALLBACK, BERT$CLOSE, 0, PACKAGE=BERT$DLL )); };
-BERT$q <- function(){ invisible(.Call(BERT$CALLBACK, BERT$CLOSE, 0 )); };
-
-quit <- function(){ BERT$q() }
+quit <- function(){ BERTXLL$q() }
 q <- quit;
 
 

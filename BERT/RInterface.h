@@ -26,8 +26,12 @@
 
 #define MAX_LOGLIST_SIZE	80
 
+#define ENV_NAME "BERTXLL"
+
 typedef std::vector< std::string > SVECTOR;
-typedef std::vector< SVECTOR > FDVECTOR;
+typedef std::pair < std::string, std::string > SPAIR;
+typedef std::vector< SPAIR > RFUNCDESC;
+typedef std::vector< RFUNCDESC > FDVECTOR;
 
 extern std::string dllpath;
 

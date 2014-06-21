@@ -28,15 +28,13 @@
 #include <windows.h>
 #include <stdio.h>
 #include <Rversion.h>
-// #define LibExtern __declspec(dllimport) extern
-//#define USE_RINTERNALS
+
+// #define USE_RINTERNALS
 
 #include <Rinternals.h>
-
-
 #include <Rembedded.h>
 #include <graphapp.h>
-#include <R_ext/RStartup.h>
+#include <R_ext\RStartup.h>
 #include <signal.h>
 #include <R_ext\Parse.h>
 #include <R_ext\Rdynload.h>
@@ -175,63 +173,74 @@ void MapFunctions()
 		g_Environment = R_tryEval(lns, R_GlobalEnv, &err );
 		UNPROTECT(2);
 
-		PROTECT(g_Environment);
-
-		/*
-		if (g_Environment)
-		{
-			int type = TYPEOF(g_Environment);
-			sprintf_s(buffer, MAX_PATH, "Type? %d (%s)\n", type, Rf_isEnvironment(g_Environment) ? "is environment" : "not environment");
-			OutputDebugStringA(buffer);
-		}
-		else OutputDebugStringA("get env returned null\n");
-		*/
+		PROTECT(g_Environment); // hold this ref [FIXME: performance?]
 	}
 
-	if (g_Environment) sprintf_s(buffer, "names(BERT$.listfunctionargs(%s))", env );
-	else sprintf_s(buffer, "names(BERT$.listfunctionargs())");
-	s = PROTECT(ExecR(buffer, &err, &status));
-	if (s)
+	// get all functions in the target environment 
+	// (except q and quit, if we're in the global env)
+
+	SEXP cmd = PROTECT(Rf_lang1(Rf_install("lsf.str")));
+	if (cmd)
 	{
-		int i, len = Rf_length(s);
+		int i, j, len = 0;
+		SEXP useEnv = g_Environment ? g_Environment : R_GlobalEnv;
+		SEXP lst = PROTECT(R_tryEval(cmd, useEnv, &err));
+		if ( lst ) len = Rf_length(lst);
+		SEXP formals = PROTECT(Rf_install("formals"));
 		for (i = 0; i < len; i++)
 		{
-			SEXP name = PROTECT(STRING_ELT(s, i));
-			std::string func = CHAR(name);
-			fnames.push_back(func);
-			UNPROTECT(1);
-		}
-	}
-	UNPROTECT(1);
+			RFUNCDESC funcdesc;
+			std::string funcName = CHAR(STRING_ELT(lst, i));
 
-	if (g_Environment) sprintf_s(buffer, "BERT$.listfunctionargs(%s)", env);
-	else sprintf_s(buffer, "BERT$.listfunctionargs()");
-	s = PROTECT(ExecR(buffer, &err, &status));
-	if (s)
-	{
-		int i, j, len = Rf_length(s);
-		for (i = 0; i < len; i++)
-		{
-			SVECTOR funcdesc;
-			funcdesc.push_back(fnames[i]);
-
-			SEXP elt = PROTECT(VECTOR_ELT(s, i));
-			int type = TYPEOF(elt);
-			int arglen = Rf_length(elt);
-			for (j = 0; j < arglen; j++)
+			if (!g_Environment && strcmp("q", funcName.c_str()) && strcmp("quit", funcName.c_str()))
 			{
-				SEXP arg = PROTECT(STRING_ELT(elt, j));
-				std::string argname = CHAR(arg);
-				funcdesc.push_back(argname);
+				funcdesc.push_back(SPAIR(funcName, ""));
+				SEXP args = PROTECT(R_tryEval(Rf_lang2(formals, Rf_mkString(funcName.c_str())), useEnv, &err));
+				if (args && isList(args))
+				{
+					SEXP asvec = PROTECT(Rf_PairToVectorList(args));
+					SEXP names = PROTECT(R_tryEval(Rf_lang2(R_NamesSymbol, args), useEnv, &err));
+					if (names)
+					{
+						int plen = Rf_length(names);
+						for (j = 0; j < plen; j++)
+						{
+							std::string dflt = "";
+							std::string arg = CHAR(STRING_ELT(names, j));
+							SEXP vecelt = VECTOR_ELT(asvec, j);
+							int type = TYPEOF(vecelt);
+
+							if ( type != 1 )
+							{
+								dflt = "Default: ";
+								const char *a = CHAR(asChar(vecelt));
+								if (type == 16)
+								{
+									dflt += "\"";
+									dflt += a;
+									dflt += "\"";
+								}
+								else if (type == 10)
+								{
+									if ((LOGICAL(vecelt))[0]) dflt += "TRUE";
+									else dflt += "FALSE";
+								}
+								else dflt += a;
+							}
+
+							funcdesc.push_back(SPAIR(arg, dflt));
+						}
+					}
+					UNPROTECT(2);
+				}
 				UNPROTECT(1);
+				RFunctions.push_back(funcdesc);
 			}
-			UNPROTECT(1);
-
-			RFunctions.push_back(funcdesc);
-
 		}
+		UNPROTECT(2);
 	}
 	UNPROTECT(1);
+
 
 }
 
@@ -347,10 +356,31 @@ void RInit()
 
 
 	{
+		const char *p = dllpath.c_str();
 		int errorOccurred;
-		SEXP s = PROTECT(Rf_lang2(Rf_install("dyn.load"), Rf_mkString(dllpath.c_str())));
+		int plen = strlen(p);
+
+		SEXP s = PROTECT(Rf_lang2(Rf_install("dyn.load"), Rf_mkString(p)));
 		if ( s ) R_tryEval( s, R_GlobalEnv, &errorOccurred );
 		UNPROTECT(1);
+
+		s = PROTECT(Rf_lang1(Rf_install("new.env")));
+		if (s)
+		{
+			SEXP e = PROTECT(R_tryEval(s, R_GlobalEnv, &errorOccurred));
+			if (e)
+			{
+				Rf_defineVar(Rf_install(ENV_NAME), e, R_GlobalEnv);
+				Rf_defineVar(Rf_install("PATH"), Rf_mkString(p), e);
+				int idx = 0;
+				for (int i = 0; i < plen-1; i++) if (p[i] == '\\') idx = i + 1;
+				Rf_defineVar(Rf_install("MODULE"), Rf_mkString(p+idx), e);
+			}
+			UNPROTECT(1);
+		}
+		UNPROTECT(1);
+
+
 	}
 
 	// run embedded code (if any)
@@ -911,17 +941,6 @@ bool RExec2(LPXLOPER12 rslt, std::string &funcname, std::vector< LPXLOPER12 > &a
 	UNPROTECT(3);
 	return true;
 }
-
-void R_init_BERT(DllInfo *info){
-
-	int i = 13;
-
-}
-
-void R_init_BERT32(DllInfo *info){ R_init_BERT(info); }
-void R_init_BERT32D(DllInfo *info){ R_init_BERT(info); }
-void R_init_BERT64(DllInfo *info){ R_init_BERT(info); }
-void R_init_BERT64D(DllInfo *info){ R_init_BERT(info); }
 
 SEXP BERT_Callback(SEXP cmd, SEXP data, SEXP data2)
 {

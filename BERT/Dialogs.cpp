@@ -334,6 +334,10 @@ LRESULT CALLBACK SubClassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		switch (wParam)
 		{
+		case VK_ESCAPE:
+			::PostMessage(::GetParent(hwnd), WM_COMMAND, WM_CLOSE_CONSOLE, 0);
+			return 0;
+
 		case VK_LEFT:
 		case VK_BACK:
 			p = fn(ptr, SCI_GETCURRENTPOS, 0, 0);

@@ -85,7 +85,7 @@ LPXLOPER12 BERTFunctionCall(
 
 	if (index < 0 || index >= RFunctions.size()) return rslt;
 
-	SVECTOR func = RFunctions[index];
+	RFUNCDESC func = RFunctions[index];
 
 	std::vector< LPXLOPER12 > args;
 
@@ -106,7 +106,7 @@ LPXLOPER12 BERTFunctionCall(
 	if (func.size() > 15) args.push_back(input_14);
 	if (func.size() > 16) args.push_back(input_15);
 
-	RExec2(rslt, func[0], args);
+	RExec2(rslt, func[0].first, args);
 
 	return rslt;
 }
@@ -337,13 +337,21 @@ short BERT_Console()
 	return 1;
 }
 
-void SetBERTMenu(bool add )
+/**
+ * add or remove the menu.  
+ */
+void SetBERTMenu( bool add )
 {
 	XLOPER12 xl1, xlMenuName, xlMenu;
 	XCHAR menuName[] = L" BERT";
 	XCHAR menuEmpty[] = L" ";
 
 	static bool menuInstalled = false;
+
+	DWORD dwRegCheck = 0;
+
+	if (add && CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dwRegCheck, REGISTRY_KEY, REGISTRY_VALUE_HIDE_MENU)
+		&& dwRegCheck) return;
 
 	xl1.xltype = xltypeInt;
 	xl1.val.w = 1;
@@ -514,10 +522,14 @@ bool RegisterBasicFunctions()
 
 bool RegisterAddinFunctions()
 {
-	LPXLOPER12 xlParm[32];
+
+//	LPXLOPER12 xlParm[11 + MAX_ARGUMENT_COUNT];
+
+	LPXLOPER12 *xlParm;
 	XLOPER12 xlRegisterID;
 
 	int err;
+	int alistCount = 12 + MAX_ARGUMENT_COUNT;
 
 	static bool fRegisteredOnce = false;
 
@@ -526,7 +538,8 @@ bool RegisterAddinFunctions()
 
 	// init memory
 
-	for (int i = 0; i< 32; i++) xlParm[i] = new XLOPER12;
+	xlParm = new LPXLOPER12[alistCount];
+	for (int i = 0; i< alistCount; i++) xlParm[i] = new XLOPER12;
 
 	// get the library; store as the first entry in our parameter list
 
@@ -540,53 +553,90 @@ bool RegisterAddinFunctions()
 
 	for (int i = 0; i< fcount && i< MAX_FUNCTION_COUNT; i++)
 	{
-		SVECTOR func = RFunctions[i];
-		for (int j = 0; j < 15; j++)
+		RFUNCDESC func = RFunctions[i];
+		int scount = 0;
+
+		for (int j = 1; j < alistCount; j++)
 		{
-			switch (j)
+			xlParm[j]->xltype = xltypeMissing;
+		}
+
+		for (scount = 0; scount < 9; scount++)
+		{
+			switch (scount)
 			{
 			case 0: sprintf_s(szHelpBuffer, 256, "BERTFunctionCall%04d", 1000 + i); break;
 			case 1: 
 				for (int k = 0; k < func.size(); k++) szHelpBuffer[k] = 'U';
 				szHelpBuffer[func.size()] = 0;
 				break;
-			case 2: sprintf_s(szHelpBuffer, 256, "R.%s", func[0].c_str()); break;
+			case 2: sprintf_s(szHelpBuffer, 256, "R.%s", func[0].first.c_str()); break;
 			case 3: 
 				szHelpBuffer[0] = 0;
 				for (int k = 1; k < func.size(); k++)
 				{
 					if (strlen(szHelpBuffer)) strcat_s(szHelpBuffer, 256, ",");
-					strcat_s(szHelpBuffer, 256, func[k].c_str());
+					strcat_s(szHelpBuffer, 256, func[k].first.c_str());
 				}
 				break;
 			case 4: sprintf_s(szHelpBuffer, 256, "1"); break;
-			case 5: sprintf_s(szHelpBuffer, 256, ""); break;
+			case 5: sprintf_s(szHelpBuffer, 256, "Exported R functions"); break;
 			case 6: sprintf_s(szHelpBuffer, 256, "%d", 100 + i); break;
-			case 7: sprintf_s(szHelpBuffer, 256, "Exported R function"); break;
+			case 7: sprintf_s(szHelpBuffer, 256, "Exported R function"); break; // ??
 			default: sprintf_s(szHelpBuffer, 256, ""); break;
 			}
 			
 			int len = strlen(szHelpBuffer);
-			xlParm[j + 1]->xltype = xltypeStr ;
-			xlParm[j + 1]->val.str = new XCHAR[len + 2];
+			xlParm[scount + 1]->xltype = xltypeStr ;
+			xlParm[scount + 1]->val.str = new XCHAR[len + 2];
 
-			//strcpy_s(xlParm[j + 1]->val.str + 1, len + 1, szHelpBuffer);
-			for (int k = 0; k < len; k++) xlParm[j + 1]->val.str[k + 1] = szHelpBuffer[k];
-
-			xlParm[j + 1]->val.str[0] = len;
+			for (int k = 0; k < len; k++) xlParm[scount + 1]->val.str[k + 1] = szHelpBuffer[k];
+			xlParm[scount + 1]->val.str[0] = len;
 		}
 
+		
+
+		// so this is supposed to show the default value; but for some
+		// reason, it's truncating some strings (one string?) - FALS.  leave
+		// it out until we can figure this out.
+
+		// also, quote default strings.
+
+		for (int j = 0; j < func.size() - 1; j++)
+		{
+			int len = func[j + 1].second.length();
+			xlParm[scount + 1]->xltype = xltypeStr;
+			xlParm[scount + 1]->val.str = new XCHAR[len + 2];
+			const char *p = func[j + 1].second.c_str();
+			for (int k = 0; k < len; k++) xlParm[scount + 1]->val.str[k + 1] = p[k];
+			xlParm[scount + 1]->val.str[0] = len;
+			scount++;
+		}
+		
+		// it seems that it always truncates the last character of the last argument
+		// help string, UNLESS there's another parameter.  so here you go.  could just
+		// have an extra missing? CHECK / TODO / FIXME
+
+		xlParm[scount + 1]->xltype = xltypeStr;
+		xlParm[scount + 1]->val.str = new XCHAR[2];
+		xlParm[scount + 1]->val.str[0] = 0;
+		scount++;
+
 		xlRegisterID.xltype = xltypeMissing;
-		err = Excel12v(xlfRegister, &xlRegisterID, 16, xlParm);
+		err = Excel12v(xlfRegister, &xlRegisterID, scount + 1, xlParm);
 		if (xlRegisterID.xltype == xltypeNum)
 		{
 			functionEntries.push_back(xlRegisterID.val.num);
 		}
 		Excel12(xlFree, 0, 1, &xlRegisterID);
 
-		for (int j = 0; j < 15; j++)
+		for (int j = 1; j < alistCount; j++)
 		{
-			delete[] xlParm[j + 1]->val.str;
+			if (xlParm[j]->xltype == xltypeStr)
+			{
+				delete[] xlParm[j]->val.str;
+			}
+			xlParm[j]->xltype = xltypeMissing;
 		}
 
 	}
@@ -595,8 +645,8 @@ bool RegisterAddinFunctions()
 
 	Excel12(xlFree, 0, 1, xlParm[0]);
 
-	for (int i = 0; i< 32; i++) delete xlParm[i];
-	
+	for (int i = 0; i< alistCount; i++) delete xlParm[i];
+	delete [] xlParm;
 
 	// debugLogf("Exit registerAddinFunctions\n");
 

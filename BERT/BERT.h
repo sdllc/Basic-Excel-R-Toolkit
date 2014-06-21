@@ -36,14 +36,14 @@
 extern HMODULE ghModule;
 
 static LPSTR funcTemplates[][16] = {
-	{ "BERT_UpdateScript", "UU#", "BERT.UpdateScript", "R Code", "1", "BERT", "", "99", "Update Script", "", "", "", "", "", "", "" },
-	{ "BERT_RExec", "UU", "BERT.Exec", "R Code", "1", "BERT", "", "98", "Exec R Code", "", "", "", "", "", "", "" },
-	{ "BERT_Configure", "A#", "BERT.Configure", "", "1", "BERT", "", "97", "", "", "", "", "", "", "", "" },
-	{ "BERT_Console", "A#", "BERT.Console", "", "1", "BERT", "", "96", "", "", "", "", "", "", "", "" },
-	{ "BERT_HomeDirectory", "A#", "BERT.Home", "", "1", "BERT", "", "95", "", "", "", "", "", "", "", "" },
-	{ "BERT_InstallPackages", "A#", "BERT.InstallPackages", "", "1", "BERT", "", "94", "", "", "", "", "", "", "", "" },
-	{ "BERT_Reload", "A#", "BERT.Reload", "", "1", "BERT", "", "93", "", "", "", "", "", "", "", "" },
-	{ "BERT_About", "A#", "BERT.About", "", "1", "BERT", "", "92", "", "", "", "", "", "", "", "" },
+	{ "BERT_UpdateScript", "UU#", "BERT.UpdateScript", "R Code", "2", "BERT", "", "99", "Update Script", "", "", "", "", "", "", "" },
+	{ "BERT_RExec", "UU", "BERT.Exec", "R Code", "2", "BERT", "", "98", "Exec R Code", "", "", "", "", "", "", "" },
+	{ "BERT_Configure", "A#", "BERT.Configure", "", "2", "BERT", "", "97", "", "", "", "", "", "", "", "" },
+	{ "BERT_Console", "A#", "BERT.Console", "", "2", "BERT", "", "96", "", "", "", "", "", "", "", "" },
+	{ "BERT_HomeDirectory", "A#", "BERT.Home", "", "2", "BERT", "", "95", "", "", "", "", "", "", "", "" },
+	{ "BERT_InstallPackages", "A#", "BERT.InstallPackages", "", "2", "BERT", "", "94", "", "", "", "", "", "", "", "" },
+	{ "BERT_Reload", "A#", "BERT.Reload", "", "2", "BERT", "", "93", "", "", "", "", "", "", "", "" },
+	{ "BERT_About", "A#", "BERT.About", "", "2", "BERT", "", "92", "", "", "", "", "", "", "", "" },
 	{ 0 }
 };
 
@@ -71,6 +71,7 @@ const char WRAP_ERR[] = "Error in eval(expr, envir, enclos) :";
 	x.val.str = s; 
 
 #define MAX_FUNCTION_COUNT 100
+#define MAX_ARGUMENT_COUNT 16
 
 DLLEX LPXLOPER12 BERT_UpdateScript(LPXLOPER12 script);
 
