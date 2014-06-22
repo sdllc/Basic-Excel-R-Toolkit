@@ -29,6 +29,7 @@
 #include <string>
 #include <list>
 #include <vector>
+#include <regex>
 #include <sstream>
 #include <algorithm>
 
@@ -39,6 +40,7 @@ SVECTOR cmdVector;
 SVECTOR historyVector;
 
 SVECTOR wordList;
+SVECTOR moneyList;
 SVECTOR baseWordList;
 bool wlInit = false;
 
@@ -54,6 +56,8 @@ sptr_t(*fn)(sptr_t*, int, uptr_t, sptr_t);
 sptr_t* ptr;
 
 extern SVECTOR & getWordList(SVECTOR &wordList);
+extern int getCallTip(std::string &callTip, const std::string &sym);
+
 
 RECT rectConsole = { 0, 0, 0, 0 };
 
@@ -100,12 +104,22 @@ void initWordList()
 		}
 	}
 
-	wordList.insert(wordList.end(), baseWordList.begin(), baseWordList.end());
-	getWordList(wordList);
+	SVECTOR tmp;
 
+	tmp.insert(tmp.end(), baseWordList.begin(), baseWordList.end());
+	getWordList(tmp);
+
+	for (SVECTOR::iterator iter = tmp.begin(); iter != tmp.end(); iter++)
+	{
+		if (iter->find('$') == std::string::npos) wordList.push_back(*iter);
+		else moneyList.push_back(*iter);
+	}
 
 	std::sort(wordList.begin(), wordList.end());
+	std::sort(moneyList.begin(), moneyList.end());
+
 	wordList.erase(std::unique(wordList.begin(), wordList.end()), wordList.end());
+	moneyList.erase(std::unique(moneyList.begin(), moneyList.end()), moneyList.end());
 
 }
 
@@ -397,7 +411,8 @@ LRESULT CALLBACK SubClassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		switch (wParam)
 		{
 		case VK_ESCAPE:
-			if (!fn(ptr, SCI_AUTOCACTIVE, 0, 0))
+			if (!fn(ptr, SCI_AUTOCACTIVE, 0, 0)
+				&& !fn(ptr, SCI_CALLTIPACTIVE, 0, 0))
 			{
 				::PostMessage(::GetParent(hwnd), WM_COMMAND, WM_CLOSE_CONSOLE, 0);
 				return 0;
@@ -442,11 +457,14 @@ bool isWordChar(char c)
 {
 	return (((c >= 'a') && (c <= 'z'))
 		|| ((c >= 'A') && (c <= 'Z'))
-		|| (c == '_') 
+		|| (c == '_')
+		|| (c == '$')
 		|| (c == '.')
 		);
 }
 
+/**
+ */
 void testAutocomplete()
 {
 	int len = fn(ptr, SCI_GETCURLINE, 0, 0);
@@ -459,16 +477,17 @@ void testAutocomplete()
 
 	if (caret == len-1)
 	{
-		for (--caret; caret >= 2 && isWordChar(c[caret]); caret--);
+		bool money = false;
+		for (--caret; caret >= 2 && isWordChar(c[caret]); caret--){ if (c[caret] == '$') money = true; }
 		caret++;
 		int slen = strlen(&(c[caret]));
 		if (slen > 1)
 		{
 			std::string str = &(c[caret]);
-			SVECTOR::iterator iter = std::lower_bound(wordList.begin(), wordList.end(), str);
+			SVECTOR::iterator iter = std::lower_bound( money ? moneyList.begin() : wordList.begin(), money? moneyList.end(): wordList.end(), str);
 			c[len - 2]++;
 			str = &(c[caret]);
-			SVECTOR::iterator iter2 = std::lower_bound(wordList.begin(), wordList.end(), str);
+			SVECTOR::iterator iter2 = std::lower_bound( money? moneyList.begin(): wordList.begin(), money ? moneyList.end(): wordList.end(), str);
 			int count = iter2 - iter;
 
 			str = "";
@@ -479,13 +498,45 @@ void testAutocomplete()
 					if( count ) str += " ";
 					str += iter->c_str();
 				}
-
 				fn(ptr, SCI_AUTOCSHOW, slen, (sptr_t)(str.c_str()));
 			}
 		}
 	}
 
+	// TODO: optimize this over a single bit of typing...
+
+	caret = fn(ptr, SCI_GETCURLINE, len + 1, (sptr_t)c);
+	c[caret] = 0;
+
+	static std::regex rex("^.*?\\s+([\\w\\._\\$]+)\\s*\\([^\\)]*$");
+	std::cmatch mat;
+
+	bool ctvisible = fn(ptr, SCI_CALLTIPACTIVE, 0, 0);
+
+	// so there is the possibility that we have a tip because we're in one
+	// function, but then we close the tip and fall into an enclosing 
+	// function... actually my regex doesn't work, then.
+
+	if (std::regex_search(c, mat, rex) /* && !ctvisible */ )
+	{
+		std::string tip;
+		std::string sym(mat[1].first, mat[1].second);
+
+		if (getCallTip(tip, sym))
+		{
+			OutputDebugStringA(tip.c_str());
+			OutputDebugStringA("\n");
+
+			int pos = fn(ptr, SCI_GETCURRENTPOS, 0, 0);
+			// pos -= (mat[0].second - mat[0].first - 1);
+
+			fn(ptr, SCI_CALLTIPSHOW, pos - caret, (sptr_t)tip.c_str());
+		}
+	}
+	else if (ctvisible) fn(ptr, SCI_CALLTIPCANCEL, 0, 0);
+
 	delete [] c;
+
 }
 
 DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam )

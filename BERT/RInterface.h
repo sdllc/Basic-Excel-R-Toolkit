@@ -48,6 +48,7 @@ void MapFunctions();
 void LoadStartupFile();
 
 SVECTOR & getWordList( SVECTOR &wordList );
+int getCallTip(std::string &callTip, const std::string &sym);
 
 short BERT_InstallPackages();
 

@@ -570,6 +570,50 @@ __inline void STRSXP2XLOPER( LPXLOPER12 result, SEXP str )
 
 }
 
+int getCallTip(std::string &callTip, const std::string &sym)
+{
+	int err;
+	int ret = 0;
+	
+	SEXP ex = PROTECT(R_tryEval(Rf_lang2(Rf_install("exists"), Rf_mkString(sym.c_str())), R_GlobalEnv, &err));
+	if (!ex || TYPEOF(ex) != 10 || !((LOGICAL(ex))[0]))
+	{
+		UNPROTECT(1); 
+		return 0;
+	}
+	UNPROTECT(1);
+
+
+	SEXP args = PROTECT(Rf_lang2(Rf_install("args"), Rf_mkString(sym.c_str())));
+	if (args)
+	{
+		SEXP cap = PROTECT(Rf_lang2(Rf_install("capture.output"), args));
+		if (cap)
+		{
+			//SEXP inv = PROTECT(Rf_lang2(Rf_install("invisible"), cap));
+			//if ( inv )
+			//{
+				SEXP result = PROTECT(R_tryEval(cap, R_GlobalEnv, &err));
+				if (result && TYPEOF(result) == 16)
+				{
+					const char *c = CHAR(STRING_ELT(result,0));
+					if (!strncmp(c, "function ", 9))
+					{
+						callTip = &(c[9]);
+						ret = 1;
+					}
+				}
+				UNPROTECT(1);
+			//}
+			//UNPROTECT(1);
+		}
+		UNPROTECT(1);
+	}
+	UNPROTECT(1);
+	
+	return ret;
+}
+
 SVECTOR & getWordList(SVECTOR &wordList)
 {
 	SEXP rslt = PROTECT(ExecR(std::string("BERTXLL$WordList()")));
