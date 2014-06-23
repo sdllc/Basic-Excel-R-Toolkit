@@ -128,7 +128,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <OutputFile>BERTMGR32.xll</OutputFile>
+      <OutputFile>..\BERT\BERTMGR32.xll</OutputFile>
       <ModuleDefinitionFile>BERTMGR.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
@@ -148,7 +148,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <OutputFile>BERTMGR64.xll</OutputFile>
+      <OutputFile>..\BERT\BERTMGR64.xll</OutputFile>
       <ModuleDefinitionFile>BERTMGR.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>

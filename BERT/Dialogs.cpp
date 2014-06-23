@@ -506,10 +506,17 @@ void testAutocomplete()
 	// TODO: optimize this over a single bit of typing...
 
 	caret = fn(ptr, SCI_GETCURLINE, len + 1, (sptr_t)c);
-	c[caret] = 0;
+	std::string sc(c, c + caret);
 
-	static std::regex rex("^.*?\\s+([\\w\\._\\$]+)\\s*\\([^\\)]*$");
-	std::cmatch mat;
+	static std::string empty = "";
+	static std::regex bparen("\\([^\\(]*?\\)");
+	static std::regex rex("[^\\w\\._\\$]([\\w\\._\\$]+)\\s*\\([^\\)\\(]*$");
+	static std::string lasttip;
+
+	while (std::regex_search(sc, bparen))
+		sc = regex_replace(sc, bparen, empty);
+
+	std::smatch mat;
 
 	bool ctvisible = fn(ptr, SCI_CALLTIPACTIVE, 0, 0);
 
@@ -517,23 +524,33 @@ void testAutocomplete()
 	// function, but then we close the tip and fall into an enclosing 
 	// function... actually my regex doesn't work, then.
 
-	if (std::regex_search(c, mat, rex) /* && !ctvisible */ )
+	if (std::regex_search(sc, mat, rex) /* && !ctvisible */ )
 	{
 		std::string tip;
 		std::string sym(mat[1].first, mat[1].second);
 
-		if (getCallTip(tip, sym))
+		if (sym.compare(lasttip))
 		{
-			OutputDebugStringA(tip.c_str());
-			OutputDebugStringA("\n");
+			if (getCallTip(tip, sym))
+			{
+				OutputDebugStringA(sym.c_str());
+				OutputDebugStringA(": ");
+				OutputDebugStringA(tip.c_str());
+				OutputDebugStringA("\n");
 
-			int pos = fn(ptr, SCI_GETCURRENTPOS, 0, 0);
-			// pos -= (mat[0].second - mat[0].first - 1);
-
-			fn(ptr, SCI_CALLTIPSHOW, pos - caret, (sptr_t)tip.c_str());
+				int pos = fn(ptr, SCI_GETCURRENTPOS, 0, 0);
+				// pos -= caret; // start of line
+				pos -= (mat[0].second - mat[0].first - 1); // this is not correct b/c we are munging the string
+				fn(ptr, SCI_CALLTIPSHOW, pos, (sptr_t)tip.c_str());
+			}
+			lasttip = sym;
 		}
 	}
-	else if (ctvisible) fn(ptr, SCI_CALLTIPCANCEL, 0, 0);
+	else 
+	{
+		if (ctvisible) fn(ptr, SCI_CALLTIPCANCEL, 0, 0);
+		lasttip = "";
+	}
 
 	delete [] c;
 
