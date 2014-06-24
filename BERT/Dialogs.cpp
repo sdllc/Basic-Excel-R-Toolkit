@@ -543,6 +543,7 @@ void testAutocomplete()
 				pos -= (mat[0].second - mat[0].first - 1); // this is not correct b/c we are munging the string
 				fn(ptr, SCI_CALLTIPSHOW, pos, (sptr_t)tip.c_str());
 			}
+			else if (ctvisible) fn(ptr, SCI_CALLTIPCANCEL, 0, 0);
 			lasttip = sym;
 		}
 	}
