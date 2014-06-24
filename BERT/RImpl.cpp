@@ -67,7 +67,7 @@ SEXP XLOPER2SEXP(LPXLOPER12 px, int depth = 0);
 
 std::string dllpath;
 
-int myReadConsole(const char *prompt, char *buf, int len, int addtohistory)
+int R_ReadConsole(const char *prompt, char *buf, int len, int addtohistory)
 {
 	fputs(prompt, stdout);
 	fflush(stdout);
@@ -79,7 +79,7 @@ void R_WriteConsole(const char *buf, int len)
 	logMessage(buf, len);
 }
 
-void myCallBack(void)
+void R_CallBack(void)
 {
 	/* called during i/o, eval, graphics in ProcessEvents */
 }
@@ -332,9 +332,9 @@ void RInit()
 	Rp->home = RUser;
 
 	Rp->CharacterMode = LinkDLL;
-	Rp->ReadConsole = myReadConsole;
+	Rp->ReadConsole = R_ReadConsole;
 	Rp->WriteConsole = R_WriteConsole;
-	Rp->CallBack = myCallBack;
+	Rp->CallBack = R_CallBack;
 	Rp->ShowMessage = R_AskOk;
 	Rp->YesNoCancel = R_AskYesNoCancel;
 	Rp->Busy = myBusy;
@@ -574,14 +574,25 @@ int getCallTip(std::string &callTip, const std::string &sym)
 {
 	int err;
 	int ret = 0;
-	
+	bool func = false;
+
 	SEXP ex = PROTECT(R_tryEval(Rf_lang2(Rf_install("exists"), Rf_mkString(sym.c_str())), R_GlobalEnv, &err));
 	if (!ex || TYPEOF(ex) != 10 || !((LOGICAL(ex))[0]))
 	{
-		UNPROTECT(1); 
+		UNPROTECT(1);
 		return 0;
 	}
 	UNPROTECT(1);
+
+	ex = PROTECT(R_tryEval(Rf_lang2(R_ModeSymbol, Rf_install(sym.c_str())), R_GlobalEnv, &err));
+	if (ex && TYPEOF(ex) == 16)
+	{
+		const char *c = CHAR(STRING_ELT(ex, 0));
+		if (!strcmp(c, "function")) func = true;
+	}
+	UNPROTECT(1);
+
+	if (!func) return 0;
 
 
 	SEXP args = PROTECT(Rf_lang2(Rf_install("args"), Rf_mkString(sym.c_str())));
@@ -616,7 +627,7 @@ int getCallTip(std::string &callTip, const std::string &sym)
 
 SVECTOR & getWordList(SVECTOR &wordList)
 {
-	SEXP rslt = PROTECT(ExecR(std::string("BERTXLL$WordList()")));
+	SEXP rslt = PROTECT(ExecR(std::string("BERT$WordList()")));
 	if (rslt)
 	{
 		// int type = TYPEOF(rslt);
@@ -626,6 +637,105 @@ SVECTOR & getWordList(SVECTOR &wordList)
 	UNPROTECT(1);
 	return wordList;
 
+}
+
+bool CheckExcelRef(LPXLOPER12 rslt, SEXP s)
+{
+	int type, err;
+	int rc[4] = { 0, 0, 0, 0 };
+	IDSHEET ids = 0;
+
+	if (TYPEOF(s) != 4) return false;
+	if (!Rf_inherits(s, "xlRefClass")) return false;
+
+	rslt->xltype = xltypeSRef;
+
+	SEXP ans = PROTECT(R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString("r1")), s, &err));
+	if (ans)
+	{
+		type = TYPEOF(ans);
+		if (type == INTSXP) rc[0] = (INTEGER(ans))[0] - 1;
+		else if (type == REALSXP) rc[0] = (int)(REAL(ans))[0] - 1;
+		else DebugOut("Unexpected type in check excel ref: %d\n", type);
+	}
+	UNPROTECT(1);
+
+	ans = PROTECT(R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString("c1")), s, &err));
+	if (ans)
+	{
+		type = TYPEOF(ans);
+		if (type == INTSXP) rc[1] = (INTEGER(ans))[0] - 1;
+		else if (type == REALSXP) rc[1] = (int)(REAL(ans))[0] - 1;
+		else DebugOut("Unexpected type in check excel ref: %d\n", type);
+	}
+	UNPROTECT(1);
+
+	ans = PROTECT(R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString("r2")), s, &err));
+	if (ans)
+	{
+		type = TYPEOF(ans);
+		if (type == INTSXP) rc[2] = (INTEGER(ans))[0]-1;
+		else if (type == REALSXP) rc[2] = (int)(REAL(ans))[0]-1;
+		else DebugOut("Unexpected type in check excel ref: %d\n", type);
+	}
+	UNPROTECT(1);
+
+	ans = PROTECT(R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString("c2")), s, &err));
+	if (ans)
+	{
+		type = TYPEOF(ans);
+		if (type == INTSXP) rc[3] = (INTEGER(ans))[0] - 1;
+		else if (type == REALSXP) rc[3] = (int)(REAL(ans))[0] - 1;
+		else DebugOut("Unexpected type in check excel ref: %d\n", type);
+	}
+	UNPROTECT(1);
+
+	ans = PROTECT(R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString("sheetID")), s, &err));
+	if (ans)
+	{
+		type = TYPEOF(ans);
+		if (type == INTSXP && Rf_length(ans) == 2)
+		{
+			int *p = INTEGER(ans);
+			ids = p[0];
+			ids <<= 32;
+			ids |= p[1];
+		}
+		else DebugOut("Unexpected type in check excel ref: %d\n", type);
+	}
+	UNPROTECT(1);
+
+	if (rc[2] < rc[0]) rc[2] = rc[0];
+	if (rc[3] < rc[1]) rc[3] = rc[1];
+
+	LPXLREF12 pref = 0;
+
+	if (ids > 0)
+	{
+		// not using this structure as intended... be careful
+
+		rslt->xltype = xltypeRef;
+		rslt->val.mref.idSheet = ids;
+		rslt->val.mref.lpmref = new XLMREF12[1];
+		rslt->val.mref.lpmref[0].count = 1;
+		pref = &(rslt->val.mref.lpmref[0].reftbl[0]);
+	}
+	else
+	{
+		rslt->xltype = xltypeSRef;
+		pref = &(rslt->val.sref.ref);
+		rslt->val.sref.count = (rc[2] - rc[0] + 1) * (rc[3] - rc[1] + 1);
+	}
+
+	if ( pref )
+	{
+		pref->rwFirst = rc[0];
+		pref->colFirst = rc[1];
+		pref->rwLast = rc[2];
+		pref->colLast = rc[3];
+	}
+
+	return true;
 }
 
 void ParseResult(LPXLOPER12 rslt, SEXP ans)
@@ -978,11 +1088,14 @@ void NarrowString(std::string &out, LPXLOPER12 pxl)
  * they are all numeric, returns a Real matrix.  this should 
  * simplify function calls on the R side, but check how expensive
  * this is.
+ *
+ * the function takes offsets so we can use it inside the
+ * data frame version of this coercion (wasteful?)
  */
-SEXP Multi2SEXP2(LPXLOPER12 px)
+SEXP Multi2Matrix(LPXLOPER12 px, int rowOffset, int colOffset)
 {
-	int rows = px->val.array.rows;
-	int cols = px->val.array.columns;
+	int rows = px->val.array.rows - rowOffset;
+	int cols = px->val.array.columns - colOffset;
 
 	// pass 1: check.  for now we only accept types num
 	// and integer, although in theory booleans and nils
@@ -991,18 +1104,22 @@ SEXP Multi2SEXP2(LPXLOPER12 px)
 	// FIXME: the check for Integers may be a waste, as this
 	// type seems to be pretty rare these days.
 
-	int idx = 0;
+	int ptr, idx = 0;
 	bool numeric = true;
 
 	for (int i = 0; numeric && i < cols; i++)
 	{
 		for (int j = 0; numeric && j < rows; j++)
 		{
+			idx = (j + rowOffset) * cols + i + colOffset;
 			numeric = numeric &&
-				(px->val.array.lparray[j*cols + i].xltype == xltypeNum
-				|| px->val.array.lparray[j*cols + i].xltype == xltypeInt);
+				(px->val.array.lparray[idx].xltype == xltypeNum
+				|| px->val.array.lparray[idx].xltype == xltypeInt);
 		}
 	}
+
+	idx = 0;
+	ptr = 0;
 
 	if (numeric)
 	{
@@ -1012,9 +1129,9 @@ SEXP Multi2SEXP2(LPXLOPER12 px)
 			double *mat = REAL(s);
 			for (int j = 0; j < rows; j++)
 			{
-				if (px->val.array.lparray[j*cols + i].xltype == xltypeNum) mat[idx] = px->val.array.lparray[j*cols + i].val.num;
-				else // if (px->val.array.lparray[j*cols + i].xltype == xltypeInt) 
-					mat[idx] = px->val.array.lparray[j*cols + i].val.w;
+				ptr = (j+rowOffset)*cols + i + colOffset;
+				if (px->val.array.lparray[ptr].xltype == xltypeNum) mat[idx] = px->val.array.lparray[ptr].val.num;
+				else mat[idx] = px->val.array.lparray[ptr].val.w;
 				idx++; 
 			}
 		}
@@ -1027,7 +1144,8 @@ SEXP Multi2SEXP2(LPXLOPER12 px)
 		{
 			for (int j = 0; j < rows; j++)
 			{
-				SET_VECTOR_ELT(s, idx, XLOPER2SEXP(&(px->val.array.lparray[j*cols + i]), 0));
+				ptr = (j+rowOffset) * cols + i + colOffset;
+				SET_VECTOR_ELT(s, idx, XLOPER2SEXP(&(px->val.array.lparray[ptr]), 0));
 				idx++; // not macro friendly with opt
 			}
 		}
@@ -1086,7 +1204,7 @@ SEXP XLOPER2SEXP( LPXLOPER12 px, int depth )
 	switch (px->xltype)
 	{
 	case xltypeMulti:
-		return Multi2SEXP2(px);
+		return Multi2Matrix(px, 0, 0);
 		break;
 
 	case xltypeRef:
@@ -1179,6 +1297,144 @@ bool RExec2(LPXLOPER12 rslt, std::string &funcname, std::vector< LPXLOPER12 > &a
 	return true;
 }
 
+SEXP ExcelCall(SEXP cmd, SEXP data)
+{
+	int dlen = Rf_length(data);
+	int fn;
+	int type = TYPEOF(cmd);
+
+	XLOPER12 xlRslt;
+	LPXLOPER12 *xdata = 0;
+
+	if (type != INTSXP && type != REALSXP)
+	{
+		Rf_error("Error: invalid command constant\n");
+		return R_NilValue;
+	}
+
+
+	if (type == REALSXP) fn = (int)(*(REAL(cmd)));
+	else fn = *(INTEGER(cmd));
+
+	xdata = new LPXLOPER12[dlen];
+
+	type = TYPEOF(data);
+
+	for (int i = 0; i < dlen; i++)
+	{
+		xdata[i] = new XLOPER12;
+		switch (type)
+		{
+		case VECSXP:
+			{
+				SEXP tmp = VECTOR_ELT(data, i);
+				if (!CheckExcelRef(xdata[i], tmp))
+					ParseResult(xdata[i], tmp);
+			}
+			break;
+		case STRSXP:
+			ParseResult(xdata[i], STRING_ELT(data, i));
+			break;
+		case INTSXP:
+			xdata[i]->xltype = xltypeInt;
+			xdata[i]->val.w = (INTEGER(data))[i];
+			break;
+		case REALSXP:
+			xdata[i]->xltype = xltypeNum;
+			xdata[i]->val.num = (REAL(data))[i];
+			break;
+		case LGLSXP:
+			xdata[i]->xltype = xltypeBool;
+			xdata[i]->val.xbool = (INTEGER(data))[i] ? TRUE : FALSE;
+			break;
+		}
+	}
+
+	SEXP rv = R_NilValue;
+	int rs = Excel12v(fn, &xlRslt, dlen, xdata);
+
+	if (rs)
+	{
+		Rf_error("Excel call failed (%d)", rs);
+	}
+	else
+	{
+
+		// in this call we want refs, so return as the class type
+
+		if (xlRslt.xltype == xltypeRef || xlRslt.xltype == xltypeSRef)
+		{
+			int err;
+			int rc[4] = { 0, 0, 0, 0 };
+			IDSHEET ids = 0;
+
+			rv = R_tryEval(Rf_lang1(Rf_install("new.env")), R_GlobalEnv, &err);
+			Rf_setAttrib(rv, Rf_mkString("class"), Rf_mkString("xlRefClass"));
+
+			LPXLREF12 pref = 0;
+
+			if (xlRslt.xltype == xltypeRef)
+			{
+				ids = xlRslt.val.mref.idSheet;
+				if (xlRslt.val.mref.lpmref && xlRslt.val.mref.lpmref->count > 0) pref = &(xlRslt.val.mref.lpmref->reftbl[0]);
+			}
+			else // sref
+			{
+				pref = &(xlRslt.val.sref.ref);
+			}
+
+			if (pref)
+			{
+				rc[0] = pref->rwFirst + 1;
+				rc[1] = pref->colFirst + 1;
+				rc[2] = pref->rwLast + 1;
+				rc[3] = pref->colLast + 1;
+			}
+
+			Rf_defineVar(Rf_install("r1"), Rf_ScalarInteger(rc[0]), rv);
+			Rf_defineVar(Rf_install("c1"), Rf_ScalarInteger(rc[1]), rv);
+			Rf_defineVar(Rf_install("r2"), Rf_ScalarInteger(rc[2]), rv);
+			Rf_defineVar(Rf_install("c2"), Rf_ScalarInteger(rc[3]), rv);
+
+			// Rf_defineVar(Rf_install("sheetID"), Rf_ScalarReal(ids), rv);
+			SEXP idv = Rf_allocVector(INTSXP, 2);
+			int *pidv = INTEGER(idv);
+
+			if (sizeof(IDSHEET) > 4)
+			{
+				pidv[0] = (INT32)(ids >> 32);
+				pidv[1] = (INT32)(ids & 0xffffffff);
+			}
+			else
+			{
+				pidv[0] = 0;
+				pidv[1] = ids;
+			}
+
+			Rf_defineVar(Rf_install("sheetID"), idv, rv);
+
+		}
+		else rv = XLOPER2SEXP(&xlRslt);
+	}
+
+	// ...
+
+	// free up any allocated 
+
+	for (int i = 0; i < dlen; i++)
+	{
+		if (xdata[i]->xltype == xltypeStr && xdata[i]->val.str) delete xdata[i]->val.str;
+		else if (xdata[i]->xltype == xltypeMulti && xdata[i]->val.array.lparray) delete xdata[i]->val.array.lparray;
+		else if (xdata[i]->xltype == xltypeRef && xdata[i]->val.mref.lpmref) delete xdata[i]->val.mref.lpmref;
+		delete xdata[i];
+	}
+	
+	Excel12(xlFree, 0, 1, &xlRslt);
+
+	return rv;
+
+}
+
 SEXP BERT_Callback(SEXP cmd, SEXP data, SEXP data2)
 {
 	int command = 0;
@@ -1189,8 +1445,15 @@ SEXP BERT_Callback(SEXP cmd, SEXP data, SEXP data2)
 	}
 	switch (command)
 	{
-	case 1023:
+	case CC_EXCEL:
+		return ExcelCall(data, data2);
+
+	case CC_CLOSECONSOLE:
 		CloseConsole();
+		break;
+
+	case CC_RELOAD:
+		BERT_Reload();
 		break;
 	}
 

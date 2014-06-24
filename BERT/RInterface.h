@@ -26,7 +26,18 @@
 
 #define MAX_LOGLIST_SIZE	80
 
-#define ENV_NAME "BERTXLL"
+#define ENV_NAME "BERT"
+
+typedef enum
+{
+	CC_EXCEL =			1,
+
+	CC_RELOAD =			1022,
+	CC_CLOSECONSOLE =	1023,
+
+	LAST_CALLBACK_COMMAND
+
+} CALLBACK_COMMANDS;
 
 typedef std::vector< std::string > SVECTOR;
 typedef std::pair < std::string, std::string > SPAIR;

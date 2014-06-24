@@ -1,32 +1,112 @@
 
-#
+with( BERT, {
+
+#========================================================
 # constants
-#
+#========================================================
 
-BERTXLL$EXCEL <- 1;
-BERTXLL$CLOSECONSOLE <- 1023;
+EXCEL <- 1;
+RELOAD <- 1022;
+CLOSECONSOLE <- 1023;
 
-BERTXLL$CALLBACK <- "BERT_Callback";
-BERTXLL$CloseConsole <- function(){ invisible(.Call(BERTXLL$CALLBACK, BERTXLL$CLOSECONSOLE, 0, PACKAGE=BERTXLL$MODULE )); };
-BERTXLL$Namespace <- function(a, b){ return( paste( b, "$", a, sep="" )); }
-BERTXLL$WordList <- function(){ 
+CALLBACK <- "BERT_Callback";
+
+#========================================================
+# functions - for general use
+#========================================================
+
+#--------------------------------------------------------
+# close the console
+#--------------------------------------------------------
+CloseConsole <- function(){ invisible(.Call(CALLBACK, CLOSECONSOLE, 0, PACKAGE=MODULE )); };
+
+#--------------------------------------------------------
+# reload the startup file
+#--------------------------------------------------------
+ReloadStartup <- function(){ invisible(.Call(CALLBACK, RELOAD, 0, PACKAGE=MODULE )); };
+
+#--------------------------------------------------------
+# get an excel range.  1-based.
+#--------------------------------------------------------
+GetRange <- function( r1, c1, r2=r1, c2=c1, sheetName=NULL )
+{
+	ref <- xlRefClass( r1, c1, r2, c2 );
+	if( !is.null( sheetName ))
+	{
+		ref$sheetID <- GetSheetID( sheetName );
+		if( is.null( ref$sheetID )) stop( "Sheet name not found");
+	}
+	Excel( 0x4002, list( ref )); 
+}
+
+#--------------------------------------------------------
+# get a sheet ID by name.  
+#--------------------------------------------------------
+GetSheetID <- function( sheetName )
+{
+	ref <- Excel( 0x4004, list( sheetName )); 
+	return( ref$sheetID );
+}
+
+#--------------------------------------------------------
+# Excel callback function. Be careful with this unless 
+# you know what you are doing.
+#--------------------------------------------------------
+Excel<- function( command, arguments ){ .Call(CALLBACK, EXCEL, command, arguments, PACKAGE=MODULE ); };
+
+#========================================================
+# functions - for internal use
+#========================================================
+
+Namespace <- function(a, b){ return( paste( b, "$", a, sep="" )); }
+WordList <- function(){ 
 	wl <- vector();
 	for( i in search()){ wl <- c( wl, ls(i, all.names=1)); }
 	for( i in ls(.GlobalEnv))
 	{
 		if( is.environment(get(i, .GlobalEnv)))
 		{
-			wl <- c( wl, unlist( lapply( ls(get(i, .GlobalEnv), all.names=1), BERTXLL$Namespace, i)));	
+			wl <- c( wl, unlist( lapply( ls(get(i, .GlobalEnv), all.names=1), Namespace, i)));	
 		}
 	}
 	wl;
 }
 
-#
-# overload quit methods or it will stop the excel process
-#
+#========================================================
+# class type representing an Excel cell reference.
+#========================================================
 
-quit <- function(){ BERTXLL$CloseConsole() }
+xlRefClass <- function(r1 = 0, c1 = 0, r2 = 0, c2 = 0, sheetID = vector( mode="integer", length=2)) {
+    r = list(
+        r1 = r1,
+        r2 = r2,
+        c1 = c1,
+		c2 = c2,
+		sheetID = sheetID
+		);
+
+    r <- list2env(r)
+    class(r) <- "xlRefClass"
+    return(r)
+}
+
+});
+
+print.xlRefClass <- function(x){ 
+	if( x$r2 <= x$r1 && x$c2 <= x$c1 )
+	{
+		s <- paste( "Excel Reference R", x$r1, "C", x$c1, sep="");
+	}
+	else { s <- paste( "Excel Reference R", x$r1, "C", x$c1, ":R", x$r2, "C", x$c2, sep=""); }
+	cat( s, "\n", sep="");
+}
+
+
+#========================================================
+# overload quit method or it will stop the excel process
+#========================================================
+
+quit <- function(){ BERT$CloseConsole() }
 q <- quit;
 
 

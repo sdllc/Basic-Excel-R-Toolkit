@@ -252,6 +252,9 @@ void Prompt( const char *prompt = DEFAULT_PROMPT )
 	fn(ptr, SCI_SETSEL, -1, -1);
 	minCaret = fn(ptr, SCI_GETCURRENTPOS, 0, 0);
 	historyPointer = 0;
+
+	fn(ptr, SCI_SETXOFFSET, 0, 0);
+
 }
 
 void ProcessCommand()
@@ -419,6 +422,14 @@ LRESULT CALLBACK SubClassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			}
 			break;
 
+		case VK_HOME:
+			fn(ptr, SCI_SETSEL, minCaret, minCaret);
+			break;
+
+		case VK_END:
+			fn(ptr, SCI_SETSEL, -1, -1);
+			break;
+
 		case VK_LEFT:
 		case VK_BACK:
 			p = fn(ptr, SCI_GETCURRENTPOS, 0, 0);
@@ -443,6 +454,7 @@ LRESULT CALLBACK SubClassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		case VK_RETURN:
 			fn(ptr, SCI_AUTOCCANCEL, 0, 0);
+			fn(ptr, SCI_CALLTIPCANCEL, 0, 0);
 			return 0;
 		}
 
