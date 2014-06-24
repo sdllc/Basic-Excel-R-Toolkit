@@ -333,7 +333,7 @@ short BERT_Console()
 		hModScintilla = LoadLibraryA(buffer);
 		if (!hModScintilla)
 		{
-			sprintf_s(buffer, MAX_PATH, "Failed to load scintilla module: 0x%x\n", ::GetLastError());
+			DebugOut(buffer, MAX_PATH, "Failed to load scintilla module: 0x%x\n", ::GetLastError());
 			OutputDebugStringA(buffer);
 			::MessageBoxA(0, buffer, "ERR", MB_OK);
 		}
@@ -693,6 +693,24 @@ bool RegisterAddinFunctions()
 	fRegisteredOnce = true;
 	return true;
 }
+
+#ifdef _DEBUG
+
+int DebugOut(const char *fmt, ...)
+{
+	static char msg[256];
+	int ret;
+	va_list args;
+	va_start(args, fmt);
+
+	ret = vsprintf_s(msg, fmt, args);
+	OutputDebugStringA(msg);
+
+	va_end(args);
+	return ret;
+}
+
+#endif
 
 BFC(1000);
 BFC(1001);

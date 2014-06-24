@@ -533,10 +533,7 @@ void testAutocomplete()
 		{
 			if (getCallTip(tip, sym))
 			{
-				OutputDebugStringA(sym.c_str());
-				OutputDebugStringA(": ");
-				OutputDebugStringA(tip.c_str());
-				OutputDebugStringA("\n");
+				DebugOut("%s: %s\n", sym.c_str(), tip.c_str());
 
 				int pos = fn(ptr, SCI_GETCURRENTPOS, 0, 0);
 				// pos -= caret; // start of line

@@ -28,6 +28,7 @@
 #include "BERT_Version.h"
 #include "RegistryConstants.h"
 #include "util.h"
+#include "DebugOut.h"
 
 #include "XLCALL.H"
 

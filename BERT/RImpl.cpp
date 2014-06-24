@@ -630,18 +630,30 @@ SVECTOR & getWordList(SVECTOR &wordList)
 
 void ParseResult(LPXLOPER12 rslt, SEXP ans)
 {
-	// R values (ignoring data frames) are vectors of typed
-	// values.  in some cases they are matrices, but these appear
-	// to be just lists with some extra attributes.
+	// there are a couple of different return semantics 
+	// that we need to handle here.
 
-	// for our purposes the controlling feature should be 
-	// length, which affects whether we return 1 value or multiple 
-	// values.
+	// simple types (scalars) are returned as arrays of 
+	// a particular type. 
+
+	// lists are the same thing, except they hold more 
+	// than one value.  in this case, return values in a 
+	// single column.
+
+	// matrices are the same thing again, except they have
+	// defined row and column counts.  
+
+	// and finally vectors of vectors; these are arrays
+	// of the generic type (VECSXP) of which each entry 
+	// is itself an array.  this is the type used by
+	// data frames, but it's also used by things which
+	// are not data frames.
+
+	// FOR NOW, we are not returning row names / column 
+	// names for things which are not data frames.
 
 	if (!ans)
 	{
-		OutputDebugStringA("Null value in ans\n");
-
 		rslt->xltype = xltypeErr;
 		rslt->val.err = xlerrValue;
 		return;
@@ -650,12 +662,193 @@ void ParseResult(LPXLOPER12 rslt, SEXP ans)
 	int len = Rf_length(ans);
 	int type = TYPEOF(ans);
 
-	char sz[64];
-	sprintf_s(sz, 64, "Type %d, len %d\n", type, len);
-	OutputDebugStringA(sz);
+	// FIXME: there's starting to be a lot of repeated code here...
 
-	// else if (Rf_isMatrix(ans))
-	if ( len > 1 )
+	if (Rf_isFrame(ans))
+	{
+		int err;
+		int nc = len + 1; 
+		SEXP s = VECTOR_ELT(ans, 0);
+		int nr = Rf_length(s) + 1;
+
+		// data frames always have row, column names
+
+		rslt->xltype = xltypeMulti;
+		rslt->val.array.rows = nr;
+		rslt->val.array.columns = nc;
+		rslt->val.array.lparray = new XLOPER12[nr*nc];
+
+		// init or excel will show errors for ALL elements
+		// include a "" for the top-left corner
+
+		rslt->val.array.lparray[0].xltype = xltypeStr;
+		rslt->val.array.lparray[0].val.str = new XCHAR[1];
+		rslt->val.array.lparray[0].val.str[0] = 0;
+
+		for (int i = 1; i < nr*nc; i++) rslt->val.array.lparray[i].xltype = xltypeMissing;
+		
+		// column (member) names
+
+		SEXP cn = PROTECT(R_tryEval(Rf_lang2(R_NamesSymbol, ans), R_GlobalEnv, &err));
+		if (cn)
+		{
+			len = Rf_length(cn);
+			type = TYPEOF(cn);
+
+			if (len != nc-1)
+			{
+				DebugOut("** Len != NC-1\n");
+			}
+
+			for (int c = 0; c < len; c++)
+			{
+				int idx = c + 1;
+				switch (type)
+				{
+				case INTSXP:	//  13	  /* integer vectors */
+					rslt->val.array.lparray[idx].xltype = xltypeInt;
+					rslt->val.array.lparray[idx].val.w = (INTEGER(cn))[c];
+					break;
+				case REALSXP:	//  14	  /* real variables */  
+					rslt->val.array.lparray[idx].xltype = xltypeNum;
+					rslt->val.array.lparray[idx].val.num = (REAL(cn))[c];
+					break;
+				case STRSXP:	//  16	  /* string vectors - legal? */ 
+					STRSXP2XLOPER(&(rslt->val.array.lparray[idx]), STRING_ELT(cn, c));
+					break;
+				default:
+					DebugOut("** Unexpected type in data frame (col) names: %d\n", type);
+					break;
+				}
+			}
+
+		}
+		UNPROTECT(1);
+
+		// get row names, we'll stick them in column 0
+
+		SEXP rn = PROTECT(R_tryEval(Rf_lang2( R_RowNamesSymbol, ans), R_GlobalEnv, &err));
+		if (rn)
+		{
+			len = Rf_length(rn);
+			type = TYPEOF(rn);
+
+			if (len != nr-1)
+			{
+				DebugOut("** Len != NR-1\n");
+			}
+			for (int r = 0; r < len; r++)
+			{
+				int idx = (r+1) * nc + 0;
+				switch (type)
+				{
+				case INTSXP:	//  13	  /* integer vectors */
+					rslt->val.array.lparray[idx].xltype = xltypeInt;
+					rslt->val.array.lparray[idx].val.w = (INTEGER(rn))[r];
+					break;
+				case STRSXP:	//  16	  /* string vectors - legal? */ 
+					STRSXP2XLOPER(&(rslt->val.array.lparray[idx]), STRING_ELT(rn, r));
+					break;
+				default:
+					DebugOut( "** Unexpected type in data frame row names: %d\n", type);
+					break;
+				}
+			}
+		}
+		UNPROTECT(1);
+
+		for (int i = 0; i < nc - 1; i++) 
+		{
+			s = VECTOR_ELT(ans, i);
+			type = TYPEOF(s);
+			len = Rf_length(s);
+
+			if (len != nr)
+			{
+				DebugOut("** Len != NR\n");
+			}
+
+			for (int r = 0; r < len; r++)
+			{
+				// offset for column names, row names
+				int idx = (r+1) * nc + i + 1; 
+
+				switch (type)
+				{
+				case INTSXP:	//  13	  /* integer vectors */
+					rslt->val.array.lparray[idx].xltype = xltypeInt;
+					rslt->val.array.lparray[idx].val.w = (INTEGER(s))[r];
+					break;
+				case REALSXP:	//  14	  /* real variables */  
+					rslt->val.array.lparray[idx].xltype = xltypeNum;
+					rslt->val.array.lparray[idx].val.num = (REAL(s))[r];
+					break;
+				case STRSXP:	//  16	  /* string vectors - legal? */ 
+					STRSXP2XLOPER(&(rslt->val.array.lparray[idx]), STRING_ELT(s, r));
+					break;
+				default:
+					DebugOut("** Unexpected type in data frame: %d\n", type);
+					break;
+				}
+			}
+
+		}
+
+	}
+	else if (type == VECSXP)
+	{
+		int nc = len, nr = 0;
+
+		// need to figure out the max length first
+
+		for (int c = 0; c < nc; c++)
+		{
+			SEXP s = VECTOR_ELT(ans, c);
+			int r = Rf_length(s);
+			if (r > nr) nr = r;
+		}
+
+		rslt->xltype = xltypeMulti;
+		rslt->val.array.rows = nr;
+		rslt->val.array.columns = nc;
+		rslt->val.array.lparray = new XLOPER12[nr*nc];
+
+		// in the event there are any holes (sparse)
+
+		for (int i = 0; i < nr*nc; i++) rslt->val.array.lparray[i].xltype = xltypeMissing;
+
+		// the rest is just like a data frame but without headers
+
+		for (int c = 0; c < nc; c++)
+		{
+			SEXP v = VECTOR_ELT(ans, c);
+			int vlen = Rf_length(v);
+			type = TYPEOF(v);
+			for (int r = 0; r < vlen; r++)
+			{
+				int idx = r * nc + c;
+				switch (type)
+				{
+				case INTSXP:	//  13	  /* integer vectors */
+					rslt->val.array.lparray[idx].xltype = xltypeInt;
+					rslt->val.array.lparray[idx].val.w = (INTEGER(v))[r];
+					break;
+				case REALSXP:	//  14	  /* real variables */  
+					rslt->val.array.lparray[idx].xltype = xltypeNum;
+					rslt->val.array.lparray[idx].val.num = (REAL(v))[r];
+					break;
+				case STRSXP:	//  16	  /* string vectors - legal? */ 
+					STRSXP2XLOPER(&(rslt->val.array.lparray[idx]), STRING_ELT(v, r));
+					break;
+				default:
+					DebugOut("** Unexpected type in vector/vector: %d\n", type);
+					break;
+				}
+			}
+		}
+
+	}
+	else if (len > 1)
 	{
 		// for normal vector, use rows
 
@@ -668,24 +861,13 @@ void ParseResult(LPXLOPER12 rslt, SEXP ans)
 		{
 			nc = Rf_ncols(ans);
 			nr = Rf_nrows(ans);
-			//int len = nc*nr;
-			//int type = TYPEOF(ans);
 		}
 
 		rslt->xltype = xltypeMulti;
 		rslt->val.array.rows = nr;
 		rslt->val.array.columns = nc;
-		rslt->val.array.lparray = new XLOPER12[len];
-
-		// from the header file:
-
-		/* Under the generational allocator the data for vector nodes comes
-		immediately after the node structure, so the data address is a
-		known offset from the node SEXP. */
-
-		// which means handling this type-specific, I guess...
-		// also: have to swap r/c order 
-
+		rslt->val.array.lparray = new XLOPER12[nr*nc];
+		
 		// FIXME: LOOP ON THE INSIDE (CHECK OPTIM)
 
 		int idx = 0;
@@ -710,9 +892,10 @@ void ParseResult(LPXLOPER12 rslt, SEXP ans)
 					// ParseResult(&(rslt->val.array.lparray[j*nc + i]), STRING_ELT(ans, idx)); // this is lazy
 					break;
 
-				case VECSXP:	//  19	  /* generic vectors */
-					ParseResult(&(rslt->val.array.lparray[j*nc + i]), VECTOR_ELT(ans, idx));
+				default:
+					DebugOut("Unexpected type in list: %d\n", type);
 					break;
+
 				}
 
 				idx++;
@@ -896,7 +1079,7 @@ SEXP XLOPER2SEXP( LPXLOPER12 px, int depth )
 
 	if (depth >= 2)
 	{
-		OutputDebugStringA("WARNING: deep recursion\n");
+		DebugOut("WARNING: deep recursion\n");
 		return R_NilValue;
 	}
 
@@ -958,10 +1141,6 @@ void RExecVector(std::vector<std::string> &vec, int *err, PARSE_STATUS_2 *status
 	{
 		SEXP elt = VECTOR_ELT(rslt, 1);
 		int *pVisible = LOGICAL(elt);
-
-		//char sz[64];
-		//sprintf_s(sz, 64, "len %d; logical[1] %d\n", Rf_length(rslt), pVisible[0]);
-		//OutputDebugStringA(sz);
 
 		if (*pVisible ) Rf_PrintValue(VECTOR_ELT(rslt,0));
 	}
