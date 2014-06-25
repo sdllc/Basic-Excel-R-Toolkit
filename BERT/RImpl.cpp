@@ -67,6 +67,11 @@ SEXP XLOPER2SEXP(LPXLOPER12 px, int depth = 0);
 
 std::string dllpath;
 
+bool g_buffering = false;
+std::vector< std::string > logBuffer;
+
+HANDLE mux;
+
 int R_ReadConsole(const char *prompt, char *buf, int len, int addtohistory)
 {
 	fputs(prompt, stdout);
@@ -76,7 +81,27 @@ int R_ReadConsole(const char *prompt, char *buf, int len, int addtohistory)
 
 void R_WriteConsole(const char *buf, int len)
 {
-	logMessage(buf, len);
+	DWORD rslt = WaitForSingleObject(mux, INFINITE);
+	if (g_buffering) logBuffer.push_back(buf);
+	else logMessage(buf, len);
+	ReleaseMutex(mux);
+}
+
+void flush_log()
+{
+	DWORD rslt = WaitForSingleObject(mux, INFINITE);
+	std::string str;
+	for (std::vector< std::string > ::iterator iter = logBuffer.begin(); iter != logBuffer.end(); iter++)
+	{
+		str += *iter;
+	}
+	logBuffer.clear();
+
+	// this is dumb.  check ^ before iterating.
+
+	if (str.length() > 0 ) 
+		logMessage(str.c_str(), str.length());
+	::ReleaseMutex(mux);
 }
 
 void R_CallBack(void)
@@ -306,6 +331,8 @@ void RInit()
 		return;
 	}
 
+	mux = ::CreateMutex(0, 0, 0);
+
 	R_setStartTime();
 	R_DefParams(Rp);
 
@@ -431,6 +458,7 @@ void RInit()
 void RShutdown()
 {
 	Rf_endEmbeddedR(0);
+	CloseHandle(mux);
 }
 
 SEXP ExecR(std::string &str, int *err, ParseStatus *pStatus)
@@ -1259,6 +1287,9 @@ SEXP XLOPER2SEXP( LPXLOPER12 px, int depth )
 void RExecVector(std::vector<std::string> &vec, int *err, PARSE_STATUS_2 *status, bool printResult)
 {
 	ParseStatus ps;
+
+	g_buffering = true;
+
 	SEXP rslt = PROTECT(ExecR(vec, err, &ps, true));
 
 	if (status)
@@ -1284,6 +1315,9 @@ void RExecVector(std::vector<std::string> &vec, int *err, PARSE_STATUS_2 *status
 	}
 
 	UNPROTECT(1);
+
+	g_buffering = false;
+	flush_log();
 }
 
 bool RExec2(LPXLOPER12 rslt, std::string &funcname, std::vector< LPXLOPER12 > &args)

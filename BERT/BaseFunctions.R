@@ -23,7 +23,7 @@ CloseConsole <- function(){ invisible(.Call(.CALLBACK, .CLOSECONSOLE, 0, PACKAGE
 #--------------------------------------------------------
 # reload the startup file
 #--------------------------------------------------------
-ReloadStartup <- function(){ invisible(.Call(.CALLBACK, .RELOAD, 0, PACKAGE=.MODULE )); };
+ReloadStartup <- function(){ .Call(.CALLBACK, .RELOAD, 0, PACKAGE=.MODULE ); };
 
 #--------------------------------------------------------
 # get an excel range.  1-based.

@@ -57,7 +57,9 @@ sptr_t* ptr;
 
 extern SVECTOR & getWordList(SVECTOR &wordList);
 extern int getCallTip(std::string &callTip, const std::string &sym);
+extern void flush_log();
 
+bool inputlock = false;
 
 RECT rectConsole = { 0, 0, 0, 0 };
 
@@ -148,6 +150,7 @@ void CenterWindow(HWND hWnd, HWND hParent, int offsetX = 0, int offsetY = 0)
 
 DIALOG_RESULT_TYPE CALLBACK AboutDlgProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
+	
 	switch (message)
 	{
 	case WM_INITDIALOG:
@@ -244,6 +247,7 @@ void AppendLog(const char *buffer, int style)
 		fn(ptr, SCI_STARTSTYLING, start, 0x31);
 		fn(ptr, SCI_SETSTYLING, len, style);
 	}
+
 }
 
 void Prompt( const char *prompt = DEFAULT_PROMPT )
@@ -316,7 +320,10 @@ void ProcessCommand()
 	if (cmd.length() > 0)
 	{
 		cmdVector.push_back(cmd);
+
+		inputlock = true;
 		PARSE_STATUS_2 ps = RExecVectorBuffered(cmdVector);
+		inputlock = false;
 
 		switch (ps)
 		{
@@ -328,6 +335,7 @@ void ProcessCommand()
 			Prompt(CONTINUATION_PROMPT);
 			return;
 		}
+
 	}
 	else if (cmdVector.size() > 0)
 	{
@@ -385,6 +393,9 @@ LRESULT CALLBACK SubClassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	switch (msg)
 	{
 	case WM_CHAR:
+
+		if (inputlock) return 0;
+
 		switch (wParam)
 		{
 		case 13:
@@ -410,6 +421,8 @@ LRESULT CALLBACK SubClassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		break;
 
 	case WM_KEYDOWN:
+
+		if (inputlock) return 0;
 
 		switch (wParam)
 		{
@@ -567,6 +580,11 @@ void testAutocomplete()
 
 }
 
+VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
+{
+	flush_log();
+}
+
 DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam )
 {
 	const int borderedge = 8;
@@ -574,6 +592,8 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM w
 	HWND hWnd = 0;
 	char *szBuffer = 0;
 	RECT rect;
+
+	static UINT_PTR tid = 0;
 
 	switch (message)
 	{
@@ -612,6 +632,8 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM w
 
 			//if (!wlInit) 
 			initWordList();
+
+			tid = ::SetTimer(hwndDlg, TIMERID_FLUSHBUFFER, 1000, TimerProc);
 
 		}
 		else
@@ -671,6 +693,11 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM w
 		case IDOK:
 		case IDCANCEL:
 			::GetWindowRect(hwndDlg, &rectConsole);
+			if (tid)
+			{
+				::KillTimer(hwndDlg, tid);
+				tid = 0;
+			}
 			EndDialog(hwndDlg, wParam);
 			return TRUE;
 		}

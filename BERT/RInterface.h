@@ -63,4 +63,6 @@ int getCallTip(std::string &callTip, const std::string &sym);
 
 short BERT_InstallPackages();
 
+void flush_log();
+
 #endif // #ifndef __RINTERFACE_H
