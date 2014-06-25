@@ -424,6 +424,7 @@ LRESULT CALLBACK SubClassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		case VK_HOME:
 			fn(ptr, SCI_SETSEL, minCaret, minCaret);
+			return 0;
 			break;
 
 		case VK_END:
@@ -662,6 +663,10 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM w
 
 		switch (LOWORD(wParam))
 		{
+		case WM_REBUILD_WORDLISTS:
+			initWordList();
+			break;
+
 		case WM_CLOSE_CONSOLE:
 		case IDOK:
 		case IDCANCEL:

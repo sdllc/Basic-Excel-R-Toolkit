@@ -371,10 +371,10 @@ void RInit()
 			if (e)
 			{
 				Rf_defineVar(Rf_install(ENV_NAME), e, R_GlobalEnv);
-				Rf_defineVar(Rf_install("PATH"), Rf_mkString(p), e);
+				Rf_defineVar(Rf_install(".PATH"), Rf_mkString(p), e);
 				int idx = 0;
 				for (int i = 0; i < plen-1; i++) if (p[i] == '\\') idx = i + 1;
-				Rf_defineVar(Rf_install("MODULE"), Rf_mkString(p+idx), e);
+				Rf_defineVar(Rf_install(".MODULE"), Rf_mkString(p+idx), e);
 			}
 			UNPROTECT(1);
 		}
@@ -714,7 +714,7 @@ bool CheckExcelRef(LPXLOPER12 rslt, SEXP s)
 	{
 		// not using this structure as intended... be careful
 
-		rslt->xltype = xltypeRef;
+		rslt->xltype = xltypeRef | xlbitDLLFree;
 		rslt->val.mref.idSheet = ids;
 		rslt->val.mref.lpmref = new XLMREF12[1];
 		rslt->val.mref.lpmref[0].count = 1;
@@ -1016,18 +1016,38 @@ void ParseResult(LPXLOPER12 rslt, SEXP ans)
 	{
 		// single value
 
-		if (Rf_isInteger(ans))
+		if (isLogical(ans)) 
+		{
+			// it seems wasteful having this first, 
+			// but I think one of the other types is 
+			// intercepting it.  figure out how to do
+			// tighter checks and then move this down
+			// so real->integer->string->logical->NA->?
+
+			// this is weird, but NA seems to be a logical
+			// with a particular value.
+
+			int lgl = Rf_asLogical(ans);
+			if (lgl == NA_LOGICAL)
+			{
+				rslt->xltype = xltypeMissing;
+			}
+			else
+			{
+				rslt->xltype = xltypeBool;
+				rslt->val.xbool = lgl ? true : false;
+			}
+		}
+		else if (Rf_isInteger(ans))
 		{
 			rslt->xltype = xltypeInt;
 			rslt->val.num = Rf_asInteger(ans);
 		}
-		//else if (Rf_isReal(ans) || Rf_isNumber(ans))
 		else if (isReal(ans) || Rf_isNumber(ans))
 		{
 			rslt->xltype = xltypeNum;
 			rslt->val.num = Rf_asReal(ans);
 		}
-		//else if (Rf_isString(ans))
 		else if (isString(ans))
 		{
 			/*
@@ -1348,6 +1368,16 @@ SEXP ExcelCall(SEXP cmd, SEXP data)
 			xdata[i]->val.xbool = (INTEGER(data))[i] ? TRUE : FALSE;
 			break;
 		}
+
+		DebugOut("parm %d type 0x%x\n", i, xdata[i]->xltype);
+		if (xdata[i]->xltype & xltypeStr)
+		{
+			DebugOut("\tptr: %x\n", xdata[i]->val.str);
+		}
+		if (xdata[i]->xltype & xltypeRef)
+		{
+			DebugOut("\tptr: %x\n", xdata[i]->val.mref.lpmref);
+		}
 	}
 
 	SEXP rv = R_NilValue;
@@ -1359,6 +1389,7 @@ SEXP ExcelCall(SEXP cmd, SEXP data)
 	}
 	else
 	{
+		DebugOut("Return type 0x%x\n", xlRslt.xltype);
 
 		// in this call we want refs, so return as the class type
 
@@ -1423,9 +1454,13 @@ SEXP ExcelCall(SEXP cmd, SEXP data)
 
 	for (int i = 0; i < dlen; i++)
 	{
-		if (xdata[i]->xltype == xltypeStr && xdata[i]->val.str) delete xdata[i]->val.str;
-		else if (xdata[i]->xltype == xltypeMulti && xdata[i]->val.array.lparray) delete xdata[i]->val.array.lparray;
-		else if (xdata[i]->xltype == xltypeRef && xdata[i]->val.mref.lpmref) delete xdata[i]->val.mref.lpmref;
+		if ((xdata[i]->xltype & xltypeStr ) && xdata[i]->val.str) delete xdata[i]->val.str;
+		else if ((xdata[i]->xltype & xltypeMulti ) && xdata[i]->val.array.lparray) delete xdata[i]->val.array.lparray;
+		else if (( xdata[i]->xltype & xltypeRef ) && xdata[i]->val.mref.lpmref) delete xdata[i]->val.mref.lpmref;
+		else
+		{
+			DebugOut("Not deleting type 0x%x\n", xdata[i]->xltype);
+		}
 		delete xdata[i];
 	}
 	

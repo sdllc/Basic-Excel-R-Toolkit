@@ -192,6 +192,14 @@ short BERT_Reload()
 	LoadStartupFile();
 	MapFunctions();
 	RegisterAddinFunctions();
+
+	// if console is open, re-run wordlists?
+
+	if (hWndConsole)
+	{
+		::SendMessageA(hWndConsole, WM_COMMAND, MAKEWPARAM(WM_REBUILD_WORDLISTS, 0), 0);
+	}
+
 	return 1;
 }
 

@@ -5,11 +5,11 @@ with( BERT, {
 # constants
 #========================================================
 
-EXCEL <- 1;
-RELOAD <- 1022;
-CLOSECONSOLE <- 1023;
+.EXCEL <- 1;
+.RELOAD <- 1022;
+.CLOSECONSOLE <- 1023;
 
-CALLBACK <- "BERT_Callback";
+.CALLBACK <- "BERT_Callback";
 
 #========================================================
 # functions - for general use
@@ -18,12 +18,12 @@ CALLBACK <- "BERT_Callback";
 #--------------------------------------------------------
 # close the console
 #--------------------------------------------------------
-CloseConsole <- function(){ invisible(.Call(CALLBACK, CLOSECONSOLE, 0, PACKAGE=MODULE )); };
+CloseConsole <- function(){ invisible(.Call(.CALLBACK, .CLOSECONSOLE, 0, PACKAGE=.MODULE )); };
 
 #--------------------------------------------------------
 # reload the startup file
 #--------------------------------------------------------
-ReloadStartup <- function(){ invisible(.Call(CALLBACK, RELOAD, 0, PACKAGE=MODULE )); };
+ReloadStartup <- function(){ invisible(.Call(.CALLBACK, .RELOAD, 0, PACKAGE=.MODULE )); };
 
 #--------------------------------------------------------
 # get an excel range.  1-based.
@@ -52,7 +52,7 @@ GetSheetID <- function( sheetName )
 # Excel callback function. Be careful with this unless 
 # you know what you are doing.
 #--------------------------------------------------------
-Excel<- function( command, arguments ){ .Call(CALLBACK, EXCEL, command, arguments, PACKAGE=MODULE ); };
+Excel<- function( command, arguments = list() ){ .Call(.CALLBACK, .EXCEL, command, arguments, PACKAGE=.MODULE ); };
 
 #========================================================
 # functions - for internal use
@@ -98,7 +98,7 @@ print.xlRefClass <- function(x){
 		s <- paste( "Excel Reference R", x$r1, "C", x$c1, sep="");
 	}
 	else { s <- paste( "Excel Reference R", x$r1, "C", x$c1, ":R", x$r2, "C", x$c2, sep=""); }
-	cat( s, "\n", sep="");
+	cat( s, " ", x$sheetID, "\n", sep="");
 }
 
 
