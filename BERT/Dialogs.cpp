@@ -621,8 +621,7 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM w
 			std::list< std::string > *loglist = getLogText();
 			for (std::list< std::string >::iterator iter = loglist->begin(); iter != loglist->end(); iter++)
 			{
-				if (!strncmp(iter->c_str(), DEFAULT_PROMPT, 2)
-					|| !strncmp(iter->c_str(), CONTINUATION_PROMPT, 2))
+				if (!strncmp(iter->c_str(), DEFAULT_PROMPT, 2) || !strncmp(iter->c_str(), CONTINUATION_PROMPT, 2))
 				{
 					AppendLog(iter->c_str(), 0);
 				}

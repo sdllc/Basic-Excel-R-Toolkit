@@ -37,7 +37,7 @@ That's pretty much it.  Next step is to add your own functions:
 Construction
 ------------
 
-BERT is an XLL (Excel extension DLL).  On startup, it reads the given
+BERT is an XLL (Excel extension library).  On startup, it reads the given
 source file and looks for functions.  It uses its own R installation, so it
 won't affect any other workspaces you have on your machine.
 
@@ -48,6 +48,9 @@ be exposed from the global environment (we will locate it with `get`).
 For each function, it creates an Excel function with the same arguments
 (which we determine via `formals`).  When you type in the function, or
 recalculate, the Add-in executes the function using `do.call`.
+
+BERT uses the Excel C API, so it's fast.  It also exposes that API to you,
+the developer, so it's powerful (but can be dangerous).
 
 Arguments and Return Types
 --------------------------
@@ -87,23 +90,26 @@ There is some overhead in Excel -> R calls, in part because there are
 several layers of abstraction, and in part because there's a dynamic element
 to the call.  However performance is still pretty good.
 
-Mapping the simplest possible function `NOOP <- function(a, b){ 0 }` we find
-that over 1,000,000 function calls the average time for one call is 0.0422 ms.
-The Excel native function `SUM` over 1,000,000 calls takes on average
-0.005445 ms/call.  So R functions are an order of magintude slower.
+Mapping the simplest possible function `NOOP <- function(a, b){ 0 }`
+we find that over 1,000,000 function calls the average time for one call
+is 42.2 µs.  The Excel native function `SUM` over 1,000,000 calls takes
+on average 5.445 µs/call.  So R functions are an order of magintude slower.
 
 However this is fixed overhead, and beyond this the calculation time is
-entirely dependent on R performance.  For complex functions the .04 ms is
-effectively noise.
+entirely dependent on R performance.  For complex functions, 42 µs is
+effectively noise.  (If you actually have 1 million function calls in an
+Excel spreadsheet, you may be doing it wrong.  Also that still only takes 42
+seconds).
 
-More importantly, BERT is not threaded (see below).
+More importantly for performance, BERT is not threaded (see below).
 
 Excel Arrays
 ------------
 
-If a function returns a vector of length > 1, or a matrix, the return value
-will be the Excel Array type.  Excel Arrays can be entered into a spreadsheet
-directly, although you need to know the size of the Array beforehand.  
+If a function returns a vector of length > 1 (or a matrix, data frame, list, or
+anything other than a single scalar), the return value will be the Excel Array
+type.  Excel Arrays can be entered into a spreadsheet directly, although you
+need to know the size of the Array beforehand.  
 
 1. Select a 4x4 matrix in the spreadsheet
 
@@ -112,11 +118,18 @@ directly, although you need to know the size of the Array beforehand.
 3. Press `Ctrl+Shift+Return`
 
 This will enter the Array into the selected cells.  You can spot Arrays by
-looking at the function bar; here you'll see `{=R.Identity(4)}`.  You can't
-remove (or add) cells, which can be frustrating.
+looking at the function bar; here you'll see `{=R.Identity(4)}`.  You can
+change the shape of the array, but it's a pain.
 
 The other thing you can do with Excel Arrays is pass them into functions
 which can handle them.  For example, the function `=SUM( R.Identity(4))`.
+
+Data frames are returned as Excel Arrays including their row and column
+headers.  That makes them better for building spreadsheet reports, but
+less useful when passing into functions.  If you intend to pass a data
+frame into a function, your R code should convert the data (less headers) into
+a matrix.
+
 
 Limitations / Issues
 --------------------
