@@ -222,7 +222,7 @@ short BERT_Configure()
 	// InitRichEdit();
 
 	::DialogBox(ghModule,
-		MAKEINTRESOURCE(IDD_DIALOG2),
+		MAKEINTRESOURCE(IDD_CONFIG),
 		(HWND)xWnd.val.w,
 		(DLGPROC)OptionsDlgProc);
 
@@ -294,16 +294,13 @@ std::string trim(const std::string& str, const std::string& whitespace )
 	return str.substr(strBegin, strRange);
 }
 
+void clearLogText()
+{
+	loglist.clear();
+}
+
 std::list< std::string > * getLogText()
 {
-	/*
-	str = "";
-	for (std::list< std::string > ::iterator iter = loglist.begin(); iter != loglist.end(); iter++)
-	{
-		str += iter->c_str();
-		// str += "\n";
-	}
-	*/
 	return &loglist;
 }
 
@@ -360,7 +357,7 @@ short BERT_Console()
 	if (!hWndConsole)
 	{
 		hWndConsole = ::CreateDialog(ghModule,
-			MAKEINTRESOURCE(IDD_DIALOG1),
+			MAKEINTRESOURCE(IDD_CONSOLE),
 			(HWND)xWnd.val.w,
 			(DLGPROC)ConsoleDlgProc);
 	}
@@ -371,7 +368,7 @@ short BERT_Console()
 	// back to modal
 
 	::DialogBox( ghModule,
-		MAKEINTRESOURCE(IDD_DIALOG1),
+		MAKEINTRESOURCE(IDD_CONSOLE),
 		(HWND)xWnd.val.w,
 		(DLGPROC)ConsoleDlgProc);
 	hWndConsole = 0;

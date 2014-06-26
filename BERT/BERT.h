@@ -120,6 +120,9 @@ void logMessage(const char *buf, int len, bool console = true);
 /** */
 std::list< std::string > * getLogText();
 
+/** */
+void clearLogText();
+
 /**
 * register functions (dynamic)
 */

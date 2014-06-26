@@ -58,6 +58,7 @@ sptr_t* ptr;
 extern SVECTOR & getWordList(SVECTOR &wordList);
 extern int getCallTip(std::string &callTip, const std::string &sym);
 extern void flush_log();
+extern short BERT_InstallPackages();
 
 bool inputlock = false;
 
@@ -343,8 +344,22 @@ void ProcessCommand()
 		return;
 	}
 	cmdVector.clear();
+
+	initWordList(); // every time? (!) 
+
 	Prompt();
 
+}
+
+/**
+ * clears the buffer history, not the command history
+ */
+void ClearHistory()
+{
+	fn(ptr, SCI_SETTEXT, 0, (sptr_t)"");
+	clearLogText();
+	cmdVector.clear();
+	Prompt();
 }
 
 void CmdHistory(int scrollBy)
@@ -588,6 +603,8 @@ VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam )
 {
 	const int borderedge = 8;
+	const int topspace = 0;
+
 	static HWND hwndScintilla = 0;
 	HWND hWnd = 0;
 	char *szBuffer = 0;
@@ -600,9 +617,21 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM w
 	case WM_INITDIALOG:
 		
 		::GetClientRect(hwndDlg, &rect);
+
+		{
+			HMENU hMenu = (HMENU)::LoadMenu(ghModule, MAKEINTRESOURCE(IDR_CONSOLEMENU));
+			if (hMenu != INVALID_HANDLE_VALUE)
+				::SetMenu(hwndDlg, hMenu);
+		}
+
+
 		hwndScintilla = CreateWindowExA(0,
 			"Scintilla", "", WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_CLIPCHILDREN,
-			borderedge, borderedge, rect.right - 2 * borderedge, rect.bottom - 2 * borderedge, hwndDlg, 0, ghModule, NULL);
+			borderedge, 
+			borderedge + topspace, 
+			rect.right - 2 * borderedge, 
+			rect.bottom - 2 * borderedge - topspace, 
+			hwndDlg, 0, ghModule, NULL);
 
 		if (hwndScintilla)
 		{
@@ -655,16 +684,25 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM w
 				rectConsole.right - rectConsole.left, rectConsole.bottom - rectConsole.top,
 				SWP_NOZORDER);
 			::GetClientRect(hwndDlg, &rect);
-			::SetWindowPos(hwndScintilla, HWND_TOP, borderedge, borderedge, rect.right - 2 * borderedge, rect.bottom - 2 * borderedge,
+			::SetWindowPos(hwndScintilla, HWND_TOP, 
+				borderedge, 
+				borderedge + topspace, 
+				rect.right - 2 * borderedge, 
+				rect.bottom - 2 * borderedge - topspace,
 				SWP_NOMOVE | SWP_NOZORDER | SWP_DEFERERASE);
 		}
 
 		break;
 
-
+	case WM_SIZE:
+	case WM_WINDOWPOSCHANGED:
 	case WM_SIZING:
 		::GetClientRect(hwndDlg, &rect);
-		::SetWindowPos(hwndScintilla, HWND_TOP, borderedge, borderedge, rect.right - 2 * borderedge, rect.bottom - 2 * borderedge,
+		::SetWindowPos(hwndScintilla, HWND_TOP, 
+			borderedge, 
+			borderedge + topspace, 
+			rect.right - 2 * borderedge, 
+			rect.bottom - 2 * borderedge - topspace,
 			SWP_NOMOVE | SWP_NOZORDER | SWP_DEFERERASE);
 		break;
 
@@ -684,10 +722,27 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM w
 
 		switch (LOWORD(wParam))
 		{
+		case ID_CONSOLE_CLEARHISTORY:
+			ClearHistory();
+			break;
+
+		case ID_CONSOLE_INSTALLPACKAGES:
+			BERT_InstallPackages();
+			break;
+
+		case ID_CONSOLE_HOMEDIRECTORY:
+			BERT_HomeDirectory();
+			break;
+
+		case ID_CONSOLE_RELOADSTARTUPFILE:
+			BERT_Reload();
+			break;
+
 		case WM_REBUILD_WORDLISTS:
 			initWordList();
 			break;
 
+		case ID_CONSOLE_CLOSECONSOLE:
 		case WM_CLOSE_CONSOLE:
 		case IDOK:
 		case IDCANCEL:
@@ -711,7 +766,7 @@ void ConsoleDlg(HINSTANCE hInst)
 	
 
 	::DialogBox(hInst,
-		MAKEINTRESOURCE(IDD_DIALOG1),
+		MAKEINTRESOURCE(IDD_CONSOLE),
 		(HWND)xWnd.val.w,
 		(DLGPROC)ConsoleDlgProc);
 
