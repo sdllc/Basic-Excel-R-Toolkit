@@ -26,29 +26,6 @@ CloseConsole <- function(){ invisible(.Call(.CALLBACK, .CLOSECONSOLE, 0, PACKAGE
 ReloadStartup <- function(){ .Call(.CALLBACK, .RELOAD, 0, PACKAGE=.MODULE ); };
 
 #--------------------------------------------------------
-# get an excel range.  1-based.
-#--------------------------------------------------------
-GetRange <- function( r1, c1, r2=r1, c2=c1, sheetName=NULL )
-{
-	ref <- xlRefClass( r1, c1, r2, c2 );
-	if( !is.null( sheetName ))
-	{
-		ref$sheetID <- GetSheetID( sheetName );
-		if( is.null( ref$sheetID )) stop( "Sheet name not found");
-	}
-	Excel( 0x4002, list( ref )); 
-}
-
-#--------------------------------------------------------
-# get a sheet ID by name.  
-#--------------------------------------------------------
-GetSheetID <- function( sheetName )
-{
-	ref <- Excel( 0x4004, list( sheetName )); 
-	return( ref$sheetID );
-}
-
-#--------------------------------------------------------
 # Excel callback function. Be careful with this unless 
 # you know what you are doing.
 #--------------------------------------------------------
@@ -108,9 +85,6 @@ print.xlRefClass <- function(x){
 
 quit <- function(){ BERT$CloseConsole() }
 q <- quit;
-
-
-
 
 
 

@@ -80,6 +80,10 @@ void initWordList()
 	// fuck it we'll do it live
 
 	wordList.clear();
+	moneyList.clear();
+
+	wordList.reserve(5000);
+	moneyList.reserve(5000);
 
 	if (!wlInit)
 	{
@@ -107,7 +111,8 @@ void initWordList()
 		}
 	}
 
-	SVECTOR tmp;
+	SVECTOR tmp; 
+	tmp.reserve(5000);
 
 	tmp.insert(tmp.end(), baseWordList.begin(), baseWordList.end());
 	getWordList(tmp);
@@ -642,10 +647,34 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM w
 			fn = (sptr_t(__cdecl *)(sptr_t*, int, uptr_t, sptr_t))SendMessage(hwndScintilla, SCI_GETDIRECTFUNCTION, 0, 0);
 			ptr = (sptr_t*)SendMessage(hwndScintilla, SCI_GETDIRECTPOINTER, 0, 0);
 
-			fn(ptr, SCI_STYLESETFONT, STYLE_DEFAULT, (sptr_t)SCINTILLA_FONT_NAME);
-			fn(ptr, SCI_STYLESETSIZE, STYLE_DEFAULT, SCINTILLA_FONT_SIZE);
-			fn(ptr, SCI_STYLESETFORE, 1, SCINTILLA_R_TEXT_COLOR);
-			fn(ptr, SCI_STYLESETFORE, 0, SCINTILLA_USER_TEXT_COLOR);
+			char buffer[64];
+			DWORD dw;
+
+			if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, buffer, 63, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_FONT)
+				|| !strlen(buffer)) strcpy_s(buffer, 64, SCINTILLA_FONT_NAME);
+			fn(ptr, SCI_STYLESETFONT, STYLE_DEFAULT, (sptr_t)buffer);
+
+			if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_SIZE)
+				|| dw <= 0) dw = SCINTILLA_FONT_SIZE;
+			fn(ptr, SCI_STYLESETSIZE, STYLE_DEFAULT, dw);
+
+			if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_NORMAL)
+				|| dw < 0) dw = SCINTILLA_R_TEXT_COLOR;
+			fn(ptr, SCI_STYLESETFORE, 1, dw);
+
+			if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_USER)
+				|| dw < 0) dw = SCINTILLA_USER_TEXT_COLOR;
+			fn(ptr, SCI_STYLESETFORE, 0, dw);
+
+			if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_USER)
+				|| dw < 0) dw = SCINTILLA_USER_TEXT_COLOR;
+			fn(ptr, SCI_STYLESETFORE, 0, dw);
+
+			if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_BACK)
+				|| dw < 0) dw = SCINTILLA_BACK_COLOR;
+			fn(ptr, SCI_STYLESETBACK, 0, dw);
+			fn(ptr, SCI_STYLESETBACK, 1, dw);
+			fn(ptr, SCI_STYLESETBACK, 32, dw);
 
 			std::list< std::string > *loglist = getLogText();
 			for (std::list< std::string >::iterator iter = loglist->begin(); iter != loglist->end(); iter++)

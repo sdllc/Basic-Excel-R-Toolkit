@@ -69,12 +69,17 @@ int registerSecondXLL( bool reg, LPWSTR secondDll )
 DLLEX BOOL WINAPI xlAutoOpen(void)
 {
 	char RBin[MAX_PATH];
+	char Home[MAX_PATH];
 	DWORD bitness;
 
 	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, RBin, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_R_HOME, true))
 		ExpandEnvironmentStringsA(DEFAULT_R_HOME, RBin, MAX_PATH - 1);
+
 	if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &bitness, REGISTRY_KEY, REGISTRY_VALUE_BITNESS))
 		bitness = DEFAULT_BITNESS;
+
+	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, Home, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_R_USER, true))
+		ExpandEnvironmentStringsA(DEFAULT_R_USER, Home, MAX_PATH - 1);
 
 	int len = strlen(RBin);
 	if (len > 0)
@@ -96,6 +101,8 @@ DLLEX BOOL WINAPI xlAutoOpen(void)
 		::GetEnvironmentVariableA("PATH", &(buffer[blen]), elen);
 	}
 	::SetEnvironmentVariableA("PATH", buffer);
+	::SetEnvironmentVariableA("HOME", Home);
+
 	delete[] buffer;
 
 	// load xll

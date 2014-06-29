@@ -29,6 +29,12 @@
 #define REGISTRY_VALUE_BITNESS			"Bitness"
 #define REGISTRY_VALUE_HIDE_MENU		"HideMenu"
 
+#define REGISTRY_VALUE_CONSOLE_FONT		"ConsoleFont"
+#define REGISTRY_VALUE_CONSOLE_SIZE		"ConsoleFontSize"
+#define REGISTRY_VALUE_CONSOLE_USER		"ConsoleUserTextColor"
+#define REGISTRY_VALUE_CONSOLE_NORMAL	"ConsoleNormalTextColor"
+#define REGISTRY_VALUE_CONSOLE_BACK		"ConsoleBackgroundColor"
+
 #define DEFAULT_ENVIRONMENT				""
 #define DEFAULT_R_USER					"%APPDATA%\\BERT"
 #define DEFAULT_R_HOME					"%APPDATA%\\BERT\\R-3.1.0"
