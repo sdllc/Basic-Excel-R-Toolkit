@@ -676,6 +676,8 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM w
 			fn(ptr, SCI_STYLESETBACK, 1, dw);
 			fn(ptr, SCI_STYLESETBACK, 32, dw);
 
+			fn(ptr, SCI_SETMARGINWIDTHN, 1, 0);
+
 			std::list< std::string > *loglist = getLogText();
 			for (std::list< std::string >::iterator iter = loglist->begin(); iter != loglist->end(); iter++)
 			{
