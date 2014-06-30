@@ -115,7 +115,12 @@ void initWordList()
 	tmp.reserve(5000);
 
 	tmp.insert(tmp.end(), baseWordList.begin(), baseWordList.end());
+
+	DebugOut("Call gwl:\t%d\n", GetTickCount());
+
 	getWordList(tmp);
+
+	DebugOut("gwl complete:\t%d\n", GetTickCount());
 
 	for (SVECTOR::iterator iter = tmp.begin(); iter != tmp.end(); iter++)
 	{
@@ -128,6 +133,8 @@ void initWordList()
 
 	wordList.erase(std::unique(wordList.begin(), wordList.end()), wordList.end());
 	moneyList.erase(std::unique(moneyList.begin(), moneyList.end()), moneyList.end());
+
+	DebugOut("iwl finished:\t%d\n", GetTickCount());
 
 }
 
@@ -259,16 +266,17 @@ void AppendLog(const char *buffer, int style)
 void Prompt( const char *prompt = DEFAULT_PROMPT )
 {
 	fn(ptr, SCI_APPENDTEXT, strlen(prompt), (sptr_t)prompt);
+	fn(ptr, SCI_SETXOFFSET, 0, 0);
 	fn(ptr, SCI_SETSEL, -1, -1);
 	minCaret = fn(ptr, SCI_GETCURRENTPOS, 0, 0);
 	historyPointer = 0;
-
-	fn(ptr, SCI_SETXOFFSET, 0, 0);
 
 }
 
 void ProcessCommand()
 {
+	DebugOut("ProcessCommand:\t%d\n", GetTickCount());
+
 	int len = fn(ptr, SCI_GETLENGTH, 0, 0);
 
 	/*
@@ -327,9 +335,13 @@ void ProcessCommand()
 	{
 		cmdVector.push_back(cmd);
 
+		DebugOut("Exec:\t%d\n", GetTickCount());
+
 		inputlock = true;
 		PARSE_STATUS_2 ps = RExecVectorBuffered(cmdVector);
 		inputlock = false;
+
+		DebugOut("Complete:\t%d\n", GetTickCount());
 
 		switch (ps)
 		{
@@ -340,6 +352,11 @@ void ProcessCommand()
 		case PARSE2_INCOMPLETE:
 			Prompt(CONTINUATION_PROMPT);
 			return;
+
+		default:
+			DebugOut("Call IWL:\t%d\n", GetTickCount());
+			initWordList(); // every time? (!) 
+			break;
 		}
 
 	}
@@ -350,9 +367,9 @@ void ProcessCommand()
 	}
 	cmdVector.clear();
 
-	initWordList(); // every time? (!) 
-
 	Prompt();
+
+	DebugOut("Done:\t%d\n", GetTickCount());
 
 }
 

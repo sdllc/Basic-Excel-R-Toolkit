@@ -107,11 +107,13 @@ void flush_log()
 void R_CallBack(void)
 {
 	/* called during i/o, eval, graphics in ProcessEvents */
+	// DebugOut("R_CallBack\n");
 }
 
 void myBusy(int which)
 {
 	/* set a busy cursor ... if which = 1, unset if which = 0 */
+	DebugOut("busy\n");
 }
 
 /** 
@@ -592,6 +594,25 @@ SEXP ExecR(std::vector < std::string > &vec, int *err, ParseStatus *pStatus, boo
 
 }
 
+__inline void CPLXSXP2XLOPER(LPXLOPER12 result, Rcomplex &c)
+{
+	// thread issues, FIXME: use TLS
+	static char sz[MAX_PATH];
+
+	// see STRSXP2XLOPER
+	result->xltype = xltypeStr | xlbitDLLFree;
+
+	sprintf_s(sz, MAX_PATH, "%g+%gj", c.r, c.i);
+
+	int i, len = strlen(sz);
+
+	result->val.str = new XCHAR[len + 2];
+	result->val.str[0] = len;
+
+	for (i = 0; i < len; i++) result->val.str[i + 1] = sz[i];
+
+}
+
 __inline void STRSXP2XLOPER( LPXLOPER12 result, SEXP str )
 {
 	// this is just for our reference, as we do not call
@@ -878,6 +899,9 @@ void ParseResult(LPXLOPER12 rslt, SEXP ans)
 				case STRSXP:	//  16	  /* string vectors - legal? */ 
 					STRSXP2XLOPER(&(rslt->val.array.lparray[idx]), STRING_ELT(cn, c));
 					break;
+				case CPLXSXP:	//	15	  /* complex variables */
+					CPLXSXP2XLOPER(&(rslt->val.array.lparray[idx]), (COMPLEX(cn))[c]);
+					break;
 				default:
 					DebugOut("** Unexpected type in data frame (col) names: %d\n", type);
 					break;
@@ -911,6 +935,10 @@ void ParseResult(LPXLOPER12 rslt, SEXP ans)
 				case STRSXP:	//  16	  /* string vectors - legal? */ 
 					STRSXP2XLOPER(&(rslt->val.array.lparray[idx]), STRING_ELT(rn, r));
 					break;
+				case CPLXSXP:	//	15	  /* complex variables */
+					CPLXSXP2XLOPER(&(rslt->val.array.lparray[idx]), (COMPLEX(rn))[r]);
+					break;
+
 				default:
 					DebugOut( "** Unexpected type in data frame row names: %d\n", type);
 					break;
@@ -948,6 +976,10 @@ void ParseResult(LPXLOPER12 rslt, SEXP ans)
 				case STRSXP:	//  16	  /* string vectors - legal? */ 
 					STRSXP2XLOPER(&(rslt->val.array.lparray[idx]), STRING_ELT(s, r));
 					break;
+				case CPLXSXP:	//	15	  /* complex variables */
+					CPLXSXP2XLOPER(&(rslt->val.array.lparray[idx]), (COMPLEX(s))[r]);
+					break;
+
 				default:
 					DebugOut("** Unexpected type in data frame: %d\n", type);
 					break;
@@ -1002,6 +1034,9 @@ void ParseResult(LPXLOPER12 rslt, SEXP ans)
 				case STRSXP:	//  16	  /* string vectors - legal? */ 
 					STRSXP2XLOPER(&(rslt->val.array.lparray[idx]), STRING_ELT(v, r));
 					break;
+				case CPLXSXP:	//	15	  /* complex variables */
+					CPLXSXP2XLOPER(&(rslt->val.array.lparray[idx]), (COMPLEX(v))[r]);
+					break;
 				default:
 					DebugOut("** Unexpected type in vector/vector: %d\n", type);
 					break;
@@ -1054,6 +1089,10 @@ void ParseResult(LPXLOPER12 rslt, SEXP ans)
 					// ParseResult(&(rslt->val.array.lparray[j*nc + i]), STRING_ELT(ans, idx)); // this is lazy
 					break;
 
+				case CPLXSXP:	//	15	  /* complex variables */
+					CPLXSXP2XLOPER(&(rslt->val.array.lparray[j*nc + i]), (COMPLEX(ans))[idx]);
+					break;
+
 				default:
 					DebugOut("Unexpected type in list: %d\n", type);
 					break;
@@ -1089,6 +1128,10 @@ void ParseResult(LPXLOPER12 rslt, SEXP ans)
 				rslt->xltype = xltypeBool;
 				rslt->val.xbool = lgl ? true : false;
 			}
+		}
+		else if (Rf_isComplex(ans))
+		{
+			CPLXSXP2XLOPER(rslt, *(COMPLEX(ans)));
 		}
 		else if (Rf_isInteger(ans))
 		{
