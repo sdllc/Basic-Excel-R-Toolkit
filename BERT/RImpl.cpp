@@ -46,7 +46,6 @@
 
 FDVECTOR RFunctions;
 
-
 // who does this?
 #ifdef length
 	#undef length

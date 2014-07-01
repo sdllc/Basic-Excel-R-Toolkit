@@ -2,6 +2,12 @@
 Basic Excel R Toolkit (BERT)
 ============================
 
+Please note: user documentation is moving to [the wiki] [1].  We'll
+leave this file here, and may update it from time to time, but if 
+there's a conflict between the two the wiki should be presumed to be
+correct.
+
+
 Overview
 --------
 
@@ -183,7 +189,7 @@ there is no magic in here.  We do use some (non-standard) Microsoft string funct
 
 #### Build Dependencies ####
 
- * [Microsoft Excel Developer's Toolkit Version 15.0] [1].
+ * [Microsoft Excel Developer's Toolkit Version 15.0] [2].
 
 The project expects the files `XLCALL.h` and `XLCALL.cpp` in the ExcelLib
 directory; these are not included in our source distribution for license
@@ -213,5 +219,6 @@ Default values:
     Bitness:         32
 
 
+[1]: https://github.com/StructuredDataLLC/Basic-Excel-R-Toolkit/wiki
 
-[1]: http://msdn.microsoft.com/en-us/library/office/bb687883(v=office.15).aspx
+[2]: http://msdn.microsoft.com/en-us/library/office/bb687883(v=office.15).aspx
