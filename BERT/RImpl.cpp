@@ -888,8 +888,11 @@ void ParseResult(LPXLOPER12 rslt, SEXP ans)
 				switch (type)
 				{
 				case INTSXP:	//  13	  /* integer vectors */
-					rslt->val.array.lparray[idx].xltype = xltypeInt;
-					rslt->val.array.lparray[idx].val.w = (INTEGER(cn))[c];
+					if (!ISNA((INTEGER(cn))[c]))
+					{
+						rslt->val.array.lparray[idx].xltype = xltypeInt;
+						rslt->val.array.lparray[idx].val.w = (INTEGER(cn))[c];
+					}
 					break;
 				case REALSXP:	//  14	  /* real variables */  
 					rslt->val.array.lparray[idx].xltype = xltypeNum;
@@ -1344,7 +1347,15 @@ SEXP XLOPER2SEXP( LPXLOPER12 px, int depth )
 
 	case xltypeNil:
 	default:
-		return R_NilValue;
+
+		// changing to NA (from NULL).  not sure about this 
+		// either way, but I *think* NA is more appropriate.
+
+		// TODO/FIXME: check?
+
+		//return R_NilValue;
+		return Rf_ScalarInteger(NA_LOGICAL);
+
 		break;
 	}
 

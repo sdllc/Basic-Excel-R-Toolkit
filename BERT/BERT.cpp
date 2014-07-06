@@ -350,9 +350,9 @@ short BERT_Console()
 
 	/*
 
-	this would be nice, but Excel steals all key messages,
-	so non-modal is no-go.  perhaps there's a way to control 
-	that behavior.
+	//this would be nice, but Excel steals all key messages,
+	//so non-modal is no-go.  perhaps there's a way to control 
+	//that behavior.
 
 	if (!hWndConsole)
 	{
