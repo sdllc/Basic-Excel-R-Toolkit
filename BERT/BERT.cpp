@@ -267,6 +267,8 @@ void ExcelStatus(const char *message)
 	}
 	else
 	{
+		// FIXME: unicode
+
 		int len = strlen(message) + 2;
 
 		xlUpdate.val.xbool = true;
@@ -419,6 +421,8 @@ void SetBERTMenu( bool add )
 		{
 			for (int j = 0; j < 4; j++)
 			{
+				// FIXME: unicode
+
 				len = wcslen(menuTemplates[i][j]);
 				xlMenu.val.array.lparray[4 * (i + 1) + j].xltype = xltypeStr;
 				xlMenu.val.array.lparray[4 * (i + 1) + j].val.str = new XCHAR[len + 2];
@@ -460,6 +464,8 @@ LPXLOPER12 BERT_UpdateScript(LPXLOPER12 script)
 
 	if (script->xltype == xltypeStr)
 	{
+		// fixme: unicode
+
 		std::string str;
 		int len = script->val.str[0];
 		for (int i = 0; i < len; i++) str += (script->val.str[i + 1] & 0xff);
@@ -521,6 +527,8 @@ bool RegisterBasicFunctions()
 	{
 		for (int j = 0; j < 15; j++)
 		{
+			// FIXME: unicode
+
 			int len = strlen(funcTemplates[i][j]);
 			xlParm[j + 1]->xltype = xltypeStr;
 			xlParm[j + 1]->val.str = new XCHAR[len + 2];
@@ -631,6 +639,8 @@ bool RegisterAddinFunctions()
 			xlParm[scount + 1]->xltype = xltypeStr ;
 			xlParm[scount + 1]->val.str = new XCHAR[len + 2];
 
+			// fixme: unicode
+
 			for (int k = 0; k < len; k++) xlParm[scount + 1]->val.str[k + 1] = szHelpBuffer[k];
 			xlParm[scount + 1]->val.str[0] = len;
 		}
@@ -645,6 +655,8 @@ bool RegisterAddinFunctions()
 
 		for (int j = 0; j < func.size() - 1; j++)
 		{
+			// fixme: unicode
+
 			int len = func[j + 1].second.length();
 			xlParm[scount + 1]->xltype = xltypeStr;
 			xlParm[scount + 1]->val.str = new XCHAR[len + 2];

@@ -667,6 +667,8 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM w
 			char buffer[64];
 			DWORD dw;
 
+			fn(ptr, SCI_SETCODEPAGE, SC_CP_UTF8, 0);
+
 			if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, buffer, 63, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_FONT)
 				|| !strlen(buffer)) strcpy_s(buffer, 64, SCINTILLA_FONT_NAME);
 			fn(ptr, SCI_STYLESETFONT, STYLE_DEFAULT, (sptr_t)buffer);

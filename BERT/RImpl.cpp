@@ -601,6 +601,8 @@ __inline void CPLXSXP2XLOPER(LPXLOPER12 result, Rcomplex &c)
 	// see STRSXP2XLOPER
 	result->xltype = xltypeStr | xlbitDLLFree;
 
+	// FIXME: make this configurable (i/j/etc)
+
 	sprintf_s(sz, MAX_PATH, "%g+%gj", c.r, c.i);
 
 	int i, len = strlen(sz);
@@ -612,7 +614,7 @@ __inline void CPLXSXP2XLOPER(LPXLOPER12 result, Rcomplex &c)
 
 }
 
-__inline void STRSXP2XLOPER( LPXLOPER12 result, SEXP str )
+__inline void STRSXP2XLOPER(LPXLOPER12 result, SEXP str)
 {
 	// this is just for our reference, as we do not call
 	// xlFree on this object (also, don't call xlFree on
@@ -621,12 +623,13 @@ __inline void STRSXP2XLOPER( LPXLOPER12 result, SEXP str )
 	result->xltype = xltypeStr | xlbitDLLFree;
 
 	const char *sz = CHAR(Rf_asChar(str));
-	int i, len = strlen(sz);
 
-	result->val.str = new XCHAR[len + 2];
-	result->val.str[0] = len;
+	int len = MultiByteToWideChar(CP_UTF8, 0, sz, -1, 0, 0);
 
-	for (i = 0; i < len; i++) result->val.str[i + 1] = sz[i];
+	result->val.str = new XCHAR[len + 1];
+	result->val.str[0] = len == 0 ? 0 : len - 1;
+
+	MultiByteToWideChar(CP_UTF8, 0, sz, -1, &(result->val.str[1]), len);
 
 }
 
@@ -1147,14 +1150,6 @@ void ParseResult(LPXLOPER12 rslt, SEXP ans)
 		}
 		else if (isString(ans))
 		{
-			/*
-			rslt->xltype = xltypeStr;
-			const char *sz = CHAR(Rf_asChar(ans));
-			int i, len = strlen(sz);
-			rslt->val.str = new XCHAR[len + 2];
-			rslt->val.str[0] = len;
-			for (i = 0; i < len; i++) rslt->val.str[i + 1] = sz[i];
-			*/
 			STRSXP2XLOPER(rslt, ans);
 		}
 	}
@@ -1174,6 +1169,8 @@ LPXLOPER12 BERT_RExec(LPXLOPER12 code)
 	char *sz = 0;
 	if (code->xltype == xltypeStr)
 	{
+		// FIXME: unicode
+
 		int i, len = code->val.str[0];
 		sz = new char[len + 1];
 		for (i = 0; i < len; i++) sz[i] = code->val.str[i + 1] & 0xff;
@@ -1196,8 +1193,13 @@ LPXLOPER12 BERT_RExec(LPXLOPER12 code)
 void NarrowString(std::string &out, LPXLOPER12 pxl)
 {
 	int i, len = pxl->val.str[0];
-	out = "";
-	for (i = 0; i < len; i++) out += (pxl->val.str[i + 1] & 0xff);
+	int slen = WideCharToMultiByte(CP_UTF8, 0, &(pxl->val.str[1]), len, 0, 0, 0, 0);
+	char *s = new char[slen + 1];
+	WideCharToMultiByte(CP_UTF8, 0, &(pxl->val.str[1]), len, s, slen, 0, 0);
+	s[slen] = 0;
+	out = s;
+	delete[] s;
+
 }
 
 /**
