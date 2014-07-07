@@ -1169,12 +1169,15 @@ LPXLOPER12 BERT_RExec(LPXLOPER12 code)
 	char *sz = 0;
 	if (code->xltype == xltypeStr)
 	{
-		// FIXME: unicode
+		// FIXME: this seems fragile, as it might try to 
+		// allocate a really large contiguous block.  better
+		// to walk through and find lines?
 
-		int i, len = code->val.str[0];
+		int len = WideCharToMultiByte(CP_UTF8, 0, &(code->val.str[1]), code->val.str[0], 0, 0, 0, 0);
 		sz = new char[len + 1];
-		for (i = 0; i < len; i++) sz[i] = code->val.str[i + 1] & 0xff;
-		sz[i] = 0;
+		WideCharToMultiByte(CP_UTF8, 0, &(code->val.str[1]), code->val.str[0], sz, len, 0, 0);
+		sz[len] = 0;
+
 	}
 
 	result.xltype = xltypeErr;
@@ -1190,17 +1193,6 @@ LPXLOPER12 BERT_RExec(LPXLOPER12 code)
 	return &result;
 }
 
-void NarrowString(std::string &out, LPXLOPER12 pxl)
-{
-	int i, len = pxl->val.str[0];
-	int slen = WideCharToMultiByte(CP_UTF8, 0, &(pxl->val.str[1]), len, 0, 0, 0, 0);
-	char *s = new char[slen + 1];
-	WideCharToMultiByte(CP_UTF8, 0, &(pxl->val.str[1]), len, s, slen, 0, 0);
-	s[slen] = 0;
-	out = s;
-	delete[] s;
-
-}
 
 /**
  * this version of the function checks the values first and, if

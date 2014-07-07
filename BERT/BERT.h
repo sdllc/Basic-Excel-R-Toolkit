@@ -36,15 +36,15 @@
 
 extern HMODULE ghModule;
 
-static LPSTR funcTemplates[][16] = {
-	{ "BERT_UpdateScript", "UU#", "BERT.UpdateScript", "R Code", "2", "BERT", "", "99", "Update Script", "", "", "", "", "", "", "" },
-	{ "BERT_RExec", "UU", "BERT.Exec", "R Code", "2", "BERT", "", "98", "Exec R Code", "", "", "", "", "", "", "" },
-	{ "BERT_Configure", "A#", "BERT.Configure", "", "2", "BERT", "", "97", "", "", "", "", "", "", "", "" },
-	{ "BERT_Console", "A#", "BERT.Console", "", "2", "BERT", "", "96", "", "", "", "", "", "", "", "" },
-	{ "BERT_HomeDirectory", "A#", "BERT.Home", "", "2", "BERT", "", "95", "", "", "", "", "", "", "", "" },
-	{ "BERT_InstallPackages", "A#", "BERT.InstallPackages", "", "2", "BERT", "", "94", "", "", "", "", "", "", "", "" },
-	{ "BERT_Reload", "A#", "BERT.Reload", "", "2", "BERT", "", "93", "", "", "", "", "", "", "", "" },
-	{ "BERT_About", "A#", "BERT.About", "", "2", "BERT", "", "92", "", "", "", "", "", "", "", "" },
+static LPWSTR funcTemplates[][16] = {
+	{ L"BERT_UpdateScript", L"UU#", L"BERT.UpdateScript", L"R Code", L"2", L"BERT", L"", L"99", L"Update Script", L"", L"", L"", L"", L"", L"", L"" },
+	{ L"BERT_RExec", L"UU", L"BERT.Exec", L"R Code", L"2", L"BERT", L"", L"98", L"Exec R Code", L"", L"", L"", L"", L"", L"", L"" },
+	{ L"BERT_Configure", L"A#", L"BERT.Configure", L"", L"2", L"BERT", L"", L"97", L"", L"", L"", L"", L"", L"", L"", L"" },
+	{ L"BERT_Console", L"A#", L"BERT.Console", L"", L"2", L"BERT", L"", L"96", L"", L"", L"", L"", L"", L"", L"", L"" },
+	{ L"BERT_HomeDirectory", L"A#", L"BERT.Home", L"", L"2", L"BERT", L"", L"95", L"", L"", L"", L"", L"", L"", L"", L"" },
+	{ L"BERT_InstallPackages", L"A#", L"BERT.InstallPackages", L"", L"2", L"BERT", L"", L"94", L"", L"", L"", L"", L"", L"", L"", L"" },
+	{ L"BERT_Reload", L"A#", L"BERT.Reload", L"", L"2", L"BERT", L"", L"93", L"", L"", L"", L"", L"", L"", L"", L"" },
+	{ L"BERT_About", L"A#", L"BERT.About", L"", L"2", L"BERT", L"", L"92", L"", L"", L"", L"", L"", L"", L"", L"" },
 	{ 0 }
 };
 
@@ -127,6 +127,9 @@ void clearLogText();
 * register functions (dynamic)
 */
 bool RegisterAddinFunctions();
+
+void NarrowString(std::string &out, LPXLOPER12 pxl);
+
 
 /**
  * generic call dispatcher function, exported from dll

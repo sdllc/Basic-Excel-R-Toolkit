@@ -31,6 +31,7 @@
 #include "RegistryUtils.h"
 
 #include <shellapi.h>
+#include <strsafe.h>
 
 std::vector < double > functionEntries;
 std::list< std::string > loglist;
@@ -267,17 +268,15 @@ void ExcelStatus(const char *message)
 	}
 	else
 	{
-		// FIXME: unicode
-
-		int len = strlen(message) + 2;
+		int len = MultiByteToWideChar(CP_UTF8, 0, message, -1, 0, 0);
 
 		xlUpdate.val.xbool = true;
 
 		xlMessage.xltype = xltypeStr | xlbitXLFree;
-		xlMessage.val.str = new XCHAR[len];
+		xlMessage.val.str = new XCHAR[len + 2];
+		xlMessage.val.str[0] = len == 0 ? 0 : len - 1;
 
-		xlMessage.val.str[0] = len;
-		for (int i = 0; i < len; i++) xlMessage.val.str[i + 1] = message[i];
+		MultiByteToWideChar(CP_UTF8, 0, message, -1, &(xlMessage.val.str[1]), len+1);
 
 		Excel12(xlcMessage, 0, 2, &xlUpdate, &xlMessage);
 	}
@@ -421,8 +420,6 @@ void SetBERTMenu( bool add )
 		{
 			for (int j = 0; j < 4; j++)
 			{
-				// FIXME: unicode
-
 				len = wcslen(menuTemplates[i][j]);
 				xlMenu.val.array.lparray[4 * (i + 1) + j].xltype = xltypeStr;
 				xlMenu.val.array.lparray[4 * (i + 1) + j].val.str = new XCHAR[len + 2];
@@ -455,6 +452,17 @@ void SetBERTMenu( bool add )
 	}
 }
 
+void NarrowString(std::string &out, LPXLOPER12 pxl)
+{
+	int i, len = pxl->val.str[0];
+	int slen = WideCharToMultiByte(CP_UTF8, 0, &(pxl->val.str[1]), len, 0, 0, 0, 0);
+	char *s = new char[slen + 1];
+	WideCharToMultiByte(CP_UTF8, 0, &(pxl->val.str[1]), len, s, slen, 0, 0);
+	s[slen] = 0;
+	out = s;
+	delete[] s;
+}
+
 LPXLOPER12 BERT_UpdateScript(LPXLOPER12 script)
 {
 	XLOPER12 * rslt = get_thread_local_xloper12();
@@ -464,11 +472,8 @@ LPXLOPER12 BERT_UpdateScript(LPXLOPER12 script)
 
 	if (script->xltype == xltypeStr)
 	{
-		// fixme: unicode
-
 		std::string str;
-		int len = script->val.str[0];
-		for (int i = 0; i < len; i++) str += (script->val.str[i + 1] & 0xff);
+		NarrowString(str, script);
 
 		if (!UpdateR(str))
 		{
@@ -527,14 +532,14 @@ bool RegisterBasicFunctions()
 	{
 		for (int j = 0; j < 15; j++)
 		{
-			// FIXME: unicode
-
-			int len = strlen(funcTemplates[i][j]);
+			int len = wcslen(funcTemplates[i][j]);
 			xlParm[j + 1]->xltype = xltypeStr;
 			xlParm[j + 1]->val.str = new XCHAR[len + 2];
 
-			//strcpy_s(xlParm[j + 1]->val.str + 1, len + 1, funcTemplates[i][j]);
-			for (int k = 0; k < len; k++) xlParm[j + 1]->val.str[k + 1] = funcTemplates[i][j][k];
+			// strcpy_s(xlParm[j + 1]->val.str + 1, len + 1, funcTemplates[i][j]);
+			// for (int k = 0; k < len; k++) xlParm[j + 1]->val.str[k + 1] = funcTemplates[i][j][k];
+
+			wcscpy_s(&(xlParm[j + 1]->val.str[1]), len + 1, funcTemplates[i][j]);
 
 			xlParm[j + 1]->val.str[0] = len;
 		}
@@ -581,7 +586,10 @@ bool RegisterAddinFunctions()
 
 	static bool fRegisteredOnce = false;
 
-	char szHelpBuffer[512] = " ";
+	//char szHelpBuffer[512] = " ";
+	WCHAR wbuffer[512];
+	WCHAR wtmp[64];
+	int tlen;
 	bool fExcel12 = false;
 
 	// init memory
@@ -613,39 +621,53 @@ bool RegisterAddinFunctions()
 		{
 			switch (scount)
 			{
-			case 0: sprintf_s(szHelpBuffer, 256, "BERTFunctionCall%04d", 1000 + i); break;
+			case 0:  
+				StringCbPrintf( wbuffer, 256, L"BERTFunctionCall%04d", 1000 + i); 
+				break;
 			case 1: 
 				//for (int k = 0; k < func.size(); k++) szHelpBuffer[k] = 'U';
 				//szHelpBuffer[func.size()] = 0;
-				sprintf_s(szHelpBuffer, 256, "UUUUUUUUUUUUUUUUU");
+				StringCbPrintf(wbuffer, 256, L"UUUUUUUUUUUUUUUUU");
 				break;
-			case 2: sprintf_s(szHelpBuffer, 256, "R.%s", func[0].first.c_str()); break;
+			case 2:
+
+				// FIXME: this is correct, if messy, but unecessary: tokens in R can't 
+				// use unicode.  if there are high-byte characters in here the function 
+				// name is illegal.
+
+				tlen = MultiByteToWideChar(CP_UTF8, 0, func[0].first.c_str(), -1, 0, 0);
+				if (tlen > 0) MultiByteToWideChar(CP_UTF8, 0, func[0].first.c_str(), -1, wtmp, 64);
+				else wtmp[0] = 0;
+				StringCbPrintf(wbuffer, 256, L"R.%s", wtmp); 
+				break;
 			case 3: 
-				szHelpBuffer[0] = 0;
+				wbuffer[0] = 0;
 				for (int k = 1; k < func.size(); k++)
 				{
-					if (strlen(szHelpBuffer)) strcat_s(szHelpBuffer, 256, ",");
-					strcat_s(szHelpBuffer, 256, func[k].first.c_str());
+					tlen = MultiByteToWideChar(CP_UTF8, 0, func[k].first.c_str(), -1, 0, 0);
+					if (tlen > 0) MultiByteToWideChar(CP_UTF8, 0, func[k].first.c_str(), -1, wtmp, 64);
+					else wtmp[0] = 0;
+					
+					if (wcslen(wbuffer)) StringCbCat(wbuffer, 256, L",");
+					StringCbCat(wbuffer, 256, wtmp);
 				}
 				break;
-			case 4: sprintf_s(szHelpBuffer, 256, "1"); break;
-			case 5: sprintf_s(szHelpBuffer, 256, "Exported R functions"); break;
-			case 6: sprintf_s(szHelpBuffer, 256, "%d", 100 + i); break;
-			case 7: sprintf_s(szHelpBuffer, 256, "Exported R function"); break; // ??
-			default: sprintf_s(szHelpBuffer, 256, ""); break;
+			case 4: StringCbPrintf(wbuffer, 256, L"1"); break;
+			case 5: StringCbPrintf(wbuffer, 256, L"Exported R functions"); break;
+			case 6: StringCbPrintf(wbuffer, 256, L"%d", 100 + i); break;
+			case 7: StringCbPrintf(wbuffer, 256, L"Exported R function"); break; // ??
+			default: StringCbPrintf(wbuffer, 256, L""); break;
 			}
 			
-			int len = strlen(szHelpBuffer);
+			int len = wcslen(wbuffer);
 			xlParm[scount + 1]->xltype = xltypeStr ;
 			xlParm[scount + 1]->val.str = new XCHAR[len + 2];
 
-			// fixme: unicode
-
-			for (int k = 0; k < len; k++) xlParm[scount + 1]->val.str[k + 1] = szHelpBuffer[k];
+			for (int k = 0; k < len; k++) xlParm[scount + 1]->val.str[k + 1] = wbuffer[k];
 			xlParm[scount + 1]->val.str[0] = len;
-		}
 
-		
+		}
+			
 
 		// so this is supposed to show the default value; but for some
 		// reason, it's truncating some strings (one string?) - FALS.  leave
@@ -655,14 +677,11 @@ bool RegisterAddinFunctions()
 
 		for (int j = 0; j < func.size() - 1; j++)
 		{
-			// fixme: unicode
-
-			int len = func[j + 1].second.length();
+			int len = MultiByteToWideChar(CP_UTF8, 0, func[j + 1].second.c_str(), -1, 0, 0);
 			xlParm[scount + 1]->xltype = xltypeStr;
 			xlParm[scount + 1]->val.str = new XCHAR[len + 2];
-			const char *p = func[j + 1].second.c_str();
-			for (int k = 0; k < len; k++) xlParm[scount + 1]->val.str[k + 1] = p[k];
-			xlParm[scount + 1]->val.str[0] = len;
+			xlParm[scount + 1]->val.str[0] = len > 0 ? len-1 : 0;
+			MultiByteToWideChar(CP_UTF8, 0, func[j + 1].second.c_str(), -1, &(xlParm[scount + 1]->val.str[1]), len+1);
 			scount++;
 		}
 		
