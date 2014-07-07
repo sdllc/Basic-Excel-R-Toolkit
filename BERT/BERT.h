@@ -61,6 +61,8 @@ static LPWSTR menuTemplates[][4] = {
 
 const char WRAP_ERR[] = "Error in eval(expr, envir, enclos) :";
 
+#define BERT_MENU_NAME L"BERT"
+
 
 /** 
  * convenience macro for setting an XLOPER12 string.  

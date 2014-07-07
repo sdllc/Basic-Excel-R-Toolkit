@@ -384,7 +384,7 @@ short BERT_Console()
 void SetBERTMenu( bool add )
 {
 	XLOPER12 xl1, xlMenuName, xlMenu;
-	XCHAR menuName[] = L" BERT";
+	XCHAR menuName[] = L" " BERT_MENU_NAME;
 	XCHAR menuEmpty[] = L" ";
 
 	static bool menuInstalled = false;
