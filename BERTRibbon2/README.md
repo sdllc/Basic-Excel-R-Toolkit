@@ -3,9 +3,8 @@ BERT Ribbon 2
 
 Switching from the VBA-based ribbon to a dll ribbon.  The VBA 
 ribbon works fine.  The problem is that it pollutes the VBA 
-workspace with its own files.  This is just unecessary.
-
-An ATL-based ribbon is a bit more complicated, but ultimately
+workspace with its own files.  This is just unecessary.  An 
+ATL-based ribbon is a bit more complicated, but ultimately
 it's a better solution.  It also won't get caught up in any
 future VBA lockdowns.
 
