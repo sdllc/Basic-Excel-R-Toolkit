@@ -42,6 +42,9 @@
 #include <atlcom.h>
 #include <atlstr.h>
 
+#include <Psapi.h>
+#include <string>
+
 #pragma warning( disable : 4278 )
 #pragma warning( disable : 4146 )
 //The following #import imports the IDTExtensibility2 interface based on it's LIBID

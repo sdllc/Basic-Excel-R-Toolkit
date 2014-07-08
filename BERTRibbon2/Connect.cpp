@@ -10,6 +10,7 @@ STDMETHODIMP CConnect::OnConnection(IDispatch *pApplication, AddInDesignerObject
 {
 	pApplication->QueryInterface(__uuidof(IDispatch), (LPVOID*)&m_pApplication);
 	pAddInInst->QueryInterface(__uuidof(IDispatch), (LPVOID*)&m_pAddInInstance);
+
 	return S_OK;
 }
 

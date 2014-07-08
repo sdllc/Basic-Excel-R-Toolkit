@@ -1352,6 +1352,19 @@ SEXP XLOPER2SEXP( LPXLOPER12 px, int depth )
 	case xltypeStr:
 		NarrowString(str, px);
 
+#ifdef __USE_COMPLEX
+
+		// one issue with this is that it fails on non-complex
+		// numbers.  that's an issue because Excel creates complex
+		// numbers as strings, even if i=0; and in that case, it 
+		// omits the imaginary component BUT it's still a string.
+
+		// that means we are not catching it in these regexes.
+
+		// OTOH, the user might be trying to pass strings of numbers,
+		// which we probably don't want to mess with.  not sure
+		// how to handle this... 
+
 		// TESTING complex support here via regex.
 
 		if (std::regex_search(str, m, cpx1))
@@ -1368,7 +1381,7 @@ SEXP XLOPER2SEXP( LPXLOPER12 px, int depth )
 		// TODO: perf
 		// FIXME: supposedly boost regex is much faster than stl regex.
 
-		// FIXME: should we handle reals here as well? ... (<- pondering, not a three-dots argument)
+#endif // #ifdef __USE_COMPLEX
 
 		return Rf_mkString(str.c_str());
 		break;
@@ -1637,6 +1650,7 @@ SEXP BERT_Callback(SEXP cmd, SEXP data, SEXP data2)
 	case CC_RELOAD:
 		BERT_Reload();
 		break;
+
 	}
 
 	return R_NilValue;

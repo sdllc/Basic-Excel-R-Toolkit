@@ -40,6 +40,8 @@ xlAddInManagerInfo12
 ; Functions
 ;
 
+BERT_SetPtr
+
 BERT_UpdateScript
 BERT_RExec
 BERT_Configure

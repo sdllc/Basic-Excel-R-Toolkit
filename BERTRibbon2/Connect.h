@@ -5,6 +5,8 @@
 
 typedef IDispatchImpl<IRibbonExtensibility, &__uuidof(IRibbonExtensibility), &LIBID_Office, /* wMajor = */ 2, /* wMinor = */ 4> RIBBON_INTERFACE;
 
+typedef int (*SPPROC)(LPVOID);
+
 // CConnect
 class ATL_NO_VTABLE CConnect :
 	public CComObjectRootEx<CComSingleThreadModel>,
@@ -13,7 +15,7 @@ class ATL_NO_VTABLE CConnect :
 	public RIBBON_INTERFACE
 {
 public:
-	CConnect()
+	CConnect() : m_pApplication(0)
 	{
 	}
 
@@ -139,6 +141,38 @@ public:
 			&& pdispparams->rgvarg[0].vt == VT_DISPATCH)
 		{
 			m_pRibbonUI = pdispparams->rgvarg[0].pdispVal;
+
+			{
+				// this is just -1 for the current process
+				HANDLE h = GetCurrentProcess(); 
+
+				HMODULE hMods[1024];
+				HANDLE hProcess;
+				DWORD cbNeeded;
+
+				if (EnumProcessModules(h, hMods, sizeof(hMods), &cbNeeded))
+				{
+					for (int i = 0; i < (cbNeeded / sizeof(HMODULE)); i++)
+					{
+						char szModName[MAX_PATH];
+						if (GetModuleFileNameExA(h, hMods[i], szModName, sizeof(szModName) / sizeof(char)))
+						{
+							std::string str(szModName);
+
+							// this is fragile, because it's a filename.  
+
+							if (std::string::npos != str.find("BERT") 
+								&& std::string::npos != str.find(".xll"))
+							{
+								SPPROC sp;
+								sp = (SPPROC)::GetProcAddress(hMods[i], "BERT_SetPtr");
+								if (sp) sp((LPVOID)m_pApplication.p);
+							}
+						}
+					}
+				}
+			}
+
 			return S_OK;
 		}
 		return E_FAIL;
