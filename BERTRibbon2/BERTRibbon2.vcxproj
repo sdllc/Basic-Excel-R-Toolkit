@@ -280,6 +280,7 @@
   <ItemGroup>
     <None Include="BERTRibbon2.def" />
     <None Include="BERTRibbon2.rgs" />
+    <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="BERTRibbon2.idl" />
