@@ -28,6 +28,24 @@ HKCU
 				}
 			}
 		}
+		Microsoft
+		{
+			Office
+			{
+				Excel
+				{
+					NoRemove Addins
+					{
+						ForceRemove BERTRibbon.Connect
+						{
+							val Description = s 'BERTRibbon Connect Class'	
+							val FriendlyName = s 'BERT Ribbon Menu'
+							val LoadBehavior = d 3
+						}
+					}
+				}
+			}
+		}
 	}
 }
 
