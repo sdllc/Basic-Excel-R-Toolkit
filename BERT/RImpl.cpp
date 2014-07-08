@@ -604,7 +604,7 @@ __inline void CPLXSXP2XLOPER(LPXLOPER12 result, Rcomplex &c)
 
 	// FIXME: make this configurable (i/j/etc)
 
-	sprintf_s(sz, MAX_PATH, "%g+%gj", c.r, c.i);
+	sprintf_s(sz, MAX_PATH, "%g+%gi", c.r, c.i);
 
 	int i, len = strlen(sz);
 
