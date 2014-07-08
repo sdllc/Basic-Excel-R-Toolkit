@@ -80,6 +80,9 @@
     <ClCompile Include="ExcelLib\XLCALL.CPP">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="BERTCOM.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="BERT.def">

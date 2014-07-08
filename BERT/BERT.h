@@ -35,6 +35,7 @@
 #define DLLEX extern "C" __declspec(dllexport)
 
 extern HMODULE ghModule;
+extern IDispatch *pApp;
 
 static LPWSTR funcTemplates[][16] = {
 	{ L"BERT_UpdateScript", L"UU#", L"BERT.UpdateScript", L"R Code", L"2", L"BERT", L"", L"99", L"Update Script", L"", L"", L"", L"", L"", L"", L"" },

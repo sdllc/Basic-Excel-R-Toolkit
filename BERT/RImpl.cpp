@@ -72,6 +72,8 @@ std::vector< std::string > logBuffer;
 
 HANDLE mux;
 
+extern void TestCOM();
+
 int R_ReadConsole(const char *prompt, char *buf, int len, int addtohistory)
 {
 	fputs(prompt, stdout);
@@ -1649,6 +1651,10 @@ SEXP BERT_Callback(SEXP cmd, SEXP data, SEXP data2)
 
 	case CC_RELOAD:
 		BERT_Reload();
+		break;
+
+	case 400:
+		TestCOM();
 		break;
 
 	}

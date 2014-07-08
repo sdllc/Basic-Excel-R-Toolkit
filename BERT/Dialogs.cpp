@@ -20,6 +20,7 @@
 
 #include "stdafx.h"
 #include "BERT.h"
+
 #include "ThreadLocalStorage.h"
 #include "resource.h"
 #include "Dialogs.h"

@@ -36,4 +36,7 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <atlbase.h>
+#include <atlcom.h>
+
 // TODO: reference additional headers your program requires here

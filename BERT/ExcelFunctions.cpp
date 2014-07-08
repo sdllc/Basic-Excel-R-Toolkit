@@ -20,7 +20,6 @@
 
 #include "stdafx.h"
 #include "BERT.h"
-#include "XLCALL.h"
 #include "RInterface.h"
 
 DLLEX BOOL WINAPI xlAutoOpen(void)

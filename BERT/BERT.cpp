@@ -21,6 +21,7 @@
 
 #include "stdafx.h"
 #include "BERT.h"
+
 #include "ThreadLocalStorage.h"
 
 #include "RInterface.h"
@@ -37,6 +38,8 @@ std::vector < double > functionEntries;
 std::list< std::string > loglist;
 
 HWND hWndConsole = 0;
+IDispatch *pApp = 0;
+
 
 /*
 short Startup(){
@@ -213,11 +216,9 @@ short BERT_HomeDirectory()
 	return 1;
 }
 
-LPVOID pApp = 0;
-
 int BERT_SetPtr( LPVOID pdisp )
 {
-	pApp = pdisp;
+	pApp = (IDispatch*)pdisp;
 	return 2;
 }
 
