@@ -1,0 +1,34 @@
+HKCU
+{
+	Software
+	{
+		Classes
+		{
+			BERTRibbon.Connect.2 = s 'Connect Class'
+			{
+				CLSID = s '{0445D07A-354A-4FD2-9B38-B42221BA53B7}'
+			}
+			BERTRibbon.Connect = s 'Connect Class'
+			{
+				CLSID = s '{0445D07A-354A-4FD2-9B38-B42221BA53B7}'
+				CurVer = s 'BERTRibbon.Connect.2'
+			}
+			NoRemove CLSID
+			{
+				ForceRemove '{0445D07A-354A-4FD2-9B38-B42221BA53B7}' = s 'Connect Class'
+				{
+					ProgID = s 'BERTRibbon.Connect.2'
+					VersionIndependentProgID = s 'BERTRibbon.Connect'
+					ForceRemove 'Programmable'
+					InprocServer32 = s '%MODULE%'
+					{
+						val ThreadingModel = s 'Apartment'
+					}
+					'TypeLib' = s '{BB49688B-03E5-4703-8175-99CF97125C80}'
+				}
+			}
+		}
+	}
+}
+
+

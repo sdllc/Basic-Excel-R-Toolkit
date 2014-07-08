@@ -1,0 +1,22 @@
+<customUI xmlns="http://schemas.microsoft.com/office/2006/01/customui" onLoad="BERTRIBBON_Ribbon_Loaded">
+
+  <!-- add to, don't replace, the whole ribbon -->
+  <ribbon startFromScratch="false">
+    <tabs>
+
+      <tab idMso="TabAddIns">
+        <group id="g1" label="Basic Excel R Toolkit">
+          <button id="b1" label="Console" size="large" onAction="BERTRIBBON_BERT_Console" imageMso="CreateStoredProcedure" />
+          <separator id="separator1" />
+          <button id="b2" label="Home Directory" onAction="BERTRIBBON_BERT_Home" imageMso="FileOpen" />
+          <button id="b3" label="Reload Startup File" onAction="BERTRIBBON_BERT_Reload" imageMso="FileStartWorkflow" />
+          <button id="b4" label="Install Packages" onAction="BERTRIBBON_BERT_InstallPackages" imageMso="DuplicateSelectedSlides" />
+          <separator id="separator2" />
+          <button id="b5" label="Configure" onAction="BERTRIBBON_BERT_Configure" imageMso="ComAddInsDialog" />
+          <button id="b6" label="About" onAction="BERTRIBBON_BERT_About" imageMso="Info" />
+        </group>
+      </tab>
+
+    </tabs>
+  </ribbon>
+</customUI>
