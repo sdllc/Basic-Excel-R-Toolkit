@@ -22,6 +22,7 @@
 
 #include <sstream>
 #include <vector>
+#include <regex>
 
 #define Win32
 
@@ -1298,6 +1299,19 @@ SEXP Multi2SEXP(LPXLOPER12 px)
 }
 
 /**
+ * utility method for converting string (in regex submatch) to 
+ * real, and allowing for some shorthand values
+ */
+__inline double number(const std::string &s)
+{
+	char *c;
+	double d = 0;
+	if (!s.compare("-")) return -1;
+	else if (!s.compare("") || !s.compare("+")) return 1;
+	return strtod(s.c_str(), &c);
+}
+
+/**
  * convert an arbitrary excel value to a SEXP
  */
 SEXP XLOPER2SEXP( LPXLOPER12 px, int depth )
@@ -1306,6 +1320,15 @@ SEXP XLOPER2SEXP( LPXLOPER12 px, int depth )
 	std::string str;
 	SEXP result;
 
+	// might be faster to have 1 regex with an |.  However,
+	// given how stl regex capture works, that might require
+	// changing the conditionals
+
+	static std::regex cpx1("^([-\\+]?\\d*(\\.\\d*)?([eE][-\\+]?\\d+)?)[ij]$");
+	static std::regex cpx2("^([-\\+]?\\d*(\\.\\d*)?([eE][-\\+]?\\d+)?)([-\\+]\\d*(\\.\\d*)?([eE][-\\+]?\\d+)?)[ij]$");
+
+	std::smatch m;
+	
 	if (depth >= 2)
 	{
 		DebugOut("WARNING: deep recursion\n");
@@ -1328,6 +1351,25 @@ SEXP XLOPER2SEXP( LPXLOPER12 px, int depth )
 
 	case xltypeStr:
 		NarrowString(str, px);
+
+		// TESTING complex support here via regex.
+
+		if (std::regex_search(str, m, cpx1))
+		{
+			Rcomplex rc = { 0, number(m[1].str()) };
+			return Rf_ScalarComplex(rc);
+		}
+		else if (std::regex_search(str, m, cpx2))
+		{
+			Rcomplex rc = { number(m[1].str()), number(m[4].str()) };
+			return Rf_ScalarComplex(rc);
+		}
+
+		// TODO: perf
+		// FIXME: supposedly boost regex is much faster than stl regex.
+
+		// FIXME: should we handle reals here as well? ... (<- pondering, not a three-dots argument)
+
 		return Rf_mkString(str.c_str());
 		break;
 
