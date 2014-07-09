@@ -29,6 +29,10 @@
 	"Includes R version 3.1.0 (2014-04-10) -- \"Spring Dance\"\r\n" \
 	"Copyright (C) 2014 The R Foundation for Statistical Computing"
 
+#define ABOUT_SCINTILLA_TEXT \
+	"Includes Scintilla editing component\r\n" \
+	"Copyright 1998 - 2014 by Neil Hodgson <neilh@scintilla.org>"
+
 #define PARSE_ERROR_MESSAGE "(parse error)\n"
 
 

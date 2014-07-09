@@ -819,21 +819,6 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 	return FALSE;
 }
 
-/*
-void ConsoleDlg(HINSTANCE hInst)
-{
-
-
-::DialogBox(hInst,
-MAKEINTRESOURCE(IDD_CONSOLE),
-(HWND)xWnd.val.w,
-(DLGPROC)ConsoleDlgProc);
-
-Excel12(xlFree, 0, 1, (LPXLOPER12)&xWnd);
-
-}
-*/
-
 DWORD WINAPI ThreadProc(LPVOID lpParameter)
 {
 	const wchar_t CLASS_NAME[] = L"BERT Console Window";

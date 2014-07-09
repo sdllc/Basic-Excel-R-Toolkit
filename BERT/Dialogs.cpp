@@ -60,6 +60,7 @@ DIALOG_RESULT_TYPE CALLBACK AboutDlgProc(HWND hwndDlg, UINT message, WPARAM wPar
 
 		::SetWindowTextA(::GetDlgItem(hwndDlg, IDC_STATIC_ABOUT_BERT), ABOUT_BERT_TEXT);
 		::SetWindowTextA(::GetDlgItem(hwndDlg, IDC_STATIC_ABOUT_R), ABOUT_R_TEXT);
+		::SetWindowTextA(::GetDlgItem(hwndDlg, IDC_STATIC_ABOUT_SCINTILLA), ABOUT_SCINTILLA_TEXT);
 
 		CenterWindow(hwndDlg, ::GetParent(hwndDlg));
 		break;
