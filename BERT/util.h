@@ -35,6 +35,19 @@ typedef enum
 }
 PARSE_STATUS_2;
 
+
+typedef enum
+{
+	SCC_NULL = 0,
+	SCC_EXEC = 1,
+	SCC_RELOAD_STARTUP = 2,
+	SCC_INSTALLPACKAGES = 3,
+	SCC_CALLTIP = 4,
+
+	SCC_LAST
+}
+SAFECALL_CMD;
+
 #endif // #ifndef __UTIL_H
 
 

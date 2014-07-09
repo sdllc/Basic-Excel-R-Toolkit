@@ -27,12 +27,6 @@
 #include "RegistryUtils.h"
 
 #include "Scintilla.h"
-#include <string>
-#include <list>
-#include <vector>
-#include <regex>
-#include <sstream>
-#include <algorithm>
 
 typedef std::vector< std::string> SVECTOR;
 typedef SVECTOR::iterator SITER;
@@ -56,14 +50,21 @@ WNDPROC lpfnEditWndProc = 0;
 sptr_t(*fn)(sptr_t*, int, uptr_t, sptr_t);
 sptr_t* ptr;
 
-extern SVECTOR & getWordList(SVECTOR &wordList);
-extern int getCallTip(std::string &callTip, const std::string &sym);
+//extern SVECTOR & getWordList(SVECTOR &wordList);
+//extern int getCallTip(std::string &callTip, const std::string &sym);
 extern void flush_log();
-extern short BERT_InstallPackages();
+//extern short BERT_InstallPackages();
 
 bool inputlock = false;
 
 RECT rectConsole = { 0, 0, 0, 0 };
+
+
+//extern HRESULT FreeStream();
+extern HRESULT SafeCall( SAFECALL_CMD cmd, std::vector< std::string > *vec, int *presult);
+extern HRESULT Marshal();
+extern HRESULT Unmarshal();
+extern HRESULT ReleaseThreadPtr();
 
 SVECTOR & split(const std::string &s, char delim, int minLength, SVECTOR &elems)
 {
@@ -115,13 +116,26 @@ void initWordList()
 	SVECTOR tmp; 
 	tmp.reserve(5000);
 
+	DWORD stat = WaitForSingleObject(muxWordlist, INFINITE);
+	if (stat == WAIT_OBJECT_0)
+	{
+		//std::copy(wlist->begin(), wlist->end(), std::back_inserter(tmp.begin()));
+		//std::copy(wlist->begin(), wlist->end(), tmp.begin());
+
+		for (SVECTOR::iterator iter = wlist->begin(); iter != wlist->end(); iter++)
+		{
+			std::string str(*iter);
+			tmp.push_back(str);
+		}
+		ReleaseMutex(muxWordlist);
+	}
 	tmp.insert(tmp.end(), baseWordList.begin(), baseWordList.end());
 
-	DebugOut("Call gwl:\t%d\n", GetTickCount());
+//	DebugOut("Call gwl:\t%d\n", GetTickCount());
 
-	getWordList(tmp);
+	/// getWordList(tmp);
 
-	DebugOut("gwl complete:\t%d\n", GetTickCount());
+//	DebugOut("gwl complete:\t%d\n", GetTickCount());
 
 	for (SVECTOR::iterator iter = tmp.begin(); iter != tmp.end(); iter++)
 	{
@@ -339,7 +353,12 @@ void ProcessCommand()
 		DebugOut("Exec:\t%d\n", GetTickCount());
 
 		inputlock = true;
-		PARSE_STATUS_2 ps = RExecVectorBuffered(cmdVector);
+		//PARSE_STATUS_2 ps = RExecVectorBuffered(cmdVector);
+
+		int ips = 0;
+		SafeCall(SCC_EXEC, &cmdVector, &ips);
+		PARSE_STATUS_2 ps = (PARSE_STATUS_2)ips;
+
 		inputlock = false;
 
 		DebugOut("Complete:\t%d\n", GetTickCount());
@@ -355,7 +374,7 @@ void ProcessCommand()
 			return;
 
 		default:
-			DebugOut("Call IWL:\t%d\n", GetTickCount());
+			//DebugOut("Call IWL:\t%d\n", GetTickCount());
 			initWordList(); // every time? (!) 
 			break;
 		}
@@ -595,7 +614,13 @@ void testAutocomplete()
 
 		if (sym.compare(lasttip))
 		{
-			if (getCallTip(tip, sym))
+			int sc = 0;
+			std::vector< std::string > sv;
+			sv.push_back(sym);
+			SafeCall(SCC_CALLTIP, &sv, &sc);
+			tip = calltip;
+
+			if (sc)
 			{
 				DebugOut("%s: %s\n", sym.c_str(), tip.c_str());
 
@@ -623,9 +648,10 @@ VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 	flush_log();
 }
 
-DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam )
+LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
+//DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam )
 {
-	const int borderedge = 8;
+	const int borderedge = 0; //  8;
 	const int topspace = 0;
 
 	static HWND hwndScintilla = 0;
@@ -638,7 +664,7 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM w
 	switch (message)
 	{
 	case WM_INITDIALOG:
-		
+	case WM_CREATE:
 		::GetClientRect(hwndDlg, &rect);
 
 		{
@@ -727,8 +753,11 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM w
 		}
 		hWndConsole = hwndDlg;
 
-		if ( rectConsole.right == rectConsole.left )
-			CenterWindow(hwndDlg, ::GetParent(hwndDlg));
+		if (rectConsole.right == rectConsole.left)
+		{
+			::SetWindowPos(hwndDlg, HWND_TOP, 0, 0, 600, 400, SWP_NOZORDER );
+			//CenterWindow(hwndDlg, ::GetParent(hwndDlg));
+		}
 		else
 		{
 			::SetWindowPos(hwndDlg, HWND_TOP, rectConsole.left, rectConsole.top,
@@ -769,6 +798,25 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM w
 		}
 		break;
 
+	case WM_SETFOCUS:
+		::SetFocus(hwndScintilla);
+		break;
+
+	case WM_APPEND_LOG:
+		AppendLog((const char*)lParam);
+		break;
+		
+	case WM_DESTROY:
+		::GetWindowRect(hwndDlg, &rectConsole);
+		if (tid)
+		{
+			::KillTimer(hwndDlg, tid);
+			tid = 0;
+		}
+		hWndConsole = 0;
+		::PostQuitMessage(0);
+		break;
+
 	case WM_COMMAND:
 
 		switch (LOWORD(wParam))
@@ -778,7 +826,8 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM w
 			break;
 
 		case ID_CONSOLE_INSTALLPACKAGES:
-			BERT_InstallPackages();
+			//BERT_InstallPackages();
+			SafeCall(SCC_INSTALLPACKAGES, 0, 0);
 			break;
 
 		case ID_CONSOLE_HOMEDIRECTORY:
@@ -786,7 +835,8 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM w
 			break;
 
 		case ID_CONSOLE_RELOADSTARTUPFILE:
-			BERT_Reload();
+			//BERT_Reload();
+			SafeCall(SCC_RELOAD_STARTUP, 0, 0);
 			break;
 
 		case WM_REBUILD_WORDLISTS:
@@ -804,10 +854,18 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM w
 				tid = 0;
 			}
 			EndDialog(hwndDlg, wParam);
+			::CloseWindow(hwndDlg);
+			hWndConsole = 0;
+			::PostQuitMessage(0);
 			return TRUE;
+
+
 		}
 		break;
 	}
+
+	return DefWindowProc(hwndDlg, message, wParam, lParam);
+
 	return FALSE;
 }
 
@@ -825,3 +883,91 @@ void ConsoleDlg(HINSTANCE hInst)
 
 }
 */
+
+DWORD WINAPI ThreadProc( LPVOID lpParameter )
+{
+	const wchar_t CLASS_NAME[] = L"BERT Console Window";
+	static bool first = true;
+
+	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+	Unmarshal();
+
+	WNDCLASS wc = {};
+
+	wc.lpfnWndProc = WindowProc;
+	wc.hInstance = ghModule;
+	wc.lpszClassName = CLASS_NAME;
+
+	if (first && !RegisterClass(&wc))
+	{
+		DWORD dwErr = GetLastError();
+		DebugOut("ERR %x\n", dwErr);
+	}
+
+	// Create the window.
+
+	HWND hwnd = CreateWindowEx(
+		0,                              // Optional window styles.
+		CLASS_NAME,                     // Window class
+		L"Console",						// Window text
+		WS_OVERLAPPEDWINDOW,            // Window style
+
+		// Size and position
+		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+
+		0, // (HWND)lpParameter,       // Parent window    
+		NULL,       // Menu
+		ghModule,  // Instance handle
+		NULL        // Additional application data
+		);
+
+	if (hwnd == NULL)
+	{
+		DWORD dwErr = GetLastError();
+		DebugOut("ERR %x\n", dwErr);
+
+		return 0;
+	}
+
+	ShowWindow(hwnd, SW_SHOW);
+
+	if (first) ::CenterWindow(hwnd, (HWND)lpParameter);
+	first = false;
+
+	// Run the message loop.
+
+	MSG msg = {};
+	while (GetMessage(&msg, NULL, 0, 0))
+	{
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+
+	hWndConsole = 0;
+
+	// FreeStream();
+	ReleaseThreadPtr();
+
+	CoUninitialize();
+	return 0;
+}
+
+HWND RunInThread(HWND excel)
+{
+	DWORD dwID;
+
+	if (hWndConsole)
+	{
+		::ShowWindow(hWndConsole, SW_SHOWDEFAULT );
+		::SetWindowPos(hWndConsole, HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+	}
+	else
+	{
+		Marshal();
+		UpdateWordList();
+		::CreateThread(0, 0, ThreadProc, excel, 0, &dwID);
+	}
+	//ThreadProc(excel);
+	return 0;
+}
+

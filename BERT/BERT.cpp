@@ -40,6 +40,10 @@ std::list< std::string > loglist;
 HWND hWndConsole = 0;
 IDispatch *pApp = 0;
 
+HANDLE muxWordlist = 0;
+
+SVECTOR *wlist = 0;
+std::string calltip;
 
 /*
 short Startup(){
@@ -164,8 +168,11 @@ void logMessage(const char *buf, int len, bool console)
 	loglist.push_back(entry);
 	while (loglist.size() > MAX_LOGLIST_SIZE) loglist.pop_front();
 
-	if (console && hWndConsole) AppendLog(entry.c_str()); 
-
+	if (console && hWndConsole)
+	{
+		//AppendLog(entry.c_str());
+		::SendMessage(hWndConsole, WM_APPEND_LOG, 0, (LPARAM)entry.c_str());
+	}
 }
 
 void resetXlOper(LPXLOPER12 x)
@@ -219,6 +226,12 @@ short BERT_HomeDirectory()
 int BERT_SetPtr( LPVOID pdisp )
 {
 	pApp = (IDispatch*)pdisp;
+
+	int rc = pApp->AddRef();
+	rc = pApp->Release();
+
+	DebugOut("Refcount: %d\n", rc);
+
 	return 2;
 }
 
@@ -322,6 +335,8 @@ PARSE_STATUS_2 RExecVectorBuffered(std::vector<std::string> &cmd )
 	return ps2;
 }
 
+extern HWND RunInThread(HWND excel);
+
 short BERT_Console()
 {
 	static HANDLE hModScintilla = 0;
@@ -377,14 +392,83 @@ short BERT_Console()
 
 	// back to modal
 
+	/*
 	::DialogBox( ghModule,
 		MAKEINTRESOURCE(IDD_CONSOLE),
 		(HWND)xWnd.val.w,
 		(DLGPROC)ConsoleDlgProc);
 	hWndConsole = 0;
+	*/
+
+	RunInThread((HWND)xWnd.val.w);
 
 	Excel12(xlFree, 0, 1, (LPXLOPER12)&xWnd);
 	return 1;
+}
+
+void SysCleanup()
+{
+	CloseHandle(muxWordlist);
+
+	if (wlist)
+	{
+		delete wlist;
+		wlist = 0;
+	}
+}
+
+void SysInit()
+{
+	wlist = new SVECTOR;
+
+	muxWordlist = CreateMutex(0, 0, 0);
+}
+
+void UpdateWordList()
+{
+	DWORD stat = WaitForSingleObject(muxWordlist, INFINITE);
+	if (stat == WAIT_OBJECT_0)
+	{
+		getWordList(*wlist);
+		ReleaseMutex(muxWordlist);
+	}
+}
+
+long BERT_SafeCall(LPXLOPER12 xl)
+{
+	SVECTOR sv;
+	if (xl->xltype & xltypeStr)
+	{
+		std::string func;
+		NarrowString(func, xl);
+		return getCallTip(calltip, func);
+	}
+	else if (xl->xltype & xltypeMulti)
+	{
+		// excel seems to prefer columns for one dimension,
+		// but it doesn't actually matter as it's passed
+		// as a straight vector
+
+		int r = xl->val.array.rows;
+		int c = xl->val.array.columns;
+		int m = r * c;
+
+		for (int i = 0; i < m; i++)
+		{
+			std::string str;
+			NarrowString(str, &(xl->val.array.lparray[i]));
+			sv.push_back(str);
+		}
+	}
+	if (sv.size())
+	{
+		long rslt = RExecVectorBuffered(sv);
+		if (rslt == PARSE2_OK)
+		{
+			UpdateWordList();
+		}
+	}
+	return PARSE2_EOF;
 }
 
 /**

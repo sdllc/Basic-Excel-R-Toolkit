@@ -20,10 +20,6 @@
 
 #include "stdafx.h"
 
-#include <sstream>
-#include <vector>
-#include <regex>
-
 #define Win32
 
 #include <windows.h>
@@ -70,7 +66,7 @@ std::string dllpath;
 bool g_buffering = false;
 std::vector< std::string > logBuffer;
 
-HANDLE mux;
+HANDLE muxLog;
 
 extern void TestCOM();
 
@@ -83,15 +79,15 @@ int R_ReadConsole(const char *prompt, char *buf, int len, int addtohistory)
 
 void R_WriteConsole(const char *buf, int len)
 {
-	DWORD rslt = WaitForSingleObject(mux, INFINITE);
+	DWORD rslt = WaitForSingleObject(muxLog, INFINITE);
 	if (g_buffering) logBuffer.push_back(buf);
 	else logMessage(buf, len);
-	ReleaseMutex(mux);
+	ReleaseMutex(muxLog);
 }
 
 void flush_log()
 {
-	DWORD rslt = WaitForSingleObject(mux, INFINITE);
+	DWORD rslt = WaitForSingleObject(muxLog, INFINITE);
 	std::string str;
 	for (std::vector< std::string > ::iterator iter = logBuffer.begin(); iter != logBuffer.end(); iter++)
 	{
@@ -103,7 +99,7 @@ void flush_log()
 
 	if (str.length() > 0 ) 
 		logMessage(str.c_str(), str.length());
-	::ReleaseMutex(mux);
+	::ReleaseMutex(muxLog);
 }
 
 void R_CallBack(void)
@@ -335,7 +331,7 @@ void RInit()
 		return;
 	}
 
-	mux = ::CreateMutex(0, 0, 0);
+	muxLog = ::CreateMutex(0, 0, 0);
 
 	R_setStartTime();
 	R_DefParams(Rp);
@@ -474,7 +470,7 @@ void RInit()
 void RShutdown()
 {
 	Rf_endEmbeddedR(0);
-	CloseHandle(mux);
+	CloseHandle(muxLog);
 }
 
 SEXP ExecR(std::string &str, int *err, ParseStatus *pStatus)
@@ -667,22 +663,17 @@ int getCallTip(std::string &callTip, const std::string &sym)
 		SEXP cap = PROTECT(Rf_lang2(Rf_install("capture.output"), args));
 		if (cap)
 		{
-			//SEXP inv = PROTECT(Rf_lang2(Rf_install("invisible"), cap));
-			//if ( inv )
-			//{
-				SEXP result = PROTECT(R_tryEval(cap, R_GlobalEnv, &err));
-				if (result && TYPEOF(result) == 16)
+			SEXP result = PROTECT(R_tryEval(cap, R_GlobalEnv, &err));
+			if (result && TYPEOF(result) == 16)
+			{
+				const char *c = CHAR(STRING_ELT(result,0));
+				if (!strncmp(c, "function ", 9))
 				{
-					const char *c = CHAR(STRING_ELT(result,0));
-					if (!strncmp(c, "function ", 9))
-					{
-						callTip = &(c[9]);
-						ret = 1;
-					}
+					callTip = &(c[9]);
+					ret = 1;
 				}
-				UNPROTECT(1);
-			//}
-			//UNPROTECT(1);
+			}
+			UNPROTECT(1);
 		}
 		UNPROTECT(1);
 	}

@@ -22,6 +22,8 @@
 #include "BERT.h"
 #include "RInterface.h"
 
+extern HRESULT FreeStream();
+
 DLLEX BOOL WINAPI xlAutoOpen(void)
 {
 	// debugLogf("Enter xlAutoOpen\n");
@@ -36,6 +38,7 @@ DLLEX BOOL WINAPI xlAutoOpen(void)
 		}
 	}
 
+	SysInit();
 	RInit();
 
 	// loop through the function table and register the functions
@@ -96,6 +99,9 @@ DLLEX BOOL WINAPI xlAutoClose(void)
 	// clean up...
 	RShutdown();
 	
+	SysCleanup();
+	FreeStream();
+
 	return true;
 }
 

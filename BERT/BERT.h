@@ -21,10 +21,6 @@
 #ifndef __BERT_H
 #define __BERT_H
 
-#include <string>
-#include <vector>
-#include <list>
-
 #include "BERT_Version.h"
 #include "RegistryConstants.h"
 #include "util.h"
@@ -37,6 +33,12 @@
 extern HMODULE ghModule;
 extern IDispatch *pApp;
 
+extern HANDLE muxWordlist;
+
+extern std::vector< std::string > *wlist;
+extern std::string calltip;
+
+
 static LPWSTR funcTemplates[][16] = {
 	{ L"BERT_UpdateScript", L"UU#", L"BERT.UpdateScript", L"R Code", L"2", L"BERT", L"", L"99", L"Update Script", L"", L"", L"", L"", L"", L"", L"" },
 	{ L"BERT_RExec", L"UU", L"BERT.Exec", L"R Code", L"2", L"BERT", L"", L"98", L"Exec R Code", L"", L"", L"", L"", L"", L"", L"" },
@@ -46,6 +48,8 @@ static LPWSTR funcTemplates[][16] = {
 	{ L"BERT_InstallPackages", L"A#", L"BERT.InstallPackages", L"", L"2", L"BERT", L"", L"94", L"", L"", L"", L"", L"", L"", L"", L"" },
 	{ L"BERT_Reload", L"A#", L"BERT.Reload", L"", L"2", L"BERT", L"", L"93", L"", L"", L"", L"", L"", L"", L"", L"" },
 	{ L"BERT_About", L"A#", L"BERT.About", L"", L"2", L"BERT", L"", L"92", L"", L"", L"", L"", L"", L"", L"", L"" },
+
+	{ L"BERT_SafeCall", L"JU#", L"BERT.SafeCall", L"", L"2", L"BERT", L"", L"92", L"", L"", L"", L"", L"", L"", L"", L"" },
 	{ 0 }
 };
 
@@ -94,6 +98,10 @@ void UnregisterFunctions();
 
 /** register internal (non-dynamic) functions */
 bool RegisterBasicFunctions();
+
+void SysInit();
+void SysCleanup();
+void UpdateWordList();
 
 /** add or remove the menu (old-school menu style) */
 void SetBERTMenu( bool add = true );

@@ -41,6 +41,7 @@ xlAddInManagerInfo12
 ;
 
 BERT_SetPtr
+BERT_SafeCall
 
 BERT_UpdateScript
 BERT_RExec
