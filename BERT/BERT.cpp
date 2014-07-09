@@ -26,6 +26,7 @@
 
 #include "RInterface.h"
 #include "Dialogs.h"
+#include "Console.h"
 #include "resource.h"
 #include <Richedit.h>
 
@@ -38,33 +39,19 @@ std::vector < double > functionEntries;
 std::list< std::string > loglist;
 
 HWND hWndConsole = 0;
-IDispatch *pApp = 0;
 
+/* mutex for locking the console message history */
 HANDLE muxLogList = 0;
+
+/* mutex for locking the autocomplete word list */
 HANDLE muxWordlist = 0;
 
 SVECTOR *wlist = 0;
+
 std::string calltip;
 
-/*
-short Startup(){
-
-	RInit();
-	// RegisterBasicFunctions();
-	RegisterAddinFunctions();
-	SetBERTMenu(true);
-
-	return 1;
-}
-
-short Shutdown(){
-
-	SetBERTMenu(false);
-	RShutdown();
-
-	return 1;
-}
-*/
+extern void FreeStream();
+extern void SetExcelPtr( LPVOID p );
 
 LPXLOPER12 BERTFunctionCall( 
 	int index
@@ -130,26 +117,6 @@ LPXLOPER12 BERTFunctionCall(
 
 	while (args.size() > 0 && args[args.size() - 1]->xltype == xltypeMissing) args.pop_back();
 
-
-	/*
-	if (func.size() > 1) args.push_back(input_0);
-	if (func.size() > 2) args.push_back(input_1);
-	if (func.size() > 3) args.push_back(input_2);
-	if (func.size() > 4) args.push_back(input_3);
-	if (func.size() > 5) args.push_back(input_4);
-	if (func.size() > 6) args.push_back(input_5);
-	if (func.size() > 7) args.push_back(input_6);
-	if (func.size() > 8) args.push_back(input_7);
-	if (func.size() > 9) args.push_back(input_8);
-	if (func.size() > 10) args.push_back(input_9);
-	if (func.size() > 11) args.push_back(input_10);
-	if (func.size() > 12) args.push_back(input_11);
-	if (func.size() > 13) args.push_back(input_12);
-	if (func.size() > 14) args.push_back(input_13);
-	if (func.size() > 15) args.push_back(input_14);
-	if (func.size() > 16) args.push_back(input_15);
-	*/
-
 	RExec2(rslt, func[0].first, args);
 
 	return rslt;
@@ -159,7 +126,7 @@ void logMessage(const char *buf, int len, bool console)
 {
 	std::string entry;
 
-	if (!strncmp(buf, WRAP_ERR, sizeof(WRAP_ERR)-1))
+	if (!strncmp(buf, WRAP_ERR, sizeof(WRAP_ERR)-1)) // ??
 	{
 		entry = "Error:";
 		entry += (buf + sizeof(WRAP_ERR)-1);
@@ -219,6 +186,10 @@ short BERT_Reload()
 	return 1;
 }
 
+/**
+ * open the home directory.  note that this is thread-safe,
+ * it can be called directly from the threaded console (and it is)
+ */
 short BERT_HomeDirectory()
 {
 	char buffer[MAX_PATH];
@@ -228,15 +199,12 @@ short BERT_HomeDirectory()
 	return 1;
 }
 
+/**
+ * set the excel callback pointer.
+ */
 int BERT_SetPtr( LPVOID pdisp )
 {
-	pApp = (IDispatch*)pdisp;
-
-	int rc = pApp->AddRef();
-	rc = pApp->Release();
-
-	DebugOut("Refcount: %d\n", rc);
-
+	SetExcelPtr(pdisp);
 	return 2;
 }
 
@@ -267,7 +235,7 @@ void CloseConsole()
 	}
 }
 
-DLLEX short BERT_About()
+short BERT_About()
 {
 	XLOPER12 xWnd;
 	Excel12(xlGetHwnd, &xWnd, 0);
@@ -281,6 +249,11 @@ DLLEX short BERT_About()
 	return 1;
 }
 
+/**
+ * send text to (or clear text in) the excel status bar, via 
+ * the Excel API.  this must be called from within an Excel call
+ * context.
+ */
 void ExcelStatus(const char *message)
 {
 	XLOPER12 xlUpdate;
@@ -310,17 +283,6 @@ void ExcelStatus(const char *message)
 
 }
 
-std::string trim(const std::string& str, const std::string& whitespace )
-{
-	const auto strBegin = str.find_first_not_of(whitespace);
-	if (strBegin == std::string::npos)
-		return ""; // no content
-
-	const auto strEnd = str.find_last_not_of(whitespace);
-	const auto strRange = strEnd - strBegin + 1;
-
-	return str.substr(strBegin, strRange);
-}
 
 void clearLogText()
 {
@@ -434,6 +396,9 @@ void SysCleanup()
 		::SendMessage(hWndConsole, WM_DESTROY, 0, 0);
 	}
 
+	RShutdown();
+	FreeStream();
+
 	CloseHandle(muxLogList);
 	CloseHandle(muxWordlist);
 
@@ -450,6 +415,14 @@ void SysInit()
 
 	muxWordlist = CreateMutex(0, 0, 0);
 	muxLogList = CreateMutex(0, 0, 0);
+
+	RInit();
+
+	// loop through the function table and register the functions
+
+	RegisterBasicFunctions();
+	RegisterAddinFunctions();
+
 }
 
 void UpdateWordList()

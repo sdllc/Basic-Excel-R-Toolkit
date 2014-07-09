@@ -39,7 +39,6 @@ typedef enum
 
 } CALLBACK_COMMANDS;
 
-typedef std::vector< std::string > SVECTOR;
 typedef std::pair < std::string, std::string > SPAIR;
 typedef std::vector< SPAIR > RFUNCDESC;
 typedef std::vector< RFUNCDESC > FDVECTOR;

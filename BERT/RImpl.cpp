@@ -44,14 +44,7 @@
 
 FDVECTOR RFunctions;
 
-// who does this?
-#ifdef length
-	#undef length
-#endif
 
-#ifdef clear
-	#undef clear
-#endif
 
 extern HMODULE ghModule;
 SEXP g_Environment = 0;
@@ -68,8 +61,6 @@ bool g_buffering = false;
 std::vector< std::string > logBuffer;
 
 HANDLE muxLog;
-
-extern void TestCOM();
 
 int R_ReadConsole(const char *prompt, char *buf, int len, int addtohistory)
 {
@@ -148,7 +139,7 @@ int UpdateR(std::string &str)
 	std::vector < std::string > vec;
 
 	while (std::getline(ss, line)){
-		line = trim(line);
+		line = Util::trim(line);
 		if (line.length() > 0) vec.push_back(line);
 	}
 	if (vec.size() > 0)
@@ -462,7 +453,7 @@ void RInit()
 			std::vector < std::string > vec;
 
 			while (std::getline(ss, line)){
-				line = trim(line);
+				line = Util::trim(line);
 				if (line.length() > 0) vec.push_back(line);
 			}
 			if (vec.size() > 0 )
@@ -1665,11 +1656,6 @@ SEXP BERT_Callback(SEXP cmd, SEXP data, SEXP data2)
 	case CC_RELOAD:
 		BERT_Reload();
 		break;
-
-	case 400:
-		TestCOM();
-		break;
-
 	}
 
 	return R_NilValue;

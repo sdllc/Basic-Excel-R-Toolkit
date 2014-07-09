@@ -239,6 +239,7 @@
   <ItemGroup>
     <ClInclude Include="BERT.h" />
     <ClInclude Include="BERT_Version.h" />
+    <ClInclude Include="Console.h" />
     <ClInclude Include="DebugOut.h" />
     <ClInclude Include="Dialogs.h" />
     <ClInclude Include="ExcelLib\XLCALL.H" />
@@ -255,6 +256,7 @@
   <ItemGroup>
     <ClCompile Include="BERT.cpp" />
     <ClCompile Include="BERTCOM.cpp" />
+    <ClCompile Include="Console.cpp" />
     <ClCompile Include="Dialogs.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>

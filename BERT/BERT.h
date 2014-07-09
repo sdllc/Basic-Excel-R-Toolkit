@@ -25,19 +25,14 @@
 #include "RegistryConstants.h"
 #include "util.h"
 #include "DebugOut.h"
-
 #include "XLCALL.H"
 
-#define DLLEX extern "C" __declspec(dllexport)
 
 extern HMODULE ghModule;
-extern IDispatch *pApp;
-
 extern HANDLE muxWordlist;
 
 extern std::vector< std::string > *wlist;
 extern std::string calltip;
-
 
 static LPWSTR funcTemplates[][16] = {
 	{ L"BERT_UpdateScript", L"UU#", L"BERT.UpdateScript", L"R Code", L"2", L"BERT", L"", L"99", L"Update Script", L"", L"", L"", L"", L"", L"", L"" },
@@ -52,21 +47,6 @@ static LPWSTR funcTemplates[][16] = {
 	{ L"BERT_SafeCall", L"JU#", L"BERT.SafeCall", L"", L"2", L"BERT", L"", L"92", L"", L"", L"", L"", L"", L"", L"", L"" },
 	{ 0 }
 };
-
-/*
-
-static LPWSTR menuTemplates[][4] = {
-	{ L"R Console",				L"BERT.Console",			L"",	L"Open the console" },
-	{ L"Home Directory",		L"BERT.Home",				L"",	L"Open the home directory" },
-	{ L"Reload Startup File",	L"BERT.Reload",				L"",	L"Reload startup R code" },
-	{ L"Install Packages",		L"BERT.InstallPackages",	L"",	L"Install packages via the R GUI" },
-	{ L"-", L"", L"", L"" },
-	{ L"Configuration",			L"BERT.Configure",			L"",	L"Show configuration options" },
-	{ L"About",					L"BERT.About",				L"",	L"About Basic Excel R Toolkit (BERT)" },
-	{ 0 }
-};
-
-*/
 
 const char WRAP_ERR[] = "Error in eval(expr, envir, enclos) :";
 
@@ -85,9 +65,7 @@ const char WRAP_ERR[] = "Error in eval(expr, envir, enclos) :";
 #define MAX_FUNCTION_COUNT 100
 #define MAX_ARGUMENT_COUNT 16
 
-DLLEX LPXLOPER12 BERT_UpdateScript(LPXLOPER12 script);
-
-std::string trim(const std::string& str, const std::string& whitespace = " \t\r\n");
+LPXLOPER12 BERT_UpdateScript(LPXLOPER12 script);
 
 /**
  * static (or thread-local) XLOPERs may have
@@ -143,8 +121,10 @@ void clearLogText();
 */
 bool RegisterAddinFunctions();
 
+/**
+ * convert XLOPER string (WCHAR/UTF16) to multibyte char (UTF8) string
+ */
 void NarrowString(std::string &out, LPXLOPER12 pxl);
-
 
 /**
  * generic call dispatcher function, exported from dll

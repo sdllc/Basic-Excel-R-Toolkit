@@ -36,9 +36,6 @@
 #include <string.h>
 #include <stdio.h>
 
-#include <atlbase.h>
-#include <atlcom.h>
-
 #ifdef _DEBUG
 	#pragma message(" ** Disabling STL debug")
 	#define _NOSTLDEBUG

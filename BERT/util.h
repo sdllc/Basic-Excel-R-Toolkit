@@ -21,6 +21,17 @@
 #ifndef __UTIL_H
 #define __UTIL_H
 
+// who does this?
+#ifdef length
+#undef length
+#endif
+
+#ifdef clear
+#undef clear
+#endif
+
+typedef std::vector< std::string > SVECTOR;
+
 // this is a map of an R enum.  there's no reason 
 // to do this other than to enfore separation between
 // R and non-R parts of the code, which is useful.
@@ -35,7 +46,6 @@ typedef enum
 }
 PARSE_STATUS_2;
 
-
 typedef enum
 {
 	SCC_NULL = 0,
@@ -47,6 +57,34 @@ typedef enum
 	SCC_LAST
 }
 SAFECALL_CMD;
+
+class Util
+{
+public:
+
+	static std::string trim(const std::string& str, const std::string& whitespace = " \r\n\t")
+	{
+		const auto strBegin = str.find_first_not_of(whitespace);
+		if (strBegin == std::string::npos)
+			return ""; // no content
+
+		const auto strEnd = str.find_last_not_of(whitespace);
+		const auto strRange = strEnd - strBegin + 1;
+
+		return str.substr(strBegin, strRange);
+	}
+
+	static SVECTOR & split(const std::string &s, char delim, int minLength, SVECTOR &elems)
+	{
+		std::stringstream ss(s);
+		std::string item;
+		while (std::getline(ss, item, delim))
+		{
+			if (!item.empty() && item.length() >= minLength) elems.push_back(item);
+		}
+		return elems;
+	}
+};
 
 #endif // #ifndef __UTIL_H
 
