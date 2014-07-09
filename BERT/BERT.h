@@ -129,7 +129,7 @@ void ExcelStatus(const char *message);
 void logMessage(const char *buf, int len, bool console = true);
 
 /** */
-std::list< std::string > * getLogText();
+void getLogText( std::list< std::string > &list );
 
 /** */
 void clearLogText();

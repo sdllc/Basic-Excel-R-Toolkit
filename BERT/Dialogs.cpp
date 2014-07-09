@@ -25,6 +25,7 @@
 #include "resource.h"
 #include "Dialogs.h"
 #include "RegistryUtils.h"
+#include "StringConstants.h"
 
 #include "Scintilla.h"
 
@@ -259,10 +260,35 @@ DIALOG_RESULT_TYPE CALLBACK OptionsDlgProc(HWND hwndDlg, UINT message, WPARAM wP
 	return FALSE;
 }
 
-void AppendLog(const char *buffer, int style)
+void AppendLog(const char *buffer, int style, int checkoverlap)
 {
 	// TODO: if there's a current prompt, then
 	// need to carry it over (and hide it, maybe)
+
+	Sci_TextRange tr;
+	int linelen;
+	int cp;
+
+	tr.lpstrText = 0;
+
+	if (checkoverlap && !inputlock)
+	{
+		int lc = fn(ptr, SCI_GETLINECOUNT, 0, 0);
+		int pos = fn(ptr, SCI_POSITIONFROMLINE, lc - 1, 0);
+		
+		cp = fn(ptr, SCI_GETCURRENTPOS, 0, 0);
+		if (cp <= pos) cp = -1;
+
+		linelen = fn(ptr, SCI_LINELENGTH, lc - 1, 0);
+
+		tr.chrg.cpMin = pos;
+		tr.chrg.cpMax = pos + linelen;
+		tr.lpstrText = new char[linelen + 1];
+
+		fn(ptr, SCI_GETTEXTRANGE, 0, (sptr_t)&tr);
+		fn(ptr, SCI_DELETERANGE, pos, linelen);
+		
+	}
 
 	int len = strlen(buffer);
 	int start = fn(ptr, SCI_GETLENGTH, 0, 0);
@@ -274,6 +300,15 @@ void AppendLog(const char *buffer, int style)
 	{
 		fn(ptr, SCI_STARTSTYLING, start, 0x31);
 		fn(ptr, SCI_SETSTYLING, len, style);
+	}
+
+	if (tr.lpstrText)
+	{
+		fn(ptr, SCI_SETSEL, -1, -1);
+		fn(ptr, SCI_APPENDTEXT, linelen, (sptr_t)tr.lpstrText);
+		minCaret += len;
+		delete [] tr.lpstrText;
+		if (cp >= 0) fn(ptr, SCI_SETSEL, cp + len, cp + len);
 	}
 
 }
@@ -293,6 +328,13 @@ void ProcessCommand()
 	DebugOut("ProcessCommand:\t%d\n", GetTickCount());
 
 	int len = fn(ptr, SCI_GETLENGTH, 0, 0);
+
+	// close tip, autoc
+
+	fn(ptr, SCI_AUTOCCANCEL, 0, 0);
+	fn(ptr, SCI_CALLTIPCANCEL, 0, 0);
+
+
 
 	/*
 
@@ -348,7 +390,20 @@ void ProcessCommand()
 
 	if (cmd.length() > 0)
 	{
-		cmdVector.push_back(cmd);
+		// there is a case where you paste multiple lines; we need that
+		// to be handled as multiple lines.
+
+		if (cmd.find("\n") == std::string::npos) cmdVector.push_back(cmd);
+		else
+		{
+			std::istringstream stream(cmd);
+			std::string line;
+			while (std::getline(stream, line)) {
+				line.erase(line.find_last_not_of(" \n\r\t") + 1);
+				if (line.length() > 0 )
+					cmdVector.push_back(line);
+			}
+		}
 
 		DebugOut("Exec:\t%d\n", GetTickCount());
 
@@ -449,6 +504,7 @@ LRESULT CALLBACK SubClassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 	switch (msg)
 	{
+
 	case WM_CHAR:
 
 		if (inputlock) return 0;
@@ -620,6 +676,7 @@ void testAutocomplete()
 			SafeCall(SCC_CALLTIP, &sv, &sc);
 			tip = calltip;
 
+			// if(0)// (getCallTip(tip, sym))
 			if (sc)
 			{
 				DebugOut("%s: %s\n", sym.c_str(), tip.c_str());
@@ -724,14 +781,15 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 
 			fn(ptr, SCI_SETMARGINWIDTHN, 1, 0);
 
-			std::list< std::string > *loglist = getLogText();
-			for (std::list< std::string >::iterator iter = loglist->begin(); iter != loglist->end(); iter++)
+			std::list< std::string > loglist;
+			getLogText( loglist );
+			for (std::list< std::string >::iterator iter = loglist.begin(); iter != loglist.end(); iter++)
 			{
 				if (!strncmp(iter->c_str(), DEFAULT_PROMPT, 2) || !strncmp(iter->c_str(), CONTINUATION_PROMPT, 2))
 				{
-					AppendLog(iter->c_str(), 0);
+					AppendLog(iter->c_str(), 0, 0);
 				}
-				else AppendLog(iter->c_str());
+				else AppendLog(iter->c_str(), 1, 0);
 			}
 			Prompt();
 
@@ -792,8 +850,22 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 	case WM_NOTIFY:
 		switch (((LPNMHDR)lParam)->code)
 		{
+		case SCN_MODIFIED:
+			{
+				SCNotification *scn = (SCNotification*)lParam;
+				DebugOut("Modified: 0x%x\n", scn->modificationType);
+			}
+
 		case SCN_CHARADDED:
-			testAutocomplete();
+			{
+				SCNotification *scn = (SCNotification*)lParam;
+				DebugOut("CA: %x\n", scn->ch);
+
+				// I think because I switched to utf-8 I'm getting
+				// double notifications
+
+				if( scn->ch ) testAutocomplete();
+			}
 			break;
 		}
 		break;

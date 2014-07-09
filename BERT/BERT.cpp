@@ -40,6 +40,7 @@ std::list< std::string > loglist;
 HWND hWndConsole = 0;
 IDispatch *pApp = 0;
 
+HANDLE muxLogList = 0;
 HANDLE muxWordlist = 0;
 
 SVECTOR *wlist = 0;
@@ -165,12 +166,16 @@ void logMessage(const char *buf, int len, bool console)
 	}
 	else entry = buf;
 
-	loglist.push_back(entry);
-	while (loglist.size() > MAX_LOGLIST_SIZE) loglist.pop_front();
+	DWORD stat = WaitForSingleObject(muxLogList, INFINITE);
+	if (stat == WAIT_OBJECT_0)
+	{
+		loglist.push_back(entry);
+		while (loglist.size() > MAX_LOGLIST_SIZE) loglist.pop_front();
+		ReleaseMutex(muxLogList);
+	}
 
 	if (console && hWndConsole)
 	{
-		//AppendLog(entry.c_str());
 		::SendMessage(hWndConsole, WM_APPEND_LOG, 0, (LPARAM)entry.c_str());
 	}
 }
@@ -319,13 +324,28 @@ std::string trim(const std::string& str, const std::string& whitespace )
 
 void clearLogText()
 {
-	loglist.clear();
+	DWORD stat = WaitForSingleObject(muxLogList, INFINITE);
+	if (stat == WAIT_OBJECT_0)
+	{
+		loglist.clear();
+		ReleaseMutex(muxLogList);
+	}
 }
 
-std::list< std::string > * getLogText()
+void getLogText(std::list< std::string > &list)
 {
-	return &loglist;
+	DWORD stat = WaitForSingleObject(muxLogList, INFINITE);
+	if (stat == WAIT_OBJECT_0)
+	{
+		for (std::list< std::string> ::iterator iter = loglist.begin();
+			iter != loglist.end(); iter++)
+		{
+			list.push_back(*iter);
+		}
+		ReleaseMutex(muxLogList);
+	}
 }
+
 
 PARSE_STATUS_2 RExecVectorBuffered(std::vector<std::string> &cmd )
 {
@@ -408,6 +428,13 @@ short BERT_Console()
 
 void SysCleanup()
 {
+	if (hWndConsole)
+	{
+		::CloseWindow(hWndConsole);
+		::SendMessage(hWndConsole, WM_DESTROY, 0, 0);
+	}
+
+	CloseHandle(muxLogList);
 	CloseHandle(muxWordlist);
 
 	if (wlist)
@@ -422,6 +449,7 @@ void SysInit()
 	wlist = new SVECTOR;
 
 	muxWordlist = CreateMutex(0, 0, 0);
+	muxLogList = CreateMutex(0, 0, 0);
 }
 
 void UpdateWordList()
@@ -467,6 +495,7 @@ long BERT_SafeCall(LPXLOPER12 xl)
 		{
 			UpdateWordList();
 		}
+		return rslt;
 	}
 	return PARSE2_EOF;
 }

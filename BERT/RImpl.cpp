@@ -40,6 +40,7 @@
 #include "resource.h"
 #include "RegistryUtils.h"
 #include "BERT.h"
+#include "StringConstants.h"
 
 FDVECTOR RFunctions;
 
@@ -153,7 +154,11 @@ int UpdateR(std::string &str)
 	if (vec.size() > 0)
 	{
 		ExecR(vec, &err, &status);
-		if (status != PARSE_OK) return -3;
+		if (status != PARSE_OK)
+		{
+			logMessage(PARSE_ERROR_MESSAGE, 0, 1);
+			return -3;
+		}
 		if (err) return -2;
 		return 0;
 	}
@@ -303,9 +308,26 @@ void LoadStartupFile()
 
 	if (contents.length() > 0)
 	{
+		time_t t;
+		struct tm * timeinfo;
 		int rslt = UpdateR(contents);
-		if (!rslt) ExcelStatus(0);
-		else ExcelStatus("Error reading startup file; check R log");
+		char buffer[MAX_PATH];
+		
+		time(&t);
+		timeinfo = localtime(&t);
+
+		if (!rslt)
+		{
+			strftime(buffer, MAX_PATH, "Read startup file OK @ %c\n", timeinfo);
+			logMessage(buffer, 0, 1);
+			ExcelStatus(0);
+		}
+		else
+		{
+			strftime(buffer, MAX_PATH, "Error reading startup file @ %c\n", timeinfo);
+			logMessage(buffer, 0, 1);
+			ExcelStatus("Error reading startup file; check R log");
+		}
 	}
 }
 
