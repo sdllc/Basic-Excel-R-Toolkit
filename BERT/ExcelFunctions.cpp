@@ -47,7 +47,7 @@ DLLEX BOOL WINAPI xlAutoOpen(void)
 
 	// debugLogf("Exit xlAutoOpen\n");
 
-	SetBERTMenu(true);
+	// SetBERTMenu(true);
 
 	return true;
 
@@ -94,7 +94,7 @@ DLLEX void WINAPI xlAutoFree12(LPXLOPER12 pxFree)
 DLLEX BOOL WINAPI xlAutoClose(void)
 {
 	// debugLogf("Enter xlAutoClose\n");
-	SetBERTMenu(false);
+	// SetBERTMenu(false);
 
 	// clean up...
 	RShutdown();

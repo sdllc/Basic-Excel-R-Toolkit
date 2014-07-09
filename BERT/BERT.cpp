@@ -502,7 +502,7 @@ long BERT_SafeCall(LPXLOPER12 xl)
 
 /**
  * add or remove the menu.  
- */
+ * /
 void SetBERTMenu( bool add )
 {
 	XLOPER12 xl1, xlMenuName, xlMenu;
@@ -573,6 +573,7 @@ void SetBERTMenu( bool add )
 		menuInstalled = false;
 	}
 }
+*/
 
 void NarrowString(std::string &out, LPXLOPER12 pxl)
 {

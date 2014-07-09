@@ -53,6 +53,8 @@ static LPWSTR funcTemplates[][16] = {
 	{ 0 }
 };
 
+/*
+
 static LPWSTR menuTemplates[][4] = {
 	{ L"R Console",				L"BERT.Console",			L"",	L"Open the console" },
 	{ L"Home Directory",		L"BERT.Home",				L"",	L"Open the home directory" },
@@ -64,9 +66,11 @@ static LPWSTR menuTemplates[][4] = {
 	{ 0 }
 };
 
+*/
+
 const char WRAP_ERR[] = "Error in eval(expr, envir, enclos) :";
 
-#define BERT_MENU_NAME L"BERT"
+// #define BERT_MENU_NAME L"BERT"
 
 
 /** 
@@ -104,7 +108,7 @@ void SysCleanup();
 void UpdateWordList();
 
 /** add or remove the menu (old-school menu style) */
-void SetBERTMenu( bool add = true );
+// void SetBERTMenu( bool add = true );
 
 /** run configuration */
 short BERT_Configure();
