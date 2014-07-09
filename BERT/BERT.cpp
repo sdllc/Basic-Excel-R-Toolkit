@@ -317,8 +317,6 @@ PARSE_STATUS_2 RExecVectorBuffered(std::vector<std::string> &cmd )
 	return ps2;
 }
 
-extern HWND RunInThread(HWND excel);
-
 short BERT_Console()
 {
 	static HANDLE hModScintilla = 0;
@@ -355,34 +353,7 @@ short BERT_Console()
 		}
 	}
 
-	/*
-
-	//this would be nice, but Excel steals all key messages,
-	//so non-modal is no-go.  perhaps there's a way to control 
-	//that behavior.
-
-	if (!hWndConsole)
-	{
-		hWndConsole = ::CreateDialog(ghModule,
-			MAKEINTRESOURCE(IDD_CONSOLE),
-			(HWND)xWnd.val.w,
-			(DLGPROC)ConsoleDlgProc);
-	}
-	ShowWindow(hWndConsole, SW_SHOW);
-
-	*/
-
-	// back to modal
-
-	/*
-	::DialogBox( ghModule,
-		MAKEINTRESOURCE(IDD_CONSOLE),
-		(HWND)xWnd.val.w,
-		(DLGPROC)ConsoleDlgProc);
-	hWndConsole = 0;
-	*/
-
-	RunInThread((HWND)xWnd.val.w);
+	RunThreadedConsole((HWND)xWnd.val.w);
 
 	Excel12(xlFree, 0, 1, (LPXLOPER12)&xWnd);
 	return 1;
@@ -434,6 +405,11 @@ void UpdateWordList()
 	}
 }
 
+/**
+ * this is the second part of the context-switching callback
+ * used when running functions from the console.  it is only
+ * called (indirectly) by the SafeCall function.
+ */
 long BERT_SafeCall(LPXLOPER12 xl)
 {
 	SVECTOR sv;
@@ -547,6 +523,11 @@ void SetBERTMenu( bool add )
 }
 */
 
+/**
+ * this is not in util because it uses the Excel API,
+ * and util should be clean.  FIXME: split into generic
+ * and XLOPER-specific versions.
+ */
 void NarrowString(std::string &out, LPXLOPER12 pxl)
 {
 	int i, len = pxl->val.str[0];

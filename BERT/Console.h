@@ -42,7 +42,7 @@
 
 void ConsoleDlg(HINSTANCE hInst);
 void AppendLog(const char *buffer, int style = 1, int checkoverlap = 1);
-
+void RunThreadedConsole(HWND w);
 
 
 #endif // #ifndef __CONSOLE_H

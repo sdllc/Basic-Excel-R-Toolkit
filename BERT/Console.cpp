@@ -902,10 +902,8 @@ DWORD WINAPI ThreadProc(LPVOID lpParameter)
 	return 0;
 }
 
-HWND RunInThread(HWND excel)
+void RunThreadedConsole(HWND excel)
 {
-	DWORD dwID;
-
 	if (hWndConsole)
 	{
 		::ShowWindow(hWndConsole, SW_SHOWDEFAULT);
@@ -913,11 +911,12 @@ HWND RunInThread(HWND excel)
 	}
 	else
 	{
+		DWORD dwID;
+
 		Marshal();
 		UpdateWordList();
 		::CreateThread(0, 0, ThreadProc, excel, 0, &dwID);
 	}
-	//ThreadProc(excel);
-	return 0;
+
 }
 

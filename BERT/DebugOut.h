@@ -29,7 +29,7 @@
 int DebugOut(const char *fmt, ...);
 
 #else
-#define DebugOut() {}
+#define DebugOut(...) {}
 #endif
 
 #endif // #ifndef __DEBUGOUT_H

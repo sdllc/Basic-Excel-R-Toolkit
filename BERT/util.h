@@ -74,16 +74,18 @@ public:
 		return str.substr(strBegin, strRange);
 	}
 
-	static SVECTOR & split(const std::string &s, char delim, int minLength, SVECTOR &elems)
+	static SVECTOR & split(const std::string &s, char delim, int minLength, SVECTOR &elems, bool ftrim = false)
 	{
 		std::stringstream ss(s);
 		std::string item;
 		while (std::getline(ss, item, delim))
 		{
+			if (ftrim) item = trim(item);
 			if (!item.empty() && item.length() >= minLength) elems.push_back(item);
 		}
 		return elems;
 	}
+
 };
 
 #endif // #ifndef __UTIL_H

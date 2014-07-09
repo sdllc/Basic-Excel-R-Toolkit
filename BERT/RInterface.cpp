@@ -161,10 +161,8 @@ int UpdateR(std::string &str)
 void MapFunctions()
 {
 	SEXP s = 0;
-	ParseStatus status;
 	int err;
 	char env[MAX_PATH];
-	char buffer[MAX_PATH];
 
 	RFunctions.clear();
 
@@ -1169,8 +1167,8 @@ LPXLOPER12 BERT_RExec(LPXLOPER12 code)
 	static XLOPER12 result;
 
 	ParseStatus status;
-	SEXP cmdSexp, cmdexpr = R_NilValue;
-	int i, errorOccurred;
+	SEXP cmdexpr = R_NilValue;
+	int errorOccurred;
 
 	resetXlOper(&result);
 
@@ -1455,8 +1453,7 @@ void RExecVector(std::vector<std::string> &vec, int *err, PARSE_STATUS_2 *status
 
 bool RExec2(LPXLOPER12 rslt, std::string &funcname, std::vector< LPXLOPER12 > &args)
 {
-	ParseStatus status;
-	SEXP arg, quot, env, sargs;
+	SEXP sargs;
 	SEXP lns, ans = 0;
 	int i, errorOccurred;
 	
@@ -1637,6 +1634,9 @@ SEXP ExcelCall(SEXP cmd, SEXP data)
 
 }
 
+/**
+ * callback dispatch function (calling from R)
+ */
 SEXP BERT_Callback(SEXP cmd, SEXP data, SEXP data2)
 {
 	int command = 0;

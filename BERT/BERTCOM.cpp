@@ -29,6 +29,9 @@
 #include "DebugOut.h"
 #include "util.h"
 
+// FIXME: standardize the generated headers and use those instead 
+// of the import directives, imports are fragile
+
 #import "C:\Program Files (x86)\Common Files\Microsoft Shared\OFFICE15\MSO.DLL" rename_namespace("Office") raw_interfaces_only, named_guids
 using namespace Office;
 #import "C:\Program Files\Microsoft Office\Office15\EXCEL.EXE" rename_namespace("Excel"), raw_interfaces_only, \
