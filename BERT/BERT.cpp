@@ -46,7 +46,7 @@ HANDLE muxLogList = 0;
 /* mutex for locking the autocomplete word list */
 HANDLE muxWordlist = 0;
 
-SVECTOR *wlist = 0;
+SVECTOR wlist;
 
 std::string calltip;
 
@@ -402,16 +402,10 @@ void SysCleanup()
 	CloseHandle(muxLogList);
 	CloseHandle(muxWordlist);
 
-	if (wlist)
-	{
-		delete wlist;
-		wlist = 0;
-	}
 }
 
 void SysInit()
 {
-	wlist = new SVECTOR;
 
 	muxWordlist = CreateMutex(0, 0, 0);
 	muxLogList = CreateMutex(0, 0, 0);
@@ -427,11 +421,16 @@ void SysInit()
 
 void UpdateWordList()
 {
+	static int a = 2500;
+
 	DWORD stat = WaitForSingleObject(muxWordlist, INFINITE);
 	if (stat == WAIT_OBJECT_0)
 	{
-		getWordList(*wlist);
-		ReleaseMutex(muxWordlist);
+		wlist.clear();
+		wlist.reserve(a + 100);
+		getWordList(wlist);
+		a = wlist.size();
+		::ReleaseMutex(muxWordlist);
 	}
 }
 

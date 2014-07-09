@@ -31,7 +31,7 @@
 extern HMODULE ghModule;
 extern HANDLE muxWordlist;
 
-extern std::vector< std::string > *wlist;
+extern SVECTOR wlist;
 extern std::string calltip;
 
 static LPWSTR funcTemplates[][16] = {

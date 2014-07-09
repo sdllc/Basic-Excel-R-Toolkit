@@ -66,13 +66,15 @@ extern HRESULT ReleaseThreadPtr();
 
 void initWordList()
 {
+	static int lastWLLen = 2500;
+
 	// fuck it we'll do it live
 
 	wordList.clear();
 	moneyList.clear();
 
-	wordList.reserve(5000);
-	moneyList.reserve(5000);
+	wordList.reserve(lastWLLen + 100);
+	moneyList.reserve(lastWLLen + 100);
 
 	if (!wlInit)
 	{
@@ -101,12 +103,15 @@ void initWordList()
 	}
 
 	SVECTOR tmp;
-	tmp.reserve(5000);
+	tmp.reserve(lastWLLen + 100);
 
 	DWORD stat = WaitForSingleObject(muxWordlist, INFINITE);
 	if (stat == WAIT_OBJECT_0)
 	{
-		for (SVECTOR::iterator iter = wlist->begin(); iter != wlist->end(); iter++)
+		DebugOut("Length of wl: %d\n", wlist.size());
+		lastWLLen = wlist.size();
+
+		for (SVECTOR::iterator iter = wlist.begin(); iter != wlist.end(); iter++)
 		{
 			std::string str(*iter);
 			tmp.push_back(str);

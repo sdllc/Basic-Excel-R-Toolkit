@@ -280,7 +280,7 @@
     </ClCompile>
     <ClCompile Include="ExcelFunctions.cpp" />
     <ClCompile Include="ExcelLib\XLCALL.CPP" />
-    <ClCompile Include="RImpl.cpp">
+    <ClCompile Include="RInterface.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="stdafx.cpp">

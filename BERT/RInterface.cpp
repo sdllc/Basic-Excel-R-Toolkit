@@ -709,9 +709,10 @@ SVECTOR & getWordList(SVECTOR &wordList)
 			int len = Rf_length(rslt);
 			for (int i = 0; i < len; i++)
 			{
-				// wordList.push_back(std::string(CHAR(STRING_ELT(rslt, i))));
-				std::string str(CHAR(STRING_ELT(rslt, i)));
-				wordList.push_back(str);
+				 wordList.push_back(std::string(CHAR(STRING_ELT(rslt, i))));
+				//std::string str(CHAR(STRING_ELT(rslt, i)));
+				//wordList.push_back(str);
+
 			}
 		}
 		UNPROTECT(1);
