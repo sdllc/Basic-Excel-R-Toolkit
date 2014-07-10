@@ -66,6 +66,8 @@ extern HRESULT ReleaseThreadPtr();
 
 std::vector< std::string > fontlist;
 
+int promptwidth = 0;
+
 int CALLBACK EnumFontFamExProc(const LOGFONTA *lpelfe, const TEXTMETRICA *lpntme, DWORD FontType, LPARAM lParam)
 {
 	if (lpelfe->lfFaceName[0] != '@')
@@ -155,7 +157,7 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleOptionsDlgProc(HWND hwndDlg, UINT message, WP
 			::GetWindowRect(hwnd, &rect);
 			for (int idx = 4; idx <= 28; idx++)
 			{
-				sprintf(buffer, "%d", idx);
+				sprintf_s(buffer, 32, "%d", idx);
 				::SendMessageA(hwnd, CB_ADDSTRING, 0, (LPARAM)(buffer));
 			}
 			::SendMessageA(hwnd, CB_SETCURSEL, dw-4, 0);
@@ -412,65 +414,63 @@ void initWordList()
 
 void AppendLog(const char *buffer, int style, int checkoverlap)
 {
-	// TODO: if there's a current prompt, then
-	// need to carry it over (and hide it, maybe)
+	// cases: checkoverlap is set UNLESS it's preloading
+	// text on console startup (and there is no prompt).
+	// if checkoverlap is set, just append and style.
 
-	Sci_TextRange tr;
-	int linelen;
-	int cp;
+	// the global inputlock is set when a command is running
+	// and again, there's no prompt.  (FIXME: consolidate these?)
 
-	tr.lpstrText = 0;
-
-	if (checkoverlap && !inputlock)
-	{
-		int lc = fn(ptr, SCI_GETLINECOUNT, 0, 0);
-		int pos = fn(ptr, SCI_POSITIONFROMLINE, lc - 1, 0);
-
-		cp = fn(ptr, SCI_GETCURRENTPOS, 0, 0);
-		if (cp <= pos) cp = -1;
-
-		linelen = fn(ptr, SCI_LINELENGTH, lc - 1, 0);
-
-		tr.chrg.cpMin = pos;
-		tr.chrg.cpMax = pos + linelen;
-		tr.lpstrText = new char[linelen + 1];
-
-		fn(ptr, SCI_GETTEXTRANGE, 0, (sptr_t)&tr);
-		fn(ptr, SCI_DELETERANGE, pos, linelen);
-
-	}
+	// in the other case, there is a prompt and potentially
+	// user-entered text that has to be pushed aside.  
 
 	int len = strlen(buffer);
-	int start = fn(ptr, SCI_GETLENGTH, 0, 0);
 
-	fn(ptr, SCI_SETSEL, -1, -1);
-	fn(ptr, SCI_APPENDTEXT, len, (sptr_t)buffer);
-
-	if (style != 0)
+	if (!checkoverlap || inputlock)
 	{
-		fn(ptr, SCI_STARTSTYLING, start, 0x31);
-		fn(ptr, SCI_SETSTYLING, len, style);
-	}
+		int start = fn(ptr, SCI_GETLENGTH, 0, 0);
 
-	if (tr.lpstrText)
-	{
 		fn(ptr, SCI_SETSEL, -1, -1);
-		fn(ptr, SCI_APPENDTEXT, linelen, (sptr_t)tr.lpstrText);
-		minCaret += len;
-		delete[] tr.lpstrText;
-		if (cp >= 0) fn(ptr, SCI_SETSEL, cp + len, cp + len);
+		fn(ptr, SCI_APPENDTEXT, len, (sptr_t)buffer);
+
+		if (style != 0)
+		{
+			fn(ptr, SCI_STARTSTYLING, start, 0x31);
+			fn(ptr, SCI_SETSTYLING, len, style);
+		}
+
 	}
+	else
+	{
+		// insert
+		int np = minCaret - promptwidth;
+
+		// insert
+		fn(ptr, SCI_INSERTTEXT, np, (sptr_t)buffer);
+
+		// update our marker, pos should move
+		minCaret += len;
+
+		if (style != 0)
+		{
+			fn(ptr, SCI_STARTSTYLING, np, 0x31);
+			fn(ptr, SCI_SETSTYLING, len, style);
+		}
+
+	}
+
+	fn(ptr, SCI_SCROLLCARET, 0, 0);
 
 }
 
 void Prompt(const char *prompt = DEFAULT_PROMPT)
 {
-	fn(ptr, SCI_APPENDTEXT, strlen(prompt), (sptr_t)prompt);
+	promptwidth = strlen(prompt);
+	fn(ptr, SCI_APPENDTEXT, promptwidth, (sptr_t)prompt);
 	fn(ptr, SCI_SETXOFFSET, 0, 0);
 	fn(ptr, SCI_SETSEL, -1, -1);
 	minCaret = fn(ptr, SCI_GETCURRENTPOS, 0, 0);
 	historyPointer = 0;
-
 }
 
 void ProcessCommand()
