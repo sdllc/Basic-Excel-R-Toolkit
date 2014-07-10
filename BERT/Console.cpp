@@ -64,6 +64,281 @@ extern HRESULT Marshal();
 extern HRESULT Unmarshal();
 extern HRESULT ReleaseThreadPtr();
 
+std::vector< std::string > fontlist;
+
+int CALLBACK EnumFontFamExProc(const LOGFONTA *lpelfe, const TEXTMETRICA *lpntme, DWORD FontType, LPARAM lParam)
+{
+	if (lpelfe->lfFaceName[0] != '@')
+		fontlist.push_back(std::string(lpelfe->lfFaceName));
+	return -1;
+}
+
+
+bool ColorDlg(HWND hwnd, DWORD &dwColor )
+{
+	CHOOSECOLOR cc;                 // common dialog box structure 
+	static COLORREF acrCustClr[16]; // array of custom colors 
+
+	HBRUSH hbrush;                  // brush handle
+	//static DWORD rgbCurrent;        // initial color selection
+
+	bool rslt = false;
+
+	// Initialize CHOOSECOLOR 
+	ZeroMemory(&cc, sizeof(cc));
+	cc.lStructSize = sizeof(cc);
+	cc.hwndOwner = hwnd;
+	cc.lpCustColors = (LPDWORD)acrCustClr;
+	cc.rgbResult = dwColor;
+	cc.Flags = CC_FULLOPEN | CC_RGBINIT;
+
+	if (ChooseColor(&cc) == TRUE)
+	{
+		dwColor = cc.rgbResult;
+		rslt = true;
+	}
+
+	return rslt;
+}
+
+DIALOG_RESULT_TYPE CALLBACK ConsoleOptionsDlgProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	HWND hwnd;
+	DWORD dw;
+	char buffer[64];
+	LONG_PTR lp;
+
+	static DWORD dwBack, dwUser, dwMessage;
+
+	switch (message)
+	{
+	case WM_INITDIALOG:
+
+		if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, buffer, 63, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_FONT)
+			|| !strlen(buffer)) strcpy_s(buffer, 64, SCINTILLA_FONT_NAME);
+
+		if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_SIZE)
+			|| dw <= 0) dw = SCINTILLA_FONT_SIZE;
+
+		if (fontlist.size() <= 0)
+		{
+			LOGFONTA lf;
+			memset(&lf, 0, sizeof(LOGFONTA));
+			lf.lfCharSet = DEFAULT_CHARSET;
+			EnumFontFamiliesExA(::GetWindowDC(hwndDlg), &lf, EnumFontFamExProc, 0, 0);
+
+			std::sort(fontlist.begin(), fontlist.end());
+			fontlist.erase(std::unique(fontlist.begin(), fontlist.end()), fontlist.end());
+
+		}
+
+		hwnd = ::GetDlgItem(hwndDlg, IDC_COMBO_FONTS);
+		if (hwnd)
+		{
+			RECT rect;
+			::GetWindowRect(hwnd, &rect);
+			int len = fontlist.size();
+			int sel = 0;
+			for (int idx = 0; idx < len; idx++)
+			{
+				if (!fontlist[idx].compare(buffer)) sel = idx;
+				::SendMessageA(hwnd, CB_ADDSTRING, 0, (LPARAM)(fontlist[idx].c_str()));
+			}
+			::SendMessageA(hwnd, CB_SETCURSEL, sel, 0);
+			::SetWindowPos(hwnd, 0, 0, 0, rect.right - rect.left, 300, SWP_NOZORDER | SWP_NOMOVE);
+		}
+
+		hwnd = ::GetDlgItem(hwndDlg, IDC_COMBO_FONTSIZE);
+		if (hwnd)
+		{
+			RECT rect;
+			::GetWindowRect(hwnd, &rect);
+			for (int idx = 4; idx <= 28; idx++)
+			{
+				sprintf(buffer, "%d", idx);
+				::SendMessageA(hwnd, CB_ADDSTRING, 0, (LPARAM)(buffer));
+			}
+			::SendMessageA(hwnd, CB_SETCURSEL, dw-4, 0);
+			::SetWindowPos(hwnd, 0, 0, 0, rect.right - rect.left, 200, SWP_NOZORDER | SWP_NOMOVE);
+		}
+
+		if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dwBack, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_BACK)
+			|| dwBack < 0) dwBack = SCINTILLA_BACK_COLOR;
+		if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dwUser, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_USER)
+			|| dwUser < 0) dwUser = SCINTILLA_USER_TEXT_COLOR;
+		if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dwMessage, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_MESSAGE)
+			|| dwMessage < 0) dwMessage = SCINTILLA_R_TEXT_COLOR;
+
+		lp = ::GetWindowLongPtr(::GetDlgItem(hwndDlg, IDC_BBACK), GWL_STYLE);
+		::SetWindowLongPtr(::GetDlgItem(hwndDlg, IDC_BBACK), GWL_STYLE, lp | BS_OWNERDRAW);
+
+		lp = ::GetWindowLongPtr(::GetDlgItem(hwndDlg, IDC_BUSER), GWL_STYLE);
+		::SetWindowLongPtr(::GetDlgItem(hwndDlg, IDC_BUSER), GWL_STYLE, lp | BS_OWNERDRAW);
+
+		lp = ::GetWindowLongPtr(::GetDlgItem(hwndDlg, IDC_BMESSAGE), GWL_STYLE);
+		::SetWindowLongPtr(::GetDlgItem(hwndDlg, IDC_BMESSAGE), GWL_STYLE, lp | BS_OWNERDRAW);
+
+		lp = ::GetWindowLongPtr(::GetDlgItem(hwndDlg, IDC_PREVIEW), GWL_STYLE);
+		::SetWindowLongPtr(::GetDlgItem(hwndDlg, IDC_PREVIEW), GWL_STYLE, lp | SS_OWNERDRAW);
+
+		CenterWindow(hwndDlg, ::GetParent(hwndDlg));
+		break;
+
+	case WM_DRAWITEM:
+	{
+		HBRUSH brush = 0;
+		HFONT font = 0;
+		LOGFONT lf;
+		HPEN pen;
+		HDC &dc = ((DRAWITEMSTRUCT*)lParam)->hDC;
+		RECT &rect = (((DRAWITEMSTRUCT*)lParam)->rcItem);
+		RECT rfill;
+
+		switch (wParam)
+		{
+		case IDC_PREVIEW:
+		{
+			brush = ::CreateSolidBrush(dwBack);
+			::FillRect(dc, &rect, brush);
+			memset(&lf, 0, sizeof(LOGFONT));
+			::GetWindowText(::GetDlgItem(hwndDlg, IDC_COMBO_FONTS), lf.lfFaceName, 32);
+			::GetWindowTextA(::GetDlgItem(hwndDlg, IDC_COMBO_FONTSIZE), buffer, 32);
+			dw = atoi(buffer);
+			if (dw < 1) dw = 1;
+			lf.lfHeight = -MulDiv(dw, GetDeviceCaps(GetWindowDC(hwndDlg), LOGPIXELSY), 72);
+			font = ::CreateFontIndirect(&lf);
+			::SelectObject(dc, font);
+			SetTextColor(dc, dwUser);
+			SetBkMode(dc, TRANSPARENT);
+			RECT r2;
+			::CopyRect(&r2, &rect);
+			::DrawTextA(dc, "User text; ", -1, &r2, DT_TOP | DT_WORD_ELLIPSIS | DT_SINGLELINE | DT_CALCRECT);
+			::DrawTextA(dc, "User text; ", -1, &r2, DT_TOP | DT_WORD_ELLIPSIS | DT_SINGLELINE);
+			int left = r2.right;
+			::CopyRect(&r2, &rect);
+			r2.left = left;
+			SetTextColor(dc, dwMessage);
+			::DrawTextA(dc, "message text", -1, &r2, DT_TOP | DT_WORD_ELLIPSIS | DT_SINGLELINE);
+			::DeleteObject(font);
+			::DeleteObject(brush);
+			return FALSE;
+		}
+		case IDC_BBACK:
+			brush = ::CreateSolidBrush(dwBack);
+			break;
+		case IDC_BUSER:
+			brush = ::CreateSolidBrush(dwUser);
+			break;
+		case IDC_BMESSAGE:
+			brush = ::CreateSolidBrush(dwMessage);
+			break;
+		}
+		if (brush)
+		{
+			rfill.left = rect.left + 2;
+			rfill.top = rect.top + 2;
+			rfill.right = rect.right - 2;
+			rfill.bottom = rect.bottom - 2;
+
+			pen = ::CreatePen(PS_SOLID, 1, 0);
+			MoveToEx(dc, rect.left, rect.top, 0);
+			LineTo(dc, rect.right-1, rect.top);
+			LineTo(dc, rect.right - 1, rect.bottom - 1);
+			LineTo(dc, rect.left, rect.bottom - 1);
+			LineTo(dc, rect.left, rect.top);
+			::FillRect(dc, &rfill, brush);
+			::DeleteObject(brush);
+			::DeleteObject(pen);
+		}
+	}
+		break;
+
+	case WM_COMMAND:
+
+		switch (LOWORD(wParam))
+		{
+		case IDC_COMBO_FONTS:
+		case IDC_COMBO_FONTSIZE:
+			if (HIWORD(wParam) == CBN_SELCHANGE)
+			{
+				::RedrawWindow(::GetDlgItem(hwndDlg, IDC_PREVIEW), 0, 0, RDW_INVALIDATE);
+				::EnableWindow(::GetDlgItem(hwndDlg, IDAPPLY), 1);
+			}
+			break;
+
+		case IDC_BBACK:
+			if (ColorDlg(hwndDlg, dwBack))
+			{
+				::RedrawWindow(::GetDlgItem(hwndDlg, IDC_BBACK), 0, 0, RDW_INVALIDATE);
+				::RedrawWindow(::GetDlgItem(hwndDlg, IDC_PREVIEW), 0, 0, RDW_INVALIDATE);
+				::EnableWindow(::GetDlgItem(hwndDlg, IDAPPLY), 1);
+			}
+			break;
+		case IDC_BUSER:
+			if (ColorDlg(hwndDlg, dwUser))
+			{
+				::RedrawWindow(::GetDlgItem(hwndDlg, IDC_BUSER), 0, 0, RDW_INVALIDATE);
+				::RedrawWindow(::GetDlgItem(hwndDlg, IDC_PREVIEW), 0, 0, RDW_INVALIDATE);
+				::EnableWindow(::GetDlgItem(hwndDlg, IDAPPLY), 1);
+			}
+			break;
+		case IDC_BMESSAGE:
+			if (ColorDlg(hwndDlg, dwMessage))
+			{
+				::RedrawWindow(::GetDlgItem(hwndDlg, IDC_BMESSAGE), 0, 0, RDW_INVALIDATE);
+				::RedrawWindow(::GetDlgItem(hwndDlg, IDC_PREVIEW), 0, 0, RDW_INVALIDATE);
+				::EnableWindow(::GetDlgItem(hwndDlg, IDAPPLY), 1);
+			}
+			break;
+
+		case IDAPPLY:
+		case IDOK:
+
+			::GetWindowTextA(::GetDlgItem(hwndDlg, IDC_COMBO_FONTSIZE), buffer, 64);
+			dw = atoi(buffer);
+			if (dw < 1) dw = 1;
+			fn(ptr, SCI_STYLESETSIZE, STYLE_DEFAULT, dw);
+
+			::GetWindowTextA(::GetDlgItem(hwndDlg, IDC_COMBO_FONTS), buffer, 64);
+			fn(ptr, SCI_STYLESETFONT, STYLE_DEFAULT, (sptr_t)buffer);
+
+			fn(ptr, SCI_STYLESETFORE, 1, dwMessage);
+			fn(ptr, SCI_STYLESETFORE, 0, dwUser);
+			fn(ptr, SCI_STYLESETBACK, 0, dwBack);
+			fn(ptr, SCI_STYLESETBACK, 1, dwBack);
+			fn(ptr, SCI_STYLESETBACK, 32, dwBack);
+			::EnableWindow(::GetDlgItem(hwndDlg, IDAPPLY), 0);
+
+			if (LOWORD(wParam) == IDAPPLY) break;
+
+			// set registry
+			CRegistryUtils::SetRegString(HKEY_CURRENT_USER, buffer, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_FONT);
+			CRegistryUtils::SetRegDWORD(HKEY_CURRENT_USER, dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_SIZE);
+			CRegistryUtils::SetRegDWORD(HKEY_CURRENT_USER, dwBack, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_BACK);
+			CRegistryUtils::SetRegDWORD(HKEY_CURRENT_USER, dwMessage, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_MESSAGE);
+			CRegistryUtils::SetRegDWORD(HKEY_CURRENT_USER, dwUser, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_USER);
+
+			EndDialog(hwndDlg, wParam);
+			return TRUE;
+
+		case IDCANCEL:
+			SetConsoleDefaults();
+			EndDialog(hwndDlg, wParam);
+			return TRUE;
+		}
+		break;
+	}
+	return FALSE;
+}
+
+void ConsoleOptions( HWND hwnd )
+{
+	::DialogBox(ghModule,
+		MAKEINTRESOURCE(IDD_CONSOLE_OPTIONS),
+		hwnd, (DLGPROC)ConsoleOptionsDlgProc);
+
+}
+
 void initWordList()
 {
 	static int lastWLLen = 2500;
@@ -583,123 +858,36 @@ VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 	flush_log();
 }
 
-bool ConsoleColor(HWND hwnd, DWORD &dwColor, DWORD dflt, const char *reg)
+void SetConsoleDefaults()
 {
-	CHOOSECOLOR cc;                 // common dialog box structure 
-	static COLORREF acrCustClr[16]; // array of custom colors 
-	
-	HBRUSH hbrush;                  // brush handle
-	//static DWORD rgbCurrent;        // initial color selection
-
-	bool rslt = false;
-
-	if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dwColor, REGISTRY_KEY, reg)
-		|| dwColor < 0) dwColor = dflt;
-
-	// Initialize CHOOSECOLOR 
-	ZeroMemory(&cc, sizeof(cc));
-	cc.lStructSize = sizeof(cc);
-	cc.hwndOwner = hwnd;
-	cc.lpCustColors = (LPDWORD)acrCustClr;
-	cc.rgbResult = dwColor;
-	cc.Flags = CC_FULLOPEN | CC_RGBINIT;
-
-	if (ChooseColor(&cc) == TRUE)
-	{
-		dwColor = cc.rgbResult;
-
-		// registry
-		CRegistryUtils::SetRegDWORD(HKEY_CURRENT_USER, dwColor, REGISTRY_KEY, reg);
-
-		rslt = true;
-	}
-
-	return rslt;
-}
-
-void ConsoleBackColor(HWND hwnd)
-{
-	DWORD dw = 0;
-	if (ConsoleColor(hwnd, dw, SCINTILLA_BACK_COLOR, REGISTRY_VALUE_CONSOLE_BACK))
-	{
-		fn(ptr, SCI_STYLESETBACK, 0, dw);
-		fn(ptr, SCI_STYLESETBACK, 1, dw);
-		fn(ptr, SCI_STYLESETBACK, 32, dw);
-	}
-}
-
-void ConsoleMessageColor(HWND hwnd)
-{
-	DWORD dw = 0;
-	if (ConsoleColor(hwnd, dw, SCINTILLA_R_TEXT_COLOR, REGISTRY_VALUE_CONSOLE_NORMAL))
-	{
-		fn(ptr, SCI_STYLESETFORE, 1, dw);
-	}
-}
-
-
-void ConsoleUserColor(HWND hwnd)
-{
-	DWORD dw = 0;
-	if (ConsoleColor(hwnd, dw, SCINTILLA_USER_TEXT_COLOR, REGISTRY_VALUE_CONSOLE_USER))
-	{
-		fn(ptr, SCI_STYLESETFORE, 0, dw);
-	}
-}
-
-void ConsoleFont(HWND hwnd)
-{
-	CHOOSEFONTA cf;            // common dialog box structure
-	static LOGFONTA lf;        // logical font structure
-	HFONT hfont, hfontPrev;
-	DWORD rgbPrev;
 	char buffer[64];
 	DWORD dw;
-	int i;
-
-	memset(&lf, 0, sizeof(LOGFONTA));
 
 	if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, buffer, 63, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_FONT)
 		|| !strlen(buffer)) strcpy_s(buffer, 64, SCINTILLA_FONT_NAME);
+	fn(ptr, SCI_STYLESETFONT, STYLE_DEFAULT, (sptr_t)buffer);
 
 	if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_SIZE)
 		|| dw <= 0) dw = SCINTILLA_FONT_SIZE;
+	fn(ptr, SCI_STYLESETSIZE, STYLE_DEFAULT, dw);
 
-	ZeroMemory(&lf, sizeof(lf));
-	lf.lfHeight = -MulDiv(dw, GetDeviceCaps(GetWindowDC(hwnd), LOGPIXELSY), 72);
-	lf.lfWidth = 0;
-	strcpy_s(lf.lfFaceName, 32, buffer);
-	lf.lfEscapement = 0;
-	lf.lfOrientation = 0;
-	lf.lfWeight = FW_DONTCARE;
-	lf.lfItalic = FALSE;
-	lf.lfUnderline = FALSE;
-	lf.lfStrikeOut = FALSE;
-	lf.lfCharSet = DEFAULT_CHARSET;
-	lf.lfOutPrecision = OUT_DEFAULT_PRECIS;
-	lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
-	lf.lfQuality = DEFAULT_QUALITY;
-	lf.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
-	
-	ZeroMemory(&cf, sizeof(cf));
-	cf.lStructSize = sizeof(cf);
-	cf.hwndOwner = hwnd;
-	cf.lpLogFont = &lf;
-	cf.Flags = CF_SCREENFONTS | CF_INITTOLOGFONTSTRUCT;
+	if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_MESSAGE)
+		|| dw < 0) dw = SCINTILLA_R_TEXT_COLOR;
+	fn(ptr, SCI_STYLESETFORE, 1, dw);
 
-	if (ChooseFontA(&cf) == TRUE)
-	{
-		// set registry
-		strcpy_s(buffer, 64, lf.lfFaceName);
-		CRegistryUtils::SetRegString(HKEY_CURRENT_USER, buffer, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_FONT);
+	if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_USER)
+		|| dw < 0) dw = SCINTILLA_USER_TEXT_COLOR;
+	fn(ptr, SCI_STYLESETFORE, 0, dw);
 
-		dw = MulDiv(-lf.lfHeight, 72, GetDeviceCaps(GetWindowDC(hwnd), LOGPIXELSY));
-		CRegistryUtils::SetRegDWORD(HKEY_CURRENT_USER, dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_SIZE);
+	if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_USER)
+		|| dw < 0) dw = SCINTILLA_USER_TEXT_COLOR;
+	fn(ptr, SCI_STYLESETFORE, 0, dw);
 
-		// update local
-		fn(ptr, SCI_STYLESETFONT, STYLE_DEFAULT, (sptr_t)buffer);
-		fn(ptr, SCI_STYLESETSIZE, STYLE_DEFAULT, dw);
-	}
+	if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_BACK)
+		|| dw < 0) dw = SCINTILLA_BACK_COLOR;
+	fn(ptr, SCI_STYLESETBACK, 0, dw);
+	fn(ptr, SCI_STYLESETBACK, 1, dw);
+	fn(ptr, SCI_STYLESETBACK, 32, dw);
 }
 
 LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
@@ -749,32 +937,7 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 			DWORD dw;
 
 			fn(ptr, SCI_SETCODEPAGE, SC_CP_UTF8, 0);
-
-			if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, buffer, 63, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_FONT)
-				|| !strlen(buffer)) strcpy_s(buffer, 64, SCINTILLA_FONT_NAME);
-			fn(ptr, SCI_STYLESETFONT, STYLE_DEFAULT, (sptr_t)buffer);
-
-			if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_SIZE)
-				|| dw <= 0) dw = SCINTILLA_FONT_SIZE;
-			fn(ptr, SCI_STYLESETSIZE, STYLE_DEFAULT, dw);
-
-			if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_NORMAL)
-				|| dw < 0) dw = SCINTILLA_R_TEXT_COLOR;
-			fn(ptr, SCI_STYLESETFORE, 1, dw);
-
-			if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_USER)
-				|| dw < 0) dw = SCINTILLA_USER_TEXT_COLOR;
-			fn(ptr, SCI_STYLESETFORE, 0, dw);
-
-			if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_USER)
-				|| dw < 0) dw = SCINTILLA_USER_TEXT_COLOR;
-			fn(ptr, SCI_STYLESETFORE, 0, dw);
-
-			if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_BACK)
-				|| dw < 0) dw = SCINTILLA_BACK_COLOR;
-			fn(ptr, SCI_STYLESETBACK, 0, dw);
-			fn(ptr, SCI_STYLESETBACK, 1, dw);
-			fn(ptr, SCI_STYLESETBACK, 32, dw);
+			SetConsoleDefaults();
 
 			fn(ptr, SCI_SETMARGINWIDTHN, 1, 0);
 
@@ -912,6 +1075,7 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 			initWordList();
 			break;
 
+		/*
 		case ID_CONSOLEOPTIONS_BACKGROUNDCOLOR:
 			ConsoleBackColor(hwndDlg);
 			break;
@@ -926,6 +1090,11 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 
 		case ID_CONSOLEOPTIONS_FONT:
 			ConsoleFont( hwndDlg );
+			break;
+		*/
+
+		case ID_CONSOLE_CONSOLEOPTIONS:
+			ConsoleOptions(hwndDlg);
 			break;
 
 		case ID_CONSOLE_CLOSECONSOLE:

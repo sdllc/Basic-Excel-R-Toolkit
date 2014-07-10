@@ -32,7 +32,7 @@
 #define REGISTRY_VALUE_CONSOLE_FONT		"ConsoleFont"
 #define REGISTRY_VALUE_CONSOLE_SIZE		"ConsoleFontSize"
 #define REGISTRY_VALUE_CONSOLE_USER		"ConsoleUserTextColor"
-#define REGISTRY_VALUE_CONSOLE_NORMAL	"ConsoleNormalTextColor"
+#define REGISTRY_VALUE_CONSOLE_MESSAGE	"ConsoleMessageTextColor"
 #define REGISTRY_VALUE_CONSOLE_BACK		"ConsoleBackgroundColor"
 
 #define DEFAULT_ENVIRONMENT				""
