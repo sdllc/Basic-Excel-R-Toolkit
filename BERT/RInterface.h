@@ -60,6 +60,7 @@ void LoadStartupFile();
 SVECTOR & getWordList( SVECTOR &wordList );
 
 int getCallTip(std::string &callTip, const std::string &sym);
+int setWidth(int w);
 
 short BERT_InstallPackages();
 

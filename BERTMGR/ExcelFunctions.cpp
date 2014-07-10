@@ -70,13 +70,9 @@ DLLEX BOOL WINAPI xlAutoOpen(void)
 {
 	char RBin[MAX_PATH];
 	char Home[MAX_PATH];
-	DWORD bitness;
 
 	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, RBin, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_R_HOME, true))
 		ExpandEnvironmentStringsA(DEFAULT_R_HOME, RBin, MAX_PATH - 1);
-
-	if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &bitness, REGISTRY_KEY, REGISTRY_VALUE_BITNESS))
-		bitness = DEFAULT_BITNESS;
 
 	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, Home, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_R_USER, true))
 		ExpandEnvironmentStringsA(DEFAULT_R_USER, Home, MAX_PATH - 1);
@@ -86,8 +82,14 @@ DLLEX BOOL WINAPI xlAutoOpen(void)
 	{
 		if (RBin[len - 1] != '\\') strcat_s(RBin, MAX_PATH - 1, "\\");
 	}
-	if (bitness == 64) strcat_s(RBin, MAX_PATH, "bin\\x64;");
-	else strcat_s(RBin, MAX_PATH, "bin\\i386;");
+
+	// DERP
+
+#ifdef _WIN64
+	strcat_s(RBin, MAX_PATH, "bin\\x64;");
+#else
+	strcat_s(RBin, MAX_PATH, "bin\\i386;");
+#endif
 
 	// set path
 
@@ -108,9 +110,17 @@ DLLEX BOOL WINAPI xlAutoOpen(void)
 	// load xll
 
 #ifdef _DEBUG
-	swprintf_s(BERTXLL, MAX_PATH, L"BERT%d" L"D.xll", bitness);
+	#ifdef _WIN64
+		swprintf_s(BERTXLL, MAX_PATH, L"BERT64D.xll");
+	#else
+		swprintf_s(BERTXLL, MAX_PATH, L"BERT32D.xll");
+	#endif
 #else
-	swprintf_s(BERTXLL, MAX_PATH, L"BERT%d.xll", bitness);
+	#ifdef _WIN64
+		swprintf_s(BERTXLL, MAX_PATH, L"BERT64.xll");
+	#else
+		swprintf_s(BERTXLL, MAX_PATH, L"BERT32.xll");
+	#endif
 #endif
 
 	registerSecondXLL(true, (LPWSTR)BERTXLL);
@@ -126,7 +136,7 @@ DLLEX BOOL WINAPI xlAutoClose(void)
 DLLEX LPXLOPER12 WINAPI xlAddInManagerInfo12(LPXLOPER12 xAction)
 {
 	static XLOPER12 xInfo, xIntAction;
-	static XCHAR szAddInStr[128] = L" Basic Excel R Toolkit (Manager XLL)";
+	static XCHAR szAddInStr[128] = L" Basic Excel R Toolkit";
 
 	XLOPER12 xlInt;
 	xlInt.xltype = xltypeInt;

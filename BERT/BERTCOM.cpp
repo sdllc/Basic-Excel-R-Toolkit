@@ -29,13 +29,14 @@
 #include "DebugOut.h"
 #include "util.h"
 
-// FIXME: standardize the generated headers and use those instead 
-// of the import directives, imports are fragile
+// these are generated type library headers.  they were originally created
+// using #import statements; then the files were added to the project and 
+// the #import statements removed.
 
-#import "C:\Program Files (x86)\Common Files\Microsoft Shared\OFFICE15\MSO.DLL" rename_namespace("Office") raw_interfaces_only, named_guids
-using namespace Office;
-#import "C:\Program Files\Microsoft Office\Office15\EXCEL.EXE" rename_namespace("Excel"), raw_interfaces_only, \
-	rename("DialogBox","_DialogBox"), exclude("IFont", "IPicture"), rename("RGB","_RGB"), rename("CopyFile","_CopyFile")
+// this should be less fragile than using #import as a preprocessor step.
+
+#include "MSO.tlh"
+#include "Excel.tlh"
 
 IDispatch *pdispThread = 0;
 IDispatch *pdispApp = 0;

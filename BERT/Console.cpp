@@ -73,7 +73,6 @@ int CALLBACK EnumFontFamExProc(const LOGFONTA *lpelfe, const TEXTMETRICA *lpntme
 	return -1;
 }
 
-
 bool ColorDlg(HWND hwnd, DWORD &dwColor )
 {
 	CHOOSECOLOR cc;                 // common dialog box structure 
@@ -90,7 +89,8 @@ bool ColorDlg(HWND hwnd, DWORD &dwColor )
 	cc.hwndOwner = hwnd;
 	cc.lpCustColors = (LPDWORD)acrCustClr;
 	cc.rgbResult = dwColor;
-	cc.Flags = CC_FULLOPEN | CC_RGBINIT;
+
+	cc.Flags = CC_FULLOPEN | CC_RGBINIT ;
 
 	if (ChooseColor(&cc) == TRUE)
 	{
@@ -207,7 +207,7 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleOptionsDlgProc(HWND hwndDlg, UINT message, WP
 			if (dw < 1) dw = 1;
 			lf.lfHeight = -MulDiv(dw, GetDeviceCaps(GetWindowDC(hwndDlg), LOGPIXELSY), 72);
 			font = ::CreateFontIndirect(&lf);
-			::SelectObject(dc, font);
+			HGDIOBJ oldFont = ::SelectObject(dc, font);
 			SetTextColor(dc, dwUser);
 			SetBkMode(dc, TRANSPARENT);
 			RECT r2;
@@ -219,6 +219,7 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleOptionsDlgProc(HWND hwndDlg, UINT message, WP
 			r2.left = left;
 			SetTextColor(dc, dwMessage);
 			::DrawTextA(dc, "message text", -1, &r2, DT_TOP | DT_WORD_ELLIPSIS | DT_SINGLELINE);
+			::SelectObject(dc, oldFont);
 			::DeleteObject(font);
 			::DeleteObject(brush);
 			return FALSE;
@@ -938,7 +939,7 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 
 			fn(ptr, SCI_SETCODEPAGE, SC_CP_UTF8, 0);
 			SetConsoleDefaults();
-
+			
 			fn(ptr, SCI_SETMARGINWIDTHN, 1, 0);
 
 			std::list< std::string > loglist;
@@ -974,20 +975,12 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 		if (rectConsole.right == rectConsole.left)
 		{
 			::SetWindowPos(hwndDlg, HWND_TOP, 0, 0, 600, 400, SWP_NOZORDER);
-			//CenterWindow(hwndDlg, ::GetParent(hwndDlg));
 		}
 		else
 		{
 			::SetWindowPos(hwndDlg, HWND_TOP, rectConsole.left, rectConsole.top,
 				rectConsole.right - rectConsole.left, rectConsole.bottom - rectConsole.top,
 				SWP_NOZORDER);
-			::GetClientRect(hwndDlg, &rect);
-			::SetWindowPos(hwndScintilla, HWND_TOP,
-				borderedge,
-				borderedge + topspace,
-				rect.right - 2 * borderedge,
-				rect.bottom - 2 * borderedge - topspace,
-				SWP_NOMOVE | SWP_NOZORDER | SWP_DEFERERASE);
 		}
 
 		break;
@@ -1002,6 +995,7 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 			rect.right - 2 * borderedge,
 			rect.bottom - 2 * borderedge - topspace,
 			SWP_NOMOVE | SWP_NOZORDER | SWP_DEFERERASE);
+
 		break;
 
 	case WM_ERASEBKGND:
@@ -1010,16 +1004,16 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 	case WM_NOTIFY:
 		switch (((LPNMHDR)lParam)->code)
 		{
-		case SCN_MODIFIED:
+		case SCN_MODIFIED: // what am I trapping this for? // A: was thinking about handling PASTE
 		{
-			SCNotification *scn = (SCNotification*)lParam;
-			DebugOut("Modified: 0x%x\n", scn->modificationType);
+			// SCNotification *scn = (SCNotification*)lParam;
+			// DebugOut("Modified: 0x%x\n", scn->modificationType);
 		}
 
 		case SCN_CHARADDED:
 		{
 			SCNotification *scn = (SCNotification*)lParam;
-			DebugOut("CA: %x\n", scn->ch);
+			// DebugOut("CA: %x\n", scn->ch);
 
 			// I think because I switched to utf-8 I'm getting
 			// double notifications
@@ -1058,7 +1052,6 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 			break;
 
 		case ID_CONSOLE_INSTALLPACKAGES:
-			//BERT_InstallPackages();
 			SafeCall(SCC_INSTALLPACKAGES, 0, 0);
 			break;
 
@@ -1067,31 +1060,12 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 			break;
 
 		case ID_CONSOLE_RELOADSTARTUPFILE:
-			//BERT_Reload();
 			SafeCall(SCC_RELOAD_STARTUP, 0, 0);
 			break;
 
 		case WM_REBUILD_WORDLISTS:
 			initWordList();
 			break;
-
-		/*
-		case ID_CONSOLEOPTIONS_BACKGROUNDCOLOR:
-			ConsoleBackColor(hwndDlg);
-			break;
-
-		case ID_CONSOLEOPTIONS_USERTEXTCOLOR:
-			ConsoleUserColor(hwndDlg);
-			break;
-			
-		case ID_CONSOLEOPTIONS_MESSAGETEXTCOLOR:
-			ConsoleMessageColor(hwndDlg);
-			break;
-
-		case ID_CONSOLEOPTIONS_FONT:
-			ConsoleFont( hwndDlg );
-			break;
-		*/
 
 		case ID_CONSOLE_CONSOLEOPTIONS:
 			ConsoleOptions(hwndDlg);
@@ -1168,10 +1142,10 @@ DWORD WINAPI ThreadProc(LPVOID lpParameter)
 		return 0;
 	}
 
-	ShowWindow(hwnd, SW_SHOW);
-
 	if (first) CenterWindow(hwnd, (HWND)lpParameter);
 	first = false;
+
+	ShowWindow(hwnd, SW_SHOW);
 
 	// Run the message loop.
 

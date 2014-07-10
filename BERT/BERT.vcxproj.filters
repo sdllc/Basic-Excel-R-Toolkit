@@ -98,6 +98,12 @@
       <Filter>Source Files</Filter>
     </None>
     <None Include="BaseFunctions.R" />
+    <None Include="excel.tlh">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="mso.tlh">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="BERT.rc">

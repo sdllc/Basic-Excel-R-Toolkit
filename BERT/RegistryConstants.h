@@ -26,7 +26,6 @@
 #define REGISTRY_VALUE_R_USER			"R_USER"
 #define REGISTRY_VALUE_R_HOME			"R_HOME"
 #define REGISTRY_VALUE_STARTUP			"StartupFile"
-#define REGISTRY_VALUE_BITNESS			"Bitness"
 #define REGISTRY_VALUE_HIDE_MENU		"HideMenu"
 
 #define REGISTRY_VALUE_CONSOLE_FONT		"ConsoleFont"
@@ -39,7 +38,6 @@
 #define DEFAULT_R_USER					"%APPDATA%\\BERT"
 #define DEFAULT_R_HOME					"%APPDATA%\\BERT\\R-3.1.0"
 #define DEFAULT_R_STARTUP				"Functions.R"
-#define DEFAULT_BITNESS					32
 
 #endif // #ifndef __REGISTRY_CONSTANTS_H
 

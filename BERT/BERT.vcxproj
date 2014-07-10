@@ -296,6 +296,8 @@
   <ItemGroup>
     <None Include="BaseFunctions.R" />
     <None Include="BERT.def" />
+    <None Include="excel.tlh" />
+    <None Include="mso.tlh" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="BERT.rc" />
