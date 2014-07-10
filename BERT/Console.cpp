@@ -583,6 +583,125 @@ VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 	flush_log();
 }
 
+bool ConsoleColor(HWND hwnd, DWORD &dwColor, DWORD dflt, const char *reg)
+{
+	CHOOSECOLOR cc;                 // common dialog box structure 
+	static COLORREF acrCustClr[16]; // array of custom colors 
+	
+	HBRUSH hbrush;                  // brush handle
+	//static DWORD rgbCurrent;        // initial color selection
+
+	bool rslt = false;
+
+	if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dwColor, REGISTRY_KEY, reg)
+		|| dwColor < 0) dwColor = dflt;
+
+	// Initialize CHOOSECOLOR 
+	ZeroMemory(&cc, sizeof(cc));
+	cc.lStructSize = sizeof(cc);
+	cc.hwndOwner = hwnd;
+	cc.lpCustColors = (LPDWORD)acrCustClr;
+	cc.rgbResult = dwColor;
+	cc.Flags = CC_FULLOPEN | CC_RGBINIT;
+
+	if (ChooseColor(&cc) == TRUE)
+	{
+		dwColor = cc.rgbResult;
+
+		// registry
+		CRegistryUtils::SetRegDWORD(HKEY_CURRENT_USER, dwColor, REGISTRY_KEY, reg);
+
+		rslt = true;
+	}
+
+	return rslt;
+}
+
+void ConsoleBackColor(HWND hwnd)
+{
+	DWORD dw = 0;
+	if (ConsoleColor(hwnd, dw, SCINTILLA_BACK_COLOR, REGISTRY_VALUE_CONSOLE_BACK))
+	{
+		fn(ptr, SCI_STYLESETBACK, 0, dw);
+		fn(ptr, SCI_STYLESETBACK, 1, dw);
+		fn(ptr, SCI_STYLESETBACK, 32, dw);
+	}
+}
+
+void ConsoleMessageColor(HWND hwnd)
+{
+	DWORD dw = 0;
+	if (ConsoleColor(hwnd, dw, SCINTILLA_R_TEXT_COLOR, REGISTRY_VALUE_CONSOLE_NORMAL))
+	{
+		fn(ptr, SCI_STYLESETFORE, 1, dw);
+	}
+}
+
+
+void ConsoleUserColor(HWND hwnd)
+{
+	DWORD dw = 0;
+	if (ConsoleColor(hwnd, dw, SCINTILLA_USER_TEXT_COLOR, REGISTRY_VALUE_CONSOLE_USER))
+	{
+		fn(ptr, SCI_STYLESETFORE, 0, dw);
+	}
+}
+
+void ConsoleFont(HWND hwnd)
+{
+	CHOOSEFONTA cf;            // common dialog box structure
+	static LOGFONTA lf;        // logical font structure
+	HFONT hfont, hfontPrev;
+	DWORD rgbPrev;
+	char buffer[64];
+	DWORD dw;
+	int i;
+
+	memset(&lf, 0, sizeof(LOGFONTA));
+
+	if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, buffer, 63, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_FONT)
+		|| !strlen(buffer)) strcpy_s(buffer, 64, SCINTILLA_FONT_NAME);
+
+	if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_SIZE)
+		|| dw <= 0) dw = SCINTILLA_FONT_SIZE;
+
+	ZeroMemory(&lf, sizeof(lf));
+	lf.lfHeight = -MulDiv(dw, GetDeviceCaps(GetWindowDC(hwnd), LOGPIXELSY), 72);
+	lf.lfWidth = 0;
+	strcpy_s(lf.lfFaceName, 32, buffer);
+	lf.lfEscapement = 0;
+	lf.lfOrientation = 0;
+	lf.lfWeight = FW_DONTCARE;
+	lf.lfItalic = FALSE;
+	lf.lfUnderline = FALSE;
+	lf.lfStrikeOut = FALSE;
+	lf.lfCharSet = DEFAULT_CHARSET;
+	lf.lfOutPrecision = OUT_DEFAULT_PRECIS;
+	lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
+	lf.lfQuality = DEFAULT_QUALITY;
+	lf.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
+	
+	ZeroMemory(&cf, sizeof(cf));
+	cf.lStructSize = sizeof(cf);
+	cf.hwndOwner = hwnd;
+	cf.lpLogFont = &lf;
+	cf.Flags = CF_SCREENFONTS | CF_INITTOLOGFONTSTRUCT;
+
+	if (ChooseFontA(&cf) == TRUE)
+	{
+		// set registry
+		strcpy_s(buffer, 64, lf.lfFaceName);
+		CRegistryUtils::SetRegString(HKEY_CURRENT_USER, buffer, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_FONT);
+
+		dw = MulDiv(-lf.lfHeight, 72, GetDeviceCaps(GetWindowDC(hwnd), LOGPIXELSY));
+		CRegistryUtils::SetRegDWORD(HKEY_CURRENT_USER, dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_SIZE);
+
+		// update local
+		fn(ptr, SCI_STYLESETFONT, STYLE_DEFAULT, (sptr_t)buffer);
+		fn(ptr, SCI_STYLESETSIZE, STYLE_DEFAULT, dw);
+	}
+}
+
 LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
 //DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam )
 {
@@ -791,6 +910,22 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 
 		case WM_REBUILD_WORDLISTS:
 			initWordList();
+			break;
+
+		case ID_CONSOLEOPTIONS_BACKGROUNDCOLOR:
+			ConsoleBackColor(hwndDlg);
+			break;
+
+		case ID_CONSOLEOPTIONS_USERTEXTCOLOR:
+			ConsoleUserColor(hwndDlg);
+			break;
+			
+		case ID_CONSOLEOPTIONS_MESSAGETEXTCOLOR:
+			ConsoleMessageColor(hwndDlg);
+			break;
+
+		case ID_CONSOLEOPTIONS_FONT:
+			ConsoleFont( hwndDlg );
 			break;
 
 		case ID_CONSOLE_CLOSECONSOLE:

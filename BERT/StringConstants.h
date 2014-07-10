@@ -30,7 +30,7 @@
 	"Copyright (C) 2014 The R Foundation for Statistical Computing"
 
 #define ABOUT_SCINTILLA_TEXT \
-	"Includes Scintilla editing component\r\n" \
+	"Includes Scintilla text component\r\n" \
 	"Copyright 1998 - 2014 by Neil Hodgson <neilh@scintilla.org>"
 
 #define PARSE_ERROR_MESSAGE "(parse error)\n"
