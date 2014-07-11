@@ -670,6 +670,11 @@ SEXP resolveObject(const std::string &token, SEXP parent = R_GlobalEnv)
 	return PROTECT(R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString(token.c_str())), parent, &err));
 }
 
+/**
+ * get names, or, if the object is an environment, ls
+ * FIXME: ls all.names=1
+ * FIXME: hashes?
+ */
 int getNames(SVECTOR &vec, const std::string &token)
 {
 	int err;
