@@ -681,9 +681,10 @@ int getCallTip(std::string &callTip, const std::string &sym)
 				const char *c = CHAR(STRING_ELT(result,0));
 				if (!strncmp(c, "function ", 9))
 				{
-					callTip = &(c[9]);
+					callTip = Util::trim(&(c[9]));
 					for (int i = 1; i < Rf_length(result); i++)
 					{
+						callTip += " ";
 						callTip += Util::trim(CHAR(STRING_ELT(result, i)));
 					}
 					ret = 1;

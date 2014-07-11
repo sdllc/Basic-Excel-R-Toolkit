@@ -36,12 +36,6 @@
 #include <string.h>
 #include <stdio.h>
 
-#ifdef _DEBUG
-	#pragma message(" ** Disabling STL debug")
-	#define _NOSTLDEBUG
-	#undef _DEBUG
-#endif
-
 #include <string>
 #include <list>
 #include <vector>
@@ -49,8 +43,5 @@
 #include <sstream>
 #include <algorithm>
 
-#ifdef _NOSTLDEBUG
-	#define _DEBUG
-#endif
 
 // TODO: reference additional headers your program requires here
