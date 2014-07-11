@@ -35,17 +35,9 @@ Excel<- function( command, arguments = list() ){ .Call(.CALLBACK, .EXCEL, comman
 # functions - for internal use
 #========================================================
 
-Namespace <- function(a, b){ return( paste( b, "$", a, sep="" )); }
 WordList <- function(){ 
 	wl <- vector();
 	for( i in search()){ wl <- c( wl, ls(i, all.names=1)); }
-	for( i in ls(.GlobalEnv))
-	{
-		if( is.environment(get(i, .GlobalEnv)))
-		{
-			wl <- c( wl, unlist( lapply( ls(get(i, .GlobalEnv), all.names=1), Namespace, i)));	
-		}
-	}
 	wl;
 }
 
