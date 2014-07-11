@@ -74,6 +74,30 @@ public:
 		return str.substr(strBegin, strRange);
 	}
 
+	//
+	// see
+	// http://stackoverflow.com/questions/3418231/replace-part-of-a-string-with-another-string
+	//
+	static void replaceall(std::string& str, const std::string& from, const std::string& to) 
+	{
+		if (from.empty()) return;
+		size_t start_pos = 0;
+		while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
+			str.replace(start_pos, from.length(), to);
+			start_pos += to.length(); 
+		}
+	}
+
+	static void replacechar(std::string& str, const std::string& from, const std::string& to)
+	{
+		if (from.empty()) return;
+		size_t start_pos = 0;
+		while ((start_pos = str.find_first_of(from, start_pos)) != std::string::npos) {
+			str.replace(start_pos, 1, to);
+			start_pos += to.length();
+		}
+	}
+
 	static SVECTOR & split(const std::string &s, char delim, int minLength, SVECTOR &elems, bool ftrim = false)
 	{
 		std::stringstream ss(s);

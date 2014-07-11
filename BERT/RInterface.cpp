@@ -298,22 +298,23 @@ void LoadStartupFile()
 	if (contents.length() > 0)
 	{
 		time_t t;
-		struct tm * timeinfo;
+		struct tm timeinfo;
 		int rslt = UpdateR(contents);
 		char buffer[MAX_PATH];
 		
 		time(&t);
-		timeinfo = localtime(&t);
+		//timeinfo = 
+		localtime_s(&timeinfo, &t);
 
 		if (!rslt)
 		{
-			strftime(buffer, MAX_PATH, "Read startup file OK @ %c\n", timeinfo);
+			strftime(buffer, MAX_PATH, "Read startup file OK @ %c\n", &timeinfo);
 			logMessage(buffer, 0, 1);
 			ExcelStatus(0);
 		}
 		else
 		{
-			strftime(buffer, MAX_PATH, "Error reading startup file @ %c\n", timeinfo);
+			strftime(buffer, MAX_PATH, "Error reading startup file @ %c\n", &timeinfo);
 			logMessage(buffer, 0, 1);
 			ExcelStatus("Error reading startup file; check R log");
 		}
@@ -681,6 +682,10 @@ int getCallTip(std::string &callTip, const std::string &sym)
 				if (!strncmp(c, "function ", 9))
 				{
 					callTip = &(c[9]);
+					for (int i = 1; i < Rf_length(result); i++)
+					{
+						callTip += Util::trim(CHAR(STRING_ELT(result, i)));
+					}
 					ret = 1;
 				}
 			}
