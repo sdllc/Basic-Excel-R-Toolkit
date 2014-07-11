@@ -410,13 +410,14 @@ void UpdateWordList()
  * used when running functions from the console.  it is only
  * called (indirectly) by the SafeCall function.
  */
-long BERT_SafeCall(LPXLOPER12 xl)
+long BERT_SafeCall(long cmdid, LPXLOPER12 xl)
 {
 	SVECTOR sv;
 	if (xl->xltype & xltypeStr)
 	{
 		std::string func;
 		NarrowString(func, xl);
+		if (cmdid == 2) return getNames(moneyList, func);
 		return getCallTip(calltip, func);
 	}
 	else if (xl->xltype & xltypeMulti)
@@ -810,7 +811,7 @@ bool RegisterAddinFunctions()
 
 int DebugOut(const char *fmt, ...)
 {
-	static char msg[256];
+	static char msg[1024];
 	int ret;
 	va_list args;
 	va_start(args, fmt);

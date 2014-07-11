@@ -39,6 +39,8 @@ SVECTOR historyVector;
 
 SVECTOR wordList;
 SVECTOR moneyList;
+std::string moneyToken;
+
 SVECTOR baseWordList;
 bool wlInit = false;
 
@@ -349,10 +351,7 @@ void initWordList()
 	// fuck it we'll do it live
 
 	wordList.clear();
-	moneyList.clear();
-
 	wordList.reserve(lastWLLen + 100);
-	moneyList.reserve(lastWLLen + 100);
 
 	if (!wlInit)
 	{
@@ -380,8 +379,8 @@ void initWordList()
 		}
 	}
 
-	SVECTOR tmp;
-	tmp.reserve(lastWLLen + 100);
+	//SVECTOR tmp;
+	//tmp.reserve(lastWLLen + 100);
 
 	DWORD stat = WaitForSingleObject(muxWordlist, INFINITE);
 	if (stat == WAIT_OBJECT_0)
@@ -392,23 +391,15 @@ void initWordList()
 		for (SVECTOR::iterator iter = wlist.begin(); iter != wlist.end(); iter++)
 		{
 			std::string str(*iter);
-			tmp.push_back(str);
+			wordList.push_back(str);
 		}
 		ReleaseMutex(muxWordlist);
 	}
-	tmp.insert(tmp.end(), baseWordList.begin(), baseWordList.end());
-
-	for (SVECTOR::iterator iter = tmp.begin(); iter != tmp.end(); iter++)
-	{
-		if (iter->find('$') == std::string::npos) wordList.push_back(*iter);
-		else moneyList.push_back(*iter);
-	}
+	wordList.insert(wordList.end(), baseWordList.begin(), baseWordList.end());
 
 	std::sort(wordList.begin(), wordList.end());
-	std::sort(moneyList.begin(), moneyList.end());
-
 	wordList.erase(std::unique(wordList.begin(), wordList.end()), wordList.end());
-	moneyList.erase(std::unique(moneyList.begin(), moneyList.end()), moneyList.end());
+	moneyToken = "";
 
 }
 
@@ -572,7 +563,10 @@ void ProcessCommand()
 		switch (ps)
 		{
 		case PARSE2_ERROR:
+		case PARSE2_EXTERNAL_ERROR:
+			inputlock = true;
 			logMessage(PARSE_ERROR_MESSAGE, strlen(PARSE_ERROR_MESSAGE), true);
+			inputlock = false;
 			break;
 
 		case PARSE2_INCOMPLETE:
@@ -580,8 +574,6 @@ void ProcessCommand()
 			return;
 
 		default:
-			//DebugOut("Call IWL:\t%d\n", GetTickCount());
-			//initWordList(); // every time? (!) 
 			wl = true;
 			break;
 		}
@@ -766,6 +758,8 @@ void testAutocomplete()
 	int caret = fn(ptr, SCI_GETCURLINE, len + 1, (sptr_t)c);
 	std::string part;
 
+	static std::string lastList;
+
 	// FOR NOW, require that caret is at eol
 
 	if (caret == len - 1)
@@ -777,6 +771,25 @@ void testAutocomplete()
 		if (slen > 1)
 		{
 			std::string str = &(c[caret]);
+
+			if (money)
+			{
+				std::string token = "";
+				int midx = 0;
+				for (int i = 1; i < slen; i++) if (c[caret + i] == '$') midx = caret + i - 1;
+				if (midx > 0) token = std::string(str.begin(), str.begin() + midx - 1);
+				if (token.compare(moneyToken))
+				{
+					int sc;
+					moneyList.clear();
+					moneyList.reserve(100);
+					std::vector< std::string > sv;
+					sv.push_back(token);
+					SafeCall(SCC_NAMES, &sv, &sc);
+					moneyToken = token;
+				}
+			}
+
 			SVECTOR::iterator iter = std::lower_bound(money ? moneyList.begin() : wordList.begin(), money ? moneyList.end() : wordList.end(), str);
 			c[len - 2]++;
 			str = &(c[caret]);
@@ -786,12 +799,17 @@ void testAutocomplete()
 			str = "";
 			if (count > 0 && count <= MAX_AUTOCOMPLETE_LIST_LEN)
 			{
+				DebugOut("count %d\n", count);
+
 				for (count = 0; iter < iter2; iter++, count++)
 				{
 					if (count) str += " ";
 					str += iter->c_str();
 				}
-				fn(ptr, SCI_AUTOCSHOW, slen, (sptr_t)(str.c_str()));
+
+				if ( !fn(ptr, SCI_AUTOCACTIVE, 0, 0 ) || lastList.compare(str))
+					fn(ptr, SCI_AUTOCSHOW, slen, (sptr_t)(str.c_str()));
+				lastList = str;
 			}
 		}
 	}

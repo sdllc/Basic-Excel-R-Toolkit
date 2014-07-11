@@ -644,8 +644,92 @@ __inline void STRSXP2XLOPER(LPXLOPER12 result, SEXP str)
 
 }
 
+SEXP resolveObject( const std::string &token, SEXP parent = 0 )
+{
+	int err;
+	for (std::string::const_iterator iter = token.begin(); iter != token.end(); iter++)
+	{
+		if (*iter == '$')
+		{
+			
+			std::string tmp(token.begin(), iter);
+			SEXP obj = PROTECT(R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString(tmp.c_str())), parent ? parent : R_GlobalEnv, &err));
+			std::string balance(iter + 1, token.end());
+			SEXP elt = resolveObject(balance, obj);
+			UNPROTECT(1);
+			return elt;
+		}
+	}
+
+	return PROTECT(R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString(token.c_str())), parent ? parent : R_GlobalEnv, &err));
+}
+
+int getNames(SVECTOR &vec, const std::string &token)
+{
+	int err;
+	int ret = 0;
+
+	SEXP obj = // PROTECT(R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString(token.c_str())), R_GlobalEnv, &err));
+		resolveObject(token);
+	if (obj && TYPEOF(obj) != NILSXP)
+	{
+		SEXP rslt;
+		if (TYPEOF(obj) == ENVSXP) rslt = PROTECT(R_tryEval(Rf_lang2(Rf_install("ls"), obj), R_GlobalEnv, &err));
+		else rslt = PROTECT(R_tryEval(Rf_lang2(R_NamesSymbol, obj), R_GlobalEnv, &err));
+		if (rslt && TYPEOF(rslt) == STRSXP)
+		{
+			int i, len = Rf_length(rslt);
+			for (int i = 0; i < len; i++)
+			{
+				std::string entry = token;
+				entry += "$";
+				entry += CHAR(STRING_ELT(rslt, i));
+
+				DebugOut("$: %s\n", entry.c_str());
+				vec.push_back(entry);
+			}
+			std::sort(vec.begin(), vec.end());
+			vec.erase(std::unique(vec.begin(), vec.end()), vec.end());
+			ret = 1;
+		}
+		else
+		{
+			DebugOut("type: 0x%x\n", TYPEOF(rslt));
+		}
+		UNPROTECT(1);
+	}
+	UNPROTECT(1);
+
+	return ret;
+}
+
 int getCallTip(std::string &callTip, const std::string &sym)
 {
+	int err, ret = 0;
+	SEXP obj = resolveObject(sym);
+	if (obj)
+	{
+		SEXP result = PROTECT(R_tryEval(Rf_lang2(Rf_install("capture.output"), Rf_lang2(Rf_install("args"), obj)), R_GlobalEnv, &err));
+		if (result && TYPEOF(result) == STRSXP )
+		{
+			const char *c = CHAR(STRING_ELT(result, 0));
+			if (!strncmp(c, "function ", 9))
+			{
+				callTip = Util::trim(&(c[9]));
+				for (int i = 1; i < Rf_length(result) - 1; i++)
+				{
+					callTip += " ";
+					callTip += Util::trim(CHAR(STRING_ELT(result, i)));
+				}
+				ret = 1;
+			}
+		}
+		UNPROTECT(1);
+	}
+	UNPROTECT(1);
+	return ret;
+
+	/*
 	int err;
 	int ret = 0;
 	bool func = false;
@@ -697,6 +781,7 @@ int getCallTip(std::string &callTip, const std::string &sym)
 	UNPROTECT(1);
 	
 	return ret;
+	*/
 }
 
 SVECTOR & getWordList(SVECTOR &wordList)
