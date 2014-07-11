@@ -644,24 +644,30 @@ __inline void STRSXP2XLOPER(LPXLOPER12 result, SEXP str)
 
 }
 
-SEXP resolveObject( const std::string &token, SEXP parent = 0 )
+/**
+ * resolve the string representation of an object, where it might
+ * be nested within environments, e.g. env$variable$name.  
+ *
+ * FIXME: support [[ ]] indexing?
+ *
+ * returns a PROTECTED object so be sure to UNPROTECT it
+ */
+SEXP resolveObject(const std::string &token, SEXP parent = R_GlobalEnv)
 {
 	int err;
 	for (std::string::const_iterator iter = token.begin(); iter != token.end(); iter++)
 	{
 		if (*iter == '$')
 		{
-			
 			std::string tmp(token.begin(), iter);
-			SEXP obj = PROTECT(R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString(tmp.c_str())), parent ? parent : R_GlobalEnv, &err));
+			SEXP obj = PROTECT(R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString(tmp.c_str())), parent, &err));
 			std::string balance(iter + 1, token.end());
 			SEXP elt = resolveObject(balance, obj);
 			UNPROTECT(1);
 			return elt;
 		}
 	}
-
-	return PROTECT(R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString(token.c_str())), parent ? parent : R_GlobalEnv, &err));
+	return PROTECT(R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString(token.c_str())), parent, &err));
 }
 
 int getNames(SVECTOR &vec, const std::string &token)
@@ -669,8 +675,7 @@ int getNames(SVECTOR &vec, const std::string &token)
 	int err;
 	int ret = 0;
 
-	SEXP obj = // PROTECT(R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString(token.c_str())), R_GlobalEnv, &err));
-		resolveObject(token);
+	SEXP obj = resolveObject(token);
 	if (obj && TYPEOF(obj) != NILSXP)
 	{
 		SEXP rslt;
@@ -703,6 +708,9 @@ int getNames(SVECTOR &vec, const std::string &token)
 	return ret;
 }
 
+/**
+ * get function call tip (if it's a function), using the print representation from "args"
+ */
 int getCallTip(std::string &callTip, const std::string &sym)
 {
 	int err, ret = 0;
@@ -728,60 +736,6 @@ int getCallTip(std::string &callTip, const std::string &sym)
 	}
 	UNPROTECT(1);
 	return ret;
-
-	/*
-	int err;
-	int ret = 0;
-	bool func = false;
-
-	SEXP ex = PROTECT(R_tryEval(Rf_lang2(Rf_install("exists"), Rf_mkString(sym.c_str())), R_GlobalEnv, &err));
-	if (!ex || TYPEOF(ex) != 10 || !((LOGICAL(ex))[0]))
-	{
-		UNPROTECT(1);
-		return 0;
-	}
-	UNPROTECT(1);
-
-	ex = PROTECT(R_tryEval(Rf_lang2(R_ModeSymbol, Rf_install(sym.c_str())), R_GlobalEnv, &err));
-	if (ex && TYPEOF(ex) == 16)
-	{
-		const char *c = CHAR(STRING_ELT(ex, 0));
-		if (!strcmp(c, "function")) func = true;
-	}
-	UNPROTECT(1);
-
-	if (!func) return 0;
-
-
-	SEXP args = PROTECT(Rf_lang2(Rf_install("args"), Rf_mkString(sym.c_str())));
-	if (args)
-	{
-		SEXP cap = PROTECT(Rf_lang2(Rf_install("capture.output"), args));
-		if (cap)
-		{
-			SEXP result = PROTECT(R_tryEval(cap, R_GlobalEnv, &err));
-			if (result && TYPEOF(result) == 16)
-			{
-				const char *c = CHAR(STRING_ELT(result,0));
-				if (!strncmp(c, "function ", 9))
-				{
-					callTip = Util::trim(&(c[9]));
-					for (int i = 1; i < Rf_length(result); i++)
-					{
-						callTip += " ";
-						callTip += Util::trim(CHAR(STRING_ELT(result, i)));
-					}
-					ret = 1;
-				}
-			}
-			UNPROTECT(1);
-		}
-		UNPROTECT(1);
-	}
-	UNPROTECT(1);
-	
-	return ret;
-	*/
 }
 
 SVECTOR & getWordList(SVECTOR &wordList)
