@@ -63,8 +63,8 @@ RECT rectConsole = { 0, 0, 0, 0 };
 
 extern HRESULT SafeCall(SAFECALL_CMD cmd, std::vector< std::string > *vec, int *presult);
 extern HRESULT Marshal();
-extern HRESULT Unmarshal();
-extern HRESULT ReleaseThreadPtr();
+//extern HRESULT Unmarshal();
+//extern HRESULT ReleaseThreadPtr();
 
 std::vector< std::string > fontlist;
 
@@ -464,6 +464,49 @@ void Prompt(const char *prompt = DEFAULT_PROMPT)
 	historyPointer = 0;
 }
 
+void CallComplete(PARSE_STATUS_2 ps)
+{
+	inputlock = false;
+	DebugOut("Complete:\t%d\n", GetTickCount());
+
+	switch (ps)
+	{
+	case PARSE2_ERROR:
+	case PARSE2_EXTERNAL_ERROR:
+		inputlock = true;
+		logMessage(PARSE_ERROR_MESSAGE, strlen(PARSE_ERROR_MESSAGE), true);
+		inputlock = false;
+		break;
+
+	case PARSE2_INCOMPLETE:
+		Prompt(CONTINUATION_PROMPT);
+		return;
+
+	default:
+		initWordList();
+		break;
+	}
+
+	cmdVector.clear();
+	Prompt();
+
+	DebugOut("Done:\t%d\n", GetTickCount());
+
+}
+
+DWORD WINAPI CallThreadProc(LPVOID lpParameter)
+{
+	HWND hwnd = (HWND)lpParameter;
+	// Unmarshal();
+
+	int ips = 0;
+	SafeCall(SCC_EXEC, &cmdVector, &ips);
+	::PostMessage(hwnd, WM_CALL_COMPLETE, ips, 0);
+
+	// ReleaseThreadPtr();
+	return 0;
+}
+
 void ProcessCommand()
 {
 	DebugOut("ProcessCommand:\t%d\n", GetTickCount());
@@ -474,23 +517,7 @@ void ProcessCommand()
 
 	fn(ptr, SCI_AUTOCCANCEL, 0, 0);
 	fn(ptr, SCI_CALLTIPCANCEL, 0, 0);
-
-
-
-	/*
-
-	don't do this, it's wicked annoying
-
-	if (len != pos)
-	{
-	// scrub remainder of line
-	// ...
-	fn(ptr, SCI_SETSEL, pos, len);
-	fn(ptr, SCI_REPLACESEL, 0, (sptr_t)(""));
-	}
-
-	*/
-
+	
 	int linelen = len - minCaret;
 	std::string cmd;
 
@@ -548,10 +575,12 @@ void ProcessCommand()
 		}
 
 		DebugOut("Exec:\t%d\n", GetTickCount());
-
 		inputlock = true;
-		//PARSE_STATUS_2 ps = RExecVectorBuffered(cmdVector);
 
+		DWORD dwThread;
+		::CreateThread(0, 0, CallThreadProc, hWndConsole, 0, &dwThread);
+
+		/*
 		int ips = 0;
 		SafeCall(SCC_EXEC, &cmdVector, &ips);
 		PARSE_STATUS_2 ps = (PARSE_STATUS_2)ips;
@@ -577,13 +606,19 @@ void ProcessCommand()
 			wl = true;
 			break;
 		}
+		*/
 
 	}
 	else if (cmdVector.size() > 0)
 	{
 		Prompt(CONTINUATION_PROMPT);
-		return;
 	}
+	else
+	{
+		Prompt();
+	}
+
+	/*
 	cmdVector.clear();
 
 	Prompt();
@@ -591,6 +626,7 @@ void ProcessCommand()
 	if (wl) initWordList();
 
 	DebugOut("Done:\t%d\n", GetTickCount());
+	*/
 
 }
 
@@ -874,6 +910,7 @@ void testAutocomplete()
 
 VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 {
+	DebugOut("Flush log\n");
 	flush_log();
 }
 
@@ -1061,6 +1098,10 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 		::PostQuitMessage(0);
 		break;
 
+	case WM_CALL_COMPLETE:
+		CallComplete((PARSE_STATUS_2)wParam);
+		break;
+
 	case WM_COMMAND:
 
 		switch (LOWORD(wParam))
@@ -1121,7 +1162,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParameter)
 	static bool first = true;
 
 	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
-	Unmarshal();
+	//Unmarshal();
 
 	WNDCLASS wc = {};
 
@@ -1176,8 +1217,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParameter)
 
 	hWndConsole = 0;
 
-	// FreeStream();
-	ReleaseThreadPtr();
+	//ReleaseThreadPtr();
 
 	CoUninitialize();
 	return 0;
@@ -1194,7 +1234,7 @@ void RunThreadedConsole(HWND excel)
 	{
 		DWORD dwID;
 
-		Marshal();
+		Marshal(); // FIXME: do this elsewhere, and once
 		UpdateWordList();
 		::CreateThread(0, 0, ThreadProc, excel, 0, &dwID);
 	}

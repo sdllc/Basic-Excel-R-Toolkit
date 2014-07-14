@@ -40,8 +40,11 @@
 
 IDispatch *pdispThread = 0;
 IDispatch *pdispApp = 0;
-
 IStream *pstream = 0;
+
+HRESULT Unmarshal(); // fwd
+HRESULT ReleaseThreadPtr(); // fwd
+
 
 /**
  * execute an R call through an asynchronous Excel callback.  we have to 
@@ -53,6 +56,8 @@ IStream *pstream = 0;
  */
 HRESULT SafeCall( SAFECALL_CMD cmd, std::vector< std::string > *vec, int *presult )
 {
+	HRESULT hr = E_FAIL;
+	Unmarshal();
 	CComQIPtr< Excel::_Application > application = pdispThread;
 	if (application)
 	{
@@ -150,9 +155,10 @@ HRESULT SafeCall( SAFECALL_CMD cmd, std::vector< std::string > *vec, int *presul
 			if (presult) *presult = PARSE2_EXTERNAL_ERROR;
 		}
 
-		return hr;
 	}
-	return E_FAIL;
+
+	ReleaseThreadPtr();
+	return hr;
 }
 
 /**
