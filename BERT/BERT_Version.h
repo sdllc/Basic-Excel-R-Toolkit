@@ -21,7 +21,7 @@
 #ifndef __BERT_VERSION_H
 #define __BERT_VERSION_H
 
-#define BERT_VERSION	"0.18"
+#define BERT_VERSION	"0.19"
 
 #endif // #ifndef __BERT_VERSION_H
 

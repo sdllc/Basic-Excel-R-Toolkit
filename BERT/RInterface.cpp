@@ -745,7 +745,6 @@ int getCallTip(std::string &callTip, const std::string &sym)
 
 SVECTOR & getWordList(SVECTOR &wordList)
 {
-	//SEXP rslt = PROTECT(ExecR(std::string("BERT$WordList()")));
 	int err;
 	SEXP env = PROTECT(R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString(ENV_NAME)), R_GlobalEnv, &err));
 	if (env)
@@ -753,14 +752,10 @@ SVECTOR & getWordList(SVECTOR &wordList)
 		SEXP rslt = PROTECT(R_tryEvalSilent(Rf_lang1(Rf_install("WordList")), env, &err));
 		if (rslt)
 		{
-			// int type = TYPEOF(rslt);
 			int len = Rf_length(rslt);
 			for (int i = 0; i < len; i++)
 			{
 				 wordList.push_back(std::string(CHAR(STRING_ELT(rslt, i))));
-				//std::string str(CHAR(STRING_ELT(rslt, i)));
-				//wordList.push_back(str);
-
 			}
 		}
 		UNPROTECT(1);
