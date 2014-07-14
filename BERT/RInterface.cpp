@@ -776,12 +776,14 @@ bool CheckExcelRef(LPXLOPER12 rslt, SEXP s)
 	int rc[4] = { 0, 0, 0, 0 };
 	IDSHEET ids = 0;
 
-	if (TYPEOF(s) != 4) return false;
-	if (!Rf_inherits(s, "xlRefClass")) return false;
+	type = TYPEOF(s);
+
+	if (TYPEOF(s) != S4SXP) return false;
+	if (!Rf_inherits(s, "xlReference")) return false;
 
 	rslt->xltype = xltypeSRef;
 
-	SEXP ans = PROTECT(R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString("r1")), s, &err));
+	SEXP ans = R_do_slot(s, Rf_mkString("r1"));
 	if (ans)
 	{
 		type = TYPEOF(ans);
@@ -789,9 +791,8 @@ bool CheckExcelRef(LPXLOPER12 rslt, SEXP s)
 		else if (type == REALSXP) rc[0] = (int)(REAL(ans))[0] - 1;
 		else DebugOut("Unexpected type in check excel ref: %d\n", type);
 	}
-	UNPROTECT(1);
 
-	ans = PROTECT(R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString("c1")), s, &err));
+	ans = R_do_slot(s, Rf_mkString("c1"));
 	if (ans)
 	{
 		type = TYPEOF(ans);
@@ -799,9 +800,8 @@ bool CheckExcelRef(LPXLOPER12 rslt, SEXP s)
 		else if (type == REALSXP) rc[1] = (int)(REAL(ans))[0] - 1;
 		else DebugOut("Unexpected type in check excel ref: %d\n", type);
 	}
-	UNPROTECT(1);
 
-	ans = PROTECT(R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString("r2")), s, &err));
+	ans = R_do_slot(s, Rf_mkString("r2"));
 	if (ans)
 	{
 		type = TYPEOF(ans);
@@ -809,9 +809,8 @@ bool CheckExcelRef(LPXLOPER12 rslt, SEXP s)
 		else if (type == REALSXP) rc[2] = (int)(REAL(ans))[0]-1;
 		else DebugOut("Unexpected type in check excel ref: %d\n", type);
 	}
-	UNPROTECT(1);
 
-	ans = PROTECT(R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString("c2")), s, &err));
+	ans = R_do_slot(s, Rf_mkString("c2"));
 	if (ans)
 	{
 		type = TYPEOF(ans);
@@ -819,9 +818,8 @@ bool CheckExcelRef(LPXLOPER12 rslt, SEXP s)
 		else if (type == REALSXP) rc[3] = (int)(REAL(ans))[0] - 1;
 		else DebugOut("Unexpected type in check excel ref: %d\n", type);
 	}
-	UNPROTECT(1);
 
-	ans = PROTECT(R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString("sheetID")), s, &err));
+	ans = R_do_slot(s, Rf_mkString("sheetID"));
 	if (ans)
 	{
 		type = TYPEOF(ans);
@@ -834,7 +832,6 @@ bool CheckExcelRef(LPXLOPER12 rslt, SEXP s)
 		}
 		else DebugOut("Unexpected type in check excel ref: %d\n", type);
 	}
-	UNPROTECT(1);
 
 	if (rc[2] < rc[0]) rc[2] = rc[0];
 	if (rc[3] < rc[1]) rc[3] = rc[1];
@@ -1613,8 +1610,10 @@ SEXP ExcelCall(SEXP cmd, SEXP data)
 			int rc[4] = { 0, 0, 0, 0 };
 			IDSHEET ids = 0;
 
-			rv = R_tryEval(Rf_lang1(Rf_install("new.env")), R_GlobalEnv, &err);
-			Rf_setAttrib(rv, Rf_mkString("class"), Rf_mkString("xlRefClass"));
+			rv = R_do_new_object(R_getClassDef("xlReference"));
+
+			//rv = R_tryEval(Rf_lang1(Rf_install("new.env")), R_GlobalEnv, &err);
+			//Rf_setAttrib(rv, Rf_mkString("class"), Rf_mkString("xlRefClass"));
 
 			LPXLREF12 pref = 0;
 
@@ -1636,12 +1635,22 @@ SEXP ExcelCall(SEXP cmd, SEXP data)
 				rc[3] = pref->colLast + 1;
 			}
 
-			Rf_defineVar(Rf_install("r1"), Rf_ScalarInteger(rc[0]), rv);
-			Rf_defineVar(Rf_install("c1"), Rf_ScalarInteger(rc[1]), rv);
-			Rf_defineVar(Rf_install("r2"), Rf_ScalarInteger(rc[2]), rv);
-			Rf_defineVar(Rf_install("c2"), Rf_ScalarInteger(rc[3]), rv);
+			R_do_slot_assign(rv, Rf_mkString("r1"), Rf_ScalarInteger(rc[0]));
+			R_do_slot_assign(rv, Rf_mkString("c1"), Rf_ScalarInteger(rc[1]));
+			R_do_slot_assign(rv, Rf_mkString("r2"), Rf_ScalarInteger(rc[2]));
+			R_do_slot_assign(rv, Rf_mkString("c2"), Rf_ScalarInteger(rc[3]));
 
-			// Rf_defineVar(Rf_install("sheetID"), Rf_ScalarReal(ids), rv);
+			SEXP idv;
+			if (sizeof(IDSHEET) > 4)
+			{
+				idv = Rf_list2( ScalarInteger((INT32)(ids >> 32)), ScalarInteger((INT32)(ids & 0xffffffff)));
+			}
+			else
+			{
+				idv = Rf_list2(ScalarInteger(0), ScalarInteger(ids));
+			}
+
+			/*
 			SEXP idv = Rf_allocVector(INTSXP, 2);
 			int *pidv = INTEGER(idv);
 
@@ -1655,8 +1664,10 @@ SEXP ExcelCall(SEXP cmd, SEXP data)
 				pidv[0] = 0;
 				pidv[1] = ids;
 			}
+			*/
 
-			Rf_defineVar(Rf_install("sheetID"), idv, rv);
+			//Rf_defineVar(Rf_install("sheetID"), idv, rv);
+			R_do_slot_assign(rv, Rf_mkString("sheetID"), idv);
 
 		}
 		else rv = XLOPER2SEXP(&xlRslt);

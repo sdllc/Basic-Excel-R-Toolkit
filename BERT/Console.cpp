@@ -63,8 +63,6 @@ RECT rectConsole = { 0, 0, 0, 0 };
 
 extern HRESULT SafeCall(SAFECALL_CMD cmd, std::vector< std::string > *vec, int *presult);
 extern HRESULT Marshal();
-//extern HRESULT Unmarshal();
-//extern HRESULT ReleaseThreadPtr();
 
 std::vector< std::string > fontlist;
 
@@ -464,7 +462,7 @@ void Prompt(const char *prompt = DEFAULT_PROMPT)
 	historyPointer = 0;
 }
 
-void CallComplete(PARSE_STATUS_2 ps)
+void CallComplete(PARSE_STATUS_2 ps, LPARAM lParam)
 {
 	inputlock = false;
 	DebugOut("Complete:\t%d\n", GetTickCount());
@@ -487,8 +485,11 @@ void CallComplete(PARSE_STATUS_2 ps)
 		break;
 	}
 
-	cmdVector.clear();
-	Prompt();
+	if (!lParam)
+	{
+		cmdVector.clear();
+		Prompt();
+	}
 
 	DebugOut("Done:\t%d\n", GetTickCount());
 
@@ -497,15 +498,33 @@ void CallComplete(PARSE_STATUS_2 ps)
 DWORD WINAPI CallThreadProc(LPVOID lpParameter)
 {
 	HWND hwnd = (HWND)lpParameter;
-	// Unmarshal();
-
 	int ips = 0;
 	SafeCall(SCC_EXEC, &cmdVector, &ips);
 	::PostMessage(hwnd, WM_CALL_COMPLETE, ips, 0);
-
-	// ReleaseThreadPtr();
 	return 0;
 }
+
+/*
+DWORD WINAPI UtilityThreadProc(LPVOID lpParameter)
+{
+	HWND hwnd = (HWND)lpParameter;
+	int cmd = (int)lpParameter;
+	switch (cmd)
+	{
+	case ID_CONSOLE_RELOADSTARTUPFILE:
+		SafeCall(SCC_RELOAD_STARTUP, 0, 0);
+		break;
+	}
+	::PostMessage(hWndConsole, WM_CALL_COMPLETE, PARSE2_OK, 1);
+	return 0;
+}
+
+void UtilityCall( int cmdid )
+{
+	DWORD dwThread;
+	::CreateThread(0, 0, UtilityThreadProc, (void*)cmdid, 0, &dwThread);
+}
+*/
 
 void ProcessCommand()
 {
@@ -812,8 +831,8 @@ void testAutocomplete()
 			{
 				std::string token = "";
 				int midx = 0;
-				for (int i = 1; i < slen; i++) if (c[caret + i] == '$') midx = caret + i - 1;
-				if (midx > 0) token = std::string(str.begin(), str.begin() + midx - 1);
+				for (int i = 1; i < slen; i++) if (str[i] == '$') midx = i ;//caret + i - 1;
+				if (midx > 0) token = std::string(str.begin(), str.begin() + midx);// -1);
 				if (token.compare(moneyToken))
 				{
 					int sc;
@@ -910,7 +929,6 @@ void testAutocomplete()
 
 VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 {
-	DebugOut("Flush log\n");
 	flush_log();
 }
 
@@ -1099,7 +1117,7 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 		break;
 
 	case WM_CALL_COMPLETE:
-		CallComplete((PARSE_STATUS_2)wParam);
+		CallComplete((PARSE_STATUS_2)wParam, lParam);
 		break;
 
 	case WM_COMMAND:
@@ -1162,7 +1180,6 @@ DWORD WINAPI ThreadProc(LPVOID lpParameter)
 	static bool first = true;
 
 	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
-	//Unmarshal();
 
 	WNDCLASS wc = {};
 
@@ -1216,8 +1233,6 @@ DWORD WINAPI ThreadProc(LPVOID lpParameter)
 	}
 
 	hWndConsole = 0;
-
-	//ReleaseThreadPtr();
 
 	CoUninitialize();
 	return 0;

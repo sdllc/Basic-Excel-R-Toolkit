@@ -45,6 +45,9 @@ IStream *pstream = 0;
 HRESULT Unmarshal(); // fwd
 HRESULT ReleaseThreadPtr(); // fwd
 
+#define MISSING_10 vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing
+#define MISSING_30 MISSING_10, MISSING_10, MISSING_10
+#define MISSING_28 MISSING_10, MISSING_10, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing
 
 /**
  * execute an R call through an asynchronous Excel callback.  we have to 
@@ -86,11 +89,7 @@ HRESULT SafeCall( SAFECALL_CMD cmd, std::vector< std::string > *vec, int *presul
 
 				cvArg = (LPSAFEARRAY)cc;
 
-				hr = application->_Run2(cvFunc, cvCmdID, cvArg,
-					vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing,
-					vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing,
-					vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing,
-					1033, &cvRslt);
+				hr = application->_Run2(cvFunc, cvCmdID, cvArg, MISSING_28, 1033, &cvRslt);
 
 				cc.Destroy();
 			}
@@ -99,42 +98,26 @@ HRESULT SafeCall( SAFECALL_CMD cmd, std::vector< std::string > *vec, int *presul
 		case SCC_CALLTIP:
 			cvFunc = "BERT.SafeCall";
 			cvArg = vec->begin()->c_str();
-			hr = application->_Run2(cvFunc, cvCmdID, cvArg,
-				vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing,
-				vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing,
-				vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing,
-				1033, &cvRslt);
+			hr = application->_Run2(cvFunc, cvCmdID, cvArg, MISSING_28, 1033, &cvRslt);
 			break;
 
 		case SCC_NAMES:
 			cvFunc = "BERT.SafeCall";
 			cvCmdID = 2; // FIXME: ENUM
 			cvArg = vec->begin()->c_str();
-			hr = application->_Run2(cvFunc, cvCmdID, cvArg,
-				vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing,
-				vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing,
-				vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing,
-				1033, &cvRslt);
+			hr = application->_Run2(cvFunc, cvCmdID, cvArg, MISSING_28, 1033, &cvRslt);
 			break;
 
 		case SCC_INSTALLPACKAGES:
 			bstrCmd = "BERT.InstallPackages";
 			cvFunc = bstrCmd;
-			hr = application->_Run2(cvFunc, cvCmdID,
-				vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing,
-				vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing,
-				vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing,
-				1033, &cvRslt);
+			hr = application->_Run2(cvFunc, MISSING_30, 1033, &cvRslt);
 			break;
 
 		case SCC_RELOAD_STARTUP:
 			bstrCmd = "BERT.Reload";
 			cvFunc = bstrCmd;
-			hr = application->_Run2(cvFunc, cvCmdID,
-				vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing,
-				vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing,
-				vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing,
-				1033, &cvRslt);
+			hr = application->_Run2(cvFunc, MISSING_30, 1033, &cvRslt);
 			break;
 		}
 

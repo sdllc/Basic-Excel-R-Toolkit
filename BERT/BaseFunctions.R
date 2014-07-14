@@ -45,31 +45,26 @@ WordList <- function(){
 # class type representing an Excel cell reference.
 #========================================================
 
-xlRefClass <- function(r1 = 0, c1 = 0, r2 = 0, c2 = 0, sheetID = vector( mode="integer", length=2)) {
-    r = list(
-        r1 = r1,
-        r2 = r2,
-        c1 = c1,
-		c2 = c2,
-		sheetID = sheetID
-		);
+setClass( "xlReference", 
+	representation( r1 = "integer", c1 = "integer", r2 = "integer", c2 = "integer", sheetID = "integer" ),
+	prototype( r1 = 0L, c1 = 0L, r2 = 0L, c2 = 0L, sheetID = c(0L,0L))
+	);
 
-    r <- list2env(r)
-    class(r) <- "xlRefClass"
-    return(r)
-}
-
+setMethod( "show", "xlReference", function(object){
+	cat( "Excel Reference ", "R", object@r1, "C", object@c1, sep="" );
+	if( object@r2 >= object@r1 && object@c2 >= object@c1 
+		&& ( object@r1 != object@r2 || object@c1 != object@c2 ))
+	{
+		cat( ":", "R", object@r2, "C", object@c2, sep="" );
+	}
+	if( object@sheetID[1] != 0 || object@sheetID[2] != 0 )
+	{
+		cat( " SheetID ", object@sheetID[1], ".", object@sheetID[2], sep="");
+	}
+	cat( "\n" );
 });
 
-print.xlRefClass <- function(x){ 
-	if( x$r2 <= x$r1 && x$c2 <= x$c1 )
-	{
-		s <- paste( "Excel Reference R", x$r1, "C", x$c1, sep="");
-	}
-	else { s <- paste( "Excel Reference R", x$r1, "C", x$c1, ":R", x$r2, "C", x$c2, sep=""); }
-	cat( s, " ", x$sheetID, "\n", sep="");
-}
-
+}); # end with(BERT)
 
 #========================================================
 # overload quit method or it will stop the excel process
