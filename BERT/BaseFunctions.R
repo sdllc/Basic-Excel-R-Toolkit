@@ -46,20 +46,20 @@ WordList <- function(){
 #========================================================
 
 setClass( "xlReference", 
-	representation( r1 = "integer", c1 = "integer", r2 = "integer", c2 = "integer", sheetID = "integer" ),
-	prototype( r1 = 0L, c1 = 0L, r2 = 0L, c2 = 0L, sheetID = c(0L,0L))
+	representation( R1 = "integer", C1 = "integer", R2 = "integer", C2 = "integer", SheetID = "integer" ),
+	prototype( R1 = 0L, C1 = 0L, R2 = 0L, C2 = 0L, SheetID = c(0L,0L))
 	);
 
 setMethod( "show", "xlReference", function(object){
-	cat( "Excel Reference ", "R", object@r1, "C", object@c1, sep="" );
-	if( object@r2 >= object@r1 && object@c2 >= object@c1 
-		&& ( object@r1 != object@r2 || object@c1 != object@c2 ))
+	cat( "Excel Reference ", "R", object@R1, "C", object@C1, sep="" );
+	if( object@R2 >= object@R1 && object@C2 >= object@C1 
+		&& ( object@R1 != object@R2 || object@C1 != object@C2 ))
 	{
-		cat( ":", "R", object@r2, "C", object@c2, sep="" );
+		cat( ":", "R", object@R2, "C", object@C2, sep="" );
 	}
-	if( object@sheetID[1] != 0 || object@sheetID[2] != 0 )
+	if( object@SheetID[1] != 0 || object@SheetID[2] != 0 )
 	{
-		cat( " SheetID ", object@sheetID[1], ".", object@sheetID[2], sep="");
+		cat( " SheetID ", object@SheetID[1], ".", object@SheetID[2], sep="");
 	}
 	cat( "\n" );
 });

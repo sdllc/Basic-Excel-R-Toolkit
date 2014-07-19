@@ -799,6 +799,7 @@ bool isWordChar(char c)
 		|| ((c >= 'A') && (c <= 'Z'))
 		|| (c == '_')
 		|| (c == '$')
+		|| (c == '@')
 		|| (c == '.')
 		);
 }
@@ -820,7 +821,7 @@ void testAutocomplete()
 	if (caret == len - 1)
 	{
 		bool money = false;
-		for (--caret; caret >= 2 && isWordChar(c[caret]); caret--){ if (c[caret] == '$') money = true; }
+		for (--caret; caret >= 2 && isWordChar(c[caret]); caret--){ if (c[caret] == '$' || c[caret] == '@') money = true; }
 		caret++;
 		int slen = strlen(&(c[caret]));
 		if (slen > 1)
@@ -831,8 +832,8 @@ void testAutocomplete()
 			{
 				std::string token = "";
 				int midx = 0;
-				for (int i = 1; i < slen; i++) if (str[i] == '$') midx = i ;//caret + i - 1;
-				if (midx > 0) token = std::string(str.begin(), str.begin() + midx);// -1);
+				for (int i = 1; i < slen; i++) if (str[i] == '$' || str[i] == '@') midx = i ;
+				if (midx > 0) token = std::string(str.begin(), str.begin() + midx);
 				if (token.compare(moneyToken))
 				{
 					int sc;

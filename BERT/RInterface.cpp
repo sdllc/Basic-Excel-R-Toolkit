@@ -647,7 +647,8 @@ __inline void STRSXP2XLOPER(LPXLOPER12 result, SEXP str)
 /**
  * resolve the string representation of an object, where it might
  * be nested within environments, e.g. env$variable$name.  
- *
+ * 
+ * UPDATE: added @ for S4 slots, but needs more testing
  * FIXME: support [[ ]] indexing?
  *
  * returns a PROTECTED object so be sure to UNPROTECT it
@@ -657,10 +658,14 @@ SEXP resolveObject(const std::string &token, SEXP parent = R_GlobalEnv)
 	int err;
 	for (std::string::const_iterator iter = token.begin(); iter != token.end(); iter++)
 	{
-		if (*iter == '$')
+		if (*iter == '$' || *iter == '@')
 		{
 			std::string tmp(token.begin(), iter);
-			SEXP obj = PROTECT(R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString(tmp.c_str())), parent, &err));
+			SEXP obj;
+			
+			if (*iter == '$') obj = PROTECT(R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString(tmp.c_str())), parent, &err));
+			else obj = PROTECT(R_do_slot(parent, Rf_mkString(tmp.c_str()))); // @slot
+
 			std::string balance(iter + 1, token.end());
 			SEXP elt = resolveObject(balance, obj);
 			UNPROTECT(1);
@@ -679,12 +684,19 @@ int getNames(SVECTOR &vec, const std::string &token)
 {
 	int err;
 	int ret = 0;
+	char cc = '$';
 
 	SEXP obj = resolveObject(token);
 	if (obj && TYPEOF(obj) != NILSXP)
 	{
 		SEXP rslt;
 		if (TYPEOF(obj) == ENVSXP) rslt = PROTECT(R_tryEval(Rf_lang2(Rf_install("ls"), obj), R_GlobalEnv, &err));
+		else if (TYPEOF(obj) == S4SXP)
+		{
+			rslt = PROTECT(R_tryEval(Rf_lang2(Rf_install("slotNames"), obj), R_GlobalEnv, &err));
+			//rslt = PROTECT(R_tryEval(Rf_lang2(R_NamesSymbol, Rf_lang2(Rf_install("attributes"), obj)), R_GlobalEnv, &err));
+			cc = '@';
+		}
 		else rslt = PROTECT(R_tryEval(Rf_lang2(R_NamesSymbol, obj), R_GlobalEnv, &err));
 		if (rslt && TYPEOF(rslt) == STRSXP)
 		{
@@ -692,10 +704,10 @@ int getNames(SVECTOR &vec, const std::string &token)
 			for (int i = 0; i < len; i++)
 			{
 				std::string entry = token;
-				entry += "$";
+				entry += cc;
 				entry += CHAR(STRING_ELT(rslt, i));
 
-				DebugOut("$: %s\n", entry.c_str());
+				DebugOut("%c: %s\n", cc, entry.c_str());
 				vec.push_back(entry);
 			}
 			std::sort(vec.begin(), vec.end());
@@ -778,7 +790,7 @@ bool CheckExcelRef(LPXLOPER12 rslt, SEXP s)
 
 	rslt->xltype = xltypeSRef;
 
-	SEXP ans = R_do_slot(s, Rf_mkString("r1"));
+	SEXP ans = R_do_slot(s, Rf_mkString("R1"));
 	if (ans)
 	{
 		type = TYPEOF(ans);
@@ -787,7 +799,7 @@ bool CheckExcelRef(LPXLOPER12 rslt, SEXP s)
 		else DebugOut("Unexpected type in check excel ref: %d\n", type);
 	}
 
-	ans = R_do_slot(s, Rf_mkString("c1"));
+	ans = R_do_slot(s, Rf_mkString("C1"));
 	if (ans)
 	{
 		type = TYPEOF(ans);
@@ -796,7 +808,7 @@ bool CheckExcelRef(LPXLOPER12 rslt, SEXP s)
 		else DebugOut("Unexpected type in check excel ref: %d\n", type);
 	}
 
-	ans = R_do_slot(s, Rf_mkString("r2"));
+	ans = R_do_slot(s, Rf_mkString("R2"));
 	if (ans)
 	{
 		type = TYPEOF(ans);
@@ -805,7 +817,7 @@ bool CheckExcelRef(LPXLOPER12 rslt, SEXP s)
 		else DebugOut("Unexpected type in check excel ref: %d\n", type);
 	}
 
-	ans = R_do_slot(s, Rf_mkString("c2"));
+	ans = R_do_slot(s, Rf_mkString("C2"));
 	if (ans)
 	{
 		type = TYPEOF(ans);
@@ -814,7 +826,7 @@ bool CheckExcelRef(LPXLOPER12 rslt, SEXP s)
 		else DebugOut("Unexpected type in check excel ref: %d\n", type);
 	}
 
-	ans = R_do_slot(s, Rf_mkString("sheetID"));
+	ans = R_do_slot(s, Rf_mkString("SheetID"));
 	if (ans)
 	{
 		type = TYPEOF(ans);
@@ -1630,10 +1642,10 @@ SEXP ExcelCall(SEXP cmd, SEXP data)
 				rc[3] = pref->colLast + 1;
 			}
 
-			R_do_slot_assign(rv, Rf_mkString("r1"), Rf_ScalarInteger(rc[0]));
-			R_do_slot_assign(rv, Rf_mkString("c1"), Rf_ScalarInteger(rc[1]));
-			R_do_slot_assign(rv, Rf_mkString("r2"), Rf_ScalarInteger(rc[2]));
-			R_do_slot_assign(rv, Rf_mkString("c2"), Rf_ScalarInteger(rc[3]));
+			R_do_slot_assign(rv, Rf_mkString("R1"), Rf_ScalarInteger(rc[0]));
+			R_do_slot_assign(rv, Rf_mkString("C1"), Rf_ScalarInteger(rc[1]));
+			R_do_slot_assign(rv, Rf_mkString("R2"), Rf_ScalarInteger(rc[2]));
+			R_do_slot_assign(rv, Rf_mkString("C2"), Rf_ScalarInteger(rc[3]));
 
 			SEXP idv;
 			if (sizeof(IDSHEET) > 4)
@@ -1645,24 +1657,7 @@ SEXP ExcelCall(SEXP cmd, SEXP data)
 				idv = Rf_list2(ScalarInteger(0), ScalarInteger(ids));
 			}
 
-			/*
-			SEXP idv = Rf_allocVector(INTSXP, 2);
-			int *pidv = INTEGER(idv);
-
-			if (sizeof(IDSHEET) > 4)
-			{
-				pidv[0] = (INT32)(ids >> 32);
-				pidv[1] = (INT32)(ids & 0xffffffff);
-			}
-			else
-			{
-				pidv[0] = 0;
-				pidv[1] = ids;
-			}
-			*/
-
-			//Rf_defineVar(Rf_install("sheetID"), idv, rv);
-			R_do_slot_assign(rv, Rf_mkString("sheetID"), idv);
+			R_do_slot_assign(rv, Rf_mkString("SheetID"), idv);
 
 		}
 		else rv = XLOPER2SEXP(&xlRslt);
