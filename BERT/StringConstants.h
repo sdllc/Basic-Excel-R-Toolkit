@@ -26,7 +26,7 @@
 	"Copyright (C) 2014 Structured Data, LLC"
 
 #define ABOUT_R_TEXT \
-	"Includes R version 3.1.0 (2014-04-10) -- \"Spring Dance\"\r\n" \
+	"Includes R version 3.1.1 (2014-07-10) -- \"Sock it to Me\"\r\n" \
 	"Copyright (C) 2014 The R Foundation for Statistical Computing"
 
 #define ABOUT_SCINTILLA_TEXT \

@@ -36,7 +36,7 @@
 
 #define DEFAULT_ENVIRONMENT				""
 #define DEFAULT_R_USER					"%APPDATA%\\BERT"
-#define DEFAULT_R_HOME					"%APPDATA%\\BERT\\R-3.1.0"
+#define DEFAULT_R_HOME					"%APPDATA%\\BERT\\R-3.1.1"
 #define DEFAULT_R_STARTUP				"Functions.R"
 
 #endif // #ifndef __REGISTRY_CONSTANTS_H

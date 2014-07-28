@@ -73,7 +73,7 @@ GA_copytext
 GA_copytoclipboard
 GA_countFilenames
 GA_createcursor
-GA_currentcursor
+GA_currentcursor = _GA_check
 GA_currentdrawing
 GA_currentfont
 GA_currentlinewidth
@@ -136,9 +136,9 @@ GA_gabeep
 GA_gamainloop
 GA_gbitblt
 GA_gchangemenubar
-GA_gchangepopup
+GA_gchangepopup = _GA_newimage
 GA_gchangescrollbar
-GA_gcharmetric
+GA_gcharmetric = _GA_devicewidth
 GA_gcopy
 GA_gcopyalpha
 GA_gdrawellipse
@@ -230,9 +230,9 @@ GA_myMessageBox
 GA_nametorgb
 GA_new_font_object
 GA_newbitmap
-GA_newbutton
+GA_newbutton = _GAI_handle_control
 GA_newcheckbox
-GA_newcontrol
+GA_newcontrol = _GA_changescrollbar
 GA_newcursor
 GA_newdrawing
 GA_newdropfield
@@ -273,7 +273,7 @@ GA_objdepth
 GA_objheight
 GA_objrect
 GA_objwidth
-GA_oldfillellipse
+GA_oldfillellipse = _get_next_line
 GA_open1_image
 GA_open_image
 GA_parentwindow
@@ -325,7 +325,7 @@ GA_setforeground
 GA_sethit
 GA_setim
 GA_setimage
-GA_setkeyaction
+GA_setkeyaction = _GA_disable
 GA_setkeydown
 GA_setlimittext
 GA_setlinewidth
@@ -340,7 +340,7 @@ GA_setonfocus
 GA_setpalette
 GA_setpixel
 GA_setpixels
-GA_setprogressbar
+GA_setprogressbar = _GA_currentpoint
 GA_setprogressbarrange
 GA_setredraw
 GA_setresize
@@ -356,10 +356,10 @@ GA_show
 GA_showcaret
 GA_sortpalette
 GA_startgraphapp
-GA_stepprogressbar
+GA_stepprogressbar = _GA_getkeystate
 GA_stop_image
 GA_strrect
-GA_strsize
+GA_strsize = _handle_char
 GA_strwidth
 GA_subpt
 GA_textheight
@@ -380,7 +380,7 @@ askfilenameW
 askfilenamesW
 askfilesaveW
 gcopyalpha2
-gdrawimage
+gdrawimage = _GA_gwcswidth
 gfillpolypolygon
 gmaskimage
 gstrwidth1

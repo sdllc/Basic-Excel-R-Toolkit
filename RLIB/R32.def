@@ -368,6 +368,8 @@ R_isort
 R_lsInternal
 R_max_col
 R_max_num_math_threads
+R_mkEVPROMISE
+R_mkEVPROMISE_NR
 R_new_custom_connection
 R_num_math_threads
 R_orderVector
@@ -964,6 +966,7 @@ orderVector1
 pagercol
 pagerrow
 parseError
+pcre_stack_guard
 pow
 printf
 qsort3_
