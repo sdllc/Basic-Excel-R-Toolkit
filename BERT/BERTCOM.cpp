@@ -62,6 +62,7 @@ HRESULT SafeCall( SAFECALL_CMD cmd, std::vector< std::string > *vec, int *presul
 	HRESULT hr = E_FAIL;
 	Unmarshal();
 	CComQIPtr< Excel::_Application > application = pdispThread;
+
 	if (application)
 	{
 		CComVariant cvFunc, cvRslt, cvArg;
@@ -184,6 +185,7 @@ void FreeStream()
 HRESULT Unmarshal()
 {
 	HRESULT hr = AtlUnmarshalPtr(pstream, IID_IDispatch, (IUnknown**)&pdispThread);
+
 	return hr;
 }
 

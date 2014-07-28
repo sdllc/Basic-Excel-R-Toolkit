@@ -491,16 +491,18 @@ void CallComplete(PARSE_STATUS_2 ps, LPARAM lParam)
 		Prompt();
 	}
 
-	DebugOut("Done:\t%d\n", GetTickCount());
+	DebugOut("Done:\t%d\n", GetTickCount()); 
 
 }
 
 DWORD WINAPI CallThreadProc(LPVOID lpParameter)
 {
+	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 	HWND hwnd = (HWND)lpParameter;
 	int ips = 0;
 	SafeCall(SCC_EXEC, &cmdVector, &ips);
 	::PostMessage(hwnd, WM_CALL_COMPLETE, ips, 0);
+	::CoUninitialize();
 	return 0;
 }
 
@@ -598,34 +600,6 @@ void ProcessCommand()
 
 		DWORD dwThread;
 		::CreateThread(0, 0, CallThreadProc, hWndConsole, 0, &dwThread);
-
-		/*
-		int ips = 0;
-		SafeCall(SCC_EXEC, &cmdVector, &ips);
-		PARSE_STATUS_2 ps = (PARSE_STATUS_2)ips;
-
-		inputlock = false;
-
-		DebugOut("Complete:\t%d\n", GetTickCount());
-
-		switch (ps)
-		{
-		case PARSE2_ERROR:
-		case PARSE2_EXTERNAL_ERROR:
-			inputlock = true;
-			logMessage(PARSE_ERROR_MESSAGE, strlen(PARSE_ERROR_MESSAGE), true);
-			inputlock = false;
-			break;
-
-		case PARSE2_INCOMPLETE:
-			Prompt(CONTINUATION_PROMPT);
-			return;
-
-		default:
-			wl = true;
-			break;
-		}
-		*/
 
 	}
 	else if (cmdVector.size() > 0)

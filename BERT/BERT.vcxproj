@@ -172,6 +172,9 @@
       <OutputFile>BERT32.xll</OutputFile>
       <AdditionalDependencies>R32.lib;RGraphApp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /Y BERT32.xll z:\</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
