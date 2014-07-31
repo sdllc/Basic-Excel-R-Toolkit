@@ -22,16 +22,25 @@
 #define __STRING_CONSTANTS_H
 
 #define ABOUT_BERT_TEXT \
-	"Basic Excel R Toolkit (BERT) v " BERT_VERSION "\r\n" \
-	"Copyright (C) 2014 Structured Data, LLC"
+	L"Basic Excel R Toolkit (BERT) v " BERT_VERSION L"\r\n" \
+	L"Copyright (C) 2014 Structured Data, LLC"
+
+#define BERT_LINK			L"http://riskamp.com/BERT"
+#define BERT_LINK_TEXT		BERT_LINK
 
 #define ABOUT_R_TEXT \
-	"Includes R version 3.1.1 (2014-07-10) -- \"Sock it to Me\"\r\n" \
-	"Copyright (C) 2014 The R Foundation for Statistical Computing"
+	L"Includes R version 3.1.1 (2014-07-10) -- \"Sock it to Me\"\r\n" \
+	L"Copyright (C) 2014 The R Foundation for Statistical Computing"
+
+#define R_LINK				L"http://www.r-project.org/"
+#define R_LINK_TEXT			R_LINK
 
 #define ABOUT_SCINTILLA_TEXT \
-	"Includes Scintilla text component\r\n" \
-	"Copyright 1998 - 2014 by Neil Hodgson <neilh@scintilla.org>"
+	L"Includes Scintilla text component\r\n" \
+	L"Copyright 1998 - 2014 by Neil Hodgson <neilh@scintilla.org>"
+
+#define SCINTILLA_LINK		L"http://scintilla.org/"
+#define SCINTILLA_LINK_TEXT	SCINTILLA_LINK
 
 #define PARSE_ERROR_MESSAGE "(parse error)\n"
 

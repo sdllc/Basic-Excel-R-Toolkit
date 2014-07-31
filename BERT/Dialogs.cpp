@@ -25,6 +25,7 @@
 #include "Dialogs.h"
 #include "StringConstants.h"
 #include "RegistryUtils.h"
+#include "LinkLabel.h"
 
 extern HMODULE ghModule;
 
@@ -58,9 +59,13 @@ DIALOG_RESULT_TYPE CALLBACK AboutDlgProc(HWND hwndDlg, UINT message, WPARAM wPar
 	{
 	case WM_INITDIALOG:
 
-		::SetWindowTextA(::GetDlgItem(hwndDlg, IDC_STATIC_ABOUT_BERT), ABOUT_BERT_TEXT);
-		::SetWindowTextA(::GetDlgItem(hwndDlg, IDC_STATIC_ABOUT_R), ABOUT_R_TEXT);
-		::SetWindowTextA(::GetDlgItem(hwndDlg, IDC_STATIC_ABOUT_SCINTILLA), ABOUT_SCINTILLA_TEXT);
+		::SetWindowText(::GetDlgItem(hwndDlg, IDC_STATIC_ABOUT_BERT), ABOUT_BERT_TEXT);
+		::SetWindowText(::GetDlgItem(hwndDlg, IDC_STATIC_ABOUT_R), ABOUT_R_TEXT);
+		::SetWindowText(::GetDlgItem(hwndDlg, IDC_STATIC_ABOUT_SCINTILLA), ABOUT_SCINTILLA_TEXT);
+
+		SubclassLinkLabel(::GetDlgItem(hwndDlg, IDC_STATIC_BERT_LINK), BERT_LINK, BERT_LINK_TEXT);
+		SubclassLinkLabel(::GetDlgItem(hwndDlg, IDC_STATIC_R_LINK), R_LINK, R_LINK_TEXT);
+		SubclassLinkLabel(::GetDlgItem(hwndDlg, IDC_STATIC_SCINTILLA_LINK), SCINTILLA_LINK, SCINTILLA_LINK_TEXT);
 
 		CenterWindow(hwndDlg, ::GetParent(hwndDlg));
 		break;
