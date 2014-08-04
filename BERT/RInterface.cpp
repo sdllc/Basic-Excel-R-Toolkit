@@ -1056,59 +1056,115 @@ void ParseResult(LPXLOPER12 rslt, SEXP ans)
 	}
 	else if (type == VECSXP)
 	{
+		// this could be a vector-of-vectors, or it could 
+		// be a matrix.  for a matrix, we can only handle
+		// two dimensions.
+
 		int nc = len, nr = 0;
 
-		// need to figure out the max length first
-
-		for (int c = 0; c < nc; c++)
+		if (Rf_isMatrix(ans))
 		{
-			SEXP s = VECTOR_ELT(ans, c);
-			int r = Rf_length(s);
-			if (r > nr) nr = r;
-		}
+			nr = Rf_nrows(ans);
+			nc = Rf_ncols(ans);
 
-		rslt->xltype = xltypeMulti;
-		rslt->val.array.rows = nr;
-		rslt->val.array.columns = nc;
-		rslt->val.array.lparray = new XLOPER12[nr*nc];
+			rslt->xltype = xltypeMulti;
+			rslt->val.array.rows = nr;
+			rslt->val.array.columns = nc;
+			rslt->val.array.lparray = new XLOPER12[nr*nc];
 
-		// in the event there are any holes (sparse)
-
-		for (int i = 0; i < nr*nc; i++) rslt->val.array.lparray[i].xltype = xltypeMissing;
-
-		// the rest is just like a data frame but without headers
-
-		for (int c = 0; c < nc; c++)
-		{
-			SEXP v = VECTOR_ELT(ans, c);
-			int vlen = Rf_length(v);
-			type = TYPEOF(v);
-			for (int r = 0; r < vlen; r++)
+			int idx = 0;
+			for (int i = 0; i < nc; i++)
 			{
-				int idx = r * nc + c;
-				switch (type)
+				for (int j = 0; j < nr; j++)
 				{
-				case INTSXP:	//  13	  /* integer vectors */
-					rslt->val.array.lparray[idx].xltype = xltypeInt;
-					rslt->val.array.lparray[idx].val.w = (INTEGER(v))[r];
-					break;
-				case REALSXP:	//  14	  /* real variables */  
-					rslt->val.array.lparray[idx].xltype = xltypeNum;
-					rslt->val.array.lparray[idx].val.num = (REAL(v))[r];
-					break;
-				case STRSXP:	//  16	  /* string vectors - legal? */ 
-					STRSXP2XLOPER(&(rslt->val.array.lparray[idx]), STRING_ELT(v, r));
-					break;
-				case CPLXSXP:	//	15	  /* complex variables */
-					CPLXSXP2XLOPER(&(rslt->val.array.lparray[idx]), (COMPLEX(v))[r]);
-					break;
-				default:
-					DebugOut("** Unexpected type in vector/vector: %d\n", type);
-					break;
+					SEXP v = VECTOR_ELT(ans, idx);
+					type = TYPEOF(v);
+
+					switch (type)
+					{
+					case INTSXP:	//  13	  /* integer vectors */
+						rslt->val.array.lparray[j*nc + i].xltype = xltypeInt;
+						rslt->val.array.lparray[j*nc + i].val.w = (INTEGER(v))[0];
+						break;
+
+					case REALSXP:	//  14	  /* real variables */  
+						rslt->val.array.lparray[j*nc + i].xltype = xltypeNum;
+						rslt->val.array.lparray[j*nc + i].val.num = (REAL(v))[0];
+						break;
+
+					case STRSXP:	//  16	  /* string vectors */ 
+						STRSXP2XLOPER(&(rslt->val.array.lparray[j*nc + i]), STRING_ELT(v, 0));
+						// ParseResult(&(rslt->val.array.lparray[j*nc + i]), STRING_ELT(ans, idx)); // this is lazy
+						break;
+
+					case CPLXSXP:	//	15	  /* complex variables */
+						CPLXSXP2XLOPER(&(rslt->val.array.lparray[j*nc + i]), (COMPLEX(v))[0]);
+						break;
+
+					default:
+						DebugOut("Unexpected type in list: %d\n", type);
+						break;
+
+					}
+
+					idx++;
+				}
+			}
+
+		}
+		else // VofV?
+		{
+			// need to figure out the max length first
+
+			for (int c = 0; c < nc; c++)
+			{
+				SEXP s = VECTOR_ELT(ans, c);
+				int r = Rf_length(s);
+				if (r > nr) nr = r;
+			}
+
+			rslt->xltype = xltypeMulti;
+			rslt->val.array.rows = nr;
+			rslt->val.array.columns = nc;
+			rslt->val.array.lparray = new XLOPER12[nr*nc];
+
+			// in the event there are any holes (sparse)
+
+			for (int i = 0; i < nr*nc; i++) rslt->val.array.lparray[i].xltype = xltypeMissing;
+
+			// the rest is just like a data frame but without headers
+
+			for (int c = 0; c < nc; c++)
+			{
+				SEXP v = VECTOR_ELT(ans, c);
+				int vlen = Rf_length(v);
+				type = TYPEOF(v);
+				for (int r = 0; r < vlen; r++)
+				{
+					int idx = r * nc + c;
+					switch (type)
+					{
+					case INTSXP:	//  13	  /* integer vectors */
+						rslt->val.array.lparray[idx].xltype = xltypeInt;
+						rslt->val.array.lparray[idx].val.w = (INTEGER(v))[r];
+						break;
+					case REALSXP:	//  14	  /* real variables */  
+						rslt->val.array.lparray[idx].xltype = xltypeNum;
+						rslt->val.array.lparray[idx].val.num = (REAL(v))[r];
+						break;
+					case STRSXP:	//  16	  /* string vectors - legal? */ 
+						STRSXP2XLOPER(&(rslt->val.array.lparray[idx]), STRING_ELT(v, r));
+						break;
+					case CPLXSXP:	//	15	  /* complex variables */
+						CPLXSXP2XLOPER(&(rslt->val.array.lparray[idx]), (COMPLEX(v))[r]);
+						break;
+					default:
+						DebugOut("** Unexpected type in vector/vector: %d\n", type);
+						break;
+					}
 				}
 			}
 		}
-
 	}
 	else if (len > 1)
 	{
