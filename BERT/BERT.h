@@ -38,6 +38,7 @@ extern std::string calltip;
 static LPWSTR funcTemplates[][16] = {
 	{ L"BERT_UpdateScript", L"UU#", L"BERT.UpdateScript", L"R Code", L"2", L"BERT", L"", L"99", L"Update Script", L"", L"", L"", L"", L"", L"", L"" },
 	{ L"BERT_RExec", L"UU", L"BERT.Exec", L"R Code", L"2", L"BERT", L"", L"98", L"Exec R Code", L"", L"", L"", L"", L"", L"", L"" },
+	{ L"BERT_RCall", L"UUUUUUUUUU", L"BERT.Call", L"R Function, Argument", L"2", L"BERT", L"", L"98", L"Exec R Code", L"", L"", L"", L"", L"", L"", L"" },
 	{ L"BERT_Configure", L"A#", L"BERT.Configure", L"", L"2", L"BERT", L"", L"97", L"", L"", L"", L"", L"", L"", L"", L"" },
 	{ L"BERT_Console", L"A#", L"BERT.Console", L"", L"2", L"BERT", L"", L"96", L"", L"", L"", L"", L"", L"", L"", L"" },
 	{ L"BERT_HomeDirectory", L"A#", L"BERT.Home", L"", L"2", L"BERT", L"", L"95", L"", L"", L"", L"", L"", L"", L"", L"" },

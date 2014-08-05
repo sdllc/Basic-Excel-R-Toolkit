@@ -356,7 +356,7 @@ void RInit()
 	{
 		ExpandEnvironmentStringsA(DEFAULT_R_USER, RUser, MAX_PATH);
 	}
-
+	
 	/*
 	if ((RHome = get_R_HOME()) == NULL) {
 		fprintf(stderr, "R_HOME must be set in the environment or Registry\n");
@@ -476,7 +476,7 @@ void RInit()
 
 	LoadStartupFile();
 	MapFunctions();
-	
+
 }
 
 void RShutdown()

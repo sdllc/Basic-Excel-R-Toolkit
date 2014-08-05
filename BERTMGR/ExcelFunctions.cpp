@@ -102,6 +102,7 @@ DLLEX BOOL WINAPI xlAutoOpen(void)
 	{
 		::GetEnvironmentVariableA("PATH", &(buffer[blen]), elen);
 	}
+
 	::SetEnvironmentVariableA("PATH", buffer);
 	::SetEnvironmentVariableA("HOME", Home);
 
@@ -109,7 +110,7 @@ DLLEX BOOL WINAPI xlAutoOpen(void)
 
 	// load xll
 
-#ifdef _DEBUG
+#ifdef _DEBUG 
 	#ifdef _WIN64
 		swprintf_s(BERTXLL, MAX_PATH, L"BERT64D.xll");
 	#else

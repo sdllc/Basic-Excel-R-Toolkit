@@ -122,6 +122,53 @@ LPXLOPER12 BERTFunctionCall(
 	return rslt;
 }
 
+LPXLOPER12 BERT_RCall(
+	LPXLOPER12 func
+	, LPXLOPER12 input_0
+	, LPXLOPER12 input_1
+	, LPXLOPER12 input_2
+	, LPXLOPER12 input_3
+	, LPXLOPER12 input_4
+	, LPXLOPER12 input_5
+	, LPXLOPER12 input_6
+	, LPXLOPER12 input_7 )
+{
+	XLOPER12 * rslt = get_thread_local_xloper12();
+	resetXlOper(rslt);
+
+	rslt->xltype = xltypeErr;
+	rslt->val.err = xlerrName;
+
+	std::string funcNarrow;
+
+	if (func->xltype == xltypeStr)
+	{
+		// FIXME: this seems fragile, as it might try to 
+		// allocate a really large contiguous block.  better
+		// to walk through and find lines?
+
+		int len = WideCharToMultiByte(CP_UTF8, 0, &(func->val.str[1]), func->val.str[0], 0, 0, 0, 0);
+		char *ps = new char[len + 1];
+		WideCharToMultiByte(CP_UTF8, 0, &(func->val.str[1]), func->val.str[0], ps, len, 0, 0);
+		ps[len] = 0;
+		funcNarrow = ps;
+	}
+	else return rslt;
+
+	std::vector< LPXLOPER12 > args;
+	args.push_back(input_0);
+	args.push_back(input_1);
+	args.push_back(input_2);
+	args.push_back(input_3);
+	args.push_back(input_4);
+	args.push_back(input_5);
+	args.push_back(input_6);
+	args.push_back(input_7);
+	while (args.size() > 0 && args[args.size() - 1]->xltype == xltypeMissing) args.pop_back();
+	RExec2(rslt, funcNarrow, args);
+	return rslt;
+}
+
 void logMessage(const char *buf, int len, bool console)
 {
 	std::string entry;

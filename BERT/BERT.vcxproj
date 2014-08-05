@@ -173,7 +173,7 @@
       <AdditionalDependencies>R32.lib;RGraphApp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y BERT32.xll z:\</Command>
+      <Command>copy /Y BERT32.xll z:\ &amp;&amp; copy /Y BERTMGR32.xll z:\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
