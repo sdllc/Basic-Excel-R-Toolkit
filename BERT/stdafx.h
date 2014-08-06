@@ -26,6 +26,8 @@
 #define _WIN32_WINNT 0x0501
 #endif // #ifndef _WIN32_WINNT
 
+#define ISOLATION_AWARE_ENABLED 1
+
 #include "targetver.h"
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
