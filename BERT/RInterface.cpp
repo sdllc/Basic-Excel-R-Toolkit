@@ -548,6 +548,8 @@ SEXP ExecR(std::vector < std::string > &vec, int *err, ParseStatus *pStatus, boo
 	SEXP ans = 0;
 	int i, errorOccurred;
 
+	if (vec.size() == 0) return R_NilValue;
+
 	PROTECT(cmdSexp = Rf_allocVector(STRSXP, vec.size()));
 	for (i = 0; i < vec.size(); i++)
 	{
@@ -1299,7 +1301,20 @@ LPXLOPER12 BERT_RExec(LPXLOPER12 code)
 	result.xltype = xltypeErr;
 	result.val.err = xlerrValue;
 
-	SEXP ans = ExecR(sz, &errorOccurred, &status);
+	SEXP ans;
+
+	// if there are newlines in the string, we need to split it and use the vector method
+	std::string scode(sz);
+	if (scode.find_first_of("\r\n") != std::string::npos)
+	{
+		SVECTOR vec;
+		Util::split(scode, '\n', 1, vec, true);
+		ans = ExecR(vec, &errorOccurred, &status);
+	}
+	else
+	{
+		ans = ExecR(sz, &errorOccurred, &status);
+	}
 
 	if (sz) delete [] sz;
 
