@@ -46,5 +46,7 @@ void AppendLog(const char *buffer, int style = 1, int checkoverlap = 1);
 void RunThreadedConsole(HWND w);
 void SetConsoleDefaults();
 
+void UpdateConsoleWidth(bool force = false);
+
 
 #endif // #ifndef __CONSOLE_H

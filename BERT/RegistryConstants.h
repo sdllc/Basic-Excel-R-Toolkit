@@ -34,10 +34,16 @@
 #define REGISTRY_VALUE_CONSOLE_MESSAGE	"ConsoleMessageTextColor"
 #define REGISTRY_VALUE_CONSOLE_BACK		"ConsoleBackgroundColor"
 
+#define REGISTRY_VALUE_CONSOLE_WIDTH		"ConsoleWidth"
+#define REGISTRY_VALUE_CONSOLE_AUTO_WIDTH	"ConsoleAutoWidth"
+
 #define DEFAULT_ENVIRONMENT				""
 #define DEFAULT_R_USER					"%APPDATA%\\BERT"
 #define DEFAULT_R_HOME					"%APPDATA%\\BERT\\R-3.1.1"
 #define DEFAULT_R_STARTUP				"Functions.R"
+
+#define DEFAULT_CONSOLE_WIDTH			80
+#define DEFAULT_CONSOLE_AUTO_WIDTH		1
 
 #endif // #ifndef __REGISTRY_CONSTANTS_H
 

@@ -67,6 +67,7 @@ extern HRESULT Marshal();
 std::vector< std::string > fontlist;
 
 int promptwidth = 0;
+bool autowidth = true;
 
 int CALLBACK EnumFontFamExProc(const LOGFONTA *lpelfe, const TEXTMETRICA *lpntme, DWORD FontType, LPARAM lParam)
 {
@@ -183,6 +184,20 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleOptionsDlgProc(HWND hwndDlg, UINT message, WP
 		lp = ::GetWindowLongPtr(::GetDlgItem(hwndDlg, IDC_PREVIEW), GWL_STYLE);
 		::SetWindowLongPtr(::GetDlgItem(hwndDlg, IDC_PREVIEW), GWL_STYLE, lp | SS_OWNERDRAW);
 
+		if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_WIDTH)
+			|| dw < 0) dw = DEFAULT_CONSOLE_WIDTH;
+		sprintf_s(buffer, 64, "%d", dw);
+		::SetWindowTextA(::GetDlgItem(hwndDlg, IDC_CONSOLE_WIDTH), buffer);
+
+		if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_AUTO_WIDTH)
+			|| dw < 0) dw = DEFAULT_CONSOLE_AUTO_WIDTH;
+
+		::SendMessage(::GetDlgItem(hwndDlg, IDC_CB_AUTO), BM_SETCHECK, dw ? BST_CHECKED : BST_UNCHECKED, 0);
+		::EnableWindow(::GetDlgItem(hwndDlg, IDC_CONSOLE_WIDTH), !dw);
+
+
+		::EnableWindow(::GetDlgItem(hwndDlg, IDAPPLY), 0);
+
 		CenterWindow(hwndDlg, ::GetParent(hwndDlg));
 		break;
 
@@ -294,6 +309,16 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleOptionsDlgProc(HWND hwndDlg, UINT message, WP
 			}
 			break;
 
+		case IDC_CONSOLE_WIDTH:
+			if (HIWORD( wParam) == EN_CHANGE )
+				::EnableWindow(::GetDlgItem(hwndDlg, IDAPPLY), 1);
+			break;
+
+		case IDC_CB_AUTO:
+			::EnableWindow(::GetDlgItem(hwndDlg, IDC_CONSOLE_WIDTH), ::SendMessage(::GetDlgItem(hwndDlg, IDC_CB_AUTO), BM_GETCHECK, 0, 0) != BST_CHECKED);
+			::EnableWindow(::GetDlgItem(hwndDlg, IDAPPLY), 1);
+			break;
+
 		case IDAPPLY:
 		case IDOK:
 
@@ -321,6 +346,14 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleOptionsDlgProc(HWND hwndDlg, UINT message, WP
 			CRegistryUtils::SetRegDWORD(HKEY_CURRENT_USER, dwMessage, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_MESSAGE);
 			CRegistryUtils::SetRegDWORD(HKEY_CURRENT_USER, dwUser, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_USER);
 
+			::GetWindowTextA(::GetDlgItem(hwndDlg, IDC_CONSOLE_WIDTH), buffer, 64);
+			dw = atoi(buffer);
+			CRegistryUtils::SetRegDWORD(HKEY_CURRENT_USER, dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_WIDTH);
+			autowidth = ::SendMessage(::GetDlgItem(hwndDlg, IDC_CB_AUTO), BM_GETCHECK, 0, 0) == BST_CHECKED;
+			dw = autowidth ? 1 : 0;
+			CRegistryUtils::SetRegDWORD(HKEY_CURRENT_USER, dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_AUTO_WIDTH);
+			UpdateConsoleWidth(true);
+
 			EndDialog(hwndDlg, wParam);
 			return TRUE;
 
@@ -339,7 +372,7 @@ void ConsoleOptions( HWND hwnd )
 	::DialogBox(ghModule,
 		MAKEINTRESOURCE(IDD_CONSOLE_OPTIONS),
 		hwnd, (DLGPROC)ConsoleOptionsDlgProc);
-
+	UpdateConsoleWidth(true);
 }
 
 void initWordList()
@@ -937,10 +970,90 @@ void SetConsoleDefaults()
 	fn(ptr, SCI_STYLESETBACK, 0, dw);
 	fn(ptr, SCI_STYLESETBACK, 1, dw);
 	fn(ptr, SCI_STYLESETBACK, 32, dw);
+
+	if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_AUTO_WIDTH)
+		|| dw < 0) dw = DEFAULT_CONSOLE_AUTO_WIDTH;
+
+	autowidth = (dw != 0);
+
+}
+
+void UpdateConsoleWidth( bool force )
+{
+	char buffer[128];
+	DWORD dw;
+	LOGFONTA lf;
+	TEXTMETRIC tm;
+	RECT rc;
+	int chars = 0;
+
+	static int lastWidth = 0;
+	static int lastChars = 0;
+
+	if (!fn) return;
+	if (!force && !autowidth) return;
+
+	::GetClientRect(hWndConsole, &rc);
+	int width = rc.right - rc.left;
+	if (width <= 0) return;
+
+	if (!force && (lastWidth == width)) return;
+	lastWidth = width;
+
+	if (autowidth)
+	{
+		memset(&lf, 0, sizeof(LOGFONTA));
+
+		if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, lf.lfFaceName, 32, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_FONT)
+			|| !strlen(buffer)) strcpy_s(lf.lfFaceName, 32, SCINTILLA_FONT_NAME);
+
+		if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_SIZE)
+			|| dw <= 0) dw = SCINTILLA_FONT_SIZE;
+
+		HDC dc = ::GetDC(0);
+		lf.lfHeight = -MulDiv(dw, GetDeviceCaps(dc, LOGPIXELSY), 72);
+
+		HFONT font = ::CreateFontIndirectA(&lf);
+		HGDIOBJ oldFont = ::SelectObject(dc, font);
+
+		::GetTextMetrics(dc, &tm);
+
+		DWORD pixels = MulDiv(tm.tmAveCharWidth, 72, GetDeviceCaps(dc, LOGPIXELSX));
+
+		::SelectObject(dc, oldFont);
+		::DeleteObject(font);
+		::ReleaseDC(0, dc);
+
+		// this should not work, as char width is in logical units.
+		// 16 represents the scrollbar - too small? check
+
+		chars = (rc.right - rc.left - 16) / (tm.tmAveCharWidth) - 1;
+	}
+	else
+	{
+		if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_WIDTH)
+			|| dw <= 0) dw = DEFAULT_CONSOLE_WIDTH;
+		chars = dw;
+	}
+
+	if (chars < 10) chars = 10;
+	if (chars > 1000) chars = 1000;
+
+	if (chars == lastChars) return;
+	lastChars = chars;
+
+	SVECTOR sv;
+	int r;
+
+	sprintf_s(buffer, 128, "options(\"width\"=%d)", chars);
+	sv.push_back(std::string(buffer));
+	SafeCall(SCC_EXEC, &sv, &r);
+
+	DebugOut("%s\n", buffer);
+
 }
 
 LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
-//DIALOG_RESULT_TYPE CALLBACK ConsoleDlgProc( HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam )
 {
 	const int borderedge = 0; //  8;
 	const int topspace = 0;
@@ -1043,7 +1156,7 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 			rect.right - 2 * borderedge,
 			rect.bottom - 2 * borderedge - topspace,
 			SWP_NOMOVE | SWP_NOZORDER | SWP_DEFERERASE);
-
+		if ( message == WM_SIZE ) UpdateConsoleWidth();
 		break;
 
 	case WM_ERASEBKGND:
