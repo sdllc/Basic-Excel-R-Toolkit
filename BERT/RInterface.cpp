@@ -53,7 +53,7 @@ SEXP ExecR(const char *code, int *err = 0, ParseStatus *pStatus = 0);
 SEXP ExecR(std::string &str, int *err = 0, ParseStatus *pStatus = 0);
 SEXP ExecR(std::vector< std::string > &vec, int *err = 0, ParseStatus *pStatus = 0, bool withVisible = false);
 
-SEXP XLOPER2SEXP(LPXLOPER12 px, int depth = 0);
+SEXP XLOPER2SEXP(LPXLOPER12 px, int depth = 0, bool missingArguments = false);
 
 std::string dllpath;
 
@@ -1444,7 +1444,7 @@ __inline double number(const std::string &s)
 /**
  * convert an arbitrary excel value to a SEXP
  */
-SEXP XLOPER2SEXP( LPXLOPER12 px, int depth )
+SEXP XLOPER2SEXP( LPXLOPER12 px, int depth, bool missingArguments )
 {
 	XLOPER12 xlArg;
 	std::string str;
@@ -1474,7 +1474,7 @@ SEXP XLOPER2SEXP( LPXLOPER12 px, int depth )
 	case xltypeRef:
 	case xltypeSRef:
 		Excel12(xlCoerce, &xlArg, 1, px);
-		result = XLOPER2SEXP(&xlArg, depth++);
+		result = XLOPER2SEXP(&xlArg, depth++, missingArguments);
 		Excel12(xlFree, 0, 1, (LPXLOPER12)&xlArg);
 		return result;
 		break;
@@ -1526,6 +1526,8 @@ SEXP XLOPER2SEXP( LPXLOPER12 px, int depth )
 
 	case xltypeNil:
 	default:
+
+		if (missingArguments) return R_MissingArg;
 
 		// changing to NA (from NULL).  not sure about this 
 		// either way, but I *think* NA is more appropriate.
@@ -1587,7 +1589,7 @@ bool RExec2(LPXLOPER12 rslt, std::string &funcname, std::vector< LPXLOPER12 > &a
 	PROTECT(sargs = Rf_allocVector(VECSXP, args.size()));
 	for (i = 0; i < args.size(); i++)
 	{
-		SET_VECTOR_ELT(sargs, i, XLOPER2SEXP(args[i]));
+		SET_VECTOR_ELT(sargs, i, XLOPER2SEXP(args[i], 0, true));
 	}
 
 	if (g_Environment)
