@@ -217,6 +217,11 @@ void resetXlOper(LPXLOPER12 x)
 	x->xltype = xltypeNil;
 }
 
+LPXLOPER BERT_Volatile(LPXLOPER arg)
+{
+	return arg;
+}
+
 short BERT_Reload()
 {
 	LoadStartupFile();
