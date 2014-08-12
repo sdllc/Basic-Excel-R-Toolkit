@@ -38,12 +38,10 @@
 #include "MSO.tlh"
 #include "Excel.tlh"
 
-IDispatch *pdispThread = 0;
 IDispatch *pdispApp = 0;
 IStream *pstream = 0;
 
-HRESULT Unmarshal(); // fwd
-HRESULT ReleaseThreadPtr(); // fwd
+HRESULT Unmarshal( LPDISPATCH &p ); // fwd
 
 #define MISSING_10 vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing
 #define MISSING_30 MISSING_10, MISSING_10, MISSING_10
@@ -60,8 +58,9 @@ HRESULT ReleaseThreadPtr(); // fwd
 HRESULT SafeCall( SAFECALL_CMD cmd, std::vector< std::string > *vec, int *presult )
 {
 	HRESULT hr = E_FAIL;
-	Unmarshal();
-	CComQIPtr< Excel::_Application > application = pdispThread;
+	LPDISPATCH pdisp = 0;
+	Unmarshal( pdisp );
+	CComQIPtr< Excel::_Application > application(pdisp);
 
 	if (application)
 	{
@@ -145,21 +144,7 @@ HRESULT SafeCall( SAFECALL_CMD cmd, std::vector< std::string > *vec, int *presul
 
 	}
 
-	ReleaseThreadPtr();
-	return hr;
-}
-
-/**
- *
- */
-HRESULT ReleaseThreadPtr()
-{
-	HRESULT hr = S_OK;
-	if (pdispThread)
-	{
-		hr = pdispThread->Release();
-		pdispThread = 0;
-	}
+	if (pdisp) pdisp->Release();
 	return hr;
 }
 
@@ -172,7 +157,8 @@ void SetExcelPtr(LPVOID p)
 }
 
 /**
- *
+ * free the marshaled pointer.  must be done from the thread that
+ * called marshal (cf the ms example, which is wrong)
  */
 void FreeStream()
 {
@@ -184,17 +170,16 @@ void FreeStream()
 }
 
 /**
- *
+ * unmarshal (in order to use) the marshaled pointer. calls AddRef
+ * on the underlying object, so be sure to Release it.
  */
-HRESULT Unmarshal()
+HRESULT Unmarshal(LPDISPATCH &p)
 {
-	HRESULT hr = AtlUnmarshalPtr(pstream, IID_IDispatch, (IUnknown**)&pdispThread);
-
-	return hr;
+	return AtlUnmarshalPtr(pstream, IID_IDispatch, (LPUNKNOWN*)&p);
 }
 
 /**
- *
+ * marshal pointer for use by other threads
  */
 HRESULT Marshal()
 {
