@@ -270,6 +270,7 @@ void LoadStartupFile()
 	char RUser[MAX_PATH];
 	char path[MAX_PATH];
 	char buffer[MAX_PATH];
+	char wd[MAX_PATH];
 	std::string contents;
 
 	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, RUser, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_R_USER))
@@ -297,11 +298,20 @@ void LoadStartupFile()
 
 	if (contents.length() > 0)
 	{
+		// set CWD, temporarily, to home directory
+		// to support easier source()ing
+
+		::GetCurrentDirectoryA(MAX_PATH, wd);
+		::SetCurrentDirectoryA(RUser);
+
 		time_t t;
 		struct tm timeinfo;
 		int rslt = UpdateR(contents);
-		char buffer[MAX_PATH];
 		
+		// and revert
+
+		::SetCurrentDirectoryA(wd);
+
 		time(&t);
 		//timeinfo = 
 		localtime_s(&timeinfo, &t);
