@@ -38,10 +38,11 @@
 #include "MSO.tlh"
 #include "Excel.tlh"
 
+/** cached Excel pointer */
 IDispatch *pdispApp = 0;
-IStream *pstream = 0;
 
-HRESULT Unmarshal( LPDISPATCH &p ); // fwd
+/** stream for the marshaled pointer */
+IStream *pstream = 0;
 
 #define MISSING_10 vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing
 #define MISSING_30 MISSING_10, MISSING_10, MISSING_10
@@ -59,7 +60,8 @@ HRESULT SafeCall( SAFECALL_CMD cmd, std::vector< std::string > *vec, int *presul
 {
 	HRESULT hr = E_FAIL;
 	LPDISPATCH pdisp = 0;
-	Unmarshal( pdisp );
+
+	hr = AtlUnmarshalPtr(pstream, IID_IDispatch, (LPUNKNOWN*)&pdisp);
 	CComQIPtr< Excel::_Application > application(pdisp);
 
 	if (application)
@@ -88,9 +90,7 @@ HRESULT SafeCall( SAFECALL_CMD cmd, std::vector< std::string > *vec, int *presul
 				}
 
 				cvArg = (LPSAFEARRAY)cc;
-
 				hr = application->_Run2(cvFunc, cvCmdID, cvArg, MISSING_28, 1033, &cvRslt);
-
 				cc.Destroy();
 			}
 			break;
@@ -137,7 +137,6 @@ HRESULT SafeCall( SAFECALL_CMD cmd, std::vector< std::string > *vec, int *presul
 		{
 			if (presult)
 			{
-				if (hr == 0x800a03ec )
 				*presult = PARSE2_EXTERNAL_ERROR;
 			}
 		}
@@ -149,7 +148,7 @@ HRESULT SafeCall( SAFECALL_CMD cmd, std::vector< std::string > *vec, int *presul
 }
 
 /**
- *
+ * cache pointer to excel, for use by the console
  */
 void SetExcelPtr(LPVOID p)
 {
@@ -167,15 +166,6 @@ void FreeStream()
 		AtlFreeMarshalStream(pstream);
 	}
 	pstream = 0;
-}
-
-/**
- * unmarshal (in order to use) the marshaled pointer. calls AddRef
- * on the underlying object, so be sure to Release it.
- */
-HRESULT Unmarshal(LPDISPATCH &p)
-{
-	return AtlUnmarshalPtr(pstream, IID_IDispatch, (LPUNKNOWN*)&p);
 }
 
 /**
