@@ -136,7 +136,11 @@ HRESULT SafeCall( SAFECALL_CMD cmd, std::vector< std::string > *vec, int *presul
 		}
 		else
 		{
-			if (presult) *presult = PARSE2_EXTERNAL_ERROR;
+			if (presult)
+			{
+				if (hr == 0x800a03ec )
+				*presult = PARSE2_EXTERNAL_ERROR;
+			}
 		}
 
 	}

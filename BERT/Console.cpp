@@ -503,9 +503,14 @@ void CallComplete(PARSE_STATUS_2 ps, LPARAM lParam)
 	switch (ps)
 	{
 	case PARSE2_ERROR:
-	case PARSE2_EXTERNAL_ERROR:
 		inputlock = true;
 		logMessage(PARSE_ERROR_MESSAGE, strlen(PARSE_ERROR_MESSAGE), true);
+		inputlock = false;
+		break;
+
+	case PARSE2_EXTERNAL_ERROR:
+		inputlock = true;
+		logMessage(EXTERNAL_ERROR_MESSAGE, strlen(EXTERNAL_ERROR_MESSAGE), true);
 		inputlock = false;
 		break;
 

@@ -43,6 +43,7 @@
 #define SCINTILLA_LINK		L"http://" SCINTILLA_LINK_TEXT
 
 #define PARSE_ERROR_MESSAGE "(parse error)\n"
+#define EXTERNAL_ERROR_MESSAGE "(an error occurred processing the command.  is excel busy?)\n"
 
 
 #endif // #ifndef __STRING_CONSTANTS_H

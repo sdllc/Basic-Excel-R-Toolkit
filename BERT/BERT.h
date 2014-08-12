@@ -36,6 +36,9 @@ extern SVECTOR moneyList;
 extern std::string calltip;
 
 static LPWSTR funcTemplates[][16] = {
+
+	// type 2 functions
+
 	{ L"BERT_UpdateScript", L"UU#", L"BERT.UpdateScript", L"R Code", L"2", L"BERT", L"", L"100", L"Update Script", L"", L"", L"", L"", L"", L"", L"" },
 	{ L"BERT_RExec", L"UU", L"BERT.Exec", L"R Code", L"2", L"BERT", L"", L"99", L"Exec R Code", L"", L"", L"", L"", L"", L"", L"" },
 	{ L"BERT_RCall", L"UUUUUUUUUU", L"BERT.Call", L"R Function, Argument", L"2", L"BERT", L"", L"98", L"Exec R Code", L"", L"", L"", L"", L"", L"", L"" },
@@ -46,7 +49,13 @@ static LPWSTR funcTemplates[][16] = {
 	{ L"BERT_Reload", L"A#", L"BERT.Reload", L"", L"2", L"BERT", L"", L"93", L"", L"", L"", L"", L"", L"", L"", L"" },
 	{ L"BERT_About", L"A#", L"BERT.About", L"", L"2", L"BERT", L"", L"92", L"", L"", L"", L"", L"", L"", L"", L"" },
 	{ L"BERT_SafeCall", L"JJU#", L"BERT.SafeCall", L"", L"2", L"BERT", L"", L"91", L"", L"", L"", L"", L"", L"", L"", L"" },
-	{ L"BERT_Volatile", L"UU!", L"BERT.Volatile", L"", L"1", L"BERT", L"", L"90", L"", L"", L"", L"", L"", L"", L"", L"" },
+
+	// type 1 functions
+
+	{ L"BERT_Volatile", L"UU!", L"BERT.Volatile", L"", L"1", L"BERT", L"", L"80", \
+		L"Forces calculation to be volatile (recalculate on F9).", \
+		L"", L"", L"", L"", L"", L"", L"" },
+
 	{ 0 }
 };
 
