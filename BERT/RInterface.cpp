@@ -1526,6 +1526,10 @@ SEXP XLOPER2SEXP( LPXLOPER12 px, int depth, bool missingArguments )
 		return Rf_mkString(str.c_str());
 		break;
 
+	case xltypeBool:
+		return Rf_ScalarLogical(px->val.xbool ? -1 : 0);
+		break;
+
 	case xltypeNum:
 		return Rf_ScalarReal(px->val.num);
 		break;
