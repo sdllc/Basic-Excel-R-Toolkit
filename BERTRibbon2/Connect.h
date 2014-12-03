@@ -24,7 +24,7 @@ public:
 
 	BEGIN_COM_MAP(CConnect)
 		COM_INTERFACE_ENTRY2(IDispatch, IRibbonExtensibility)
-		COM_INTERFACE_ENTRY(AddInDesignerObjects::IDTExtensibility2)
+		COM_INTERFACE_ENTRY(AddInDesignerObjects::_IDTExtensibility2)
 		COM_INTERFACE_ENTRY(IRibbonExtensibility)
 	END_COM_MAP()
 
@@ -186,7 +186,6 @@ public:
 			CComBSTR bstrCmd(szCmd);
 			CComVariant cvRslt;
 			HRESULT hr = pApp->ExecuteExcel4Macro(bstrCmd, 1033, &cvRslt);
-
 		}
 		return S_OK;
 	}

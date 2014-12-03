@@ -86,9 +86,13 @@ private:
 
 extern CBERTRibbon2Module _AtlModule;
 
-#import "C:\Program Files (x86)\Common Files\Microsoft Shared\OFFICE15\MSO.DLL" rename_namespace("Office") raw_interfaces_only, named_guids
+// @see BERTCOM.cpp about these files
+
+#include "..\BERT\mso.tlh"
 using namespace Office;
 
-#import "C:\Program Files\Microsoft Office\Office15\EXCEL.EXE" rename_namespace("Excel"), raw_interfaces_only, rename("DialogBox","_DialogBox"), exclude("IFont", "IPicture"), rename("RGB","_RGB"), rename("CopyFile","_CopyFile")
+#include "..\BERT\excel.tlh"
+
+
 
 
