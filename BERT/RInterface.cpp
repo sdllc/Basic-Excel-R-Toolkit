@@ -1224,8 +1224,16 @@ void ParseResult(LPXLOPER12 rslt, SEXP ans)
 					break;
 
 				case REALSXP:	//  14	  /* real variables */  
-					rslt->val.array.lparray[j*nc + i].xltype = xltypeNum;
-					rslt->val.array.lparray[j*nc + i].val.num = (REAL(ans))[idx];
+
+					if (ISNA( (REAL(ans))[idx] )) {
+						rslt->val.array.lparray[j*nc + i].xltype = xltypeStr;
+						rslt->val.array.lparray[j*nc + i].val.str = new XCHAR[1];
+						rslt->val.array.lparray[j*nc + i].val.str[0] = 0;
+					}
+					else {
+						rslt->val.array.lparray[j*nc + i].xltype = xltypeNum;
+						rslt->val.array.lparray[j*nc + i].val.num = (REAL(ans))[idx];
+					}
 					break;
 
 				case STRSXP:	//  16	  /* string vectors */ 
