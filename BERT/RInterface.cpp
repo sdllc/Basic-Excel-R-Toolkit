@@ -1095,8 +1095,19 @@ void ParseResult(LPXLOPER12 rslt, SEXP ans)
 					switch (type)
 					{
 					case INTSXP:	//  13	  /* integer vectors */
-						rslt->val.array.lparray[j*nc + i].xltype = xltypeInt;
-						rslt->val.array.lparray[j*nc + i].val.w = (INTEGER(v))[0];
+
+						// this is not working as expected...
+						if (!ISNA((INTEGER(v))[0]) && (INTEGER(v))[0] != NA_INTEGER )
+						{
+							rslt->val.array.lparray[j*nc + i].xltype = xltypeInt;
+							rslt->val.array.lparray[j*nc + i].val.w = (INTEGER(v))[0];
+						}
+						else
+						{
+							rslt->val.array.lparray[j*nc + i].xltype = xltypeStr;
+							rslt->val.array.lparray[j*nc + i].val.str = new XCHAR[1];
+							rslt->val.array.lparray[j*nc + i].val.str[0] = 0;
+						}
 						break;
 
 					case REALSXP:	//  14	  /* real variables */  
