@@ -1,6 +1,6 @@
 /*
 * Basic Excel R Toolkit (BERT)
-* Copyright (C) 2014 Structured Data, LLC
+* Copyright (C) 2014-2015 Structured Data, LLC
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by

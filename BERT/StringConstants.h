@@ -1,6 +1,6 @@
 /*
  * Basic Excel R Toolkit (BERT)
- * Copyright (C) 2014 Structured Data, LLC
+ * Copyright (C) 2014-2015 Structured Data, LLC
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,13 +23,13 @@
 
 #define ABOUT_BERT_TEXT \
 	L"Basic Excel R Toolkit (BERT) v " BERT_VERSION L"\r\n" \
-	L"Copyright (C) 2014 Structured Data, LLC"
+	L"Copyright (C) 2014-2015 Structured Data, LLC"
 
 #define BERT_LINK_TEXT		L"bert-toolkit.com"
 #define BERT_LINK			L"http://" BERT_LINK_TEXT
 
 #define ABOUT_R_TEXT \
-	L"Includes R version 3.1.1 (2014-07-10) -- \"Sock it to Me\"\r\n" \
+	L"Includes R version 3.1.2 (2014-10-31) -- \"Pumpkin Helmet\"\r\n" \
 	L"Copyright (C) 2014 The R Foundation for Statistical Computing"
 
 #define R_LINK_TEXT			L"www.r-project.org"
