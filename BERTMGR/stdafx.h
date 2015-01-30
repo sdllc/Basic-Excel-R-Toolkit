@@ -35,6 +35,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <Psapi.h>
 
 #define DLLEX extern "C" __declspec(dllexport)
 

@@ -135,13 +135,52 @@ public:
 
 	// Local methods
 
+
+	int SetCOMPtrs(void *pexcel, void *pribbon)
+	{
+		// this is just -1 for the current process
+		HANDLE h = GetCurrentProcess();
+		HMODULE hMods[1024];
+		DWORD cbNeeded;
+
+		int rslt = -1;
+
+		if (EnumProcessModules(h, hMods, sizeof(hMods), &cbNeeded))
+		{
+			for (int i = 0; i < (cbNeeded / sizeof(HMODULE)); i++)
+			{
+				char szModName[MAX_PATH];
+				if (GetModuleFileNameExA(h, hMods[i], szModName, sizeof(szModName) / sizeof(char)))
+				{
+					std::string str(szModName);
+
+					// this is fragile, because it's a filename.  
+
+					if (std::string::npos != str.find("BERT")
+						&& std::string::npos != str.find(".xll"))
+					{
+						SPPROC sp;
+						sp = (SPPROC)::GetProcAddress(hMods[i], "BERT_SetPtr");
+						if (sp){
+							sp((LPVOID)m_pApplication.p);
+							rslt = 0;
+						}
+					}
+				}
+			}
+		}
+
+		return rslt;
+	}
+
+
 	HRESULT HandleCacheRibbon(DISPPARAMS* pdispparams)
 	{
 		if (pdispparams->cArgs > 0
 			&& pdispparams->rgvarg[0].vt == VT_DISPATCH)
 		{
 			m_pRibbonUI = pdispparams->rgvarg[0].pdispVal;
-
+			/*
 			{
 				// this is just -1 for the current process
 				HANDLE h = GetCurrentProcess(); 
@@ -172,7 +211,7 @@ public:
 					}
 				}
 			}
-
+			*/
 			return S_OK;
 		}
 		return E_FAIL;

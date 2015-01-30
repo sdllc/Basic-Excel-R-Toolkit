@@ -33,9 +33,7 @@ BOOL WINAPI xlAutoOpen(void)
 	}
 
 	SysInit();
-
 	return true;
-
 }
 
 void WINAPI xlAutoFree12(LPXLOPER12 pxFree)

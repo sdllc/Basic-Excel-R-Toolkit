@@ -66,10 +66,64 @@ int registerSecondXLL( bool reg, LPWSTR secondDll )
 
 }
 
+int BERTLoaded( LPCWSTR compare )
+{
+	// this is just -1 for the current process
+	HANDLE h = GetCurrentProcess();
+	HMODULE hMods[1024];
+	DWORD cbNeeded;
+
+	int len = wcslen(compare);
+
+	if (EnumProcessModules(h, hMods, sizeof(hMods), &cbNeeded))
+	{
+		for (int i = 0; i < (cbNeeded / sizeof(HMODULE)); i++)
+		{
+			WCHAR szModName[MAX_PATH];
+			if (GetModuleFileNameEx(h, hMods[i], szModName, sizeof(szModName) / sizeof(WCHAR)))
+			{
+				for (int j = 0; j < wcslen(szModName); j++){
+					if (!wcsncmp(szModName + j, compare, len)) return -1;
+				}
+				/*
+				//std::string str(szModName);
+
+				// this is fragile, because it's a filename.  
+
+				if (std::string::npos != str.find("BERT")
+					&& std::string::npos != str.find(".xll"))
+				{
+				}
+				*/
+			}
+		}
+	}
+
+	return 0;
+}
+
 DLLEX BOOL WINAPI xlAutoOpen(void)
 {
 	char RBin[MAX_PATH];
 	char Home[MAX_PATH];
+
+#ifdef _DEBUG 
+#ifdef _WIN64
+	swprintf_s(BERTXLL, MAX_PATH, L"BERT64D.xll");
+#else
+	swprintf_s(BERTXLL, MAX_PATH, L"BERT32D.xll");
+#endif
+#else
+#ifdef _WIN64
+	swprintf_s(BERTXLL, MAX_PATH, L"BERT64.xll");
+#else
+	swprintf_s(BERTXLL, MAX_PATH, L"BERT32.xll");
+#endif
+#endif
+
+	// we have to guard against double-loading here as well
+
+	if (BERTLoaded(BERTXLL)) return true;
 
 	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, RBin, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_R_HOME, true))
 		ExpandEnvironmentStringsA(DEFAULT_R_HOME, RBin, MAX_PATH - 1);
@@ -110,19 +164,6 @@ DLLEX BOOL WINAPI xlAutoOpen(void)
 
 	// load xll
 
-#ifdef _DEBUG 
-	#ifdef _WIN64
-		swprintf_s(BERTXLL, MAX_PATH, L"BERT64D.xll");
-	#else
-		swprintf_s(BERTXLL, MAX_PATH, L"BERT32D.xll");
-	#endif
-#else
-	#ifdef _WIN64
-		swprintf_s(BERTXLL, MAX_PATH, L"BERT64.xll");
-	#else
-		swprintf_s(BERTXLL, MAX_PATH, L"BERT32.xll");
-	#endif
-#endif
 
 	registerSecondXLL(true, (LPWSTR)BERTXLL);
 	return true;

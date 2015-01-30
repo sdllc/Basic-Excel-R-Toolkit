@@ -27,6 +27,7 @@
 #define REGISTRY_VALUE_R_HOME			"R_HOME"
 #define REGISTRY_VALUE_STARTUP			"StartupFile"
 #define REGISTRY_VALUE_HIDE_MENU		"HideMenu"
+#define REGISTRY_VALUE_INSTALL_DIR		"InstallDir"
 
 #define REGISTRY_VALUE_CONSOLE_FONT		"ConsoleFont"
 #define REGISTRY_VALUE_CONSOLE_SIZE		"ConsoleFontSize"
