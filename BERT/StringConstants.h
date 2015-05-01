@@ -29,15 +29,15 @@
 #define BERT_LINK			L"http://" BERT_LINK_TEXT
 
 #define ABOUT_R_TEXT \
-	L"Includes R version 3.1.2 (2014-10-31) -- \"Pumpkin Helmet\"\r\n" \
-	L"Copyright (C) 2014 The R Foundation for Statistical Computing"
+	L"Includes R version 3.2.0 (2015-04-16) -- \"Full of Ingredients\"\r\n" \
+	L"Copyright (C) 2015 The R Foundation for Statistical Computing"
 
 #define R_LINK_TEXT			L"www.r-project.org"
 #define R_LINK				L"http://" R_LINK_TEXT
 
 #define ABOUT_SCINTILLA_TEXT \
 	L"Includes Scintilla text component\r\n" \
-	L"Copyright 1998 - 2014 by Neil Hodgson <neilh@scintilla.org>"
+	L"Copyright 1998 - 2015 by Neil Hodgson <neilh@scintilla.org>"
 
 #define SCINTILLA_LINK_TEXT	L"scintilla.org"
 #define SCINTILLA_LINK		L"http://" SCINTILLA_LINK_TEXT
