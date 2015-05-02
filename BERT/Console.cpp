@@ -373,19 +373,14 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleOptionsDlgProc(HWND hwndDlg, UINT message, WP
 
 void ToggleOnTop(HWND hwnd){
 
+	// we need to close and re-open the console, so we don't
+	// do any UI here - just set the registry value
+
 	DWORD dw;
 	if (CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_ON_TOP) && dw) dw = 0;
 	else dw = 1;
-
-	CheckMenuItem(
-		::GetMenu(hwnd),
-		ID_CONSOLE_ALWAYSONTOP,
-		dw ? MF_CHECKED : MF_UNCHECKED
-	);
-
 	CRegistryUtils::SetRegDWORD(HKEY_CURRENT_USER, dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_ON_TOP);
 
-	// we're going to exit after this, so we don't explicitly change the parent
 
 }
 
@@ -1277,8 +1272,7 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 		case ID_CONSOLE_ALWAYSONTOP:
 			ToggleOnTop(hwndDlg);
 			reopenWindow = true;
-
-			// now close so we can reopen (drop into next case)
+			::SetFocus(hWndExcel);
 
 		case ID_CONSOLE_CLOSECONSOLE:
 		case WM_CLOSE_CONSOLE:
@@ -1335,6 +1329,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParameter)
 	while (reopenWindow)
 	{
 		reopenWindow = false;
+
 		HWND hwndParent = 0;
 		DWORD dw;
 
@@ -1379,7 +1374,9 @@ DWORD WINAPI ThreadProc(LPVOID lpParameter)
 		}
 
 		hWndConsole = 0;
-	
+
+		::SetFocus(hWndExcel);
+
 	}
 
 	CoUninitialize();
