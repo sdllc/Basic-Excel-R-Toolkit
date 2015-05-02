@@ -1273,6 +1273,9 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 			ToggleOnTop(hwndDlg);
 			reopenWindow = true;
 			::SetFocus(hWndExcel);
+			ShowWindow(hwndDlg, SW_HIDE);
+			::PostMessage(hwndDlg, WM_DESTROY, 0, 0);
+			break;
 
 		case ID_CONSOLE_CLOSECONSOLE:
 		case WM_CLOSE_CONSOLE:
