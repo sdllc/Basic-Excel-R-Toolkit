@@ -29,7 +29,7 @@ ReloadStartup <- function(){ .Call(.CALLBACK, .RELOAD, 0, PACKAGE=.MODULE ); };
 # Excel callback function. Be careful with this unless 
 # you know what you are doing.
 #--------------------------------------------------------
-Excel<- function( command, arguments = list() ){ .Call(.CALLBACK, .EXCEL, command, arguments, PACKAGE=.MODULE ); };
+.Excel<- function( command, arguments = list() ){ .Call(.CALLBACK, .EXCEL, command, arguments, PACKAGE=.MODULE ); };
 
 #========================================================
 # functions - for internal use
@@ -49,6 +49,19 @@ setClass( "xlReference",
 	representation( R1 = "integer", C1 = "integer", R2 = "integer", C2 = "integer", SheetID = "integer" ),
 	prototype( R1 = 0L, C1 = 0L, R2 = 0L, C2 = 0L, SheetID = c(0L,0L))
 	);
+
+suppressMessages(setMethod( "nrow", "xlReference", function(x){ 
+	if( x@R2 >= x@R1 ){ return( x@R2-x@R1+1 ); }
+	else{ return(1); }
+}, where = BERT));
+
+suppressMessages(setMethod( "ncol", "xlReference", function(x){ 
+	if( x@C2 >= x@C1 ){ return( x@C2-x@C1+1 ); }
+	else{ return(1); }
+}, where = BERT));
+
+# length isn't really appropriate for this object
+#setMethod( "length", "xlReference", function(x){ return(nrow(x) * ncol(x)); });
 
 setMethod( "show", "xlReference", function(object){
 	cat( "Excel Reference ", "R", object@R1, "C", object@C1, sep="" );

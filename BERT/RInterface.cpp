@@ -1288,7 +1288,7 @@ void ParseResult(LPXLOPER12 rslt, SEXP ans)
 		else if (Rf_isInteger(ans))
 		{
 			rslt->xltype = xltypeInt;
-			rslt->val.num = Rf_asInteger(ans);
+			rslt->val.w = Rf_asInteger(ans);
 		}
 		else if (isReal(ans) || Rf_isNumber(ans))
 		{
