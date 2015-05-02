@@ -1,101 +1,265 @@
 
+#====================================================================
 #
-# get a sheet ID by name.  sheet IDs are internal to Excel 
+# Functions for interacting with the spreadsheet.
 #
-GetSheetID <- function( sheetName )
+#====================================================================
+
+#
+# we're going to stick these functions in a separate namespace,
+# BERT.Excel, and then attach that namespace.  we do that so they're
+# available in the console but don't get added as Excel functions.
+#
+
+BERT.Excel <- new.env();
+with( BERT.Excel, {
+
+#--------------------------------------------------------------------
+#
+# get a sheet ID by name.  sheet IDs are internal to Excel.  it's
+# probably worth noting that these are not persistent across Excel
+# sessions (they may be pointers?) but they are persistent as long
+# as the workbook is open.
+#
+#--------------------------------------------------------------------
+.GetSheetID <- function( sheetName )
 {
-	ref <- BERT$Excel( 0x4004, list( sheetName )); 
-	return( ref$sheetID );
+	ref <- BERT$.Excel( 0x4004, list( sheetName ));
+	return( unlist( ref@SheetID ));
 }
 
+#--------------------------------------------------------------------
 #
 # create a range from a text string (e.g. "A1"), potentially
-# including the sheet name ("Sheet1!A2")
+# including the sheet name ("Sheet1!A2").  Also can be a defined
+# name - this adds another lookup, but it's useful to have it
+# in one place (the same way Excel works).
 #
-Text.Ref <- function( text ) {
+#--------------------------------------------------------------------
+Text.Ref <- function( reference.text ) {
 
-	# assume A1 input, but check?
-	
-	ref <- BERT$Excel( 147, list( text, TRUE ));
-	if( is.null( ref )) ref <- BERT$Excel( 147, list( text, FALSE ));
+	# try a defined name.  this will convert it to a reference.
+	nr <- BERT$.Excel( 107, list( paste("!", reference.text, sep="" )));
+	if( !is.null( nr ) && !is.na( nr )){
+		reference.text <- substring( nr, 2 );
+	}
+
+	# assume A1 input, but check? names (above) will return R1C1.
+	ref <- BERT$.Excel( 147, list( reference.text, TRUE ));
+	if( !inherits( ref, "xlReference" )){
+		# in R1C1 notation, try again
+		ref <- BERT$.Excel( 147, list( reference.text, FALSE ));
+	}
 	
 	# this function (xlfTextref) returns a non-usable sheet ID.
 	# not sure what it actually refers to, but don't use it
-	ref$sheetID = vector( mode="integer", length=2);
+	ref@SheetID <- c(0L,0L);
 
-	mm <- regexpr( "(.*?)\\!", text )
+	mm <- regexpr( "(.*?)\\!", reference.text )
 	if( mm >= 0 )
 	{
-		sname <- substr( text, mm, attr( mm, "match.length") - mm );
-		ref$sheetID <- GetSheetID( sname );
+		sname <- substr( reference.text, mm, attr( mm, "match.length") - mm );
+		ref@SheetID <- .GetSheetID( sname );
 	}
 
 	return( ref );
 }
 
+#--------------------------------------------------------------------
 #
 # verifies a range, or creates a range from text
 #
-Ensure.Ref <- function( ref ) 
+#--------------------------------------------------------------------
+Ensure.Ref <- function( ref )
 {
 	# ref is a string, try to convert
 	if( is.character( ref )) ref <- Text.Ref( ref );
 
 	# check ref type
-	if( !inherits( ref, "xlRefClass" )) stop( "Bad ref type" );
+	if( !inherits( ref, "xlReference" )) stop( "Bad ref type" );
 
 	return( ref );
 }
 
+#--------------------------------------------------------------------
 #
-# set a cell formula (or value) 
+# the excel API wants R1C1 only, so we need to convert A1 references.
 #
-Set.Cell <- function( ref, formula ) {
+#--------------------------------------------------------------------
+Normalize.Formula <- function( formula.or.value ){
+	if( typeof( formula.or.value ) == "character" 
+		&& !is.na(formula.or.value) 
+		&& length( formula.or.value ) > 0 
+		&& substring( formula.or.value, 1, 1 ) == "=" ){
+		coffset <- new("xlReference", R1=1L, C1=1L);
+		formula.or.value <- BERT$.Excel( 241, list( formula.or.value, TRUE, FALSE, 1, coffset));
+	}
+	return( formula.or.value );
+}
 
-	ref <- Ensure.Ref( ref );	
+#--------------------------------------------------------------------
+# 
+# set a range of formulae (or values).
+#
+# if the value is singular, it will fill all cells in
+# the range with the value.  if the value has nrow and ncol,
+# it will attempt to fill it in the same shape.  if the value
+# has length but not dimensions, then it will fill the range
+# sequentially.
+#
+# repeat.values will recycle the value (default True), but 
+# only if the value is a list or vector.  this has no effect 
+# for shaped ranges.  if repeat.values is False, extra cells
+# will be filled with default.value.  if the value has a shape,
+# and that shape is smaller than the target range, extra rows
+# and columns will be filled with default.value.
+#
+#--------------------------------------------------------------------
+Set.Range <- function( ref, formula.or.value, repeat.values=T, default.value="", column.first=F ){
+	
+	len <- length( formula.or.value );
 
-	rc <- BERT$Excel( 241, list( formula, TRUE, FALSE, 1, BERT$xlRefClass( 1, 1 )));
-	# cat( "RC:", rc, "\n" );
+	# case 1: single value (or formula)
+	if( len == 1 ){
+		Set.Cell( ref, formula.or.value );
+	}
+	else {
+		ref <- Ensure.Ref( ref );
+		range.len <- BERT$nrow(ref) * BERT$ncol(ref);
+		target <- new("xlReference", R1=1L, C1=1L);
+		
+		n.row = nrow( formula.or.value );
+		
+		# case 2: shaped
+		if( !is.null( n.row )){
+			while( nrow( formula.or.value ) < BERT$nrow( ref )){ formula.or.value <- rbind( formula.or.value, default.value, deparse.level=0 ); }
+			while( ncol( formula.or.value ) < BERT$ncol( ref )){ formula.or.value <- cbind( formula.or.value, default.value, deparse.level=0 ); }
+			for( rx in seq( 0, BERT$nrow(ref) - 1 )){
+				target@R1 <- ref@R1 + rx;
+				for( cx in seq( 0, BERT$ncol(ref) - 1 )){
+					target@C1 <- ref@C1 + cx;
+					BERT$.Excel( 0x8000 + 96, list( Normalize.Formula(formula.or.value[rx+1,cx+1]), target ));
+				}
+			}
+		}
+		
+		# case 3: list/vector
+		else {
+			index <- 1;
+			
+			if( range.len > len ){
+				if( repeat.values ){
+					formula.or.value <- c( rep( formula.or.value, length.out=range.len ));
+				}
+				else {
+					formula.or.value <- c( formula.or.value, rep( default.value, length.out=range.len ));
+				}
+			}
 
-	# set
-	BERT$Excel( 0x8000 + 96, list( rc, ref ));
+			if( column.first ){
+				for( cx in seq( 0, BERT$ncol(ref) - 1 )){
+					target@C1 <- ref@C1 + cx;
+					for( rx in seq( 0, BERT$nrow(ref) - 1 )){
+						target@R1 <- ref@R1 + rx;
+						BERT$.Excel( 0x8000 + 96, list( Normalize.Formula(formula.or.value[index]), target ));
+						index <- index + 1;
+					}
+				}
+			}
+			else {
+				for( rx in seq( 0, BERT$nrow(ref) - 1 )){
+					target@R1 <- ref@R1 + rx;
+					for( cx in seq( 0, BERT$ncol(ref) - 1 )){
+						target@C1 <- ref@C1 + cx;
+						BERT$.Excel( 0x8000 + 96, list( Normalize.Formula(formula.or.value[index]), target ));
+						index <- index + 1;
+					}
+				}
+			}
+		}
+	}
 
 }
 
+#--------------------------------------------------------------------
+#
+# set a cell formula (or value).  
+#
+# this function uses xlcFormulaFill. if the reference is
+# a range, then it will set all cells to the same formula 
+# (or value).  it won't fill a range with values from a 
+# vector.
+#
+#--------------------------------------------------------------------
+Set.Cell <- function( ref, formula.or.value ) {
+	BERT$.Excel( 0x8000 + 97, list( Normalize.Formula( formula.or.value ), Ensure.Ref( ref ) ));
+}
+
+#--------------------------------------------------------------------
+#
+# like Set.Cell, but this version uses xlcFormulaArray.
+# it's the same thing, but like pressing Ctrl+Alt+Enter.
+# use if you are setting an array formula.
+#
+#--------------------------------------------------------------------
+Set.Array <- function( ref, formula.or.value ){
+	BERT$.Excel( 0x8000 + 98, list( Normalize.Formula( formula.or.value ), Ensure.Ref( ref ) ));
+}
+
+#--------------------------------------------------------------------
 #
 # get a cell or range of cells, as matrix
 #
+#--------------------------------------------------------------------
 Get.Range <- function( ref ) {
-
-	ref <- Ensure.Ref( ref );	
-	BERT$Excel( 0x4002, list( ref )); 
-}
-
-#
-# select a range of cells
-#
-Select.Range <- function( ref ) {
-
 	ref <- Ensure.Ref( ref );
-	BERT$Excel( 0x8000 + 109, list( ref ));
-
+	BERT$.Excel( 0x4002, list( ref ));
 }
 
+#--------------------------------------------------------------------
+#
+# get the selected range, as a matrix
+#
+#--------------------------------------------------------------------
+Get.Selection <- function( ref ){ 
+	sel <- BERT$.Excel( 95, list());
+	Get.Range(sel);
+}
+
+#--------------------------------------------------------------------
 #
 # select a range of cells
 #
-Calculate.Sheet <- function(){
-
-	BERT$Excel( 0x8000 + 31, list());
-
+#--------------------------------------------------------------------
+Select.Range <- function( ref ) {
+	ref <- Ensure.Ref( ref );
+	BERT$.Excel( 0x8000 + 109, list( ref ));
 }
 
+#--------------------------------------------------------------------
+#
+# recalculate
+#
+#--------------------------------------------------------------------
+Calculate.Sheet <- function(){
+	BERT$.Excel( 0x8000 + 31, list());
+}
+
+#--------------------------------------------------------------------
 #
 # run a vba macro, by absolute name (e.g. "ThisWorkbook.Macro1")
 #
+#--------------------------------------------------------------------
 Run.Macro <- function( name ){
-
-	BERT$Excel( 0x8000 + 17, list( name ));
-
+	BERT$.Excel( 0x8000 + 17, list( name ));
 }
+
+}); # end with
+
+#
+# now attach to add them to the console search path
+#
+
+suppressMessages(attach( BERT.Excel ));
+
 
