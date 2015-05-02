@@ -44,6 +44,8 @@ std::string moneyToken;
 SVECTOR baseWordList;
 bool wlInit = false;
 
+bool reopenWindow = false;
+
 int historyPointer = 0;
 std::string historyCurrentLine;
 
@@ -68,6 +70,8 @@ std::vector< std::string > fontlist;
 
 int promptwidth = 0;
 bool autowidth = true;
+
+HWND hWndExcel = 0;
 
 int CALLBACK EnumFontFamExProc(const LOGFONTA *lpelfe, const TEXTMETRICA *lpntme, DWORD FontType, LPARAM lParam)
 {
@@ -365,6 +369,24 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleOptionsDlgProc(HWND hwndDlg, UINT message, WP
 		break;
 	}
 	return FALSE;
+}
+
+void ToggleOnTop(HWND hwnd){
+
+	DWORD dw;
+	if (CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_ON_TOP) && dw) dw = 0;
+	else dw = 1;
+
+	CheckMenuItem(
+		::GetMenu(hwnd),
+		ID_CONSOLE_ALWAYSONTOP,
+		dw ? MF_CHECKED : MF_UNCHECKED
+	);
+
+	CRegistryUtils::SetRegDWORD(HKEY_CURRENT_USER, dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_ON_TOP);
+
+	// we're going to exit after this, so we don't explicitly change the parent
+
 }
 
 void ConsoleOptions( HWND hwnd )
@@ -1078,8 +1100,19 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 
 		{
 			HMENU hMenu = (HMENU)::LoadMenu(ghModule, MAKEINTRESOURCE(IDR_CONSOLEMENU));
-			if (hMenu != INVALID_HANDLE_VALUE)
+			if (hMenu != INVALID_HANDLE_VALUE){
 				::SetMenu(hwndDlg, hMenu);
+
+				DWORD dw;
+				if (CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_ON_TOP) && dw)
+				{
+					CheckMenuItem(
+						hMenu,
+						ID_CONSOLE_ALWAYSONTOP ,
+						MF_CHECKED
+						);
+				}
+			}
 		}
 
 
@@ -1241,6 +1274,12 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 			ConsoleOptions(hwndDlg);
 			break;
 
+		case ID_CONSOLE_ALWAYSONTOP:
+			ToggleOnTop(hwndDlg);
+			reopenWindow = true;
+
+			// now close so we can reopen (drop into next case)
+
 		case ID_CONSOLE_CLOSECONSOLE:
 		case WM_CLOSE_CONSOLE:
 		case IDOK:
@@ -1288,44 +1327,60 @@ DWORD WINAPI ThreadProc(LPVOID lpParameter)
 
 	// Create the window.
 
-	HWND hwnd = CreateWindowEx(
-		0,                              // Optional window styles.
-		CLASS_NAME,                     // Window class
-		L"Console",						// Window text
-		WS_OVERLAPPEDWINDOW,            // Window style
+	hWndExcel = (HWND)lpParameter;
 
-		// Size and position
-		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+	// we may close and re-open the window.
 
-		0, // (HWND)lpParameter,       // Parent window    
-		NULL,       // Menu
-		ghModule,  // Instance handle
-		NULL        // Additional application data
-		);
-
-	if (hwnd == NULL)
+	reopenWindow = true;
+	while (reopenWindow)
 	{
-		DWORD dwErr = GetLastError();
-		DebugOut("ERR %x\n", dwErr);
+		reopenWindow = false;
+		HWND hwndParent = 0;
+		DWORD dw;
 
-		return 0;
+		if (CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_ON_TOP) && dw)
+			hwndParent = hWndExcel;
+
+		HWND hwnd = CreateWindowEx(
+			0,                              // Optional window styles.
+			CLASS_NAME,                     // Window class
+			L"Console",						// Window text
+			WS_OVERLAPPEDWINDOW,            // Window style
+
+			// Size and position
+			CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+
+			hwndParent,		// Parent window    
+			NULL,			// Menu
+			ghModule,		// Instance handle
+			NULL			// Additional application data
+			);
+
+		if (hwnd == NULL)
+		{
+			DWORD dwErr = GetLastError();
+			DebugOut("ERR %x\n", dwErr);
+
+			return 0;
+		}
+
+		if (first) CenterWindow(hwnd, (HWND)lpParameter);
+		first = false;
+
+		ShowWindow(hwnd, SW_SHOW);
+
+		// Run the message loop.
+
+		MSG msg = {};
+		while (GetMessage(&msg, NULL, 0, 0))
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+
+		hWndConsole = 0;
+	
 	}
-
-	if (first) CenterWindow(hwnd, (HWND)lpParameter);
-	first = false;
-
-	ShowWindow(hwnd, SW_SHOW);
-
-	// Run the message loop.
-
-	MSG msg = {};
-	while (GetMessage(&msg, NULL, 0, 0))
-	{
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-	}
-
-	hWndConsole = 0;
 
 	CoUninitialize();
 	return 0;

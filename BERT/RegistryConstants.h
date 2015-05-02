@@ -38,6 +38,8 @@
 #define REGISTRY_VALUE_CONSOLE_WIDTH		"ConsoleWidth"
 #define REGISTRY_VALUE_CONSOLE_AUTO_WIDTH	"ConsoleAutoWidth"
 
+#define REGISTRY_VALUE_CONSOLE_ON_TOP	"ConsoleOnTop"
+
 #define DEFAULT_ENVIRONMENT				""
 #define DEFAULT_R_USER					"%APPDATA%\\BERT"
 #define DEFAULT_R_HOME					"%APPDATA%\\BERT\\R-3.1.1"
