@@ -75,7 +75,7 @@ Ensure.Ref <- function( ref )
 	# ref is a string, try to convert
 	if( is.character( ref )) ref <- Text.Ref( ref );
 
-	# check ref type
+	# check ref typeGe
 	if( !inherits( ref, "xlReference" )) stop( "Bad ref type" );
 
 	return( ref );
@@ -125,18 +125,18 @@ Set.Range <- function( ref, formula.or.value, repeat.values=T, default.value="",
 	}
 	else {
 		ref <- Ensure.Ref( ref );
-		range.len <- BERT$nrow(ref) * BERT$ncol(ref);
+		range.len <- nrow(ref) * ncol(ref);
 		target <- new("xlReference", R1=1L, C1=1L);
 		
 		n.row = nrow( formula.or.value );
 		
 		# case 2: shaped
 		if( !is.null( n.row )){
-			while( nrow( formula.or.value ) < BERT$nrow( ref )){ formula.or.value <- rbind( formula.or.value, default.value, deparse.level=0 ); }
-			while( ncol( formula.or.value ) < BERT$ncol( ref )){ formula.or.value <- cbind( formula.or.value, default.value, deparse.level=0 ); }
-			for( rx in seq( 0, BERT$nrow(ref) - 1 )){
+			while( nrow( formula.or.value ) < nrow( ref )){ formula.or.value <- rbind( formula.or.value, default.value, deparse.level=0 ); }
+			while( ncol( formula.or.value ) < ncol( ref )){ formula.or.value <- cbind( formula.or.value, default.value, deparse.level=0 ); }
+			for( rx in seq( 0, nrow(ref) - 1 )){
 				target@R1 <- ref@R1 + rx;
-				for( cx in seq( 0, BERT$ncol(ref) - 1 )){
+				for( cx in seq( 0, ncol(ref) - 1 )){
 					target@C1 <- ref@C1 + cx;
 					BERT$.Excel( 0x8000 + 96, list( Normalize.Formula(formula.or.value[rx+1,cx+1]), target ));
 				}
@@ -157,9 +157,9 @@ Set.Range <- function( ref, formula.or.value, repeat.values=T, default.value="",
 			}
 
 			if( column.first ){
-				for( cx in seq( 0, BERT$ncol(ref) - 1 )){
+				for( cx in seq( 0, ncol(ref) - 1 )){
 					target@C1 <- ref@C1 + cx;
-					for( rx in seq( 0, BERT$nrow(ref) - 1 )){
+					for( rx in seq( 0, nrow(ref) - 1 )){
 						target@R1 <- ref@R1 + rx;
 						BERT$.Excel( 0x8000 + 96, list( Normalize.Formula(formula.or.value[index]), target ));
 						index <- index + 1;
@@ -167,9 +167,9 @@ Set.Range <- function( ref, formula.or.value, repeat.values=T, default.value="",
 				}
 			}
 			else {
-				for( rx in seq( 0, BERT$nrow(ref) - 1 )){
+				for( rx in seq( 0, nrow(ref) - 1 )){
 					target@R1 <- ref@R1 + rx;
-					for( cx in seq( 0, BERT$ncol(ref) - 1 )){
+					for( cx in seq( 0, ncol(ref) - 1 )){
 						target@C1 <- ref@C1 + cx;
 						BERT$.Excel( 0x8000 + 96, list( Normalize.Formula(formula.or.value[index]), target ));
 						index <- index + 1;
@@ -251,7 +251,7 @@ Calculate.Sheet <- function(){
 #
 #--------------------------------------------------------------------
 Run.Macro <- function( name ){
-	BERT$.Excel( 0x8000 + 17, list( name ));
+	BERT$.Excel( 0x8000 + 17, list(name));
 }
 
 }); # end with

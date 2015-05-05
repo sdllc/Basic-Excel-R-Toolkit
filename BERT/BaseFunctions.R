@@ -41,9 +41,14 @@ WordList <- function(){
 	wl;
 }
 
+}); # end with(BERT)
+
 #========================================================
 # class type representing an Excel cell reference.
 #========================================================
+
+BERT.Reference <- new.env();
+with( BERT.Reference, {
 
 setClass( "xlReference", 
 	representation( R1 = "integer", C1 = "integer", R2 = "integer", C2 = "integer", SheetID = "integer" ),
@@ -53,12 +58,12 @@ setClass( "xlReference",
 suppressMessages(setMethod( "nrow", "xlReference", function(x){ 
 	if( x@R2 >= x@R1 ){ return( x@R2-x@R1+1 ); }
 	else{ return(1); }
-}, where = BERT));
+}, where = BERT.Reference));
 
 suppressMessages(setMethod( "ncol", "xlReference", function(x){ 
 	if( x@C2 >= x@C1 ){ return( x@C2-x@C1+1 ); }
 	else{ return(1); }
-}, where = BERT));
+}, where = BERT.Reference));
 
 # length isn't really appropriate for this object
 #setMethod( "length", "xlReference", function(x){ return(nrow(x) * ncol(x)); });
@@ -77,7 +82,9 @@ setMethod( "show", "xlReference", function(object){
 	cat( "\n" );
 });
 
-}); # end with(BERT)
+}); # end with(BERT.Reference)
+
+attach( BERT.Reference );
 
 #========================================================
 # overload quit method or it will stop the excel process

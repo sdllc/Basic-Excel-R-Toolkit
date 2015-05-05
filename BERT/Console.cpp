@@ -583,6 +583,17 @@ void UtilityCall( int cmdid )
 }
 */
 
+void CancelCommand(){
+
+	cmdVector.clear();
+
+	fn(ptr, SCI_APPENDTEXT, 1, (sptr_t)"\n");
+	fn(ptr, SCI_AUTOCCANCEL, 0, 0);
+	fn(ptr, SCI_CALLTIPCANCEL, 0, 0);
+
+	Prompt();
+}
+
 void ProcessCommand()
 {
 	DebugOut("ProcessCommand:\t%d\n", GetTickCount());
@@ -665,6 +676,7 @@ void ProcessCommand()
 	{
 		Prompt();
 	}
+
 
 	/*
 	cmdVector.clear();
@@ -769,6 +781,13 @@ LRESULT CALLBACK SubClassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		switch (wParam)
 		{
+		case 'C':
+			if (GetKeyState(VK_CONTROL) < 0){
+				DebugOut("Control-c\n");
+				CancelCommand();
+			}
+			break;
+
 		case VK_ESCAPE:
 			if (!fn(ptr, SCI_AUTOCACTIVE, 0, 0)
 				&& !fn(ptr, SCI_CALLTIPACTIVE, 0, 0))
@@ -1209,7 +1228,7 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 			SCNotification *scn = (SCNotification*)lParam;
 			// DebugOut("CA: %x\n", scn->ch);
 
-			// I think because I switched to utf-8 I'm getting
+			// I think because I switched to utf-8 I'm gettings
 			// double notifications
 
 			if (scn->ch) testAutocomplete();
