@@ -54,8 +54,8 @@ WordList <- function(){
 # utility methods and types
 #========================================================
 
-BERT.Util <- new.env();
-with( BERT.Util, {
+BERT$Util <- new.env();
+with( BERT$Util, {
 
 #--------------------------------------------------------
 # xlReference: s4 class type representing an Excel 
@@ -69,12 +69,12 @@ setClass( "xlReference",
 suppressMessages(setMethod( "nrow", "xlReference", function(x){ 
 	if( x@R2 >= x@R1 ){ return( x@R2-x@R1+1 ); }
 	else{ return(1); }
-}, where = BERT.Util));
+}, where = BERT$Util));
 
 suppressMessages(setMethod( "ncol", "xlReference", function(x){ 
 	if( x@C2 >= x@C1 ){ return( x@C2-x@C1+1 ); }
 	else{ return(1); }
-}, where = BERT.Util));
+}, where = BERT$Util));
 
 # length isn't really appropriate for this object
 #setMethod( "length", "xlReference", function(x){ return(nrow(x) * ncol(x)); });
@@ -99,9 +99,9 @@ setMethod( "show", "xlReference", function(object){
 quit <- function(){ BERT$CloseConsole() }
 q <- quit;
 
-}); # end with(BERT.Util)
+}); # end with(BERT$Util)
 
-suppressMessages(attach( BERT.Util ));
+suppressMessages(attach( BERT$Util ));
 
 
 
