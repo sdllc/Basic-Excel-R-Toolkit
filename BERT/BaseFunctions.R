@@ -6,6 +6,7 @@ with( BERT, {
 #========================================================
 
 .EXCEL <- 1;
+.CLEAR <- 1021;
 .RELOAD <- 1022;
 .CLOSECONSOLE <- 1023;
 
@@ -14,6 +15,12 @@ with( BERT, {
 #========================================================
 # functions - for general use
 #========================================================
+
+#--------------------------------------------------------
+# clear buffer.  if you want, you can map this to a 
+# 'clear()' function.
+#--------------------------------------------------------
+ClearBuffer <- function(){ invisible(.Call(.CALLBACK, .CLEAR, 0, PACKAGE=.MODULE )); };
 
 #--------------------------------------------------------
 # close the console
@@ -44,34 +51,37 @@ WordList <- function(){
 }); # end with(BERT)
 
 #========================================================
-# class type representing an Excel cell reference.
+# utility methods and types
 #========================================================
 
-BERT.Reference <- new.env();
-with( BERT.Reference, {
+BERT.Util <- new.env();
+with( BERT.Util, {
 
+#--------------------------------------------------------
+# xlReference: s4 class type representing an Excel 
+# cell reference.  
+#--------------------------------------------------------
 setClass( "xlReference", 
-	representation( R1 = "integer", C1 = "integer", R2 = "integer", C2 = "integer", SheetID = "integer" ),
-	prototype( R1 = 0L, C1 = 0L, R2 = 0L, C2 = 0L, SheetID = c(0L,0L))
+	slots = c( R1 = "numeric", C1 = "numeric", R2 = "numeric", C2 = "numeric", SheetID = "numeric" ),
+	prototype = list( R1 = 0, C1 = 0, R2 = 0, C2 = 0, SheetID = c(0,0))
 	);
 
 suppressMessages(setMethod( "nrow", "xlReference", function(x){ 
 	if( x@R2 >= x@R1 ){ return( x@R2-x@R1+1 ); }
 	else{ return(1); }
-}, where = BERT.Reference));
+}, where = BERT.Util));
 
 suppressMessages(setMethod( "ncol", "xlReference", function(x){ 
 	if( x@C2 >= x@C1 ){ return( x@C2-x@C1+1 ); }
 	else{ return(1); }
-}, where = BERT.Reference));
+}, where = BERT.Util));
 
 # length isn't really appropriate for this object
 #setMethod( "length", "xlReference", function(x){ return(nrow(x) * ncol(x)); });
 
 setMethod( "show", "xlReference", function(object){
 	cat( "Excel Reference ", "R", object@R1, "C", object@C1, sep="" );
-	if( object@R2 >= object@R1 && object@C2 >= object@C1 
-		&& ( object@R1 != object@R2 || object@C1 != object@C2 ))
+	if( object@R2 > object@R1 || object@C2 > object@C1 )
 	{
 		cat( ":", "R", object@R2, "C", object@C2, sep="" );
 	}
@@ -82,16 +92,16 @@ setMethod( "show", "xlReference", function(object){
 	cat( "\n" );
 });
 
-}); # end with(BERT.Reference)
-
-attach( BERT.Reference );
-
-#========================================================
+#--------------------------------------------------------
 # overload quit method or it will stop the excel process
-#========================================================
+#--------------------------------------------------------
 
 quit <- function(){ BERT$CloseConsole() }
 q <- quit;
+
+}); # end with(BERT.Util)
+
+suppressMessages(attach( BERT.Util ));
 
 
 

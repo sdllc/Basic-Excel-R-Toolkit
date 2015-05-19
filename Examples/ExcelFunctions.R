@@ -254,6 +254,31 @@ Run.Macro <- function( name ){
 	BERT$.Excel( 0x8000 + 17, list(name));
 }
 
+#--------------------------------------------------------------------
+#
+# list named ranges
+#
+#--------------------------------------------------------------------
+List.Names <- function(){
+
+	# this is returned as a matrix because of the internal
+	# excel type; here we flatten for convenience
+	
+	unlist(BERT$.Excel( 122, list()));
+}
+
+#--------------------------------------------------------------------
+#
+# define a named range
+#
+#--------------------------------------------------------------------
+Define.Name <- function( name, ref ){
+
+	ref <- Ensure.Ref( ref );
+	BERT$.Excel( 0x8000+61, list(name, ref));
+	
+}
+
 }); # end with
 
 #

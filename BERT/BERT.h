@@ -111,7 +111,11 @@ short BERT_HomeDirectory();
 /** */
 short BERT_Reload();
 
+void ClearConsole();
+
 void CloseConsole();
+
+void CloseConsoleAsync();
 
 PARSE_STATUS_2 RExecVectorBuffered(std::vector<std::string> &cmd );
 

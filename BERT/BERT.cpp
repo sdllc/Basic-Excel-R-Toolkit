@@ -279,11 +279,27 @@ short BERT_Configure()
 	return 1;
 }
 
+void ClearConsole()
+{
+	if (hWndConsole)
+	{
+		::PostMessageA(hWndConsole, WM_COMMAND, MAKEWPARAM(WM_CLEAR_BUFFER, 0), 0);
+	}
+}
+
 void CloseConsole()
 {
 	if (hWndConsole)
 	{
 		::PostMessageA(hWndConsole, WM_COMMAND, MAKEWPARAM(WM_CLOSE_CONSOLE,0), 0);
+	}
+}
+
+void CloseConsoleAsync()
+{
+	if (hWndConsole)
+	{
+		::PostMessageA(hWndConsole, WM_COMMAND, MAKEWPARAM(WM_CLOSE_CONSOLE_ASYNC, 0), 0);
 	}
 }
 

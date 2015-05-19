@@ -32,6 +32,7 @@ typedef enum
 {
 	CC_EXCEL =			1,
 
+	CC_CLEAR =			1021,
 	CC_RELOAD =			1022,
 	CC_CLOSECONSOLE =	1023,
 

@@ -60,6 +60,7 @@ sptr_t* ptr;
 extern void flush_log();
 
 bool inputlock = false;
+bool exitpending = false;
 
 RECT rectConsole = { 0, 0, 0, 0 };
 
@@ -558,6 +559,10 @@ DWORD WINAPI CallThreadProc(LPVOID lpParameter)
 	SafeCall(SCC_EXEC, &cmdVector, &ips);
 	::PostMessage(hwnd, WM_CALL_COMPLETE, ips, 0);
 	::CoUninitialize();
+	if (exitpending){
+		exitpending = false;
+		::PostMessage(hwnd, WM_COMMAND, WM_CLOSE_CONSOLE, 0);
+	}
 	return 0;
 }
 
@@ -781,10 +786,21 @@ LRESULT CALLBACK SubClassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		switch (wParam)
 		{
+
+		// don't know if I prefer this as copy or cancel.  ultimately copy 
+		// is available via the menu, whilst we need a key for cancel.  
+		// FIXME? how about, if there's a selection then copy; otherwise cancel.  
+		// too confusing? actually I think it works, it's contextual.
+
 		case 'C':
 			if (GetKeyState(VK_CONTROL) < 0){
 				DebugOut("Control-c\n");
-				CancelCommand();
+				int start = fn(ptr, SCI_GETSELECTIONSTART, 0, 0);
+				int end = fn(ptr, SCI_GETSELECTIONEND, 0, 0);
+				if (end == start){
+					DebugOut("Cancel");
+					CancelCommand();
+				}
 			}
 			break;
 
@@ -1110,6 +1126,9 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 	{
 	case WM_INITDIALOG:
 	case WM_CREATE:
+
+		exitpending = false;
+
 		::GetClientRect(hwndDlg, &rect);
 
 		{
@@ -1264,6 +1283,7 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 
 		switch (LOWORD(wParam))
 		{
+		case WM_CLEAR_BUFFER:
 		case ID_CONSOLE_CLEARHISTORY:
 			ClearHistory();
 			break;
@@ -1295,6 +1315,17 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 			ShowWindow(hwndDlg, SW_HIDE);
 			::PostMessage(hwndDlg, WM_DESTROY, 0, 0);
 			break;
+
+		// this message is used in case the close console command
+		// is called interactively; in that event we will be in the middle
+		// of a COM call and we don't want to break here.  wait until the
+		// call is complete.  if it's called some other way (such as from
+		// excel, which it should not be), then you can close.
+		case WM_CLOSE_CONSOLE_ASYNC:
+			if (inputlock) {
+				exitpending = true;
+				break;
+			}
 
 		case ID_CONSOLE_CLOSECONSOLE:
 		case WM_CLOSE_CONSOLE:
