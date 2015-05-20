@@ -29,6 +29,78 @@
 
 extern HMODULE ghModule;
 
+// windows imaging
+#include <wincodec.h>
+#include <atlbase.h>
+
+HBITMAP loadPNG( HMODULE mod, int rsrcID ){
+
+	HBITMAP hbmp = 0;
+	HRESULT hr;
+	static CComPtr<IWICImagingFactory> pFactory = 0;
+
+	if (!pFactory){
+		hr = CoCreateInstance(CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, IID_IWICImagingFactory, (void**)&pFactory);
+		if (FAILED(hr) || !pFactory) return 0;
+	}
+
+	CComPtr<IStream> pStream = 0;
+	CComPtr<IWICBitmapSource> pBitmap = 0;
+
+	HRSRC hrsrc = FindResource(mod, MAKEINTRESOURCE(rsrcID), L"PNG");
+	DWORD dwSize = SizeofResource(mod, hrsrc);
+	HGLOBAL hImage = LoadResource(mod, hrsrc);
+	void * pSource = LockResource(hImage);
+	HGLOBAL hData = GlobalAlloc(GMEM_MOVEABLE, dwSize);
+
+	if (hData){
+		void * pData = GlobalLock(hData);
+		CopyMemory(pData, pSource, dwSize);
+		GlobalUnlock(hData);
+		CreateStreamOnHGlobal(hData, TRUE, &pStream);
+	}
+
+	if (pStream){
+		CComPtr<IWICBitmapDecoder> pDecoder = 0;
+		CoCreateInstance(CLSID_WICPngDecoder, NULL, CLSCTX_INPROC_SERVER, __uuidof(pDecoder), reinterpret_cast<void**>(&pDecoder));
+		pDecoder->Initialize(pStream, WICDecodeMetadataCacheOnLoad);
+
+		CComPtr<IWICBitmapFrameDecode> pFrame = 0;
+		pDecoder->GetFrame(0, &pFrame);
+
+		CComQIPtr<IWICBitmapSource> pSource(pFrame);
+		hr = WICConvertBitmapSource(GUID_WICPixelFormat32bppPBGRA, pSource, &pBitmap);
+	}
+
+	if (pBitmap){
+
+		UINT w, h;
+		hr = pBitmap->GetSize(&w, &h);
+
+		if (SUCCEEDED(hr)){
+
+			BITMAPINFO bmi;
+			ZeroMemory(&bmi, sizeof(bmi));
+			bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+			bmi.bmiHeader.biWidth = w;
+			bmi.bmiHeader.biHeight = -((LONG)h);
+			bmi.bmiHeader.biPlanes = 1;
+			bmi.bmiHeader.biBitCount = 32;
+			bmi.bmiHeader.biCompression = BI_RGB;
+
+			void * pImage = NULL;
+			HDC hdcScreen = GetDC(NULL);
+			hbmp = CreateDIBSection(hdcScreen, &bmi, DIB_RGB_COLORS, &pImage, NULL, 0);
+			ReleaseDC(NULL, hdcScreen);
+
+			hr = pBitmap->CopyPixels(NULL, w * 4, w * h * 4, static_cast<BYTE *>(pImage));
+
+		}
+	}
+
+	return hbmp;
+}
+
 void CenterWindow(HWND hWnd, HWND hParent, int offsetX, int offsetY)
 {
 	RECT rectWnd;
@@ -54,7 +126,8 @@ void CenterWindow(HWND hWnd, HWND hParent, int offsetX, int offsetY)
 
 DIALOG_RESULT_TYPE CALLBACK AboutDlgProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	
+	static HBITMAP hbmp = 0;
+
 	switch (message)
 	{
 	case WM_INITDIALOG:
@@ -67,7 +140,38 @@ DIALOG_RESULT_TYPE CALLBACK AboutDlgProc(HWND hwndDlg, UINT message, WPARAM wPar
 		SubclassLinkLabel(::GetDlgItem(hwndDlg, IDC_STATIC_R_LINK), R_LINK, R_LINK_TEXT);
 		SubclassLinkLabel(::GetDlgItem(hwndDlg, IDC_STATIC_SCINTILLA_LINK), SCINTILLA_LINK, SCINTILLA_LINK_TEXT);
 
+		hbmp = loadPNG(ghModule, IDB_PNG1);
+
 		CenterWindow(hwndDlg, ::GetParent(hwndDlg));
+		break;
+
+	case WM_PAINT:
+		{
+			PAINTSTRUCT ps;
+			BITMAP bitmap;
+			HGDIOBJ oldBitmap;
+			RECT rc;
+			HDC hdc = BeginPaint(hwndDlg, &ps);
+
+			::GetWindowRect(hwndDlg, &rc);
+
+			BLENDFUNCTION bStruct;
+			bStruct.BlendOp = AC_SRC_OVER;
+			bStruct.BlendFlags = 0;
+			bStruct.SourceConstantAlpha = 255;
+			bStruct.AlphaFormat = AC_SRC_ALPHA;
+
+			HDC memdc = CreateCompatibleDC(hdc);
+			oldBitmap = SelectObject(memdc, hbmp);
+
+			GetObject(hbmp, sizeof(bitmap), &bitmap);
+			AlphaBlend(hdc, rc.right - rc.left - bitmap.bmWidth - 15, 0, bitmap.bmWidth, bitmap.bmHeight, memdc, 0, 0, bitmap.bmWidth, bitmap.bmHeight, bStruct);
+
+			SelectObject(memdc, oldBitmap);
+			DeleteDC(memdc);
+
+			EndPaint(hwndDlg, &ps);
+		}
 		break;
 
 	case WM_COMMAND:
@@ -76,6 +180,10 @@ DIALOG_RESULT_TYPE CALLBACK AboutDlgProc(HWND hwndDlg, UINT message, WPARAM wPar
 		{
 		case IDOK:
 		case IDCANCEL:
+			
+			if (hbmp) ::DeleteObject(hbmp);
+			hbmp = 0;
+
 			EndDialog(hwndDlg, wParam);
 			return TRUE;
 		}

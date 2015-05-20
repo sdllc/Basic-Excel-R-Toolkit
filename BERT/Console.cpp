@@ -1392,7 +1392,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParameter)
 		HWND hwnd = CreateWindowEx(
 			0,                              // Optional window styles.
 			CLASS_NAME,                     // Window class
-			L"Console",						// Window text
+			CONSOLE_WINDOW_TITLE,			// Window text
 			WS_OVERLAPPEDWINDOW,            // Window style
 
 			// Size and position

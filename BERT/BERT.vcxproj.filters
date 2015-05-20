@@ -119,4 +119,12 @@
   <ItemGroup>
     <Text Include="RWordlist.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\images\bert-logo.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\images\bert-logo.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
 </Project>
