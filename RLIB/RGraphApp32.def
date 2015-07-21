@@ -32,7 +32,7 @@ GA_apperror
 GA_askUserPass
 GA_askcdstring
 GA_askchangedir
-GA_askfilename
+GA_askfilename = _GA_askfilesavewithdir
 GA_askfilenames
 GA_askfilenamewithdir
 GA_askfilesave
@@ -42,7 +42,7 @@ GA_askokcancel
 GA_askpassword
 GA_askstring
 GA_askyesno
-GA_askyesnocancel
+GA_askyesnocancel = _GA_askfilesave
 GA_bitblt
 GA_bitmaptoimage
 GA_bottomleft
@@ -376,7 +376,7 @@ GA_undotext
 GA_unhighlight
 GA_updatestatus
 GA_waitevent
-askfilenameW
+askfilenameW = _GA_askcdstring
 askfilenamesW
 askfilesaveW
 gcopyalpha2
@@ -385,3 +385,5 @@ gfillpolypolygon
 gmaskimage
 gstrwidth1
 setuserfilterW
+
+

@@ -403,7 +403,6 @@ R_qsort_int_I
 R_registerRoutines
 R_removeTaskCallback
 R_rsort
-R_running_as_main_program
 R_setInternetRoutines
 R_setLapackRoutines
 R_setStartTime

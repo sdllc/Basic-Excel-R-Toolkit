@@ -29,7 +29,7 @@
 #define BERT_LINK			L"http://" BERT_LINK_TEXT
 
 #define ABOUT_R_TEXT \
-	L"Includes R version 3.2.0 (2015-04-16) -- \"Full of Ingredients\"\r\n" \
+	L"Includes R version 3.2.1 (2015-06-18) -- \"World-Famous Astronaut\"\r\n" \
 	L"Copyright (C) 2015 The R Foundation for Statistical Computing"
 
 #define R_LINK_TEXT			L"www.r-project.org"

@@ -45,7 +45,7 @@ Function ExitOnError( $message ) {
 #---------------------------------------------
 Function GenerateDef( $sub, $key ) {
 
-	Write-Host "Generating $key-bit .defs" -foregroundcolor yellow ;
+	Write-Host "Generating $key-bit .defs (R.dll)" -foregroundcolor yellow ;
 
 	$symbols = dumpbin /exports $r\bin\$sub\R.dll | Out-String
 	ExitOnError;
@@ -57,6 +57,18 @@ Function GenerateDef( $sub, $key ) {
 	echo "LIBRARY R`nEXPORTS`n`n$symbols`n" | Out-File -encoding ASCII R$key.def
 	ExitOnError;
 
+	Write-Host "Generating $key-bit .defs (RGraphApp.dll)" -foregroundcolor yellow ;
+
+	$symbols = dumpbin /exports $r\bin\$sub\RGraphApp.dll | Out-String
+	ExitOnError;
+	
+	$symbols = ($symbols -replace "(?s)^.*ordinal.*?\n", "");
+	$symbols = ($symbols -replace "(?s)\n\s*Summary.*?$", "");
+	$symbols = ($symbols -replace "(?m)^\s+\S+\s+\S+\s+\S+\s+", "");
+
+	echo "LIBRARY RGraphApp`nEXPORTS`n`n$symbols`n" | Out-File -encoding ASCII RGraphApp$key.def
+	ExitOnError;
+
 }
 
 #---------------------------------------------
@@ -66,6 +78,7 @@ Function GenerateLib( $machine, $key ){
 
 	Write-Host "Generating $key-bit libs" -foregroundcolor yellow ;
 	lib /machine:$machine /def:R$key.def /out:R$key.lib
+	lib /machine:$machine /def:RGraphApp$key.def /out:RGraphApp$key.lib
 	ExitOnError;
 
 }
