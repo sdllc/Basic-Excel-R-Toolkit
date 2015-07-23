@@ -109,6 +109,14 @@ bool ColorDlg(HWND hwnd, DWORD &dwColor )
 	return rslt;
 }
 
+COLORREF getCaretColor(COLORREF backgroundColor){
+	double Y = 0.299 * GetRValue(backgroundColor)
+		+ 0.587 * GetGValue(backgroundColor)
+		+ 0.114 * GetBValue(backgroundColor);
+	if (Y < 128) return RGB(255, 255, 255);
+	return 0;
+}
+
 DIALOG_RESULT_TYPE CALLBACK ConsoleOptionsDlgProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	HWND hwnd;
@@ -341,6 +349,9 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleOptionsDlgProc(HWND hwndDlg, UINT message, WP
 			fn(ptr, SCI_STYLESETBACK, 1, dwBack);
 			fn(ptr, SCI_STYLESETBACK, 32, dwBack);
 			::EnableWindow(::GetDlgItem(hwndDlg, IDAPPLY), 0);
+
+			// caret color.  for dark backgrounds, set caret to white.
+			fn(ptr, SCI_SETCARETFORE, getCaretColor(dwBack), 0);
 
 			if (LOWORD(wParam) == IDAPPLY) break;
 
@@ -1027,6 +1038,9 @@ void SetConsoleDefaults()
 	fn(ptr, SCI_STYLESETBACK, 0, dw);
 	fn(ptr, SCI_STYLESETBACK, 1, dw);
 	fn(ptr, SCI_STYLESETBACK, 32, dw);
+
+	// caret color.  for dark backgrounds, set caret to white.
+	fn(ptr, SCI_SETCARETFORE, getCaretColor(dw), 0);
 
 	if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_AUTO_WIDTH)
 		|| dw < 0) dw = DEFAULT_CONSOLE_AUTO_WIDTH;
