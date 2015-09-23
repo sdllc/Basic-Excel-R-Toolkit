@@ -146,7 +146,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>ExcelLib;..\RLIB</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>BERT.def</ModuleDefinitionFile>
-      <AdditionalDependencies>R64.lib;RGraphApp64.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Msimg32.lib;Windowscodecs.lib;R64.lib;RGraphApp64.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>BERT64D.xll</OutputFile>
     </Link>
   </ItemDefinitionGroup>

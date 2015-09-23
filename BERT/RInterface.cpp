@@ -710,8 +710,23 @@ int getNames(SVECTOR &vec, const std::string &token)
 	SEXP obj = resolveObject(token);
 	if (obj && TYPEOF(obj) != NILSXP)
 	{
+		// UPDATE to support refClasses.  these appear as s4 objects, but we 
+		// actually want to map the environment (ls), not the class slots (slotNames).  
+		// also the deref operator for refClasses is $, not @.
+
 		SEXP rslt;
-		if (TYPEOF(obj) == ENVSXP) rslt = PROTECT(R_tryEval(Rf_lang2(Rf_install("ls"), obj), R_GlobalEnv, &err));
+		bool isEnv = false;
+		
+		if( TYPEOF(obj) == ENVSXP) isEnv = true; // easy
+		else if(TYPEOF(obj) == S4SXP ) { // less so
+			rslt = PROTECT(R_tryEval(Rf_lang2(Rf_install("is.environment"), obj), R_GlobalEnv, &err));
+			if (rslt && TYPEOF(rslt) != NILSXP) {
+				isEnv = (INTEGER(rslt)[0]) ? true : false;
+			}
+			UNPROTECT(1);
+		}
+
+		if (isEnv) rslt = PROTECT(R_tryEval(Rf_lang2(Rf_install("ls"), obj), R_GlobalEnv, &err));
 		else if (TYPEOF(obj) == S4SXP)
 		{
 			rslt = PROTECT(R_tryEval(Rf_lang2(Rf_install("slotNames"), obj), R_GlobalEnv, &err));
