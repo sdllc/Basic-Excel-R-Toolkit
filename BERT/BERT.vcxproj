@@ -127,7 +127,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>ExcelLib;..\RLIB</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>BERT.def</ModuleDefinitionFile>
-      <AdditionalDependencies>Msimg32.lib;Windowscodecs.lib;R32.lib;RGraphApp32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Winhttp.lib;Msimg32.lib;Windowscodecs.lib;R32.lib;RGraphApp32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>BERT32D.xll</OutputFile>
     </Link>
   </ItemDefinitionGroup>
@@ -146,7 +146,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>ExcelLib;..\RLIB</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>BERT.def</ModuleDefinitionFile>
-      <AdditionalDependencies>Msimg32.lib;Windowscodecs.lib;R64.lib;RGraphApp64.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Winhttp.lib;Msimg32.lib;Windowscodecs.lib;R64.lib;RGraphApp64.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>BERT64D.xll</OutputFile>
     </Link>
   </ItemDefinitionGroup>
@@ -170,7 +170,7 @@
       <AdditionalLibraryDirectories>ExcelLib;..\RLIB</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>BERT.def</ModuleDefinitionFile>
       <OutputFile>BERT32.xll</OutputFile>
-      <AdditionalDependencies>Msimg32.lib;Windowscodecs.lib;R32.lib;RGraphApp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Winhttp.lib;Msimg32.lib;Windowscodecs.lib;R32.lib;RGraphApp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>
@@ -196,7 +196,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>ExcelLib;..\RLIB</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>BERT.def</ModuleDefinitionFile>
-      <AdditionalDependencies>Msimg32.lib;Windowscodecs.lib;R64.lib;RGraphApp64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Winhttp.lib;Msimg32.lib;Windowscodecs.lib;R64.lib;RGraphApp64.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>BERT64.xll</OutputFile>
     </Link>
   </ItemDefinitionGroup>
@@ -258,6 +258,7 @@
     <ClInclude Include="StringConstants.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="ThreadLocalStorage.h" />
+    <ClInclude Include="Updates.h" />
     <ClInclude Include="util.h" />
   </ItemGroup>
   <ItemGroup>
@@ -300,6 +301,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release13|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="ThreadLocalStorage.cpp" />
+    <ClCompile Include="Updates.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="BaseFunctions.R" />

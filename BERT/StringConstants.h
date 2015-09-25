@@ -53,5 +53,14 @@
 
 #define CONSOLE_WINDOW_TITLE L"BERT Console"
 
+// update check messages
+
+#define MSG_CLICK_TO_DOWNLOAD L"Click here to go to the download page."
+
+#define MSG_UP_TO_DATE "You have the latest release"
+#define MSG_UPDATE_AVAILABLE "An update is available"
+#define MSG_UPDATE_CHECK_FAILED "Checking for updates failed. Please try again later."
+#define MSG_YOURS_IS_NEWER "Your software is newer than the current release!"
+
 #endif // #ifndef __STRING_CONSTANTS_H
 

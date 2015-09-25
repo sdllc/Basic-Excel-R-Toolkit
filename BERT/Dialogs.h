@@ -22,6 +22,8 @@
 #define __DIALOGS_H
 
 #define DIALOG_RESULT_TYPE BOOL
+#define TIMER_ID_UPDATE 1000
+#define UPDATE_CHECK_DELAY 2500
 
 DIALOG_RESULT_TYPE CALLBACK OptionsDlgProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam);
 DIALOG_RESULT_TYPE CALLBACK AboutDlgProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam);

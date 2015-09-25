@@ -118,7 +118,7 @@ LRESULT CALLBACK LinkLabelMsgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
 	return CallWindowProc(base, hwnd, message, wParam, lParam);
 }
 
-void ResizeLabel(HWND hwnd)
+void ResizeLabel(HWND hwnd, DWORD style)
 {
 	HDC dc = ::GetDC(hwnd);
 	HFONT font = (HFONT)::SendMessage(hwnd, WM_GETFONT, 0, 0);
@@ -133,8 +133,20 @@ void ResizeLabel(HWND hwnd)
 	{
 		RECT rc;
 		::GetWindowRect(hwnd, &rc);
-		::ScreenToClient(::GetParent(hwnd), (POINT*)&rc);
-		::MoveWindow(hwnd, rc.left, rc.top, size.cx, size.cy, false);
+		::ScreenToClient(::GetParent(hwnd), (POINT*)&rc); 
+
+		if (style & SS_CENTER) {
+
+			::ScreenToClient(::GetParent(hwnd), (POINT*)&(rc.right));
+
+			// center horizontally but leave vertical alone? 
+			int left = ((rc.right - rc.left) - size.cx) / 2;
+			::MoveWindow(hwnd, rc.left + left, rc.top, size.cx, size.cy, false);
+
+		}
+		else {
+			::MoveWindow(hwnd, rc.left, rc.top, size.cx, size.cy, false);
+		}
 	}
 
 	::SelectObject(dc, old);
@@ -160,11 +172,11 @@ void SubclassLinkLabel(HWND hwnd, const WCHAR *link, const WCHAR *text)
 	wcscpy_s(wc, len + 1, link);
 	SetProp(hwnd, TEXT("Link"), (HANDLE)wc);
 
-	DWORD style = GetWindowLongPtr(hwnd, GWL_STYLE);
-	SetWindowLongPtr(hwnd, GWL_STYLE, style | SS_NOTIFY | WS_TABSTOP);
+	DWORD style = GetWindowLongPtr(hwnd, GWL_STYLE) | SS_NOTIFY | WS_TABSTOP;
+	SetWindowLongPtr(hwnd, GWL_STYLE, style);
 
 	if (text) ::SetWindowText(hwnd, text);
-	ResizeLabel(hwnd);
+	ResizeLabel(hwnd, style);
 
 	HFONT font = (HFONT)SendMessage(hwnd, WM_GETFONT, 0, 0);
 	LOGFONT logfont;

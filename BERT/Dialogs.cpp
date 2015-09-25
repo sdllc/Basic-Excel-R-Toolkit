@@ -26,6 +26,7 @@
 #include "StringConstants.h"
 #include "RegistryUtils.h"
 #include "LinkLabel.h"
+#include "Updates.h"
 
 extern HMODULE ghModule;
 
@@ -174,13 +175,85 @@ DIALOG_RESULT_TYPE CALLBACK AboutDlgProc(HWND hwndDlg, UINT message, WPARAM wPar
 		}
 		break;
 
+	case WM_TIMER:
+
+		::KillTimer(hwndDlg, TIMER_ID_UPDATE);
+		{
+			std::string tag;
+			std::string msg;
+			bool appendTag = false;
+			bool link = false;
+
+			int rslt = checkForUpdates(tag); // FIXME: async!
+			switch (rslt) {
+			case UC_UP_TO_DATE:
+				msg = MSG_UP_TO_DATE;
+				appendTag = true;
+				break;
+			case UC_NEW_VERSION_AVAILABLE:
+				msg = MSG_UPDATE_AVAILABLE;
+				appendTag = true;
+				link = true;
+				break;
+			case UC_UPDATE_CHECK_FAILED:
+				msg = MSG_UPDATE_CHECK_FAILED;
+				break;
+			case UC_YOURS_IS_NEWER:
+				msg = MSG_YOURS_IS_NEWER;
+				break;
+			}
+
+			if (appendTag) {
+				msg += " (";
+				msg += tag;
+				msg += ").";
+			}
+
+			if (link) {
+				HWND hwndLink = ::GetDlgItem(hwndDlg, IDC_STATIC_UPDATE_LINK);
+				::ShowWindow(hwndLink, SW_SHOW);
+				SubclassLinkLabel(hwndLink, LATEST_RELEASE_URL, MSG_CLICK_TO_DOWNLOAD);
+			}
+			::SetWindowTextA(::GetDlgItem(hwndDlg, IDC_STATIC_UPDATE_MESSAGE), msg.c_str());
+
+			::EnableWindow(::GetDlgItem(hwndDlg, IDOK), true);
+		}
+		break;
+
 	case WM_COMMAND:
 
 		switch (LOWORD(wParam))
 		{
+		case IDC_STATIC_UPDATE_LINK:
+
+			// do this via timer? TODO
+			//EndDialog(hwndDlg, wParam);
+			//return TRUE;
+
+			break;
+
+		case IDC_BCHECK:
+			
+			::ShowWindow(::GetDlgItem(hwndDlg, IDC_STATIC_ABOUT_BERT), SW_HIDE);
+			::ShowWindow(::GetDlgItem(hwndDlg, IDC_STATIC_ABOUT_R), SW_HIDE);
+			::ShowWindow(::GetDlgItem(hwndDlg, IDC_STATIC_ABOUT_SCINTILLA), SW_HIDE);
+
+			::ShowWindow(::GetDlgItem(hwndDlg, IDC_STATIC_BERT_LINK), SW_HIDE);
+			::ShowWindow(::GetDlgItem(hwndDlg, IDC_STATIC_R_LINK), SW_HIDE);
+			::ShowWindow(::GetDlgItem(hwndDlg, IDC_STATIC_SCINTILLA_LINK), SW_HIDE);
+
+			::ShowWindow(::GetDlgItem(hwndDlg, IDC_STATIC_UPDATE_MESSAGE), SW_SHOW);
+			::SetTimer(hwndDlg, TIMER_ID_UPDATE, UPDATE_CHECK_DELAY, 0);
+
+			::EnableWindow(::GetDlgItem(hwndDlg, IDOK), false);
+			::EnableWindow(::GetDlgItem(hwndDlg, IDC_BCHECK), false);
+
+			break;
+
 		case IDOK:
 		case IDCANCEL:
 			
+			::KillTimer(hwndDlg, TIMER_ID_UPDATE);
 			if (hbmp) ::DeleteObject(hbmp);
 			hbmp = 0;
 
