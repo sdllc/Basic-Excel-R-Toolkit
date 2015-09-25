@@ -56,6 +56,7 @@ STDMETHODIMP CConnect::OnConnection(IDispatch *pApplication, AddInDesignerObject
 	::SetEnvironmentVariableA("PATH", buffer);
 	::SetEnvironmentVariableA("HOME", Home);
 
+
 	delete[] buffer;
 
 	// load xll
@@ -80,7 +81,7 @@ STDMETHODIMP CConnect::OnConnection(IDispatch *pApplication, AddInDesignerObject
 	::PathAddBackslashA(Install);
 	::PathCombineA(XLLPath, Install, BERTXLL);
 
-	CComQIPtr<Excel::_Application> app = m_pApplication;
+	CComQIPtr<Excel::_Application> app(m_pApplication);
 	if (app){
 
 		int rslt = SetCOMPtrs((void*)m_pApplication.p, (void*)this);
@@ -92,17 +93,19 @@ STDMETHODIMP CConnect::OnConnection(IDispatch *pApplication, AddInDesignerObject
 			_bstr_t bstrPath(XLLPath);
 			VARIANT_BOOL vb = VARIANT_FALSE;
 			HRESULT hr = app->RegisterXLL(bstrPath, 1033, &vb);
+
 			if (SUCCEEDED(hr)){
+
 				if (vb) {
-					SetCOMPtrs((void*)m_pApplication.p, (void*)this);
-					// ATLTRACE("Loaded xll OK");
+					rslt = SetCOMPtrs((void*)m_pApplication.p, (void*)this);
+					ATLTRACE("Loaded xll OK");
 				}
 				else {
-					// ATLTRACE("Succeeded but load returned false\n");
+					ATLTRACE("Succeeded but load returned false\n");
 				}
 			}
 			else {
-				// ATLTRACE("Failed with 0x%x\n", hr);
+				ATLTRACE("Failed with 0x%x\n", hr);
 			}
 		}
 	}

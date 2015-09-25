@@ -337,7 +337,7 @@ short BERT_InstallPackages()
 	return 1;
 }
 
-void RInit()
+int RInit()
 {
 	structRstart rp;
 	Rstart Rp = &rp;
@@ -348,9 +348,9 @@ void RInit()
 
 	sprintf_s(Rversion, 25, "%s.%s", R_MAJOR, R_MINOR);
 	if (strcmp(getDLLVersion(), Rversion) != 0) {
-		fprintf(stderr, "Error: R.DLL version does not match\n");
+		// fprintf(stderr, "Error: R.DLL version does not match\n");
 		// exit(1);
-		return;
+		return -1;
 	}
 
 	muxLog = ::CreateMutex(0, 0, 0);
@@ -495,6 +495,8 @@ void RInit()
 
 	LoadStartupFile();
 	MapFunctions();
+
+	return 0;
 
 }
 

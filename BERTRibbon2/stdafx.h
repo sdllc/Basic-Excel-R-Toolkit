@@ -88,10 +88,10 @@ extern CBERTRibbon2Module _AtlModule;
 
 // @see BERTCOM.cpp about these files
 
-#include "..\BERT\mso.tlh"
+#include "..\BERT\mso-15.tlh"
 using namespace Office;
 
-#include "..\BERT\excel.tlh"
+#include "..\BERT\excel-15.tlh"
 
 
 

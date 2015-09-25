@@ -449,7 +449,7 @@ void SysInit()
 	muxWordlist = CreateMutex(0, 0, 0);
 	muxLogList = CreateMutex(0, 0, 0);
 
-	RInit();
+	if (RInit()) return;
 
 	// loop through the function table and register the functions
 

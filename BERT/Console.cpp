@@ -558,8 +558,6 @@ void CallComplete(PARSE_STATUS_2 ps, LPARAM lParam)
 		Prompt();
 	}
 
-	DebugOut("Done:\t%d\n", GetTickCount()); 
-
 }
 
 DWORD WINAPI CallThreadProc(LPVOID lpParameter)
@@ -576,28 +574,6 @@ DWORD WINAPI CallThreadProc(LPVOID lpParameter)
 	}
 	return 0;
 }
-
-/*
-DWORD WINAPI UtilityThreadProc(LPVOID lpParameter)
-{
-	HWND hwnd = (HWND)lpParameter;
-	int cmd = (int)lpParameter;
-	switch (cmd)
-	{
-	case ID_CONSOLE_RELOADSTARTUPFILE:
-		SafeCall(SCC_RELOAD_STARTUP, 0, 0);
-		break;
-	}
-	::PostMessage(hWndConsole, WM_CALL_COMPLETE, PARSE2_OK, 1);
-	return 0;
-}
-
-void UtilityCall( int cmdid )
-{
-	DWORD dwThread;
-	::CreateThread(0, 0, UtilityThreadProc, (void*)cmdid, 0, &dwThread);
-}
-*/
 
 void CancelCommand(){
 
@@ -693,16 +669,6 @@ void ProcessCommand()
 		Prompt();
 	}
 
-
-	/*
-	cmdVector.clear();
-
-	Prompt();
-
-	if (wl) initWordList();
-
-	DebugOut("Done:\t%d\n", GetTickCount());
-	*/
 
 }
 

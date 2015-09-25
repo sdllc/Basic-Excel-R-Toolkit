@@ -48,7 +48,7 @@ extern std::string dllpath;
 
 extern FDVECTOR RFunctions;
 
-void RInit();
+int RInit();
 void RShutdown();
 
 LPXLOPER12 BERT_RExec(LPXLOPER12 code);

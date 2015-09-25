@@ -137,6 +137,7 @@ public:
 
 
 	int SetCOMPtrs(void *pexcel, void *pribbon)
+//	int SetCOMPtrs(Excel::_Application *pexcel, void *pribbon)
 	{
 		// this is just -1 for the current process
 		HANDLE h = GetCurrentProcess();
@@ -154,7 +155,8 @@ public:
 				{
 					std::string str(szModName);
 
-					// this is fragile, because it's a filename.  
+					// this is fragile, because it's a filename.  is this actually expensive if 
+					// we call on other modules?
 
 					if (std::string::npos != str.find("BERT")
 						&& std::string::npos != str.find(".xll"))
@@ -162,7 +164,8 @@ public:
 						SPPROC sp;
 						sp = (SPPROC)::GetProcAddress(hMods[i], "BERT_SetPtr");
 						if (sp){
-							sp((LPVOID)m_pApplication.p);
+//							sp((LPVOID)m_pApplication.p);
+							sp((LPVOID)pexcel);
 							rslt = 0;
 						}
 					}
@@ -180,38 +183,6 @@ public:
 			&& pdispparams->rgvarg[0].vt == VT_DISPATCH)
 		{
 			m_pRibbonUI = pdispparams->rgvarg[0].pdispVal;
-			/*
-			{
-				// this is just -1 for the current process
-				HANDLE h = GetCurrentProcess(); 
-
-				HMODULE hMods[1024];
-				HANDLE hProcess;
-				DWORD cbNeeded;
-
-				if (EnumProcessModules(h, hMods, sizeof(hMods), &cbNeeded))
-				{
-					for (int i = 0; i < (cbNeeded / sizeof(HMODULE)); i++)
-					{
-						char szModName[MAX_PATH];
-						if (GetModuleFileNameExA(h, hMods[i], szModName, sizeof(szModName) / sizeof(char)))
-						{
-							std::string str(szModName);
-
-							// this is fragile, because it's a filename.  
-
-							if (std::string::npos != str.find("BERT") 
-								&& std::string::npos != str.find(".xll"))
-							{
-								SPPROC sp;
-								sp = (SPPROC)::GetProcAddress(hMods[i], "BERT_SetPtr");
-								if (sp) sp((LPVOID)m_pApplication.p);
-							}
-						}
-					}
-				}
-			}
-			*/
 			return S_OK;
 		}
 		return E_FAIL;
@@ -219,7 +190,7 @@ public:
 
 	HRESULT HandleControlInvocation(const char *szCmd)
 	{
-		CComQIPtr< Excel::_Application > pApp = m_pApplication;
+		CComQIPtr< Excel::_Application > pApp(m_pApplication);
 		if (pApp)
 		{
 			CComBSTR bstrCmd(szCmd);

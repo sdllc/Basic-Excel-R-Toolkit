@@ -29,24 +29,75 @@
 #include "DebugOut.h"
 #include "util.h"
 
-// these are generated type library headers.  they were originally created
-// using #import statements; then the files were added to the project and 
-// the #import statements removed.
+#define METHODNAME L"_Run2"
 
-// this should be less fragile than using #import as a preprocessor step.
+// typelibs have been completely removed, in favor of using dispatch.invoke.  
+// that was a workaround for (at least one, probably more) broken excel install.
 
-#include "MSO.tlh"
-#include "Excel.tlh"
+extern void logMessage(const char *, int, bool);
 
 /** cached Excel pointer */
 IDispatch *pdispApp = 0;
 
+/** cache this value, as it won't change in a single process (or ever, really, it's 806) */
+DISPID dispidRun = 0;
+
 /** stream for the marshaled pointer */
 IStream *pstream = 0;
 
-#define MISSING_10 vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing
-#define MISSING_30 MISSING_10, MISSING_10, MISSING_10
-#define MISSING_28 MISSING_10, MISSING_10, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing, vtMissing
+/**
+ * call the excel run2 method via dispatch, in case the typelib is missing
+ */
+HRESULT DispatchCall(LPDISPATCH pdisp, std::vector<CComVariant> &args, CComVariant &cvResult) {
+
+	DISPPARAMS dispparams;
+	HRESULT hr = S_OK;
+
+	// Note on 1033: Excel has problems with non-1033 locales, so we always call as 1033.
+
+	if (!dispidRun) {
+
+		WCHAR *member = METHODNAME;
+		hr = pdisp->GetIDsOfNames(IID_NULL, &member, 1, 1033, &dispidRun);
+		if (FAILED(hr)) {
+			DebugOut("ERR 0x%x\n", hr);
+			return hr;
+		}
+	}
+
+	for (int i = args.size(); i < 31; i++) {
+		args.push_back(CComVariant(DISP_E_PARAMNOTFOUND, VT_ERROR)); // missing
+	}
+
+	// dispparams in reverse order 
+	std::reverse(args.begin(), args.end());
+
+	dispparams.cArgs = args.size(); // must be 31
+	dispparams.cNamedArgs = 0;
+	dispparams.rgdispidNamedArgs = 0;
+	dispparams.rgvarg = &args[0]; // spec guarantees contiguous memory.  still feels wrong, though.
+
+	hr = pdisp->Invoke(dispidRun, IID_NULL, 1033, DISPATCH_METHOD, &dispparams, &cvResult, NULL, NULL);
+
+	return hr;
+
+}
+
+/** convenience overload */
+HRESULT DispatchCall(LPDISPATCH pdisp, CComVariant &arg, CComVariant &cvResult) {
+	std::vector<CComVariant> vec;
+	vec.push_back(arg);
+	return DispatchCall(pdisp, vec, cvResult);
+}
+
+/** convenience overload */
+HRESULT DispatchCall(LPDISPATCH pdisp, CComVariant &arg1, CComVariant &arg2, CComVariant &arg3, CComVariant &cvResult) {
+	std::vector<CComVariant> vec;
+	vec.push_back(arg1);
+	vec.push_back(arg2);
+	vec.push_back(arg3);
+	return DispatchCall(pdisp, vec, cvResult);
+}
 
 /**
  * execute an R call through an asynchronous Excel callback.  we have to 
@@ -60,23 +111,15 @@ HRESULT SafeCall( SAFECALL_CMD cmd, std::vector< std::string > *vec, int *presul
 {
 	HRESULT hr = E_FAIL;
 	LPDISPATCH pdisp = 0;
+	CComVariant cvRslt;
 
 	hr = AtlUnmarshalPtr(pstream, IID_IDispatch, (LPUNKNOWN*)&pdisp);
-	CComQIPtr< Excel::_Application > application(pdisp);
-
-	if (application)
-	{
-		CComVariant cvFunc, cvRslt, cvArg;
-		CComVariant cvCmdID = 0L;
-		CComBSTR bstrCmd;
-		HRESULT hr = S_OK;
+	if(SUCCEEDED(hr) && pdisp){
 
 		switch (cmd)
 		{
 		case SCC_EXEC:
 			{
-				cvFunc = "BERT.SafeCall";
-
 				CComSafeArray<VARIANT> cc;
 				cc.Create(vec->size());
 				std::vector< std::string > :: iterator iter = vec->begin();
@@ -89,35 +132,25 @@ HRESULT SafeCall( SAFECALL_CMD cmd, std::vector< std::string > *vec, int *presul
 					iter++;
 				}
 
-				cvArg = (LPSAFEARRAY)cc;
-				hr = application->_Run2(cvFunc, cvCmdID, cvArg, MISSING_28, 1033, &cvRslt);
+				hr = DispatchCall(pdisp, CComVariant(CComBSTR("BERT.SafeCall")), CComVariant(0L), CComVariant((LPSAFEARRAY)cc), cvRslt);
 				cc.Destroy();
 			}
 			break;
 
 		case SCC_CALLTIP:
-			cvFunc = "BERT.SafeCall";
-			cvArg = vec->begin()->c_str();
-			hr = application->_Run2(cvFunc, cvCmdID, cvArg, MISSING_28, 1033, &cvRslt);
+			hr = DispatchCall(pdisp, CComVariant(CComBSTR("BERT.SafeCall")), CComVariant(0L), CComVariant(CComBSTR(vec->begin()->c_str())), cvRslt);
 			break;
 
 		case SCC_NAMES:
-			cvFunc = "BERT.SafeCall";
-			cvCmdID = 2; // FIXME: ENUM
-			cvArg = vec->begin()->c_str();
-			hr = application->_Run2(cvFunc, cvCmdID, cvArg, MISSING_28, 1033, &cvRslt);
+			hr = DispatchCall(pdisp, CComVariant(CComBSTR("BERT.SafeCall")), CComVariant(2L), CComVariant(CComBSTR(vec->begin()->c_str())), cvRslt);
 			break;
 
 		case SCC_INSTALLPACKAGES:
-			bstrCmd = "BERT.InstallPackages";
-			cvFunc = bstrCmd;
-			hr = application->_Run2(cvFunc, MISSING_30, 1033, &cvRslt);
+			hr = DispatchCall(pdisp, CComVariant(CComBSTR("BERT.InstallPackages")), cvRslt);
 			break;
 
 		case SCC_RELOAD_STARTUP:
-			bstrCmd = "BERT.Reload";
-			cvFunc = bstrCmd;
-			hr = application->_Run2(cvFunc, MISSING_30, 1033, &cvRslt);
+			hr = DispatchCall(pdisp, CComVariant(CComBSTR("BERT.Reload")), cvRslt);
 			break;
 		}
 
@@ -135,15 +168,13 @@ HRESULT SafeCall( SAFECALL_CMD cmd, std::vector< std::string > *vec, int *presul
 		}
 		else
 		{
-			if (presult)
-			{
-				*presult = PARSE2_EXTERNAL_ERROR;
-			}
+			if (presult) *presult = PARSE2_EXTERNAL_ERROR;
 		}
 
 	}
-
+	
 	if (pdisp) pdisp->Release();
+
 	return hr;
 }
 
@@ -166,6 +197,7 @@ void FreeStream()
 		AtlFreeMarshalStream(pstream);
 	}
 	pstream = 0;
+
 }
 
 /**
@@ -175,6 +207,7 @@ HRESULT Marshal()
 {
 	if (!pdispApp) return E_FAIL;
 	if (pstream) return S_OK; // only once
+
 	return AtlMarshalPtrInProc(pdispApp, IID_IDispatch, &pstream);
 }
 
