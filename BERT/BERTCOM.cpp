@@ -34,8 +34,6 @@
 // typelibs have been completely removed, in favor of using dispatch.invoke.  
 // that was a workaround for (at least one, probably more) broken excel install.
 
-extern void logMessage(const char *, int, bool);
-
 /** cached Excel pointer */
 IDispatch *pdispApp = 0;
 
@@ -46,7 +44,7 @@ DISPID dispidRun = 0;
 IStream *pstream = 0;
 
 /**
- * call the excel run2 method via dispatch, in case the typelib is missing
+ * call the excel run2 method via dispatch, in case the typelib is missing.  
  */
 HRESULT DispatchCall(LPDISPATCH pdisp, std::vector<CComVariant> &args, CComVariant &cvResult) {
 
@@ -192,12 +190,8 @@ void SetExcelPtr(LPVOID p)
  */
 void FreeStream()
 {
-	if (pstream)
-	{
-		AtlFreeMarshalStream(pstream);
-	}
+	if (pstream) AtlFreeMarshalStream(pstream);
 	pstream = 0;
-
 }
 
 /**
@@ -207,7 +201,6 @@ HRESULT Marshal()
 {
 	if (!pdispApp) return E_FAIL;
 	if (pstream) return S_OK; // only once
-
 	return AtlMarshalPtrInProc(pdispApp, IID_IDispatch, &pstream);
 }
 
