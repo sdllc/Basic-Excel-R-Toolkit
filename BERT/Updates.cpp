@@ -20,6 +20,8 @@
 
 #include "stdafx.h"
 #include "updates.h"
+#include "RegistryConstants.h"
+#include "RegistryUtils.h"
 #include "DebugOut.h"
 
 #include <winhttp.h>
@@ -47,7 +49,36 @@ int checkForUpdates( std::string &tag )
 	int datalen = 0;
 	std::string str;
 
+	char szLastTag[MAX_PATH];
+	char szDateBuffer[MAX_PATH];
+	WCHAR wszDateBuffer[MAX_PATH] = L"If-Modified-Since: ";
+	DWORD dwResponseCode;
+
 	int result = UC_UPDATE_CHECK_FAILED;
+
+	// read last modified, last tag from registry.  we generally deal in one-byte 
+	// registry values.  with winhttp, headers are two-byte strings, but the data
+	// comes back as one-byte (could be utf-8, though).
+
+	// we'll just treat it as one-byte.  for the date, if we send no accept headers,
+	// we'll get default language english and the date will be narrow.  we also
+	// assume a max length on the string, which should be reasonable (that's the 
+	// kind of statement that gets you into trouble).
+
+	if (CRegistryUtils::GetRegString(HKEY_CURRENT_USER, szDateBuffer, MAX_PATH, REGISTRY_KEY, REGISTRY_VALUE_UPDATE_LAST_MODIFIED)) {
+		
+		int len = strlen(szDateBuffer);
+		int idx = wcslen(wszDateBuffer);
+
+		for (int i = 0; i < len; i++, idx++) wszDateBuffer[idx] = szDateBuffer[i];
+		wszDateBuffer[idx] = 0;
+
+	}
+	else wszDateBuffer[0] = 0;
+
+	if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, szLastTag, MAX_PATH, REGISTRY_KEY, REGISTRY_VALUE_UPDATE_LAST_TAG)) {
+		szLastTag[0] = 0;
+	}
 
 	hSession = WinHttpOpen( USER_AGENT_STRING,
 		WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
@@ -64,6 +95,13 @@ int checkForUpdates( std::string &tag )
 			WINHTTP_DEFAULT_ACCEPT_TYPES,
 			WINHTTP_FLAG_SECURE);
 
+	// if we have a registry value for the last-modified date, 
+	// pass it as a cache control header.  good behavior, and 
+	// prevents github from throttling you.
+
+	if (hRequest && wszDateBuffer[0])
+		WinHttpAddRequestHeaders(hRequest, wszDateBuffer, wcslen(wszDateBuffer), WINHTTP_ADDREQ_FLAG_ADD);
+	
 	if (hRequest)
 		bResults = WinHttpSendRequest(hRequest,
 			WINHTTP_NO_ADDITIONAL_HEADERS, 0,
@@ -72,7 +110,15 @@ int checkForUpdates( std::string &tag )
 	if (bResults)
 		bResults = WinHttpReceiveResponse(hRequest, NULL);
 
-	// FIXME: use etag header 
+	if (bResults) {
+		dwSize = MAX_PATH;
+		bResults = WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_LAST_MODIFIED, WINHTTP_HEADER_NAME_BY_INDEX, wszDateBuffer, &dwSize, WINHTTP_NO_HEADER_INDEX);
+	}
+
+	if (bResults) {
+		dwSize = sizeof(DWORD);
+		bResults = WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, WINHTTP_HEADER_NAME_BY_INDEX, &dwResponseCode, &dwSize, WINHTTP_NO_HEADER_INDEX);
+	}
 
 	if (bResults)
 	{
@@ -104,23 +150,39 @@ int checkForUpdates( std::string &tag )
 		while (dwSize > 0);
 	}
 
-	if (str.length() > 0) {
+	// if response code is 304, use the cached value.  otherwise
+	// use the returned data, and cache tag and header.
 
+	if( dwResponseCode == 200 && str.length() > 0) {
 		static std::regex rex("\"tag_name\"\\s*:\\s*\"(.*?)\"");
 		std::smatch mat;
 		if (std::regex_search(str, mat, rex) && mat.size() > 1)
 		{
 			tag.assign(mat[1].first, mat[1].second);
-			double v = parseVersion(tag.c_str());
-			double bv = _wtof(BERT_VERSION);
-
-			DebugOut("Version string: %s, reads as %f, bert is %f\n", tag.c_str(), v, bv);
-
-			if (v > bv) result = UC_NEW_VERSION_AVAILABLE;
-			else if (v < bv) result = UC_YOURS_IS_NEWER;
-			else result = UC_UP_TO_DATE;
-
 		}
+	}
+	else if (dwResponseCode == 304) {
+		tag = szLastTag;
+	}
+
+	if( tag.length() > 0 )
+	{
+		double v = parseVersion(tag.c_str());
+		double bv = _wtof(BERT_VERSION);
+
+		DebugOut("Version string: %s, reads as %f, bert is %f\n", tag.c_str(), v, bv);
+
+		if (v > bv) result = UC_NEW_VERSION_AVAILABLE;
+		else if (v < bv) result = UC_YOURS_IS_NEWER;
+		else result = UC_UP_TO_DATE;
+
+		// save last-modified, tag.  see above (top) re: narrow registry strings.
+
+		int len = wcslen(wszDateBuffer);
+		for (int i = 0; i < len; i++) { szDateBuffer[i] = wszDateBuffer[i] & 0xff; }
+
+		CRegistryUtils::SetRegString(HKEY_CURRENT_USER, szDateBuffer, REGISTRY_KEY, REGISTRY_VALUE_UPDATE_LAST_MODIFIED);
+		CRegistryUtils::SetRegString(HKEY_CURRENT_USER, tag.c_str(), REGISTRY_KEY, REGISTRY_VALUE_UPDATE_LAST_TAG);
 
 	}
 

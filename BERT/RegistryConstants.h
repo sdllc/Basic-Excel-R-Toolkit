@@ -48,6 +48,11 @@
 #define DEFAULT_CONSOLE_WIDTH			80
 #define DEFAULT_CONSOLE_AUTO_WIDTH		1
 
+// registry cache for update check -- use if-modified-since header
+
+#define REGISTRY_VALUE_UPDATE_LAST_MODIFIED		"UpdateLastModified"
+#define REGISTRY_VALUE_UPDATE_LAST_TAG			"UpdateLastTag"
+
 #endif // #ifndef __REGISTRY_CONSTANTS_H
 
 

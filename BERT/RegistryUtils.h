@@ -65,11 +65,11 @@ public:
 	}
 
 
-	/** 
-	 * retrieve a string from the registry. 
-	 * @returns TRUE on success, FALSE on error.
-	 */
-	static BOOL GetRegString( HKEY hkeyProgramRoot, char *szTarget, int iBufferLen, const char *szKey, const char *szValName = 0 )
+	/**
+	* retrieve a string from the registry.
+	* @returns TRUE on success, FALSE on error.
+	*/
+	static BOOL GetRegString(HKEY hkeyProgramRoot, char *szTarget, int iBufferLen, const char *szKey, const char *szValName = 0)
 	{
 		// root: HKLM or HKCU?
 		BOOL bRslt = 0;
@@ -77,20 +77,20 @@ public:
 		DWORD dwType = REG_SZ;
 		DWORD dwLen = iBufferLen - 1;
 
-		if( ERROR_SUCCESS == RegCreateKeyExA( hkeyProgramRoot, szKey, 0, 0, REG_OPTION_NON_VOLATILE, 
-											 KEY_READ, 0, &hKey, 0 ))
+		if (ERROR_SUCCESS == RegCreateKeyExA(hkeyProgramRoot, szKey, 0, 0, REG_OPTION_NON_VOLATILE,
+			KEY_READ, 0, &hKey, 0))
 		{
-			memset( szTarget, 0, iBufferLen );
+			memset(szTarget, 0, iBufferLen);
 			LSTATUS stat = RegQueryValueExA(hKey, szValName, 0, &dwType, (LPBYTE)szTarget, &dwLen);
-			if( ERROR_SUCCESS != stat )
+			if (ERROR_SUCCESS != stat)
 			{
-				memset( szTarget, 0, iBufferLen );
+				memset(szTarget, 0, iBufferLen);
 				//char szMessage[64];
 				//sprintf(szMessage, "ERR: %d", stat);
 				//::MessageBox(0, szMessage, "ERR", MB_OK);
 			}
 			else bRslt = TRUE;
-			::RegCloseKey( hKey );
+			::RegCloseKey(hKey);
 		}
 
 #ifndef _WIN64
@@ -98,7 +98,7 @@ public:
 		// not found? try the 64-bit registry [FIXME: only if we are 32-bit ]
 		// NOTE: this is really only necessary for system fields (not ours).
 
-		if (!bRslt) 
+		if (!bRslt)
 		{
 			if (ERROR_SUCCESS == RegCreateKeyExA(hkeyProgramRoot, szKey, 0, 0, REG_OPTION_NON_VOLATILE,
 				KEY_READ | KEY_WOW64_64KEY, 0, &hKey, 0))
@@ -119,7 +119,7 @@ public:
 
 		return bRslt;
 	}
-
+	
 	/**
 	* retrieve a string from the registry.
 	* @returns TRUE on success, FALSE on error.
@@ -196,7 +196,7 @@ public:
 			::RegCloseKey(hKey);
 		}
 	}
-
+	
 	/** store a string in the registry.  */
 	static void SetRegExpandString(HKEY hkeyProgramRoot, const char *szCode, const char *szKey, const char *szValName = 0)
 	{
