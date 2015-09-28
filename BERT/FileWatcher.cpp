@@ -41,6 +41,19 @@ STRVECTOR files;
 DWORD threadID = 0;
 HANDLE hSignal = 0;
 
+DWORD WINAPI execFunctionThread(void *parameter) {
+
+	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+	int pr;
+	std::string str((const char*)parameter);
+	STRVECTOR svec;
+	svec.push_back(str);
+	SafeCall(SCC_WATCH_NOTIFY, &svec, &pr);
+	::CoUninitialize();
+	return 0;
+
+}
+
 DWORD WINAPI startWatchThread(void *parameter) {
 
 	STRVECTOR dirs;
@@ -125,8 +138,6 @@ DWORD WINAPI startWatchThread(void *parameter) {
 
 	}
 
-	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
-
 	handles = new HANDLE[dirs.size() + 1];
 	handles[0] = hSignal; //  hevent;
 
@@ -185,10 +196,8 @@ DWORD WINAPI startWatchThread(void *parameter) {
 							DebugOut("Change in file: %s\n", iter->c_str());
 							// WatchFileCallback(iter->c_str());
 
-							int pr;
-							STRVECTOR svec;
-							svec.push_back(*iter);
-							SafeCall(SCC_WATCH_NOTIFY, &svec, &pr);
+							DWORD dwID;
+							CreateThread(0, 0, execFunctionThread, (void*)(iter->c_str()), 0, &dwID);
 
 							i2->second.dwHighDateTime = ft.dwHighDateTime;
 							i2->second.dwLowDateTime = ft.dwLowDateTime;
@@ -227,7 +236,7 @@ DWORD WINAPI startWatchThread(void *parameter) {
 	delete[] handles;
 
 	DebugOut("Watch thread exit\n");
-	::CoUninitialize();
+	
 
 	return 0;
 }

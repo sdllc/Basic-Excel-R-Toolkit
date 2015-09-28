@@ -328,7 +328,7 @@ void LoadStartupFile()
 		{
 			strftime(buffer, MAX_PATH, "Error reading startup file @ %c\n", &timeinfo);
 			logMessage(buffer, 0, 1);
-			ExcelStatus("Error reading startup file; check R log");
+			ExcelStatus("BERT: Error reading startup file; check console");
 		}
 	}
 }

@@ -20,7 +20,10 @@ with( BERT, {
 .WatchedFiles <- new.env();
 
 .RestartWatch <- function(){
-	.Call( .CALLBACK, .WATCHFILES, ls(.WatchedFiles), 0 );
+	rslt <- .Call( .CALLBACK, .WATCHFILES, ls(.WatchedFiles), 0 );
+	if( !rslt ){
+		cat( "File watch failed.  Make sure the files you are watching exist and are readable.\n");
+	}
 }
 
 .ExecWatchCallback <- function( path ){
@@ -70,6 +73,13 @@ UnwatchFile <- function( path ){
 ClearWatches <- function(){
 	rm( list=ls(.WatchedFiles), envir=.WatchedFiles );
 	.RestartWatch();
+}
+
+#--------------------------------------------------------
+# list watches - useful if something unexpected is happening
+#--------------------------------------------------------
+ListWatches <- function(){
+	ls(.WatchedFiles);
 }
 
 #--------------------------------------------------------
