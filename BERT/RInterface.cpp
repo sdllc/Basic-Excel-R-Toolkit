@@ -42,6 +42,8 @@
 #include "BERT.h"
 #include "StringConstants.h"
 
+#include "FileWatcher.h"
+
 FDVECTOR RFunctions;
 
 
@@ -696,6 +698,20 @@ SEXP resolveObject(const std::string &token, SEXP parent = R_GlobalEnv)
 		}
 	}
 	return PROTECT(R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString(token.c_str())), parent, &err));
+}
+
+int notifyWatch(std::string &path) {
+
+	int err;
+	SEXP env = PROTECT(R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString(ENV_NAME)), R_GlobalEnv, &err));
+	if (env)
+	{
+		SEXP rslt = PROTECT(R_tryEval(Rf_lang2(Rf_install(".ExecWatchCallback"), Rf_mkString(path.c_str())), env, &err));
+		UNPROTECT(1);
+	}
+	UNPROTECT(1);
+	return 0;
+
 }
 
 /**
@@ -1667,6 +1683,27 @@ bool RExec2(LPXLOPER12 rslt, std::string &funcname, std::vector< LPXLOPER12 > &a
 	return true;
 }
 
+SEXP BERTWatchFiles(SEXP list) {
+
+	int len = Rf_length(list);
+	std::vector< std::string > files;
+
+	// must be list of strings
+	if (len > 0 && TYPEOF(list) != STRSXP) {
+		R_WriteConsole("Invalid parameter\n", 0);
+		return Rf_ScalarLogical(0);
+	}
+	
+	for (int i = 0; i < len; i++) {
+		std::string path = CHAR(STRING_ELT(list, i));
+		files.push_back(path);
+	}
+	
+	int rslt = watchFiles(files);
+	return Rf_ScalarLogical(rslt == 0);
+
+}
+
 SEXP ExcelCall(SEXP cmd, SEXP data)
 {
 	int dlen = Rf_length(data);
@@ -1830,6 +1867,9 @@ SEXP BERT_Callback(SEXP cmd, SEXP data, SEXP data2)
 	}
 	switch (command)
 	{
+	case CC_WATCHFILES:
+		return BERTWatchFiles(data);
+
 	case CC_EXCEL:
 		return ExcelCall(data, data2);
 

@@ -55,6 +55,7 @@ typedef enum
 	SCC_INSTALLPACKAGES = 3,
 	SCC_CALLTIP = 4,
 	SCC_NAMES = 5,
+	SCC_WATCH_NOTIFY = 6,
 
 	SCC_LAST
 }

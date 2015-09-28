@@ -485,7 +485,10 @@ long BERT_SafeCall(long cmdid, LPXLOPER12 xl)
 	{
 		std::string func;
 		NarrowString(func, xl);
-		if (cmdid == 2) return getNames(moneyList, func);
+		if (cmdid == 4) {
+			return notifyWatch(func);
+		}
+		else if (cmdid == 2) return getNames(moneyList, func);
 		return getCallTip(calltip, func);
 	}
 	else if (xl->xltype & xltypeMulti)

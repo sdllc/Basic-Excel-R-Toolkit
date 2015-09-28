@@ -1216,11 +1216,13 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 	case WM_NOTIFY:
 		switch (((LPNMHDR)lParam)->code)
 		{
+			/*
 		case SCN_MODIFIED: // what am I trapping this for? // A: was thinking about handling PASTE
 		{
-			// SCNotification *scn = (SCNotification*)lParam;
-			// DebugOut("Modified: 0x%x\n", scn->modificationType);
+			SCNotification *scn = (SCNotification*)lParam;
+			DebugOut("Modified: 0x%x\n", scn->modificationType);
 		}
+			*/
 
 		case SCN_CHARADDED:
 		{

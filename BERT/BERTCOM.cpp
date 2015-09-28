@@ -143,6 +143,10 @@ HRESULT SafeCall( SAFECALL_CMD cmd, std::vector< std::string > *vec, int *presul
 			hr = DispatchCall(pdisp, CComVariant(CComBSTR("BERT.SafeCall")), CComVariant(2L), CComVariant(CComBSTR(vec->begin()->c_str())), cvRslt);
 			break;
 
+		case SCC_WATCH_NOTIFY:
+			hr = DispatchCall(pdisp, CComVariant(CComBSTR("BERT.SafeCall")), CComVariant(4L), CComVariant(CComBSTR(vec->begin()->c_str())), cvRslt);
+			break;
+
 		case SCC_INSTALLPACKAGES:
 			hr = DispatchCall(pdisp, CComVariant(CComBSTR("BERT.InstallPackages")), cvRslt);
 			break;

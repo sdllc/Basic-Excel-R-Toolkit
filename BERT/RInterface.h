@@ -32,6 +32,7 @@ typedef enum
 {
 	CC_EXCEL =			1,
 
+	CC_WATCHFILES =		1020,
 	CC_CLEAR =			1021,
 	CC_RELOAD =			1022,
 	CC_CLOSECONSOLE =	1023,
@@ -61,6 +62,7 @@ void LoadStartupFile();
 SVECTOR & getWordList( SVECTOR &wordList );
 
 int getCallTip(std::string &callTip, const std::string &sym);
+int notifyWatch(std::string &path);
 int getNames(SVECTOR &vec, const std::string &token);
 int setWidth(int w);
 
