@@ -71,3 +71,10 @@ matrix.to.frame <- function( mat )
 #
 source( "ExcelFunctions.R" );
 
+# this is the new file watcher utility.  uncomment the line below and
+# this file will be reloaded any time it's saved.  by default, it will run
+# BERT$ReloadStartup, but you can pass a function to run any arbitrary
+# R code when the file changes.
+
+# WatchFile( paste( BERT$HOME, "\\functions.R", sep=""))
+

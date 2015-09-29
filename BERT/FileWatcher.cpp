@@ -64,36 +64,6 @@ DWORD WINAPI startWatchThread(void *parameter) {
 
 	DebugOut("Watch thread start\n");
 
-	/*
-	const char *eventid = (const char*)(parameter);
-	HANDLE hevent = ::OpenEventA(SYNCHRONIZE, 0, eventid);
-
-	if (!hevent) {
-		errflag = true;
-
-		DWORD dw = GetLastError();
-
-		LPVOID lpMsgBuf;
-
-		FormatMessageA(
-			FORMAT_MESSAGE_ALLOCATE_BUFFER |
-			FORMAT_MESSAGE_FROM_SYSTEM |
-			FORMAT_MESSAGE_IGNORE_INSERTS,
-			NULL,
-			dw,
-			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-			(LPSTR)&lpMsgBuf,
-			0, NULL);
-
-		//std::cout << "ERR opening event: " << (char*)lpMsgBuf << std::endl;
-		DebugOut("ERR opening event: %s", lpMsgBuf);
-
-		free(lpMsgBuf);
-
-		// LocalFree(lpMsgBuf);
-	}
-	*/
-
 	std::map < std::string, FILETIME > fmap;
 
 	// cache file times.  also consolidate directories
@@ -104,7 +74,6 @@ DWORD WINAPI startWatchThread(void *parameter) {
 
 		if (!hfile || hfile == INVALID_HANDLE_VALUE) {
 			errflag = true;
-			//std::cout << "ERR opening file " << iter->c_str() << std::endl;
 			DebugOut("ERR opening file %s\n", iter->c_str());
 			break;
 		}
@@ -132,7 +101,6 @@ DWORD WINAPI startWatchThread(void *parameter) {
 	if (dirs.size() == 0) return -1;
 	if (dirs.size() >= MAXIMUM_WAIT_OBJECTS - 1) {
 
-//		std::cout << "Too many watch handles" << std::endl;
 		DebugOut("Too many watch handles\n");
 		errflag = true;
 
@@ -170,7 +138,6 @@ DWORD WINAPI startWatchThread(void *parameter) {
 		else if (stat > WAIT_OBJECT_0 && stat < WAIT_OBJECT_0 + index) {
 
 			int key = stat - WAIT_OBJECT_0;
-			// std::cout << "signal " << key << " " << dirs[key-1].c_str() << std::endl;
 
 			for (STRVECTOR::iterator iter = files.begin(); iter != files.end(); iter++) {
 
