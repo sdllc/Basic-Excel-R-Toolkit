@@ -31,6 +31,8 @@
 #include "Scintilla.h"
 #include "Objbase.h"
 
+#include <deque>
+
 typedef std::vector< std::string> SVECTOR;
 typedef SVECTOR::iterator SITER;
 
@@ -61,6 +63,9 @@ extern void flush_log();
 
 bool inputlock = false;
 bool exitpending = false;
+bool appappend = false;
+std::string pastebuffer;
+std::deque < std::string > pastelines;
 
 RECT rectConsole = { 0, 0, 0, 0 };
 
@@ -476,6 +481,7 @@ void AppendLog(const char *buffer, int style, int checkoverlap)
 	// user-entered text that has to be pushed aside.  
 
 	int len = strlen(buffer);
+	appappend = true;
 
 	if (!checkoverlap || inputlock)
 	{
@@ -497,7 +503,9 @@ void AppendLog(const char *buffer, int style, int checkoverlap)
 		int np = minCaret - promptwidth;
 
 		// insert
+		appappend = true;
 		fn(ptr, SCI_INSERTTEXT, np, (sptr_t)buffer);
+		appappend = false;
 
 		// update our marker, pos should move
 		minCaret += len;
@@ -509,6 +517,7 @@ void AppendLog(const char *buffer, int style, int checkoverlap)
 		}
 
 	}
+	appappend = false;
 
 	fn(ptr, SCI_SCROLLCARET, 0, 0);
 
@@ -516,12 +525,14 @@ void AppendLog(const char *buffer, int style, int checkoverlap)
 
 void Prompt(const char *prompt = DEFAULT_PROMPT)
 {
+	appappend = true;
 	promptwidth = strlen(prompt);
 	fn(ptr, SCI_APPENDTEXT, promptwidth, (sptr_t)prompt);
 	fn(ptr, SCI_SETXOFFSET, 0, 0);
 	fn(ptr, SCI_SETSEL, -1, -1);
 	minCaret = fn(ptr, SCI_GETCURRENTPOS, 0, 0);
 	historyPointer = 0;
+	appappend = false;
 }
 
 void CallComplete(PARSE_STATUS_2 ps, LPARAM lParam)
@@ -579,9 +590,11 @@ void CancelCommand(){
 
 	cmdVector.clear();
 
+	appappend = true;
 	fn(ptr, SCI_APPENDTEXT, 1, (sptr_t)"\n");
 	fn(ptr, SCI_AUTOCCANCEL, 0, 0);
 	fn(ptr, SCI_CALLTIPCANCEL, 0, 0);
+	appappend = false;
 
 	Prompt();
 }
@@ -633,7 +646,9 @@ void ProcessCommand()
 		delete[] str.lpstrText;
 	}
 
+	appappend = true;
 	fn(ptr, SCI_APPENDTEXT, 1, (sptr_t)"\n");
+	appappend = false;
 	bool wl = false;
 
 	if (cmd.length() > 0)
@@ -1153,6 +1168,7 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 			SetConsoleDefaults();
 			
 			fn(ptr, SCI_SETMARGINWIDTHN, 1, 0);
+			fn(ptr, SCI_CLEARCMDKEY, 'Z' | ((SCMOD_CTRL) << 16), 0); // has no meaning in shell context
 
 			std::list< std::string > loglist;
 			getLogText(loglist);
@@ -1213,16 +1229,59 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 	case WM_ERASEBKGND:
 		break;
 
+	case WM_CLEANUP_PASTE:
+	{
+		DebugOut("Cleanup paste: %d len %d\n", wParam, lParam);
+		appappend = true;
+		fn(ptr, SCI_UNDO, 0, 0);
+		fn(ptr, SCI_SETSEL, -1, -1);
+
+		while(pastelines.size() > 0 && !inputlock) {
+			std::string &line = pastelines[0];
+			fn(ptr, SCI_APPENDTEXT, line.length(), (sptr_t)line.c_str());
+			pastelines.pop_front();
+			fn(ptr, SCI_SETSEL, -1, -1);
+			ProcessCommand();
+		}
+
+		appappend = false;
+		break;
+	}
+
 	case WM_NOTIFY:
 		switch (((LPNMHDR)lParam)->code)
 		{
-			/*
+		/*
+		case SCN_UPDATEUI:
+		{
+			SCNotification *scn = (SCNotification*)lParam;
+			DebugOut("UD %d\n", scn->updated);
+			break;
+		}
+		*/
 		case SCN_MODIFIED: // what am I trapping this for? // A: was thinking about handling PASTE
 		{
 			SCNotification *scn = (SCNotification*)lParam;
-			DebugOut("Modified: 0x%x\n", scn->modificationType);
+			int line = fn(ptr, SCI_LINEFROMPOSITION, scn->position, 0);
+			int last = fn(ptr, SCI_GETLINECOUNT, 0, 0);
+			if (!appappend && (scn->modificationType & 0x01) && line != last - 1) {
+				DebugOut("0x%x Paste in line %d (%d), LEN IS %d\n", scn->modificationType, line, last, scn->length);
+				pastebuffer.assign(scn->text, scn->length);
+				if (scn->length != pastebuffer.length()) {
+					DebugOut("garbage?\n");
+				}
+				DebugOut("---\n%s\n---\n", pastebuffer.c_str());
+
+				std::istringstream stream(pastebuffer);
+				std::string line;
+				while (std::getline(stream, line)) {
+					pastelines.push_back(line);
+				}
+
+				::PostMessage(hwndDlg, WM_CLEANUP_PASTE, scn->position, scn->length);
+			}
+			break;
 		}
-			*/
 
 		case SCN_CHARADDED:
 		{
@@ -1259,6 +1318,16 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 
 	case WM_CALL_COMPLETE:
 		CallComplete((PARSE_STATUS_2)wParam, lParam);
+		appappend = true;
+		while (pastelines.size() > 0 && !inputlock) {
+			std::string &line = pastelines[0];
+			fn(ptr, SCI_APPENDTEXT, line.length(), (sptr_t)line.c_str());
+			pastelines.pop_front();
+			fn(ptr, SCI_SETSEL, -1, -1);
+			ProcessCommand();
+		}
+		appappend = false;
+
 		break;
 
 	case WM_COMMAND:
