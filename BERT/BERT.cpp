@@ -882,7 +882,7 @@ bool RegisterAddinFunctions()
 
 int DebugOut(const char *fmt, ...)
 {
-	static char msg[1024];
+	static char msg[1024 * 32]; // ??
 	int ret;
 	va_list args;
 	va_start(args, fmt);
