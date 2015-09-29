@@ -272,8 +272,6 @@ void LoadStartupFile()
 	char RUser[MAX_PATH];
 	char path[MAX_PATH];
 	char buffer[MAX_PATH];
-	char wd[MAX_PATH];
-	std::string contents;
 
 	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, RUser, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_R_USER))
 		ExpandEnvironmentStringsA( DEFAULT_R_USER, RUser, MAX_PATH );
@@ -281,44 +279,29 @@ void LoadStartupFile()
 	if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, buffer, MAX_PATH, REGISTRY_KEY, REGISTRY_VALUE_STARTUP))
 		strcpy_s(buffer, MAX_PATH, DEFAULT_R_STARTUP);
 
-	if (strlen(buffer) && strlen(RUser))
+	if (strlen(buffer) && strlen(RUser)) 
 	{
-		sprintf_s(path, MAX_PATH, "%s\\%s", RUser, buffer);
-		HANDLE file = ::CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-		if (file != INVALID_HANDLE_VALUE)
-		{
-			DWORD read = 0;
-			while (::ReadFile(file, buffer, MAX_PATH - 1, &read, NULL))
-			{
-				if (read <= 0) break;
-				buffer[read] = 0;
-				contents += buffer;
-			}
-			::CloseHandle(file);
-		}
-	}
-
-	if (contents.length() > 0)
-	{
-		// set CWD, temporarily, to home directory
-		// to support easier source()ing
-
-		::GetCurrentDirectoryA(MAX_PATH, wd);
-		::SetCurrentDirectoryA(RUser);
-
 		time_t t;
 		struct tm timeinfo;
-		int rslt = UpdateR(contents);
-		
-		// and revert
+		int errorOccurred;
 
-		::SetCurrentDirectoryA(wd);
+		// using named args so we can set the chdir flag
+
+		SEXP namedargs;
+		const char *names[] = { "file", "chdir", "" };
+
+		sprintf_s(path, MAX_PATH, "%s\\%s", RUser, buffer);
+
+		PROTECT(namedargs = mkNamed(VECSXP, names));
+		SET_VECTOR_ELT(namedargs, 0, Rf_mkString(path));
+		SET_VECTOR_ELT(namedargs, 1, Rf_ScalarLogical(1));
+		R_tryEval(Rf_lang3(Rf_install("do.call"), Rf_mkString("source"), namedargs), R_GlobalEnv, &errorOccurred);
+		UNPROTECT(1);
 
 		time(&t);
-		//timeinfo = 
 		localtime_s(&timeinfo, &t);
 
-		if (!rslt)
+		if( !errorOccurred )
 		{
 			strftime(buffer, MAX_PATH, "Read startup file OK @ %c\n", &timeinfo);
 			logMessage(buffer, 0, 1);
@@ -330,6 +313,7 @@ void LoadStartupFile()
 			logMessage(buffer, 0, 1);
 			ExcelStatus("BERT: Error reading startup file; check console");
 		}
+
 	}
 }
 

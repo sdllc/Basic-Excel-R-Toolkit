@@ -14,24 +14,6 @@ with( BERT, {
 .CALLBACK <- "BERT_Callback";
 
 #========================================================
-# API for the file watch utility
-#========================================================
-
-.WatchedFiles <- new.env();
-
-.RestartWatch <- function(){
-	rslt <- .Call( .CALLBACK, .WATCHFILES, ls(.WatchedFiles), 0 );
-	if( !rslt ){
-		cat( "File watch failed.  Make sure the files you are watching exist and are readable.\n");
-	}
-}
-
-.ExecWatchCallback <- function( path ){
-	cat(paste("Executing code on file change:", path, "\n" ));
-	do.call(.WatchedFiles[[path]], list());
-}
-
-#========================================================
 # functions - for general use
 #========================================================
 
@@ -50,37 +32,6 @@ CloseConsole <- function(){ invisible(.Call(.CALLBACK, .CLOSECONSOLE, 0, PACKAGE
 # reload the startup file
 #--------------------------------------------------------
 ReloadStartup <- function(){ .Call(.CALLBACK, .RELOAD, 0, PACKAGE=.MODULE ); };
-
-#--------------------------------------------------------
-# watch file, execute code on change
-#--------------------------------------------------------
-WatchFile <- function( path, code = ReloadStartup ){
-	.WatchedFiles[[path]] = code;
-	.RestartWatch();
-} 
-
-#--------------------------------------------------------
-# stop watching file (by path)
-#--------------------------------------------------------
-UnwatchFile <- function( path ){
-	rm( list=path, envir=.WatchedFiles );
-	.RestartWatch();
-}
-
-#--------------------------------------------------------
-# remove all watches
-#--------------------------------------------------------
-ClearWatches <- function(){
-	rm( list=ls(.WatchedFiles), envir=.WatchedFiles );
-	.RestartWatch();
-}
-
-#--------------------------------------------------------
-# list watches - useful if something unexpected is happening
-#--------------------------------------------------------
-ListWatches <- function(){
-	ls(.WatchedFiles);
-}
 
 #--------------------------------------------------------
 # Excel callback function. Be careful with this unless 
@@ -141,6 +92,55 @@ setMethod( "show", "xlReference", function(object){
 	}
 	cat( "\n" );
 });
+
+#========================================================
+# API for the file watch utility
+#========================================================
+
+.WatchedFiles <- new.env();
+
+.RestartWatch <- function(){
+	rslt <- .Call( BERT$.CALLBACK, BERT$.WATCHFILES, ls(.WatchedFiles), 0 );
+	if( !rslt ){
+		cat( "File watch failed.  Make sure the files you are watching exist and are readable.\n");
+	}
+}
+
+.ExecWatchCallback <- function( path ){
+	cat(paste("Executing code on file change:", path, "\n" ));
+	do.call(.WatchedFiles[[path]], list());
+}
+
+#--------------------------------------------------------
+# watch file, execute code on change
+#--------------------------------------------------------
+WatchFile <- function( path, code = BERT$ReloadStartup ){
+	.WatchedFiles[[path]] = code;
+	.RestartWatch();
+} 
+
+#--------------------------------------------------------
+# stop watching file (by path)
+#--------------------------------------------------------
+UnwatchFile <- function( path ){
+	rm( list=path, envir=.WatchedFiles );
+	.RestartWatch();
+}
+
+#--------------------------------------------------------
+# remove all watches
+#--------------------------------------------------------
+ClearWatches <- function(){
+	rm( list=ls(.WatchedFiles), envir=.WatchedFiles );
+	.RestartWatch();
+}
+
+#--------------------------------------------------------
+# list watches - useful if something unexpected is happening
+#--------------------------------------------------------
+ListWatches <- function(){
+	ls(.WatchedFiles);
+}
 
 #--------------------------------------------------------
 # overload quit method or it will stop the excel process
