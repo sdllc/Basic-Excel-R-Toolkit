@@ -1238,7 +1238,9 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 
 		while(pastelines.size() > 0 && !inputlock) {
 			std::string &line = pastelines[0];
+			appappend = true;
 			fn(ptr, SCI_APPENDTEXT, line.length(), (sptr_t)line.c_str());
+			appappend = false;
 			pastelines.pop_front();
 			fn(ptr, SCI_SETSEL, -1, -1);
 			ProcessCommand();
@@ -1318,15 +1320,15 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 
 	case WM_CALL_COMPLETE:
 		CallComplete((PARSE_STATUS_2)wParam, lParam);
-		appappend = true;
 		while (pastelines.size() > 0 && !inputlock) {
 			std::string &line = pastelines[0];
+			appappend = true;
 			fn(ptr, SCI_APPENDTEXT, line.length(), (sptr_t)line.c_str());
+			appappend = false;
 			pastelines.pop_front();
 			fn(ptr, SCI_SETSEL, -1, -1);
 			ProcessCommand();
 		}
-		appappend = false;
 
 		break;
 
