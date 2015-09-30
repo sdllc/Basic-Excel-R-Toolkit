@@ -268,6 +268,7 @@ DIALOG_RESULT_TYPE CALLBACK AboutDlgProc(HWND hwndDlg, UINT message, WPARAM wPar
 DIALOG_RESULT_TYPE CALLBACK OptionsDlgProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	char buffer[MAX_PATH];
+	DWORD dw;
 	HWND hWnd;
 
 	switch (message)
@@ -295,6 +296,9 @@ DIALOG_RESULT_TYPE CALLBACK OptionsDlgProc(HWND hwndDlg, UINT message, WPARAM wP
 			CRegistryUtils::GetRegString(HKEY_CURRENT_USER, buffer, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_STARTUP);
 			SetWindowTextA(hWnd, buffer);
 
+			if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_PRESERVE_ENV)) dw = DEFAULT_R_PRESERVE_ENV;
+			::SendMessage(::GetDlgItem(hwndDlg, IDC_SAVE_ENVIRONMENT), BM_SETCHECK, dw ? BST_CHECKED : BST_UNCHECKED, 0);
+
 		}
 		break;
 
@@ -311,6 +315,9 @@ DIALOG_RESULT_TYPE CALLBACK OptionsDlgProc(HWND hwndDlg, UINT message, WPARAM wP
 			CRegistryUtils::SetRegString(HKEY_CURRENT_USER, buffer, REGISTRY_KEY, REGISTRY_VALUE_ENVIRONMENT);
 			::GetWindowTextA(::GetDlgItem(hwndDlg, IDC_STARTUPFILE), buffer, MAX_PATH - 1);
 			CRegistryUtils::SetRegString(HKEY_CURRENT_USER, buffer, REGISTRY_KEY, REGISTRY_VALUE_STARTUP);
+
+			dw = ( BST_CHECKED == ::SendMessage(::GetDlgItem(hwndDlg, IDC_SAVE_ENVIRONMENT), BM_GETCHECK, 0, 0)) ? 1 : 0;
+			CRegistryUtils::SetRegDWORD(HKEY_CURRENT_USER, dw, REGISTRY_KEY, REGISTRY_VALUE_PRESERVE_ENV);
 
 		case IDCANCEL:
 			EndDialog(hwndDlg, wParam);
