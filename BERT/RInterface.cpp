@@ -64,6 +64,16 @@ std::vector< std::string > logBuffer;
 
 HANDLE muxLog;
 
+//
+// for whatever reason these are not exposed in the embedded headers.
+//
+extern "C" {
+
+extern void R_RestoreGlobalEnvFromFile(const char *, Rboolean);
+extern void R_SaveGlobalEnvToFile(const char *);
+
+}
+
 int R_ReadConsole(const char *prompt, char *buf, int len, int addtohistory)
 {
 	fputs(prompt, stdout);
@@ -332,6 +342,8 @@ int RInit()
 	char RHome[MAX_PATH];
 	char RUser[MAX_PATH];
 
+	DWORD dwPreserve = 0;
+
 	sprintf_s(Rversion, 25, "%s.%s", R_MAJOR, R_MINOR);
 	if (strcmp(getDLLVersion(), Rversion) != 0) {
 		// fprintf(stderr, "Error: R.DLL version does not match\n");
@@ -348,20 +360,15 @@ int RInit()
 	{
 		ExpandEnvironmentStringsA(DEFAULT_R_HOME, RHome, MAX_PATH);
 	}
+
 	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, RUser, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_R_USER))
 	{
 		ExpandEnvironmentStringsA(DEFAULT_R_USER, RUser, MAX_PATH);
 	}
 	
-	/*
-	if ((RHome = get_R_HOME()) == NULL) {
-		fprintf(stderr, "R_HOME must be set in the environment or Registry\n");
-		//exit(1);
-		return;
+	if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dwPreserve, REGISTRY_KEY, REGISTRY_VALUE_PRESERVE_ENV)) {
+		dwPreserve = DEFAULT_R_PRESERVE_ENV;
 	}
-	Rp->rhome = RHome;
-	Rp->home = getRUser();
-	*/
 
 	Rp->rhome = RHome;
 	Rp->home = RUser;
@@ -376,20 +383,17 @@ int RInit()
 
 	Rp->R_Quiet = FALSE;// TRUE;        /* Default is FALSE */
 	Rp->R_Interactive = TRUE;// FALSE; /* Default is TRUE */
+
 	Rp->RestoreAction = SA_RESTORE;
 	Rp->SaveAction = SA_NOSAVE;
 
-//	Rp->LoadInitFile = FALSE;
-//	Rp->LoadSiteFile = FALSE;
-
 	R_SetParams(Rp);
-	R_set_command_line_arguments(0, 0);// argc, argv);
+	R_set_command_line_arguments(0, 0);
 
 	FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
 
 	signal(SIGBREAK, my_onintr);
 	GA_initapp(0, 0);
-	//readconsolecfg();
 	setup_Rmainloop();
 	R_ReplDLLinit();
 
@@ -456,18 +460,18 @@ int RInit()
 				ExecR( vec, &err, &status );
 			}
 
-
-			/*
-			XLOPER12 xlTmp;
-			XCHAR *xsz = new XCHAR[len + 2];
-			xsz[0] = len;
-			for (int i = 0; i < len; i++) xsz[i + 1] = str[i];
-			xlTmp.xltype = xltypeStr;
-			xlTmp.val.str = xsz;
-			RExec(&xlTmp);
-			delete[] xsz;
-			*/
 		}
+	}
+
+	// restore session data here, if desired
+	if (dwPreserve) {
+
+		std::string path = RUser;
+		int len = path.length();
+		if (len && path[len - 1] != '\\') path += "\\";
+		path += ".RData";
+		R_RestoreGlobalEnvFromFile(path.c_str(), TRUE);
+
 	}
 
 	{
@@ -488,6 +492,30 @@ int RInit()
 
 void RShutdown()
 {
+	char RUser[MAX_PATH];
+	DWORD dwPreserve = 0;
+
+	// save session data here, if desired
+
+	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, RUser, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_R_USER))
+	{
+		ExpandEnvironmentStringsA(DEFAULT_R_USER, RUser, MAX_PATH);
+	}
+
+	if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dwPreserve, REGISTRY_KEY, REGISTRY_VALUE_PRESERVE_ENV)) {
+		dwPreserve = DEFAULT_R_PRESERVE_ENV;
+	}
+
+	if (dwPreserve) {
+
+		std::string path = RUser;
+		int len = path.length();
+		if (len && path[len - 1] != '\\') path += "\\";
+		path += ".RData";
+		R_SaveGlobalEnvToFile(path.c_str());
+
+	}
+
 	Rf_endEmbeddedR(0);
 	CloseHandle(muxLog);
 }
