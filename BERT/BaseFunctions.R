@@ -100,7 +100,7 @@ setMethod( "show", "xlReference", function(object){
 .WatchedFiles <- new.env();
 
 .RestartWatch <- function(){
-	rslt <- .Call( BERT$.CALLBACK, BERT$.WATCHFILES, ls(.WatchedFiles), 0 );
+	rslt <- .Call( BERT$.CALLBACK, BERT$.WATCHFILES, ls(.WatchedFiles), 0, PACKAGE=BERT$.MODULE );
 	if( !rslt ){
 		cat( "File watch failed.  Make sure the files you are watching exist and are readable.\n");
 	}

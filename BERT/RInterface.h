@@ -27,6 +27,7 @@
 #define MAX_LOGLIST_SIZE	80
 
 #define ENV_NAME "BERT"
+#define R_WORKSPACE_NAME ".BERT-RData"
 
 typedef enum
 {

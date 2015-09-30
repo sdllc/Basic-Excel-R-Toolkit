@@ -463,13 +463,16 @@ int RInit()
 		}
 	}
 
-	// restore session data here, if desired
+	// restore session data here, if desired.  note this is done
+	// BEFORE the startup file is loaded, so file definitions may
+	// overwrite session definitions.  
+
 	if (dwPreserve) {
 
 		std::string path = RUser;
 		int len = path.length();
 		if (len && path[len - 1] != '\\') path += "\\";
-		path += ".RData";
+		path += R_WORKSPACE_NAME;
 		R_RestoreGlobalEnvFromFile(path.c_str(), TRUE);
 
 	}
@@ -511,7 +514,7 @@ void RShutdown()
 		std::string path = RUser;
 		int len = path.length();
 		if (len && path[len - 1] != '\\') path += "\\";
-		path += ".RData";
+		path += R_WORKSPACE_NAME;
 		R_SaveGlobalEnvToFile(path.c_str());
 
 	}
