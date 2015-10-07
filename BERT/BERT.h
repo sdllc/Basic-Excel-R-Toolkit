@@ -61,8 +61,6 @@ static LPWSTR funcTemplates[][16] = {
 
 const char WRAP_ERR[] = "Error in eval(expr, envir, enclos) :";
 
-// #define BERT_MENU_NAME L"BERT"
-
 /** 
  * convenience macro for setting an XLOPER12 string.  
  * sets first char to length.  DOES NOT COPY STRING.

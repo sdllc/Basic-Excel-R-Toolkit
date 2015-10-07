@@ -1389,24 +1389,33 @@ LPXLOPER12 BERT_RExec(LPXLOPER12 code)
 
 	SEXP ans;
 
-	// if there are newlines in the string, we need to split it and use the vector method
-	std::string scode(sz);
-	if (scode.find_first_of("\r\n") != std::string::npos)
-	{
-		SVECTOR vec;
-		Util::split(scode, '\n', 1, vec, true);
-		ans = ExecR(vec, &errorOccurred, &status);
+	if (sz) {
+
+		// if there are newlines in the string, we need to split it and use the vector method
+		std::string scode(sz);
+		if (scode.find_first_of("\r\n") != std::string::npos)
+		{
+			SVECTOR vec;
+			Util::split(scode, '\n', 1, vec, true);
+			ans = ExecR(vec, &errorOccurred, &status);
+		}
+		else
+		{
+			ans = ExecR(sz, &errorOccurred, &status);
+		}
+
+		// if (sz) 
+		ParseResult(&result, ans);
+		delete[] sz;
+
 	}
-	else
-	{
-		ans = ExecR(sz, &errorOccurred, &status);
+	else {
+
+		result.xltype = xltypeErr;
+		result.val.err = xlerrValue;
+
 	}
-
-	if (sz) delete [] sz;
-
-	ParseResult(&result, ans);
-
-
+	
 	return &result;
 }
 

@@ -279,6 +279,17 @@ Define.Name <- function( name, ref ){
 	
 }
 
+#--------------------------------------------------------------------
+#
+# delete a name (not the range in the spreadsheet, just the name)
+#
+#--------------------------------------------------------------------
+Delete.Name <- function( name ){
+
+	BERT$.Excel( 0x8000 + 110, list( name ));
+	
+}
+
 }); # end with
 
 #
