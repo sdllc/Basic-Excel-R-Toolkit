@@ -154,7 +154,7 @@ DIALOG_RESULT_TYPE CALLBACK AboutDlgProc(HWND hwndDlg, UINT message, WPARAM wPar
 			RECT rc;
 			HDC hdc = BeginPaint(hwndDlg, &ps);
 
-			::GetWindowRect(hwndDlg, &rc);
+			::GetClientRect(hwndDlg, &rc);
 
 			BLENDFUNCTION bStruct;
 			bStruct.BlendOp = AC_SRC_OVER;
@@ -166,7 +166,7 @@ DIALOG_RESULT_TYPE CALLBACK AboutDlgProc(HWND hwndDlg, UINT message, WPARAM wPar
 			oldBitmap = SelectObject(memdc, hbmp);
 
 			GetObject(hbmp, sizeof(bitmap), &bitmap);
-			AlphaBlend(hdc, rc.right - rc.left - bitmap.bmWidth - 15, 0, bitmap.bmWidth, bitmap.bmHeight, memdc, 0, 0, bitmap.bmWidth, bitmap.bmHeight, bStruct);
+			AlphaBlend(hdc, rc.right - bitmap.bmWidth - 8, 0, bitmap.bmWidth, bitmap.bmHeight, memdc, 0, 0, bitmap.bmWidth, bitmap.bmHeight, bStruct);
 
 			SelectObject(memdc, oldBitmap);
 			DeleteDC(memdc);
