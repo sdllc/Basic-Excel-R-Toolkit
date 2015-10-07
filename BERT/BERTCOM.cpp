@@ -124,7 +124,12 @@ HRESULT SafeCall( SAFECALL_CMD cmd, std::vector< std::string > *vec, int *presul
 
 				for (int i = 0; i < vec->size(); i++)
 				{
-					CComBSTR b = iter->c_str();
+					int len = MultiByteToWideChar(CP_UTF8, 0, iter->c_str(), -1, 0, 0);
+					WCHAR *pwc = new WCHAR[len];
+					MultiByteToWideChar(CP_UTF8, 0, iter->c_str(), -1, pwc, len);
+					CComBSTR b(pwc);
+					delete[] pwc;
+
 					CComVariant v(b);
 					cc.SetAt(i, v);
 					iter++;

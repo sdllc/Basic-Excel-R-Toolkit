@@ -77,4 +77,3 @@ source( "ExcelFunctions.R" );
 # R code when the file changes.
 
 # WatchFile( paste( BERT$HOME, "\\functions.R", sep=""))
-
