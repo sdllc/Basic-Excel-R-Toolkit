@@ -62,6 +62,8 @@ void LoadStartupFile();
 
 SVECTOR & getWordList( SVECTOR &wordList );
 
+void userBreak();
+
 int getCallTip(std::string &callTip, const std::string &sym);
 int notifyWatch(std::string &path);
 int getNames(SVECTOR &vec, const std::string &token);

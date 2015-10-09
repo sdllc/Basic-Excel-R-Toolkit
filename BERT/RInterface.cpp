@@ -136,7 +136,17 @@ int R_AskYesNoCancel(const char *question) {
 
 }
 
-static void my_onintr(int sig) { UserBreak = 1; }
+static void my_onintr(int sig) { 
+	UserBreak = 1; 
+}
+
+void userBreak() {
+
+	// FIXME: synchronize
+	UserBreak = 1;
+	logMessage(USER_BREAK_MESSAGE, 0, 1);
+
+}
 
 ///
 

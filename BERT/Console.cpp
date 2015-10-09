@@ -774,7 +774,12 @@ LRESULT CALLBACK SubClassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 	case WM_KEYDOWN:
 
-		if (inputlock) return 0;
+		if (inputlock) {
+			if (wParam == 'C' && GetKeyState(VK_CONTROL) < 0) {
+				SafeCall(SCC_BREAK, 0, 0);
+			}
+			return 0;
+		}
 
 		switch (wParam)
 		{

@@ -49,6 +49,7 @@
 #define SCINTILLA_LINK		L"http://" SCINTILLA_LINK_TEXT
 
 #define PARSE_ERROR_MESSAGE "(parse error)\n"
+#define USER_BREAK_MESSAGE "(break)\n"
 #define EXTERNAL_ERROR_MESSAGE "(an error occurred processing the command.  is excel busy?)\n"
 
 #define CONSOLE_WINDOW_TITLE L"BERT Console"

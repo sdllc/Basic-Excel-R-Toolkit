@@ -56,6 +56,7 @@ typedef enum
 	SCC_CALLTIP = 4,
 	SCC_NAMES = 5,
 	SCC_WATCH_NOTIFY = 6,
+	SCC_BREAK = 7,
 
 	SCC_LAST
 }

@@ -477,11 +477,17 @@ void UpdateWordList()
  * this is the second part of the context-switching callback
  * used when running functions from the console.  it is only
  * called (indirectly) by the SafeCall function.
+ *
+ * FIXME: reorganize this around cmdid, clearer switching
  */
 long BERT_SafeCall(long cmdid, LPXLOPER12 xl)
 {
 	SVECTOR sv;
-	if (xl->xltype & xltypeStr)
+
+	if (cmdid == 0x08) {
+		userBreak();
+	}
+	else if (xl->xltype & xltypeStr)
 	{
 		std::string func;
 		NarrowString(func, xl);
