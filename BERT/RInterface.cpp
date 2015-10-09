@@ -142,14 +142,13 @@ static void my_onintr(int sig) {
 
 void userBreak() {
 
-	// FIXME: synchronize
+	// FIXME: synchronize (actually that's probably not helpful, unless we
+	// can synchronize with whatever is clearing it inside R, which we can't)
+
 	UserBreak = 1;
 	logMessage(USER_BREAK_MESSAGE, 0, 1);
 
 }
-
-///
-
 
 int UpdateR(std::string &str)
 {

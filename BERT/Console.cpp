@@ -775,6 +775,11 @@ LRESULT CALLBACK SubClassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_KEYDOWN:
 
 		if (inputlock) {
+
+			// FIXME: buffer typing for after command is complete?  that's 
+			// standard behavior in some shells, unless the process grabs 
+			// iostreams 
+
 			if (wParam == 'C' && GetKeyState(VK_CONTROL) < 0) {
 				SafeCall(SCC_BREAK, 0, 0);
 			}

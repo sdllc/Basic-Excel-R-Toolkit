@@ -62,6 +62,9 @@ void LoadStartupFile();
 
 SVECTOR & getWordList( SVECTOR &wordList );
 
+/**
+ * asynchronous break, stopping a long-running or runaway function
+ */
 void userBreak();
 
 int getCallTip(std::string &callTip, const std::string &sym);
