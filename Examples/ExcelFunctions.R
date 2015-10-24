@@ -290,12 +290,11 @@ Set.Echo <- function( new.state ){
 # values).  should be faster, but a bit hacky, and resets the
 # selection.
 #
+# this is now the default implementation for Set.Range.
+#
 #--------------------------------------------------------------------
 Set.Range <- function( ref, formula.or.value, default.value="", by.row=TRUE ){
 	
-	#cached.value <- Get.Echo();
-	#Set.Echo( F );
-
 	len <- length( formula.or.value );
 
 	# case 1: single value (or formula)
@@ -303,38 +302,65 @@ Set.Range <- function( ref, formula.or.value, default.value="", by.row=TRUE ){
 		Set.Cell( ref, formula.or.value );
 	}
 	else {
+		
+		# setting/unsetting echo seems to be counterproductive
+		# cached.value <- Get.Echo();
+		# Set.Echo( F );
+	
 		ref <- Ensure.Ref( ref );
-		range.len <- nrow(ref) * ncol(ref);
-		n.row = nrow( formula.or.value );
+		
+		ref.row <- nrow(ref);
+		ref.col <- ncol(ref);
+		
+		v.row = nrow( formula.or.value );
+		v.col = ncol( formula.or.value );
 				
 		# case 2: shaped. paste in as-is.  ignore by.row for this case.
-		if( !is.null( n.row )){
+		if( !is.null( v.row )){
 			
 			# add default values if the data is smaller than the target range.
 			# otherwise we'll get #NAs padding the range.
-			if( nrow( ref ) > nrow( formula.or.value ) || ncol( ref ) > ncol( formula.or.value )){
-				Set.Cell( ref, default.value );
-				if( nrow( ref ) > nrow( formula.or.value )) ref@R2 <- ref@R1 + nrow( formula.or.value ) - 1;
-				if( ncol( ref ) > ncol( formula.or.value )) ref@C2 <- ref@C1 + ncol( formula.or.value ) - 1;
+			if( ref.row > v.row || ref.col > v.col ){
+			
+				#Set.Cell( ref, default.value );
+				BERT$.Excel( 0x8000 + 97, list( Normalize.Formula( default.value ), ref ));
+				
+				if( ref.row > v.row ) ref@R2 <- ref@R1 + v.row - 1;
+				if( ref.col > v.col ) ref@C2 <- ref@C1 + v.col - 1;
 			}
 		}
 		
 		# case 3: list/vector. convert to a matrix before paste.
 		else {
-			formula.or.value <- matrix( formula.or.value, nrow=nrow(ref), ncol=ncol(ref), byrow=by.row );
+			formula.or.value <- matrix( formula.or.value, nrow=ref.row, ncol=ref.col, byrow=by.row );
 		}
 		
-		Set.Array( ref, formula.or.value );
-		Copy.Range( ref );
-		Select.Range( ref );
-		Paste.Special();
-		Cancel.Copy();
+		# we're inlining these to avoid redundant type checking.
+		
+		#Set.Array( ref, formula.or.value );
+		BERT$.Excel( 0x8000 + 98, list( Normalize.Formula( formula.or.value ), ref ));
+		
+		#Copy.Range( ref );
+		BERT$.Excel( 0x8000 + 50, list( ref ));
+		
+		#Select.Range( ref );
+		BERT$.Excel( 0x8000 + 109, list( ref ));
+		
+		#Paste.Special();
+		BERT$.Excel( 0x8000 + 53, list( 3, 1, FALSE, FALSE ));
+		
+		#Cancel.Copy();
+		BERT$.Excel( 0x8000 + 120, list());
 
-		target <- new("xlReference", R1=ref@R1, C1=ref@C1);
-		Select.Range( target );
+		# this is nice, but unecesary
+
+		#target <- new("xlReference", R1=ref@R1, C1=ref@C1);
+		#Select.Range( target );
+
+		# setting/unsetting echo seems to be counterproductive
+		# Set.Echo( cached.value );
 
 	}
-
 }
 
 #--------------------------------------------------------------------
@@ -342,11 +368,15 @@ Set.Range <- function( ref, formula.or.value, default.value="", by.row=TRUE ){
 # set the number format for a range of cells.  this function
 # uses the selection, so selection will be changed.
 #
+# number.format is a string, as in the "custom format" in
+# the excel menu -- something like "#,##0.00". it can
+# handle postive/negative formats and colors.
+#
 #--------------------------------------------------------------------
-Format.Range <- function( ref, format.text ){
+Format.Range <- function( ref, number.format ){
 	ref <- Ensure.Ref( ref );
 	Select.Range( ref );
-	BERT$.Excel( 0x8000 + 42, list( format.text ))
+	BERT$.Excel( 0x8000 + 42, list( number.format ))
 }
 
 #--------------------------------------------------------------------
