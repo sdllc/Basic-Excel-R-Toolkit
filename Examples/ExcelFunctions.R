@@ -237,6 +237,18 @@ Select.Range <- function( ref ) {
 }
 
 #--------------------------------------------------------------------
+# 
+# set the number format for a range of cells.  this function
+# uses the selection, so selection will be changed.
+#
+#--------------------------------------------------------------------
+Format.Range <- function( ref, format.text ){
+	ref <- Ensure.Ref( ref );
+	Select.Range( ref );
+	BERT$.Excel( 0x8000 + 42, list( format.text ))
+}
+
+#--------------------------------------------------------------------
 #
 # recalculate
 #
