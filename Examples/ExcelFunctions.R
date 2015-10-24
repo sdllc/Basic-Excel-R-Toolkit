@@ -115,7 +115,7 @@ Normalize.Formula <- function( formula.or.value ){
 # and columns will be filled with default.value.
 #
 #--------------------------------------------------------------------
-Set.Range <- function( ref, formula.or.value, repeat.values=T, default.value="", column.first=F ){
+Set.Range.1 <- function( ref, formula.or.value, repeat.values=T, default.value="", column.first=F ){
 	
 	len <- length( formula.or.value );
 
@@ -234,6 +234,107 @@ Get.Selection <- function( ref ){
 Select.Range <- function( ref ) {
 	ref <- Ensure.Ref( ref );
 	BERT$.Excel( 0x8000 + 109, list( ref ));
+}
+
+#--------------------------------------------------------------------
+#
+# copy a range to the clipboard
+#
+#--------------------------------------------------------------------
+Copy.Range <- function( ref ){
+	ref <- Ensure.Ref( ref );
+	BERT$.Excel( 0x8000 + 50, list( ref ))
+}
+
+#--------------------------------------------------------------------
+#
+# copy a range to the clipboard
+#
+#--------------------------------------------------------------------
+Paste.Special <- function(){
+	BERT$.Excel( 0x8000 + 53, list( 3, 1, FALSE, FALSE ));
+}
+
+#--------------------------------------------------------------------
+#
+# cancel copy
+#
+#--------------------------------------------------------------------
+Cancel.Copy <- function(){
+	BERT$.Excel( 0x8000 + 120, list());
+}
+
+#--------------------------------------------------------------------
+# 
+# get the current screen update state
+#
+#--------------------------------------------------------------------
+Get.Echo <- function(){
+	BERT$.Excel( 186, list( 40 ));
+}
+
+#--------------------------------------------------------------------
+# 
+# set the screen update state.  this function is surprisingly
+# slow, so only call it for long operations.
+#
+#--------------------------------------------------------------------
+Set.Echo <- function( new.state ){
+	# BERT$.Excel( 0x8000 + 141, list( new.state ));
+	BERT$.Excel( 87, list( new.state ));
+}
+
+#--------------------------------------------------------------------
+#
+# alternate method for setting a range of cells (to different
+# values).  should be faster, but a bit hacky, and resets the
+# selection.
+#
+#--------------------------------------------------------------------
+Set.Range <- function( ref, formula.or.value, default.value="", by.row=TRUE ){
+	
+	#cached.value <- Get.Echo();
+	#Set.Echo( F );
+
+	len <- length( formula.or.value );
+
+	# case 1: single value (or formula)
+	if( len == 1 ){
+		Set.Cell( ref, formula.or.value );
+	}
+	else {
+		ref <- Ensure.Ref( ref );
+		range.len <- nrow(ref) * ncol(ref);
+		n.row = nrow( formula.or.value );
+				
+		# case 2: shaped. paste in as-is.  ignore by.row for this case.
+		if( !is.null( n.row )){
+			
+			# add default values if the data is smaller than the target range.
+			# otherwise we'll get #NAs padding the range.
+			if( nrow( ref ) > nrow( formula.or.value ) || ncol( ref ) > ncol( formula.or.value )){
+				Set.Cell( ref, default.value );
+				if( nrow( ref ) > nrow( formula.or.value )) ref@R2 <- ref@R1 + nrow( formula.or.value ) - 1;
+				if( ncol( ref ) > ncol( formula.or.value )) ref@C2 <- ref@C1 + ncol( formula.or.value ) - 1;
+			}
+		}
+		
+		# case 3: list/vector. convert to a matrix before paste.
+		else {
+			formula.or.value <- matrix( formula.or.value, nrow=nrow(ref), ncol=ncol(ref), byrow=by.row );
+		}
+		
+		Set.Array( ref, formula.or.value );
+		Copy.Range( ref );
+		Select.Range( ref );
+		Paste.Special();
+		Cancel.Copy();
+
+		target <- new("xlReference", R1=ref@R1, C1=ref@C1);
+		Select.Range( target );
+
+	}
+
 }
 
 #--------------------------------------------------------------------
