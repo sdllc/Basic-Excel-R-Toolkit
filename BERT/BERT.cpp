@@ -829,7 +829,7 @@ bool RegisterAddinFunctions()
 
 		// also, quote default strings.
 
-		for (int j = 0; j < func.size() - 1; j++)
+		for (int j = 0; j < func.size() - 1 && j< MAX_ARGUMENT_COUNT; j++)
 		{
 			int len = MultiByteToWideChar(CP_UTF8, 0, func[j + 1].second.c_str(), -1, 0, 0);
 			xlParm[scount + 1]->xltype = xltypeStr;
