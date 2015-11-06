@@ -433,6 +433,18 @@ Delete.Name <- function( name ){
 	
 }
 
+#--------------------------------------------------------------------
+#
+# activate a worksheet, by name (brings it to the front)
+#
+#--------------------------------------------------------------------
+Activate.Sheet <- function( name ){
+
+	BERT$.Excel( 0x8000 + 291, list( name, name, TRUE ));
+
+}
+
+
 }); # end with
 
 #

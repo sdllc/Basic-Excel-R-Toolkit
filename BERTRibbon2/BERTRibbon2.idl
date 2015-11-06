@@ -17,7 +17,7 @@ library BERTRibbon2Lib
 	importlib("stdole2.tlb");
 	[
 		uuid(0445D07A-354A-4FD2-9B38-B42221BA53B7),
-		helpstring("Connect Class")
+		helpstring("BERT Ribbon")
 	]
 	coclass Connect
 	{
