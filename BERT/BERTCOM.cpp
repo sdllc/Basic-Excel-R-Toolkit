@@ -43,6 +43,9 @@ DISPID dispidRun = 0;
 /** stream for the marshaled pointer */
 IStream *pstream = 0;
 
+extern void InstallApplicationObject(void *p);
+
+
 /**
  * call the excel run2 method via dispatch, in case the typelib is missing.  
  */
@@ -195,6 +198,8 @@ HRESULT SafeCall( SAFECALL_CMD cmd, std::vector< std::string > *vec, int *presul
 void SetExcelPtr(LPVOID p)
 {
 	pdispApp = (IDispatch*)p;
+	InstallApplicationObject(p);
+
 }
 
 /**

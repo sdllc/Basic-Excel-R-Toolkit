@@ -6,12 +6,14 @@ with( BERT, {
 #========================================================
 
 .EXCEL <- 1;
+
 .WATCHFILES <- 1020;
 .CLEAR <- 1021;
 .RELOAD <- 1022;
 .CLOSECONSOLE <- 1023;
 
 .CALLBACK <- "BERT_Callback";
+.COM_CALLBACK <- "BERT_COM_Callback";
 
 #========================================================
 # functions - for general use
@@ -38,6 +40,16 @@ ReloadStartup <- function(){ .Call(.CALLBACK, .RELOAD, 0, PACKAGE=.MODULE ); };
 # you know what you are doing.
 #--------------------------------------------------------
 .Excel<- function( command, arguments = list() ){ .Call(.CALLBACK, .EXCEL, command, arguments, PACKAGE=.MODULE ); };
+
+#--------------------------------------------------------
+# callback function for handling com calls 
+#--------------------------------------------------------
+.DefineCOMFunc <- function( func.name, func.type, target.env ){
+	
+	target.env[[func.name]] <- function(...){ 
+		.Call(.COM_CALLBACK, func.name, func.type, target.env$.p, list(...), PACKAGE=.MODULE );
+	}
+}
 
 #========================================================
 # functions - for internal use

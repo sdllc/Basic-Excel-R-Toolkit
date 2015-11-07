@@ -44,6 +44,8 @@
 
 #include "FileWatcher.h"
 
+#include "RCOM.h"
+
 FDVECTOR RFunctions;
 
 
@@ -340,6 +342,36 @@ short BERT_InstallPackages()
 {
 	ExecR("install.packages()");
 	return 1;
+}
+
+void InstallApplicationObject(void *p) {
+
+	int errorOccurred;
+	SEXP obj = WrapDispatch((ULONG_PTR)p);
+
+	if (Rf_isEnvironment(obj)) {
+
+		// R_do_slot_assign(rv, Rf_mkString("SheetID"), idv);
+
+
+		Rf_defineVar(Rf_install("Excel.Application"), obj, R_GlobalEnv);
+	}
+
+	/*
+	SEXP s = PROTECT(Rf_lang1(Rf_install("new.env")));
+	if (s)
+	{
+		SEXP e = PROTECT(R_tryEval(s, R_GlobalEnv, &errorOccurred));
+		if (e)
+		{
+			Rf_defineVar(Rf_install("Excel.Application"), e, R_GlobalEnv);
+			Rf_defineVar(Rf_install(".p"), Rf_ScalarInteger(p), e);
+
+		}
+		UNPROTECT(1);
+	}
+	UNPROTECT(1);
+	*/
 }
 
 int RInit()
@@ -1885,6 +1917,27 @@ SEXP ExcelCall(SEXP cmd, SEXP data)
 
 	return rv;
 
+}
+
+SEXP BERT_COM_Callback(SEXP name, SEXP calltype, SEXP p, SEXP args) {
+
+	int ctype = 0;
+	if (Rf_length(calltype) > 0)
+	{
+		if (isReal(calltype)) ctype = (REAL(calltype))[0];
+		else if (isInteger(calltype)) ctype = (INTEGER(calltype))[0];
+	}
+
+	switch (ctype) {
+	case MRFLAG_METHOD:
+		return COMFunc(name, p, args);
+	case MRFLAG_PROPGET:
+		return COMPropGet(name, p, args);
+	case MRFLAG_PROPPUT:
+		return COMPropPut(name, p, args);
+	}
+
+	return R_NilValue;
 }
 
 /**

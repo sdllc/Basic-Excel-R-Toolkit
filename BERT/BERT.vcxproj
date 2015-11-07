@@ -251,6 +251,7 @@
     <ClInclude Include="ExcelLib\XLCALL.H" />
     <ClInclude Include="FileWatcher.h" />
     <ClInclude Include="LinkLabel.h" />
+    <ClInclude Include="RCOM.h" />
     <ClInclude Include="RegistryConstants.h" />
     <ClInclude Include="RegistryUtils.h" />
     <ClInclude Include="resource.h" />
@@ -291,6 +292,7 @@
     <ClCompile Include="ExcelLib\XLCALL.CPP" />
     <ClCompile Include="FileWatcher.cpp" />
     <ClCompile Include="LinkLabel.cpp" />
+    <ClCompile Include="RCOM.cpp" />
     <ClCompile Include="RInterface.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
     </ClCompile>
