@@ -71,11 +71,20 @@ WordList <- function(){
 
 #--------------------------------------------------------
 # callback function for handling com calls 
-#--------------------------------------------------------
-.DefineCOMFunc <- function( func.name, func.type, target.env ){
+#--------------------------------------------------------	
+.DefineCOMFunc <- function( func.name, func.type, func.args, target.env ){
 
-	target.env[[func.name]] <- function(...){ 
-		.Call(.COM_CALLBACK, func.name, func.type, target.env$.p, list(...), PACKAGE=.MODULE );
+	if( missing( func.args ) || length(func.args) == 0 ){
+		target.env[[func.name]] <- function(...){ 
+			.Call(.COM_CALLBACK, func.name, func.type, target.env$.p, list(...), PACKAGE=.MODULE );
+		}
+	}
+	else {
+		target.env[[func.name]] <- function(){ 
+			.Call(.COM_CALLBACK, func.name, func.type, target.env$.p, c(as.list(environment())), PACKAGE=.MODULE );
+		}
+		aexp <- paste( "alist(", paste( sapply( func.args, function(x){ paste( x, "=", sep="" )}), collapse=", " ), ")" );
+		formals(target.env[[func.name]]) <- eval(parse(text=aexp));
 	}
 }
 
