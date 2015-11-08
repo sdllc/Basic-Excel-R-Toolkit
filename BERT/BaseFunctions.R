@@ -41,16 +41,6 @@ ReloadStartup <- function(){ .Call(.CALLBACK, .RELOAD, 0, PACKAGE=.MODULE ); };
 #--------------------------------------------------------
 .Excel<- function( command, arguments = list() ){ .Call(.CALLBACK, .EXCEL, command, arguments, PACKAGE=.MODULE ); };
 
-#--------------------------------------------------------
-# callback function for handling com calls 
-#--------------------------------------------------------
-.DefineCOMFunc <- function( func.name, func.type, target.env ){
-	
-	target.env[[func.name]] <- function(...){ 
-		.Call(.COM_CALLBACK, func.name, func.type, target.env$.p, list(...), PACKAGE=.MODULE );
-	}
-}
-
 #========================================================
 # functions - for internal use
 #========================================================
@@ -59,6 +49,34 @@ WordList <- function(){
 	wl <- vector();
 	for( i in search()){ wl <- c( wl, ls(i, all.names=1)); }
 	wl;
+}
+
+#========================================================
+# functions for using the Excel COM interface 
+# (experimental)
+#========================================================
+
+#--------------------------------------------------------
+# create a wrapper for a dispatch pointer -- this will
+# have functions in the environment
+#--------------------------------------------------------
+.WrapDispatch <- function( class.name = NULL ){
+	
+	obj <- new.env();
+	if( is.null( class.name )){ class(obj) <- "IDispatch"; }
+	else { class(obj) <- c( class.name, "IDispatch" ) };
+	return(obj);
+
+}
+
+#--------------------------------------------------------
+# callback function for handling com calls 
+#--------------------------------------------------------
+.DefineCOMFunc <- function( func.name, func.type, target.env ){
+
+	target.env[[func.name]] <- function(...){ 
+		.Call(.COM_CALLBACK, func.name, func.type, target.env$.p, list(...), PACKAGE=.MODULE );
+	}
 }
 
 }); # end with(BERT)

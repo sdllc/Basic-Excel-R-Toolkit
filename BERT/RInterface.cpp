@@ -346,32 +346,19 @@ short BERT_InstallPackages()
 
 void InstallApplicationObject(void *p) {
 
-	int errorOccurred;
+	int err;
 	SEXP obj = WrapDispatch((ULONG_PTR)p);
 
-	if (Rf_isEnvironment(obj)) {
+	if (obj) {
 
-		// R_do_slot_assign(rv, Rf_mkString("SheetID"), idv);
-
-
-		Rf_defineVar(Rf_install("Excel.Application"), obj, R_GlobalEnv);
-	}
-
-	/*
-	SEXP s = PROTECT(Rf_lang1(Rf_install("new.env")));
-	if (s)
-	{
-		SEXP e = PROTECT(R_tryEval(s, R_GlobalEnv, &errorOccurred));
-		if (e)
-		{
-			Rf_defineVar(Rf_install("Excel.Application"), e, R_GlobalEnv);
-			Rf_defineVar(Rf_install(".p"), Rf_ScalarInteger(p), e);
-
+		SEXP env = R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString(ENV_NAME)), R_GlobalEnv, &err);
+		if (env) {
+			// R_do_slot_assign(rv, Rf_mkString("SheetID"), idv);
+			Rf_defineVar(Rf_install("Application"), obj, env);
 		}
-		UNPROTECT(1);
+
 	}
-	UNPROTECT(1);
-	*/
+
 }
 
 int RInit()
