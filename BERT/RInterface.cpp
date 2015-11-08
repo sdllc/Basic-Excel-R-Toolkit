@@ -256,13 +256,13 @@ void MapFunctions()
 							{
 								dflt = "Default: ";
 								const char *a = CHAR(asChar(vecelt));
-								if (type == 16)
+								if (type == STRSXP)
 								{
 									dflt += "\"";
 									dflt += a;
 									dflt += "\"";
 								}
-								else if (type == 10)
+								else if (type == LGLSXP)
 								{
 									if ((LOGICAL(vecelt))[0]) dflt += "TRUE";
 									else dflt += "FALSE";
@@ -347,13 +347,12 @@ short BERT_InstallPackages()
 void InstallApplicationObject(void *p) {
 
 	int err;
-	SEXP obj = WrapDispatch((ULONG_PTR)p);
+	SEXP obj = wrapDispatch((ULONG_PTR)p);
 
 	if (obj) {
 
 		SEXP env = R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString(ENV_NAME)), R_GlobalEnv, &err);
 		if (env) {
-			// R_do_slot_assign(rv, Rf_mkString("SheetID"), idv);
 			Rf_defineVar(Rf_install("Application"), obj, env);
 		}
 
