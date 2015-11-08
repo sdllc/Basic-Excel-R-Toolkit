@@ -347,7 +347,7 @@ short BERT_InstallPackages()
 void InstallApplicationObject(void *p) {
 
 	int err;
-	SEXP obj = wrapDispatch((ULONG_PTR)p);
+	SEXP obj = wrapDispatch((ULONG_PTR)p, true);
 
 	if (obj) {
 
