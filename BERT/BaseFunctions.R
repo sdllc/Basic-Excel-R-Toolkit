@@ -75,8 +75,8 @@ WordList <- function(){
 .DefineCOMFunc <- function( func.name, func.type, func.args, target.env ){
 
 	if( missing( func.args ) || length(func.args) == 0 ){
-		target.env[[func.name]] <- function(...){ 
-			.Call(.COM_CALLBACK, func.name, func.type, target.env$.p, list(...), PACKAGE=.MODULE );
+		target.env[[func.name]] <- function(){ 
+			.Call(.COM_CALLBACK, func.name, func.type, target.env$.p, list(), PACKAGE=.MODULE );
 		}
 	}
 	else {
