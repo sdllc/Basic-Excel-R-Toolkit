@@ -344,18 +344,24 @@ short BERT_InstallPackages()
 	return 1;
 }
 
-void InstallApplicationObject(void *p) {
+void installApplicationObject(ULONG_PTR p) {
 
 	int err;
-	SEXP obj = wrapDispatch((ULONG_PTR)p, true);
 
-	if (obj) {
+	// create an "excel" env
+	SEXP e = PROTECT(R_tryEval(Rf_lang1(Rf_install("new.env")), R_GlobalEnv, &err));
+	if (e)
+	{
+		Rf_defineVar(Rf_install("EXCEL"), e, R_GlobalEnv);
 
-		SEXP env = R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString(ENV_NAME)), R_GlobalEnv, &err);
-		if (env) {
-			Rf_defineVar(Rf_install("Application"), obj, env);
-		}
+		// wrap the app object
+		SEXP obj = wrapDispatch((ULONG_PTR)p);
+		if (obj) Rf_defineVar(Rf_install("Application"), obj, e);
 
+		// add enums to the excel env, rather than stuffing them into the application object
+		mapEnums(p, e);
+
+		UNPROTECT(1);
 	}
 
 }

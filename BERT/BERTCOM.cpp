@@ -43,7 +43,7 @@ DISPID dispidRun = 0;
 /** stream for the marshaled pointer */
 IStream *pstream = 0;
 
-extern void InstallApplicationObject(void *p);
+extern void installApplicationObject(ULONG_PTR p);
 
 
 /**
@@ -198,7 +198,7 @@ HRESULT SafeCall( SAFECALL_CMD cmd, std::vector< std::string > *vec, int *presul
 void SetExcelPtr(LPVOID p)
 {
 	pdispApp = (IDispatch*)p;
-	InstallApplicationObject(p);
+	installApplicationObject((ULONG_PTR)p);
 
 }
 
