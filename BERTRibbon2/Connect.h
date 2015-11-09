@@ -7,18 +7,18 @@
 
 typedef IDispatchImpl<IRibbonExtensibility, &__uuidof(IRibbonExtensibility), &LIBID_Office, /* wMajor = */ 2, /* wMinor = */ 4> RIBBON_INTERFACE;
 
-typedef int (*SPPROC)(LPVOID);
+typedef int (*SPPROC)(LPVOID, LPVOID);
 
 class UserButtonInfo {
 public:
-	std::string strLabel;
-	std::string strFunction;
+	CComBSTR bstrLabel;
+	CComBSTR bstrFunction;
 	int iImageIndex;
 
 	UserButtonInfo() {};
 	UserButtonInfo(const UserButtonInfo &rhs) {
-		strLabel = rhs.strLabel;
-		strFunction = rhs.strFunction;
+		bstrLabel = rhs.bstrLabel;
+		bstrFunction = rhs.bstrFunction;
 		iImageIndex = rhs.iImageIndex;
 	}
 };
@@ -29,6 +29,11 @@ typedef std::vector < UserButtonInfo > UBVECTOR;
 #define DISPID_USER_BUTTON_VISIBLE		3001
 #define DISPID_USER_BUTTON_LABEL		3002
 #define DISPID_USER_BUTTON_ACTION		3004
+
+#define DISPID_ADD_USER_BUTTON			3005
+#define DISPID_REMOVE_USER_BUTTON		3006
+#define DISPID_CLEAR_USER_BUTTONS		3007
+#define DISPID_REFRESH_RIBBON			3008
 
 // CConnect
 class ATL_NO_VTABLE CConnect :
@@ -128,6 +133,12 @@ public:
 			else if (!wcscmp(rgszNames[0], L"getUserButtonVisible"))			dispID = DISPID_USER_BUTTON_VISIBLE;
 			else if (!wcscmp(rgszNames[0], L"getUserButtonLabel"))				dispID = DISPID_USER_BUTTON_LABEL;
 			else if (!wcscmp(rgszNames[0], L"userButtonAction"))				dispID = DISPID_USER_BUTTON_ACTION;
+			
+			else if (!wcscmp(rgszNames[0], L"RefreshRibbonUI"))					dispID = DISPID_REFRESH_RIBBON;
+
+			else if (!wcscmp(rgszNames[0], L"AddUserButton"))					dispID = DISPID_ADD_USER_BUTTON;
+			else if (!wcscmp(rgszNames[0], L"RemoveUserButton"))				dispID = DISPID_REMOVE_USER_BUTTON;
+			else if (!wcscmp(rgszNames[0], L"ClearUserButtons"))				dispID = DISPID_CLEAR_USER_BUTTONS;
 
 		}
 		if (dispID > 0)
@@ -169,6 +180,50 @@ public:
 		case 2000:
 			return HandleCacheRibbon(pdispparams);
 
+		case DISPID_ADD_USER_BUTTON:
+			if (pdispparams->cArgs >= 2) {
+
+				UserButtonInfo ubi;
+
+				if (pdispparams->rgvarg[0].vt == VT_BSTR) {
+					ubi.bstrLabel = pdispparams->rgvarg[0].bstrVal;
+					//SysFreeString(pdispparams->rgvarg[0].bstrVal);
+				}
+				else if (pdispparams->rgvarg[0].vt == (VT_BSTR | VT_BYREF)) {
+					ubi.bstrLabel = pdispparams->rgvarg[0].bstrVal;
+				}
+				else return E_INVALIDARG;
+
+				if (pdispparams->rgvarg[1].vt == VT_BSTR) {
+					ubi.bstrFunction = pdispparams->rgvarg[1].bstrVal;
+					//SysFreeString(pdispparams->rgvarg[1].bstrVal);
+				}
+				else if (pdispparams->rgvarg[1].vt == (VT_BSTR | VT_BYREF)) {
+					ubi.bstrFunction = pdispparams->rgvarg[1].bstrVal;
+				}
+				else return E_INVALIDARG;
+
+				userbuttons.push_back(ubi);
+				if (m_pRibbonUI) m_pRibbonUI->Invalidate();
+
+				return S_OK;
+			}
+			return E_INVALIDARG;
+
+		case DISPID_REMOVE_USER_BUTTON:
+			return E_NOTIMPL;
+
+		case DISPID_CLEAR_USER_BUTTONS:
+			userbuttons.clear();
+			if (m_pRibbonUI) m_pRibbonUI->Invalidate();
+			return S_OK;
+
+		case DISPID_REFRESH_RIBBON:
+			if (m_pRibbonUI) {
+				m_pRibbonUI->Invalidate();
+			}
+			return S_OK;
+
 		case DISPID_USER_BUTTONS_VISIBLE:
 			if (pvarResult) {
 				pvarResult->vt = VT_BOOL;
@@ -192,7 +247,7 @@ public:
 				ctrl->get_Tag(&bstrTag);
 				int id = bstrTag.m_str[0] - '1';
 				if (userbuttons.size() > id) {
-					bstr = userbuttons[id].strLabel.c_str();
+					bstr = userbuttons[id].bstrLabel;
 					pvarResult->vt = VT_BSTR | VT_BYREF;
 					pvarResult->pbstrVal = &bstr;
 				}
@@ -210,7 +265,7 @@ public:
 					if (pApp)
 					{
 						CComBSTR bstrCmd("BERT.Call");
-						CComBSTR bstrMethod(userbuttons[id].strFunction.c_str());
+						CComBSTR bstrMethod(userbuttons[id].bstrFunction );
 
 						CComVariant cvCmd = bstrCmd;
 						CComVariant cvFunc = bstrMethod;
@@ -262,8 +317,7 @@ public:
 						SPPROC sp;
 						sp = (SPPROC)::GetProcAddress(hMods[i], "BERT_SetPtr");
 						if (sp){
-//							sp((LPVOID)m_pApplication.p);
-							sp((LPVOID)pexcel);
+							sp((LPVOID)pexcel, (LPVOID)pribbon);
 							rslt = 0;
 						}
 					}

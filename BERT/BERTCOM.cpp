@@ -35,7 +35,10 @@
 // that was a workaround for (at least one, probably more) broken excel install.
 
 /** cached Excel pointer */
-IDispatch *pdispApp = 0;
+LPDISPATCH pdispApp = 0;
+
+/** pointer to the ribbon class */
+LPDISPATCH pdispRibbon = 0;
 
 /** cache this value, as it won't change in a single process (or ever, really, it's 806) */
 DISPID dispidRun = 0;
@@ -45,6 +48,49 @@ IStream *pstream = 0;
 
 extern void installApplicationObject(ULONG_PTR p);
 
+/**
+ * call a function on the ribbon menu via dispinvoke
+ */
+HRESULT RibbonCall(LPDISPATCH pdisp, WCHAR *method, std::vector<CComVariant> &args, CComVariant &cvResult) {
+
+	if (!pdisp) return E_FAIL;
+
+	DISPPARAMS dispparams;
+	HRESULT hr = S_OK;
+	DISPID dispid;
+
+	hr = pdisp->GetIDsOfNames(IID_NULL, &method, 1, 1033, &dispid);
+	if (FAILED(hr)) {
+		DebugOut("ERR 0x%x\n", hr);
+		return hr;
+	}
+
+	dispparams.cArgs = args.size(); 
+	dispparams.cNamedArgs = 0;
+	dispparams.rgdispidNamedArgs = 0;
+	dispparams.rgvarg = args.size() ? &args[0] : 0; 
+
+	hr = pdisp->Invoke(dispid, IID_NULL, 1033, DISPATCH_METHOD, &dispparams, &cvResult, NULL, NULL);
+
+	return hr;
+
+}
+
+void RibbonClearUserButtons() {
+	std::vector< CComVariant > args;
+	CComVariant rslt;
+	RibbonCall(pdispRibbon, L"ClearUserButtons", args, rslt);
+}
+
+void RibbonAddUserButton(std::string &strLabel, std::string &strFunc) {
+	std::vector< CComVariant > args;
+	CComVariant rslt;
+	CComBSTR bstrLabel(strLabel.c_str());
+	CComBSTR bstrFunc(strFunc.c_str());
+	args.push_back(CComVariant(bstrLabel));
+	args.push_back(CComVariant(bstrFunc));
+	RibbonCall(pdispRibbon, L"AddUserButton", args, rslt);
+}
 
 /**
  * call the excel run2 method via dispatch, in case the typelib is missing.  
@@ -195,9 +241,10 @@ HRESULT SafeCall( SAFECALL_CMD cmd, std::vector< std::string > *vec, int *presul
 /**
  * cache pointer to excel, for use by the console
  */
-void SetExcelPtr(LPVOID p)
+void SetExcelPtr(LPVOID p, LPVOID ribbon)
 {
 	pdispApp = (IDispatch*)p;
+	pdispRibbon = (IDispatch*)ribbon;
 	installApplicationObject((ULONG_PTR)p);
 
 }

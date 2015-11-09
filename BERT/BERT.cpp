@@ -51,7 +51,7 @@ SVECTOR wlist;
 std::string calltip;
 
 extern void FreeStream();
-extern void SetExcelPtr( LPVOID p );
+extern void SetExcelPtr( LPVOID p, LPVOID ribbon );
 
 LPXLOPER12 BERTFunctionCall( 
 	int index
@@ -254,9 +254,9 @@ short BERT_HomeDirectory()
 /**
  * set the excel callback pointer.
  */
-int BERT_SetPtr( LPVOID pdisp )
+int BERT_SetPtr( LPVOID pdisp, LPVOID pribbon )
 {
-	SetExcelPtr(pdisp);
+	SetExcelPtr(pdisp, pribbon);
 	return 2;
 }
 

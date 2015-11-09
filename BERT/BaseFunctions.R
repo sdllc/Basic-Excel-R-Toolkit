@@ -7,6 +7,9 @@ with( BERT, {
 
 .EXCEL <- 1;
 
+.ADD_USER_BUTTON <- 100;
+.CLEAR_USER_BUTTONS <- 101;
+
 .WATCHFILES <- 1020;
 .CLEAR <- 1021;
 .RELOAD <- 1022;
@@ -34,6 +37,22 @@ CloseConsole <- function(){ invisible(.Call(.CALLBACK, .CLOSECONSOLE, 0, PACKAGE
 # reload the startup file
 #--------------------------------------------------------
 ReloadStartup <- function(){ .Call(.CALLBACK, .RELOAD, 0, PACKAGE=.MODULE ); };
+
+#--------------------------------------------------------
+# add a user button.  these are added to the ribbon,
+# there's a max of 6.  pass the name of the callback
+# as a string.
+#--------------------------------------------------------
+AddUserButton <- function( label, callback.function ){
+	.Call(.CALLBACK, .ADD_USER_BUTTON, c( label, callback.function ), 0, PACKAGE=.MODULE);
+}
+
+#--------------------------------------------------------
+# remove user buttons
+#--------------------------------------------------------
+ClearUserButtons <- function(){
+	.Call(.CALLBACK, .CLEAR_USER_BUTTONS, 0, 0, PACKAGE=.MODULE);
+}
 
 #--------------------------------------------------------
 # Excel callback function. Be careful with this unless 

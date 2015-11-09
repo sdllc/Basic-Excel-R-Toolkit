@@ -76,6 +76,9 @@ extern void R_SaveGlobalEnvToFile(const char *);
 
 }
 
+extern void RibbonClearUserButtons();
+extern void RibbonAddUserButton(std::string &strLabel, std::string &strFunc);
+
 int R_ReadConsole(const char *prompt, char *buf, int len, int addtohistory)
 {
 	fputs(prompt, stdout);
@@ -1932,6 +1935,19 @@ SEXP BERT_COM_Callback(SEXP name, SEXP calltype, SEXP p, SEXP args) {
 	return R_NilValue;
 }
 
+void AddUserButton(SEXP args) {
+
+	std::string strLabel = "";
+	std::string strFunc = "";
+
+	if (Rf_length(args) > 1) {
+		strLabel = CHAR(STRING_ELT(args, 0));
+		strFunc = CHAR(STRING_ELT(args, 1));
+		if( strLabel.length() && strFunc.length()) RibbonAddUserButton(strLabel, strFunc);
+	}
+
+}
+
 /**
  * callback dispatch function (calling from R)
  */
@@ -1945,6 +1961,14 @@ SEXP BERT_Callback(SEXP cmd, SEXP data, SEXP data2)
 	}
 	switch (command)
 	{
+	case CC_ADD_USER_BUTTON:
+		AddUserButton(data);
+		break;
+
+	case CC_CLEAR_USER_BUTTONS:
+		RibbonClearUserButtons();
+		break;
+
 	case CC_WATCHFILES:
 		return BERTWatchFiles(data);
 
