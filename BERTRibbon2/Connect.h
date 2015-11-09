@@ -23,6 +23,29 @@ public:
 		bstrFunction = rhs.bstrFunction;
 		iImageIndex = rhs.iImageIndex;
 	}
+
+	void FromCString(const char *label, const char *func) {
+
+		int strlen = MultiByteToWideChar(CP_UTF8, 0, label, -1, 0, 0);
+		if (strlen > 0) {
+			WCHAR *wsz = new WCHAR[strlen];
+			MultiByteToWideChar(CP_UTF8, 0, label, -1, wsz, strlen);
+			bstrLabel = wsz;
+			delete[] wsz;
+		}
+		else bstrLabel = "";
+
+		strlen = MultiByteToWideChar(CP_UTF8, 0, func, -1, 0, 0);
+		if (strlen > 0) {
+			WCHAR *wsz = new WCHAR[strlen];
+			MultiByteToWideChar(CP_UTF8, 0, func, -1, wsz, strlen);
+			bstrFunction = wsz;
+			delete[] wsz;
+		}
+		else bstrFunction = "";
+
+	}
+
 };
 
 typedef std::vector < UserButtonInfo > UBVECTOR;
@@ -336,8 +359,7 @@ public:
 								for (int j = 0; j < ubcount && j < 12; j++) {
 									if (ub(label, 255, func, 255, j) == 0) {
 										UserButtonInfo ubi;
-										ubi.bstrLabel = label;
-										ubi.bstrFunction = func;
+										ubi.FromCString(label, func);
 										userbuttons.push_back(ubi);
 									}
 								}

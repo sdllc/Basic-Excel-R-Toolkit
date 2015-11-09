@@ -67,6 +67,20 @@ IStream *pstream = 0;
 
 extern void installApplicationObject(ULONG_PTR p);
 
+void string2BSTR(CComBSTR &bstr, std::string &str) {
+
+	const char *sz = str.c_str();
+	int strlen = MultiByteToWideChar(CP_UTF8, 0, sz, -1, 0, 0);
+	if (strlen > 0) {
+		WCHAR *wsz = new WCHAR[strlen];
+		MultiByteToWideChar(CP_UTF8, 0, sz, -1, wsz, strlen);
+		bstr = wsz;
+		delete[] wsz;
+	}
+	else bstr = "";
+
+}
+
 /**
  * call a function on the ribbon menu via dispinvoke
  */
@@ -124,8 +138,11 @@ void RibbonAddUserButton(std::string &strLabel, std::string &strFunc) {
 	if (pdispRibbon) {
 		std::vector< CComVariant > args;
 		CComVariant rslt;
-		CComBSTR bstrLabel(strLabel.c_str());
-		CComBSTR bstrFunc(strFunc.c_str());
+		CComBSTR bstrLabel, bstrFunc;
+
+		string2BSTR(bstrLabel, strLabel);
+		string2BSTR(bstrFunc, strFunc);
+
 		args.push_back(CComVariant(bstrLabel));
 		args.push_back(CComVariant(bstrFunc));
 		RibbonCall(pdispRibbon, L"AddUserButton", args, rslt);
