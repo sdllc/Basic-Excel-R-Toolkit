@@ -38,19 +38,25 @@ CloseConsole <- function(){ invisible(.Call(.CALLBACK, .CLOSECONSOLE, 0, PACKAGE
 #--------------------------------------------------------
 ReloadStartup <- function(){ .Call(.CALLBACK, .RELOAD, 0, PACKAGE=.MODULE ); };
 
+.UserButtonCallbacks <- c();
+.UserButtonCallback <- function(index){
+	.UserButtonCallbacks[[index+1]]();
+}
+
 #--------------------------------------------------------
 # add a user button.  these are added to the ribbon,
-# there's a max of 6.  pass the name of the callback
-# as a string.
+# there's a max of 6.  callback is any R expression.
 #--------------------------------------------------------
-AddUserButton <- function( label, callback.function ){
-	.Call(.CALLBACK, .ADD_USER_BUTTON, c( label, callback.function ), 0, PACKAGE=.MODULE);
+AddUserButton <- function( label, FUN ){
+	.Call(.CALLBACK, .ADD_USER_BUTTON, c( label, "BERT$.UserButtonCallback" ), 0, PACKAGE=.MODULE);
+	.UserButtonCallbacks <<- c(.UserButtonCallbacks, FUN);
 }
 
 #--------------------------------------------------------
 # remove user buttons
 #--------------------------------------------------------
 ClearUserButtons <- function(){
+	.UserButtonCallbacks <<- c();
 	.Call(.CALLBACK, .CLEAR_USER_BUTTONS, 0, 0, PACKAGE=.MODULE);
 }
 

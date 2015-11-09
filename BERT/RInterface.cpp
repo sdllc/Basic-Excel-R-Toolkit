@@ -1727,14 +1727,17 @@ bool RExec2(LPXLOPER12 rslt, std::string &funcname, std::vector< LPXLOPER12 > &a
 		SET_VECTOR_ELT(sargs, i, XLOPER2SEXP(args[i], 0, true));
 	}
 
-	if (g_Environment)
-	{
-		lns = PROTECT(Rf_lang5(Rf_install("do.call"), Rf_mkString(funcname.c_str()), sargs, R_MissingArg, g_Environment));
+	SEXP envir = g_Environment ? g_Environment : R_GlobalEnv;
+
+	SVECTOR elts;
+	Util::split(funcname, '$', 1, elts);
+	if (elts.size() > 1) {
+		
+		envir = R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString(elts[0].c_str())), R_GlobalEnv, &errorOccurred);
+		funcname = elts[1];
 	}
-	else
-	{
-		lns = PROTECT(Rf_lang3(Rf_install("do.call"), Rf_mkString(funcname.c_str()), sargs));
-	}
+
+	lns = PROTECT(Rf_lang5(Rf_install("do.call"), Rf_mkString(funcname.c_str()), sargs, R_MissingArg, envir));
 	PROTECT(ans = R_tryEval(lns, R_GlobalEnv, &errorOccurred));
 
 	ParseResult(rslt, ans);

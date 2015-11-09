@@ -296,8 +296,9 @@ public:
 						CComVariant cvFunc = bstrMethod;
 						CComVariant m(DISP_E_PARAMNOTFOUND, VT_ERROR);
 						CComVariant cvRslt;
+						CComVariant cvID = id;
 
-						HRESULT hr = pApp->Run(cvCmd, cvFunc, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, &cvRslt);
+						HRESULT hr = pApp->Run(cvCmd, cvFunc, cvID, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, &cvRslt);
 						if (FAILED(hr)) {
 							ATLTRACE("Ribbon call failed: 0x%x\n", hr);
 						}
