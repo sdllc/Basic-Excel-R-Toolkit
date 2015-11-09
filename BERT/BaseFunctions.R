@@ -45,7 +45,7 @@ ReloadStartup <- function(){ .Call(.CALLBACK, .RELOAD, 0, PACKAGE=.MODULE ); };
 
 #--------------------------------------------------------
 # add a user button.  these are added to the ribbon,
-# there's a max of 6.  callback is any R expression.
+# there's a max of 6.  callback is an R function.
 #--------------------------------------------------------
 AddUserButton <- function( label, FUN ){
 	.Call(.CALLBACK, .ADD_USER_BUTTON, c( label, "BERT$.UserButtonCallback" ), 0, PACKAGE=.MODULE);
