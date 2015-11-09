@@ -6,7 +6,7 @@
 
       <tab idMso="TabAddIns">
         <group id="g1" label="Basic Excel R Toolkit">
-          <button id="b1" label="Console" size="large" onAction="BERTRIBBON_BERT_Console" imageMso="CreateStoredProcedure" supertip="Open the BERT console"/>
+          <button id="b1" label="BERT Console" size="large" onAction="BERTRIBBON_BERT_Console" imageMso="CreateStoredProcedure" supertip="Open the BERT console"/>
           <separator id="separator1" />
           <button id="b2" label="Home Directory" onAction="BERTRIBBON_BERT_Home" imageMso="FileOpen" supertip="Open the BERT home directory"/>
           <button id="b3" label="Reload Startup File" onAction="BERTRIBBON_BERT_Reload" imageMso="FileStartWorkflow" supertip="Reload the R startup file to update code changes"/>
@@ -14,6 +14,14 @@
           <separator id="separator2" />
           <button id="b5" label="Configure" onAction="BERTRIBBON_BERT_Configure" imageMso="ComAddInsDialog" supertip="Change configuration settings"/>
           <button id="b6" label="About" onAction="BERTRIBBON_BERT_About" imageMso="Info" supertip="About BERT and credits"/>
+        </group>
+        <group id="g2" label="BERT User Functions" getVisible="getUserButtonsVisible">
+          <button id="user1" getLabel="getUserButtonLabel" getVisible="getUserButtonVisible" onAction="userButtonAction" tag="1"/>
+          <button id="user2" getLabel="getUserButtonLabel" getVisible="getUserButtonVisible" onAction="userButtonAction" tag="2"/>
+          <button id="user3" getLabel="getUserButtonLabel" getVisible="getUserButtonVisible" onAction="userButtonAction" tag="3"/>
+          <button id="user4" getLabel="getUserButtonLabel" getVisible="getUserButtonVisible" onAction="userButtonAction" tag="4"/>
+          <button id="user5" getLabel="getUserButtonLabel" getVisible="getUserButtonVisible" onAction="userButtonAction" tag="5"/>
+          <button id="user6" getLabel="getUserButtonLabel" getVisible="getUserButtonVisible" onAction="userButtonAction" tag="6"/>
         </group>
       </tab>
 

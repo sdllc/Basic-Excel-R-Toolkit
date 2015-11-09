@@ -3,9 +3,32 @@
 
 #include "resource.h"       // main symbols
 
+#include <vector>
+
 typedef IDispatchImpl<IRibbonExtensibility, &__uuidof(IRibbonExtensibility), &LIBID_Office, /* wMajor = */ 2, /* wMinor = */ 4> RIBBON_INTERFACE;
 
 typedef int (*SPPROC)(LPVOID);
+
+class UserButtonInfo {
+public:
+	std::string strLabel;
+	std::string strFunction;
+	int iImageIndex;
+
+	UserButtonInfo() {};
+	UserButtonInfo(const UserButtonInfo &rhs) {
+		strLabel = rhs.strLabel;
+		strFunction = rhs.strFunction;
+		iImageIndex = rhs.iImageIndex;
+	}
+};
+
+typedef std::vector < UserButtonInfo > UBVECTOR;
+
+#define DISPID_USER_BUTTONS_VISIBLE		3000
+#define DISPID_USER_BUTTON_VISIBLE		3001
+#define DISPID_USER_BUTTON_LABEL		3002
+#define DISPID_USER_BUTTON_ACTION		3004
 
 // CConnect
 class ATL_NO_VTABLE CConnect :
@@ -32,6 +55,12 @@ public:
 
 	HRESULT FinalConstruct()
 	{
+		/*
+		UserButtonInfo ubi;
+		ubi.strFunction = "exampleFunction";
+		ubi.strLabel = "Example Function";
+		userbuttons.push_back(ubi);
+		*/
 		return S_OK;
 	}
 
@@ -52,6 +81,8 @@ public:
 	CComPtr<IDispatch> m_pApplication;
 	CComPtr<IDispatch> m_pAddInInstance;
 	CComQIPtr<IRibbonUI> m_pRibbonUI;
+
+	UBVECTOR userbuttons;
 
 	// IRibbonExtensibility Methods
 	STDMETHOD(GetCustomUI)(BSTR RibbonID, BSTR *pbstrRibbonXML)
@@ -92,6 +123,12 @@ public:
 			else if (!wcscmp(rgszNames[0], L"BERTRIBBON_BERT_Configure"))		dispID = 1005;
 			else if (!wcscmp(rgszNames[0], L"BERTRIBBON_BERT_About"))			dispID = 1006;
 			else if (!wcscmp(rgszNames[0], L"BERTRIBBON_Ribbon_Loaded"))		dispID = 2000;
+
+			else if (!wcscmp(rgszNames[0], L"getUserButtonsVisible"))			dispID = DISPID_USER_BUTTONS_VISIBLE;
+			else if (!wcscmp(rgszNames[0], L"getUserButtonVisible"))			dispID = DISPID_USER_BUTTON_VISIBLE;
+			else if (!wcscmp(rgszNames[0], L"getUserButtonLabel"))				dispID = DISPID_USER_BUTTON_LABEL;
+			else if (!wcscmp(rgszNames[0], L"userButtonAction"))				dispID = DISPID_USER_BUTTON_ACTION;
+
 		}
 		if (dispID > 0)
 		{
@@ -106,6 +143,9 @@ public:
 		LCID lcid, WORD wFlags, DISPPARAMS* pdispparams, VARIANT* pvarResult,
 		EXCEPINFO* pexcepinfo, UINT* puArgErr)
 	{
+		// this is single-threaded, right?
+		static CComBSTR bstr;
+
 		switch (dispidMember)
 		{
 		case 1001:
@@ -128,6 +168,64 @@ public:
 			return S_OK;
 		case 2000:
 			return HandleCacheRibbon(pdispparams);
+
+		case DISPID_USER_BUTTONS_VISIBLE:
+			if (pvarResult) {
+				pvarResult->vt = VT_BOOL;
+				pvarResult->boolVal = ( userbuttons.size() > 0 );
+			}
+			return S_OK;
+		case DISPID_USER_BUTTON_VISIBLE:
+			if (pvarResult && pdispparams->cArgs && pdispparams->rgvarg[0].vt == VT_DISPATCH ) {
+				CComQIPtr<IRibbonControl> ctrl(pdispparams->rgvarg[0].pdispVal);
+				CComBSTR bstrTag;
+				ctrl->get_Tag(&bstrTag);
+				int id = bstrTag.m_str[0] - '1';
+				pvarResult->vt = VT_BOOL;
+				pvarResult->boolVal = ( userbuttons.size() > id );
+			}
+			return S_OK;
+		case DISPID_USER_BUTTON_LABEL:
+			if (pvarResult && pdispparams->cArgs && pdispparams->rgvarg[0].vt == VT_DISPATCH) {
+				CComQIPtr<IRibbonControl> ctrl(pdispparams->rgvarg[0].pdispVal);
+				CComBSTR bstrTag;
+				ctrl->get_Tag(&bstrTag);
+				int id = bstrTag.m_str[0] - '1';
+				if (userbuttons.size() > id) {
+					bstr = userbuttons[id].strLabel.c_str();
+					pvarResult->vt = VT_BSTR | VT_BYREF;
+					pvarResult->pbstrVal = &bstr;
+				}
+			}
+			return S_OK;
+		case DISPID_USER_BUTTON_ACTION:
+			if (pdispparams->cArgs && pdispparams->rgvarg[0].vt == VT_DISPATCH) {
+				CComQIPtr<IRibbonControl> ctrl(pdispparams->rgvarg[0].pdispVal);
+				CComBSTR bstrTag;
+				ctrl->get_Tag(&bstrTag);
+				int id = bstrTag.m_str[0] - '1';
+				if (userbuttons.size() > id) {
+					
+					CComQIPtr< Excel::_Application > pApp(m_pApplication);
+					if (pApp)
+					{
+						CComBSTR bstrCmd("BERT.Call");
+						CComBSTR bstrMethod(userbuttons[id].strFunction.c_str());
+
+						CComVariant cvCmd = bstrCmd;
+						CComVariant cvFunc = bstrMethod;
+						CComVariant m(DISP_E_PARAMNOTFOUND, VT_ERROR);
+						CComVariant cvRslt;
+
+						HRESULT hr = pApp->Run(cvCmd, cvFunc, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, &cvRslt);
+						if (FAILED(hr)) {
+							ATLTRACE("Ribbon call failed: 0x%x\n", hr);
+						}
+					}
+
+				}
+			}
+			return E_FAIL;
 		}
 		return RIBBON_INTERFACE::Invoke(dispidMember, riid, lcid,
 			wFlags, pdispparams, pvarResult, pexcepinfo, puArgErr);
