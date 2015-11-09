@@ -53,6 +53,9 @@ BERT_Callback
 BERT_COM_Callback
 BERT_Volatile
 
+GetUBCount
+GetUB
+
 BERTFunctionCall1000
 BERTFunctionCall1001
 BERTFunctionCall1002

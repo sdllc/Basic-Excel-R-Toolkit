@@ -31,6 +31,25 @@
 
 #define METHODNAME L"_Run2"
 
+class StringPair {
+public:
+	std::string string1;
+	std::string string2;
+
+	StringPair(std::string &s1, std::string &s2) {
+		string1 = s1.c_str();
+		string2 = s2.c_str();
+	}
+	StringPair(const StringPair &rhs) {
+		string1 = rhs.string1.c_str();
+		string2 = rhs.string2.c_str();
+	}
+};
+
+typedef std::vector< StringPair > SPVECTOR;
+
+SPVECTOR pendingUserButtons;
+
 // typelibs have been completely removed, in favor of using dispatch.invoke.  
 // that was a workaround for (at least one, probably more) broken excel install.
 
@@ -76,20 +95,45 @@ HRESULT RibbonCall(LPDISPATCH pdisp, WCHAR *method, std::vector<CComVariant> &ar
 
 }
 
+int GetUBCount() {
+	return pendingUserButtons.size();
+}
+
+int GetUB(char *label, int lsize, char *function, int fsize, int index) {
+	if (index >= pendingUserButtons.size()) return -1;
+	StringPair &sp = pendingUserButtons[index];
+	if (lsize > sp.string1.length()) memcpy(label, sp.string1.c_str(), sp.string1.length());
+	else return -1;
+	label[sp.string1.length()] = 0;
+	if (fsize > sp.string2.length()) memcpy(function, sp.string2.c_str(), sp.string2.length());
+	else return -1;
+	function[sp.string2.length()] = 0;
+	return 0;
+}
+
 void RibbonClearUserButtons() {
 	std::vector< CComVariant > args;
 	CComVariant rslt;
-	RibbonCall(pdispRibbon, L"ClearUserButtons", args, rslt);
+
+	if( pdispRibbon ) RibbonCall(pdispRibbon, L"ClearUserButtons", args, rslt);
+	else pendingUserButtons.clear();
 }
 
 void RibbonAddUserButton(std::string &strLabel, std::string &strFunc) {
-	std::vector< CComVariant > args;
-	CComVariant rslt;
-	CComBSTR bstrLabel(strLabel.c_str());
-	CComBSTR bstrFunc(strFunc.c_str());
-	args.push_back(CComVariant(bstrLabel));
-	args.push_back(CComVariant(bstrFunc));
-	RibbonCall(pdispRibbon, L"AddUserButton", args, rslt);
+
+	if (pdispRibbon) {
+		std::vector< CComVariant > args;
+		CComVariant rslt;
+		CComBSTR bstrLabel(strLabel.c_str());
+		CComBSTR bstrFunc(strFunc.c_str());
+		args.push_back(CComVariant(bstrLabel));
+		args.push_back(CComVariant(bstrFunc));
+		RibbonCall(pdispRibbon, L"AddUserButton", args, rslt);
+	}
+	else {
+		pendingUserButtons.push_back(StringPair(strLabel, strFunc));
+	}
+
 }
 
 /**

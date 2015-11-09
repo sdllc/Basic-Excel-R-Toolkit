@@ -8,6 +8,8 @@
 typedef IDispatchImpl<IRibbonExtensibility, &__uuidof(IRibbonExtensibility), &LIBID_Office, /* wMajor = */ 2, /* wMinor = */ 4> RIBBON_INTERFACE;
 
 typedef int (*SPPROC)(LPVOID, LPVOID);
+typedef int (*UBCPROC)();
+typedef int (*UBPROC)(char*, int, char*, int, int);
 
 class UserButtonInfo {
 public:
@@ -320,6 +322,29 @@ public:
 							sp((LPVOID)pexcel, (LPVOID)pribbon);
 							rslt = 0;
 						}
+
+						int ubcount = 0;
+						UBCPROC ubc = (UBCPROC)::GetProcAddress( hMods[i], "GetUBCount" );
+						if (ubc) {
+							ubcount = ubc();
+						}
+						if (ubcount) {
+							UBPROC ub = (UBPROC)::GetProcAddress(hMods[i], "GetUB");
+							if (ub) {
+								char label[256];
+								char func[256];
+								for (int j = 0; j < ubcount && j < 12; j++) {
+									if (ub(label, 255, func, 255, j) == 0) {
+										UserButtonInfo ubi;
+										ubi.bstrLabel = label;
+										ubi.bstrFunction = func;
+										userbuttons.push_back(ubi);
+									}
+								}
+
+							}
+						}
+
 					}
 				}
 			}
