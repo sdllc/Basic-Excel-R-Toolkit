@@ -77,7 +77,7 @@ extern void R_SaveGlobalEnvToFile(const char *);
 }
 
 extern void RibbonClearUserButtons();
-extern void RibbonAddUserButton(std::string &strLabel, std::string &strFunc);
+extern void RibbonAddUserButton(std::string &strLabel, std::string &strFunc, std::string &strImgMso);
 
 int R_ReadConsole(const char *prompt, char *buf, int len, int addtohistory)
 {
@@ -1942,11 +1942,15 @@ void AddUserButton(SEXP args) {
 
 	std::string strLabel = "";
 	std::string strFunc = "";
+	std::string strImg = "";
 
-	if (Rf_length(args) > 1) {
+	int len = Rf_length(args);
+
+	if (len > 1) {
 		strLabel = CHAR(STRING_ELT(args, 0));
 		strFunc = CHAR(STRING_ELT(args, 1));
-		if( strLabel.length() && strFunc.length()) RibbonAddUserButton(strLabel, strFunc);
+		if (len > 2) strImg = CHAR(STRING_ELT(args, 2));
+		if( strLabel.length() && strFunc.length()) RibbonAddUserButton(strLabel, strFunc, strImg);
 	}
 
 }

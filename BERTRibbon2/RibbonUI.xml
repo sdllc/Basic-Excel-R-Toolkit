@@ -16,12 +16,12 @@
           <button id="b6" label="About" onAction="BERTRIBBON_BERT_About" imageMso="Info" supertip="About BERT and credits"/>
         </group>
         <group id="g2" label="BERT User Functions" getVisible="getUserButtonsVisible">
-          <button id="user1" getLabel="getUserButtonLabel" getVisible="getUserButtonVisible" onAction="userButtonAction" tag="1"/>
-          <button id="user2" getLabel="getUserButtonLabel" getVisible="getUserButtonVisible" onAction="userButtonAction" tag="2"/>
-          <button id="user3" getLabel="getUserButtonLabel" getVisible="getUserButtonVisible" onAction="userButtonAction" tag="3"/>
-          <button id="user4" getLabel="getUserButtonLabel" getVisible="getUserButtonVisible" onAction="userButtonAction" tag="4"/>
-          <button id="user5" getLabel="getUserButtonLabel" getVisible="getUserButtonVisible" onAction="userButtonAction" tag="5"/>
-          <button id="user6" getLabel="getUserButtonLabel" getVisible="getUserButtonVisible" onAction="userButtonAction" tag="6"/>
+          <button id="user1" getImage="getUserButtonImage" getLabel="getUserButtonLabel" getVisible="getUserButtonVisible" onAction="userButtonAction" tag="1"/>
+          <button id="user2" getImage="getUserButtonImage" getLabel="getUserButtonLabel" getVisible="getUserButtonVisible" onAction="userButtonAction" tag="2"/>
+          <button id="user3" getImage="getUserButtonImage" getLabel="getUserButtonLabel" getVisible="getUserButtonVisible" onAction="userButtonAction" tag="3"/>
+          <button id="user4" getImage="getUserButtonImage" getLabel="getUserButtonLabel" getVisible="getUserButtonVisible" onAction="userButtonAction" tag="4"/>
+          <button id="user5" getImage="getUserButtonImage" getLabel="getUserButtonLabel" getVisible="getUserButtonVisible" onAction="userButtonAction" tag="5"/>
+          <button id="user6" getImage="getUserButtonImage" getLabel="getUserButtonLabel" getVisible="getUserButtonVisible" onAction="userButtonAction" tag="6"/>
         </group>
       </tab>
 

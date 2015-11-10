@@ -9,41 +9,39 @@ typedef IDispatchImpl<IRibbonExtensibility, &__uuidof(IRibbonExtensibility), &LI
 
 typedef int (*SPPROC)(LPVOID, LPVOID);
 typedef int (*UBCPROC)();
-typedef int (*UBPROC)(char*, int, char*, int, int);
+typedef int (*UBPROC)(char*, int, char*, int, char*, int, int);
+
+void cstr2BSTR(CComBSTR &bstr, const char *sz) {
+
+	int strlen = MultiByteToWideChar(CP_UTF8, 0, sz, -1, 0, 0);
+	if (strlen > 0) {
+		WCHAR *wsz = new WCHAR[strlen];
+		MultiByteToWideChar(CP_UTF8, 0, sz, -1, wsz, strlen);
+		bstr = wsz;
+		delete[] wsz;
+	}
+	else bstr= "";
+
+}
 
 class UserButtonInfo {
 public:
 	CComBSTR bstrLabel;
 	CComBSTR bstrFunction;
-	int iImageIndex;
+	CComBSTR bstrImageMSO;
 
-	UserButtonInfo() {};
+	UserButtonInfo() : bstrImageMSO("R") {};
+
 	UserButtonInfo(const UserButtonInfo &rhs) {
 		bstrLabel = rhs.bstrLabel;
 		bstrFunction = rhs.bstrFunction;
-		iImageIndex = rhs.iImageIndex;
+		bstrImageMSO = rhs.bstrImageMSO;
 	}
 
-	void FromCString(const char *label, const char *func) {
-
-		int strlen = MultiByteToWideChar(CP_UTF8, 0, label, -1, 0, 0);
-		if (strlen > 0) {
-			WCHAR *wsz = new WCHAR[strlen];
-			MultiByteToWideChar(CP_UTF8, 0, label, -1, wsz, strlen);
-			bstrLabel = wsz;
-			delete[] wsz;
-		}
-		else bstrLabel = "";
-
-		strlen = MultiByteToWideChar(CP_UTF8, 0, func, -1, 0, 0);
-		if (strlen > 0) {
-			WCHAR *wsz = new WCHAR[strlen];
-			MultiByteToWideChar(CP_UTF8, 0, func, -1, wsz, strlen);
-			bstrFunction = wsz;
-			delete[] wsz;
-		}
-		else bstrFunction = "";
-
+	void FromCString(const char *label, const char *func, const char *imgmso = 0) {
+		if(label) cstr2BSTR(bstrLabel, label);
+		if(func) cstr2BSTR(bstrFunction, func);
+		if(imgmso) cstr2BSTR(bstrImageMSO, imgmso);
 	}
 
 };
@@ -54,11 +52,12 @@ typedef std::vector < UserButtonInfo > UBVECTOR;
 #define DISPID_USER_BUTTON_VISIBLE		3001
 #define DISPID_USER_BUTTON_LABEL		3002
 #define DISPID_USER_BUTTON_ACTION		3004
+#define DISPID_USER_BUTTON_IMAGE		3005
 
-#define DISPID_ADD_USER_BUTTON			3005
-#define DISPID_REMOVE_USER_BUTTON		3006
-#define DISPID_CLEAR_USER_BUTTONS		3007
-#define DISPID_REFRESH_RIBBON			3008
+#define DISPID_ADD_USER_BUTTON			4000
+#define DISPID_REMOVE_USER_BUTTON		4001
+#define DISPID_CLEAR_USER_BUTTONS		4002
+#define DISPID_REFRESH_RIBBON			4003
 
 // CConnect
 class ATL_NO_VTABLE CConnect :
@@ -158,6 +157,7 @@ public:
 			else if (!wcscmp(rgszNames[0], L"getUserButtonVisible"))			dispID = DISPID_USER_BUTTON_VISIBLE;
 			else if (!wcscmp(rgszNames[0], L"getUserButtonLabel"))				dispID = DISPID_USER_BUTTON_LABEL;
 			else if (!wcscmp(rgszNames[0], L"userButtonAction"))				dispID = DISPID_USER_BUTTON_ACTION;
+			else if (!wcscmp(rgszNames[0], L"getUserButtonImage"))				dispID = DISPID_USER_BUTTON_IMAGE;
 			
 			else if (!wcscmp(rgszNames[0], L"RefreshRibbonUI"))					dispID = DISPID_REFRESH_RIBBON;
 
@@ -227,6 +227,14 @@ public:
 					ubi.bstrFunction = pdispparams->rgvarg[1].bstrVal;
 				}
 				else return E_INVALIDARG;
+
+				if (pdispparams->cArgs>2 && pdispparams->rgvarg[2].vt == VT_BSTR) {
+					ubi.bstrImageMSO = pdispparams->rgvarg[2].bstrVal;
+					//SysFreeString(pdispparams->rgvarg[1].bstrVal);
+				}
+				else if (pdispparams->cArgs>2 && pdispparams->rgvarg[1].vt == (VT_BSTR | VT_BYREF)) {
+					ubi.bstrImageMSO = pdispparams->rgvarg[2].bstrVal;
+				}
 
 				userbuttons.push_back(ubi);
 				if (m_pRibbonUI) m_pRibbonUI->Invalidate();
@@ -307,6 +315,32 @@ public:
 				}
 			}
 			return E_FAIL;
+		case DISPID_USER_BUTTON_IMAGE:
+			{
+				if (pvarResult && pdispparams->cArgs && pdispparams->rgvarg[0].vt == VT_DISPATCH) {
+					CComQIPtr<IRibbonControl> ctrl(pdispparams->rgvarg[0].pdispVal);
+					CComBSTR bstrTag;
+					ctrl->get_Tag(&bstrTag);
+					int id = bstrTag.m_str[0] - '1';
+					if (userbuttons.size() > id) {
+						CComQIPtr< Excel::_Application > pApp(m_pApplication);
+						if (pApp) {
+							bstr = userbuttons[id].bstrImageMSO; // "GoLeftToRight";
+							CComPtr<Office::_CommandBars> cb;
+							IPictureDisp *pic = 0;
+							pApp->get_CommandBars(&cb);
+							if (cb) cb->GetImageMso(bstr, 16, 16, &pic);
+							if (pic) {
+								pic->AddRef();
+								pvarResult->vt = VT_PICTURE;
+								pvarResult->pdispVal = pic;
+								return S_OK;
+							}
+						}
+					}
+				}
+				return E_FAIL;
+			}
 		}
 		return RIBBON_INTERFACE::Invoke(dispidMember, riid, lcid,
 			wFlags, pdispparams, pvarResult, pexcepinfo, puArgErr);
@@ -357,10 +391,11 @@ public:
 							if (ub) {
 								char label[256];
 								char func[256];
+								char img[256];
 								for (int j = 0; j < ubcount && j < 12; j++) {
-									if (ub(label, 255, func, 255, j) == 0) {
+									if (ub(label, 255, func, 255, img, 255, j) == 0) {
 										UserButtonInfo ubi;
-										ubi.FromCString(label, func);
+										ubi.FromCString(label, func, img[0] ? img : 0);
 										userbuttons.push_back(ubi);
 									}
 								}

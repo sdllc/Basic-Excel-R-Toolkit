@@ -31,22 +31,25 @@
 
 #define METHODNAME L"_Run2"
 
-class StringPair {
+class String3{
 public:
 	std::string string1;
 	std::string string2;
+	std::string string3;
 
-	StringPair(std::string &s1, std::string &s2) {
+	String3(std::string &s1, std::string &s2, std::string &s3) {
 		string1 = s1.c_str();
 		string2 = s2.c_str();
+		string3 = s3.c_str();
 	}
-	StringPair(const StringPair &rhs) {
+	String3(const String3&rhs) {
 		string1 = rhs.string1.c_str();
 		string2 = rhs.string2.c_str();
+		string3 = rhs.string3.c_str();
 	}
 };
 
-typedef std::vector< StringPair > SPVECTOR;
+typedef std::vector< String3> SPVECTOR;
 
 SPVECTOR pendingUserButtons;
 
@@ -113,15 +116,23 @@ int GetUBCount() {
 	return pendingUserButtons.size();
 }
 
-int GetUB(char *label, int lsize, char *function, int fsize, int index) {
+int GetUB(char *label, int lsize, char *function, int fsize, char *img, int isize, int index) {
+
 	if (index >= pendingUserButtons.size()) return -1;
-	StringPair &sp = pendingUserButtons[index];
+	String3&sp = pendingUserButtons[index];
+
 	if (lsize > sp.string1.length()) memcpy(label, sp.string1.c_str(), sp.string1.length());
 	else return -1;
 	label[sp.string1.length()] = 0;
+
 	if (fsize > sp.string2.length()) memcpy(function, sp.string2.c_str(), sp.string2.length());
 	else return -1;
 	function[sp.string2.length()] = 0;
+
+	if( isize > sp.string3.length()) memcpy(img, sp.string3.c_str(), sp.string3.length());
+	else return -1;
+	img[sp.string3.length()] = 0;
+
 	return 0;
 }
 
@@ -133,22 +144,28 @@ void RibbonClearUserButtons() {
 	else pendingUserButtons.clear();
 }
 
-void RibbonAddUserButton(std::string &strLabel, std::string &strFunc) {
+void RibbonAddUserButton(std::string &strLabel, std::string &strFunc, std::string &strImageMso) {
 
 	if (pdispRibbon) {
 		std::vector< CComVariant > args;
 		CComVariant rslt;
-		CComBSTR bstrLabel, bstrFunc;
+		CComBSTR bstrLabel, bstrFunc, bstrImg;
 
 		string2BSTR(bstrLabel, strLabel);
 		string2BSTR(bstrFunc, strFunc);
 
 		args.push_back(CComVariant(bstrLabel));
 		args.push_back(CComVariant(bstrFunc));
+
+		if (strImageMso.length() > 0) {
+			string2BSTR(bstrImg, strImageMso);
+			args.push_back(CComVariant(bstrImg));
+		}
+
 		RibbonCall(pdispRibbon, L"AddUserButton", args, rslt);
 	}
 	else {
-		pendingUserButtons.push_back(StringPair(strLabel, strFunc));
+		pendingUserButtons.push_back(String3(strLabel, strFunc, strImageMso));
 	}
 
 }
