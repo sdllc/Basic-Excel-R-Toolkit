@@ -40,7 +40,7 @@ ReloadStartup <- function(){ .Call(.CALLBACK, .RELOAD, 0, PACKAGE=.MODULE ); };
 
 .UserButtonCallbacks <- c();
 .UserButtonCallback <- function(index){
-	.UserButtonCallbacks[[index+1]]();
+	return(.UserButtonCallbacks[[index+1]]());
 }
 
 #--------------------------------------------------------

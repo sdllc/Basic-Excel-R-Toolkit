@@ -4,6 +4,7 @@
 #include "resource.h"       // main symbols
 
 #include <vector>
+#include <atlsafe.h>
 
 typedef IDispatchImpl<IRibbonExtensibility, &__uuidof(IRibbonExtensibility), &LIBID_Office, /* wMajor = */ 2, /* wMinor = */ 4> RIBBON_INTERFACE;
 
@@ -297,19 +298,23 @@ public:
 					CComQIPtr< Excel::_Application > pApp(m_pApplication);
 					if (pApp)
 					{
-						CComBSTR bstrCmd("BERT.Call");
-						CComBSTR bstrMethod(userbuttons[id].bstrFunction );
-
-						CComVariant cvCmd = bstrCmd;
-						CComVariant cvFunc = bstrMethod;
-						CComVariant m(DISP_E_PARAMNOTFOUND, VT_ERROR);
+						CComSafeArray<VARIANT> cc;
+						cc.Create(1); 
+						CComBSTR bstrCode = userbuttons[id].bstrFunction;
+						bstrCode.Append("(");
+						WCHAR w = bstrTag.m_str[0] - 1;
+						bstrCode.Append(w);
+						bstrCode.Append( "); ");
+						CComVariant v(bstrCode);
+						cc.SetAt(0, v);
 						CComVariant cvRslt;
-						CComVariant cvID = id;
+						CComVariant m(DISP_E_PARAMNOTFOUND, VT_ERROR);
+						HRESULT hr = pApp->_Run2( CComVariant(CComBSTR("BERT.SafeCall")), CComVariant(0L), CComVariant((LPSAFEARRAY)cc),
+							m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, 1033,
+							&cvRslt);
+							return hr;
+						cc.Destroy();
 
-						HRESULT hr = pApp->Run(cvCmd, cvFunc, cvID, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, m, &cvRslt);
-						if (FAILED(hr)) {
-							ATLTRACE("Ribbon call failed: 0x%x\n", hr);
-						}
 					}
 
 				}
