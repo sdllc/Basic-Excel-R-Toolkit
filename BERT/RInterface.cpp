@@ -1701,8 +1701,13 @@ void RExecVector(std::vector<std::string> &vec, int *err, PARSE_STATUS_2 *status
 
 	if (ps == PARSE_OK && printResult && rslt)
 	{
+		int checkLen = Rf_length(rslt);
+
 		SEXP elt = VECTOR_ELT(rslt, 1);
 		int *pVisible = LOGICAL(elt);
+
+		SEXP v0 = VECTOR_ELT(rslt, 0);
+		int vt = TYPEOF(v0);
 
 		if (*pVisible ) Rf_PrintValue(VECTOR_ELT(rslt,0));
 	}
