@@ -447,7 +447,7 @@ int RInit()
 	setup_Rmainloop();
 	R_ReplDLLinit();
 
-	::WaitForSingleObject(muxExecR);
+	::WaitForSingleObject(muxExecR, INFINITE );
 
 	// restore session data here, if desired.  note this is done
 	// BEFORE the startup file is loaded, so file definitions may
@@ -594,7 +594,7 @@ SEXP ExecR(const char *code, int *err, ParseStatus *pStatus)
 	SEXP ans = 0;
 	int i, errorOccurred;
 
-	::WaitForSingleObject(muxExecR);
+	::WaitForSingleObject(muxExecR, INFINITE);
 
 	PROTECT(cmdSexp = Rf_allocVector(STRSXP, 1));
 	SET_STRING_ELT(cmdSexp, 0, Rf_mkChar(code));
@@ -1746,7 +1746,11 @@ void RExecVector(std::vector<std::string> &vec, int *err, PARSE_STATUS_2 *status
 		SEXP v0 = VECTOR_ELT(rslt, 0);
 		int vt = TYPEOF(v0);
 
-		if (*pVisible ) Rf_PrintValue(VECTOR_ELT(rslt,0));
+		if (*pVisible) {
+			::WaitForSingleObject(muxExecR, INFINITE);
+			Rf_PrintValue(VECTOR_ELT(rslt, 0));
+			::ReleaseMutex(muxExecR);
+		}
 	}
 
 	UNPROTECT(1);
