@@ -65,6 +65,7 @@ bool g_buffering = false;
 std::vector< std::string > logBuffer;
 
 HANDLE muxLog;
+HANDLE muxExecR;
 
 //
 // for whatever reason these are not exposed in the embedded headers.
@@ -190,6 +191,8 @@ void MapFunctions()
 	int err;
 	char env[MAX_PATH];
 
+	::WaitForSingleObject(muxExecR, INFINITE);
+
 	RFunctions.clear();
 
 	SVECTOR fnames;
@@ -286,6 +289,7 @@ void MapFunctions()
 	}
 	UNPROTECT(1);
 
+	::ReleaseMutex(muxExecR);
 
 }
 
@@ -296,6 +300,8 @@ void LoadStartupFile()
 	char RUser[MAX_PATH];
 	char path[MAX_PATH];
 	char buffer[MAX_PATH];
+
+	::WaitForSingleObject(muxExecR, INFINITE);
 
 	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, RUser, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_R_USER))
 		ExpandEnvironmentStringsA( DEFAULT_R_USER, RUser, MAX_PATH );
@@ -339,6 +345,9 @@ void LoadStartupFile()
 		}
 
 	}
+
+	::ReleaseMutex(muxExecR);
+
 }
 
 short BERT_InstallPackages()
@@ -350,6 +359,8 @@ short BERT_InstallPackages()
 void installApplicationObject(ULONG_PTR p) {
 
 	int err;
+
+	::WaitForSingleObject(muxExecR, INFINITE);
 
 	// create an "excel" env
 	SEXP e = PROTECT(R_tryEval(Rf_lang1(Rf_install("new.env")), R_GlobalEnv, &err));
@@ -366,6 +377,8 @@ void installApplicationObject(ULONG_PTR p) {
 
 		UNPROTECT(1);
 	}
+
+	::ReleaseMutex(muxExecR);
 
 }
 
@@ -388,6 +401,7 @@ int RInit()
 	}
 
 	muxLog = ::CreateMutex(0, 0, 0);
+	muxExecR = ::CreateMutex(0, 0, 0);
 
 	R_setStartTime();
 	R_DefParams(Rp);
@@ -433,6 +447,24 @@ int RInit()
 	setup_Rmainloop();
 	R_ReplDLLinit();
 
+	::WaitForSingleObject(muxExecR);
+
+	// restore session data here, if desired.  note this is done
+	// BEFORE the startup file is loaded, so file definitions may
+	// overwrite session definitions.  
+
+	// UPDATE: moved to before loading the BaseFunctions.R -- that
+	// was causing some confusion.
+
+	if (dwPreserve) {
+
+		std::string path = RUser;
+		int len = path.length();
+		if (len && path[len - 1] != '\\') path += "\\";
+		path += R_WORKSPACE_NAME;
+		R_RestoreGlobalEnvFromFile(path.c_str(), TRUE);
+
+	}
 
 	{
 		const char *p = dllpath.c_str();
@@ -499,19 +531,7 @@ int RInit()
 		}
 	}
 
-	// restore session data here, if desired.  note this is done
-	// BEFORE the startup file is loaded, so file definitions may
-	// overwrite session definitions.  
-
-	if (dwPreserve) {
-
-		std::string path = RUser;
-		int len = path.length();
-		if (len && path[len - 1] != '\\') path += "\\";
-		path += R_WORKSPACE_NAME;
-		R_RestoreGlobalEnvFromFile(path.c_str(), TRUE);
-
-	}
+	::ReleaseMutex(muxExecR);
 
 	{
 		// BERT banner in the console.  needs to be narrow, though.
@@ -557,6 +577,8 @@ void RShutdown()
 
 	Rf_endEmbeddedR(0);
 	CloseHandle(muxLog);
+	CloseHandle(muxExecR);
+
 }
 
 SEXP ExecR(std::string &str, int *err, ParseStatus *pStatus)
@@ -571,6 +593,8 @@ SEXP ExecR(const char *code, int *err, ParseStatus *pStatus)
 	SEXP cmdSexp, cmdexpr = R_NilValue;
 	SEXP ans = 0;
 	int i, errorOccurred;
+
+	::WaitForSingleObject(muxExecR);
 
 	PROTECT(cmdSexp = Rf_allocVector(STRSXP, 1));
 	SET_STRING_ELT(cmdSexp, 0, Rf_mkChar(code));
@@ -589,6 +613,7 @@ SEXP ExecR(const char *code, int *err, ParseStatus *pStatus)
 			if (errorOccurred) {
 				if (err) *err = errorOccurred;
 				UNPROTECT(2);
+				::ReleaseMutex(muxExecR);
 				return 0;
 			}
 		}
@@ -611,6 +636,8 @@ SEXP ExecR(const char *code, int *err, ParseStatus *pStatus)
 	}
 
 	UNPROTECT(2);
+
+	::ReleaseMutex(muxExecR);
 	return ans;
 
 }
@@ -623,6 +650,8 @@ SEXP ExecR(std::vector < std::string > &vec, int *err, ParseStatus *pStatus, boo
 	int i, errorOccurred;
 
 	if (vec.size() == 0) return R_NilValue;
+
+	::WaitForSingleObject(muxExecR, INFINITE);
 
 	PROTECT(cmdSexp = Rf_allocVector(STRSXP, vec.size()));
 	for (i = 0; i < vec.size(); i++)
@@ -653,6 +682,8 @@ SEXP ExecR(std::vector < std::string > &vec, int *err, ParseStatus *pStatus, boo
 				if (errorOccurred) {
 					if (err) *err = errorOccurred;
 					UNPROTECT(2);
+					::ReleaseMutex(muxExecR);
+
 					return 0;
 				}
 			}
@@ -676,6 +707,8 @@ SEXP ExecR(std::vector < std::string > &vec, int *err, ParseStatus *pStatus, boo
 	}
 
 	UNPROTECT(2);
+	::ReleaseMutex(muxExecR);
+
 	return ans;
 
 }
@@ -754,6 +787,8 @@ SEXP resolveObject(const std::string &token, SEXP parent = R_GlobalEnv)
 int notifyWatch(std::string &path) {
 
 	int err;
+	::WaitForSingleObject(muxExecR, INFINITE);
+
 	SEXP env = PROTECT(R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString(ENV_NAME)), R_GlobalEnv, &err));
 	if (env)
 	{
@@ -761,6 +796,8 @@ int notifyWatch(std::string &path) {
 		UNPROTECT(1);
 	}
 	UNPROTECT(1);
+	::ReleaseMutex(muxExecR);
+
 	return 0;
 
 }
@@ -1726,6 +1763,8 @@ bool RExec2(LPXLOPER12 rslt, std::string &funcname, std::vector< LPXLOPER12 > &a
 	
 	resetXlOper(rslt);
 
+	::WaitForSingleObject(muxExecR, INFINITE);
+
 	PROTECT(sargs = Rf_allocVector(VECSXP, args.size()));
 	for (i = 0; i < args.size(); i++)
 	{
@@ -1748,6 +1787,8 @@ bool RExec2(LPXLOPER12 rslt, std::string &funcname, std::vector< LPXLOPER12 > &a
 	ParseResult(rslt, ans);
 
 	UNPROTECT(3);
+	::ReleaseMutex(muxExecR);
+
 	return true;
 }
 
