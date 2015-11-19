@@ -51,6 +51,12 @@
 
 #include "RCOM.h"
 
+#ifdef _DEBUG
+
+static int objectRefCtr = 0;
+
+#endif
+
 void STRSXP2BSTR(CComBSTR &bstr, SEXP s) {
 
 	const char *sz = CHAR(STRING_ELT(s, 0));
@@ -85,7 +91,15 @@ __inline LPDISPATCH SEXP2Ptr(SEXP p) {
 
 void releaseMappedPtr(SEXP ptr) {
 	void* p = R_ExternalPtrAddr(ptr);
-	if (p) ((LPDISPATCH)p)->Release();
+	if (p) {
+
+#ifdef _DEBUG
+		objectRefCtr--;
+		DebugOut("[-] Object ref counter: %d\n", objectRefCtr);
+#endif
+
+		((LPDISPATCH)p)->Release();
+	}
 }
 
 
@@ -226,7 +240,7 @@ void mapEnum(std::string &name, CComPtr<ITypeInfo> typeinfo, TYPEATTR *pTatt, SE
 			if (vd->varkind != VAR_CONST
 				|| vd->lpvarValue->vt != VT_I4)
 			{
-				ATLTRACE("enum type not const/I4\n");
+				DebugOut("enum type not const/I4\n");
 			}
 
 			elementname.clear();
@@ -365,7 +379,7 @@ void mapObject(IDispatch *Dispatch, std::vector< MemberRep > &mrlist, CComBSTR &
 						//break;
 
 					default:
-						ATLTRACE("Unexpected tkind: %d\n", tk);
+						DebugOut("Unexpected tkind: %d\n", tk);
 						break;
 					}
 
@@ -421,15 +435,15 @@ SEXP wrapDispatch(ULONG_PTR pdisp, bool enums) {
 
 				std::string strcname;
 				BSTR2String(bstrName, strcname);
-				ATLTRACE(" * Coclass %s\n", strcname.c_str());
+				DebugOut(" * Coclass %s\n", strcname.c_str());
 
 			}
 			else {
-				ATLTRACE(" * Coclass failed (2)\n");
+				DebugOut(" * Coclass failed (2)\n");
 			}
 		}
 		else {
-			ATLTRACE(" * Coclass failed (1)\n");
+			DebugOut(" * Coclass failed (1)\n");
 		}
 
 	}
@@ -447,6 +461,11 @@ SEXP wrapDispatch(ULONG_PTR pdisp, bool enums) {
 		SET_VECTOR_ELT(wdargs, 0, Rf_mkString(strName.c_str()));
 		PROTECT(result = R_tryEval(Rf_lang5(Rf_install("do.call"), Rf_mkString(".WrapDispatch"), wdargs, R_MissingArg, env), env, &err));
 		if (result) {
+
+#ifdef _DEBUG
+			objectRefCtr++;
+			DebugOut("[+] Object ref counter: %d\n", objectRefCtr);
+#endif
 
 			// install pointer
 			((LPDISPATCH)pdisp)->AddRef();
@@ -808,8 +827,10 @@ SEXP invokePropertyPut(std::string name, LPDISPATCH pdisp, SEXP value)
 		else if (Rf_isString(arg)) {
 
 			STRSXP2BSTR(bstr, arg);
-			cv.vt = VT_BSTR | VT_BYREF;
-			cv.pbstrVal = &(bstr);
+			//cv.vt = VT_BSTR | VT_BYREF;
+			//cv.pbstrVal = &(bstr);
+			cv.vt = VT_BSTR;
+			cv.bstrVal = bstr;
 
 		}
 
@@ -1016,7 +1037,7 @@ SEXP invokeFunc(std::string name, LPDISPATCH pdisp, SEXP args)
 									else {
 
 										int tx = TYPEOF(arg);
-										ATLTRACE("Unhandled argument type; tx = %d\n", tx);
+										DebugOut("Unhandled argument type; tx = %d\n", tx);
 
 										// equivalent to "missing"
 										pcv[k] = CComVariant(DISP_E_PARAMNOTFOUND, VT_ERROR);

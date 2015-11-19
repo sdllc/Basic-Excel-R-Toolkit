@@ -25,6 +25,7 @@
 #include "util.h"
 
 #define MAX_LOGLIST_SIZE	80
+#define MAX_CMD_HISTORY		1000
 
 #define ENV_NAME "BERT"
 #define R_WORKSPACE_NAME ".BERT-RData"
@@ -35,6 +36,8 @@ typedef enum
 
 	CC_ADD_USER_BUTTON =		100,
 	CC_CLEAR_USER_BUTTONS =		101,
+
+	CC_HISTORY =				200,
 
 	CC_WATCHFILES =				1020,
 	CC_CLEAR =					1021,

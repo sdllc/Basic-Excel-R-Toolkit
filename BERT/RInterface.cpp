@@ -63,6 +63,7 @@ std::string dllpath;
 
 bool g_buffering = false;
 std::vector< std::string > logBuffer;
+std::vector< std::string > cmdBuffer;
 
 HANDLE muxLog;
 HANDLE muxExecR;
@@ -1736,6 +1737,12 @@ void RExecVector(std::vector<std::string> &vec, int *err, PARSE_STATUS_2 *status
 		}
 	}
 
+	if (ps == PARSE_OK || ps == PARSE_ERROR) {
+		while (cmdBuffer.size() >= MAX_CMD_HISTORY) cmdBuffer.erase(cmdBuffer.begin());
+		for (std::vector< std::string > ::iterator iter = vec.begin(); iter != vec.end(); iter++ )
+			cmdBuffer.push_back(iter->c_str());
+	}
+
 	if (ps == PARSE_OK && printResult && rslt)
 	{
 		int checkLen = Rf_length(rslt);
@@ -1988,6 +1995,65 @@ SEXP BERT_COM_Callback(SEXP name, SEXP calltype, SEXP p, SEXP args) {
 	return R_NilValue;
 }
 
+SEXP ConsoleHistory(SEXP args) {
+
+	std::string pattern = "";
+
+	int len = Rf_length(args);
+	int histlen = 25;
+	bool rev = false;
+
+	if (len > 1) {
+
+		SEXP s = VECTOR_ELT(args, 0);
+		if (TYPEOF(s) == INTSXP) histlen = (INTEGER(s))[0];
+		else if (TYPEOF(s) == REALSXP) histlen = (int)(REAL(s))[0];
+		else return Rf_ScalarLogical(0);
+
+		s = VECTOR_ELT(args, 1);
+		if( TYPEOF(s) == INTSXP || TYPEOF(s) == LGLSXP ) rev = (INTEGER(s))[0];
+		else return Rf_ScalarLogical(0);
+
+		if (len > 2)
+		{
+			s = VECTOR_ELT(args, 2);
+			if (TYPEOF(s) == STRSXP) {
+				pattern = CHAR(STRING_ELT(s, 0));
+			}
+		}
+
+		std::vector< std::string > *sv = &cmdBuffer;
+		std::vector< std::string > smatch;
+		if (pattern.length()) {
+			std::regex rex(pattern);
+			for (std::vector< std::string > :: iterator iter = cmdBuffer.begin(); iter != cmdBuffer.end(); iter++) {
+				if (std::regex_search(*iter, rex)) {
+					smatch.push_back(iter->c_str());
+				}
+			}
+			sv = &smatch;
+		}
+
+		int count = sv->size();
+		int start = count - histlen - 1; 
+		if (start < 0) start = 0;
+
+		if( start < count ) logMessage("\n", 0, 1);
+		for (; start < count; start++ ) {
+			std::string str = "  ";
+			str += (*sv)[start].c_str();
+			str += "\n";
+			logMessage(str.c_str(), 0, 1);
+		}
+		logMessage("\n", 0, 1);
+
+		return Rf_ScalarLogical(-1);
+	}
+
+	return Rf_ScalarLogical(0);
+
+}
+
 void AddUserButton(SEXP args) {
 
 	std::string strLabel = "";
@@ -2018,6 +2084,10 @@ SEXP BERT_Callback(SEXP cmd, SEXP data, SEXP data2)
 	}
 	switch (command)
 	{
+	case CC_HISTORY:
+		return ConsoleHistory(data);
+		break;
+
 	case CC_ADD_USER_BUTTON:
 		AddUserButton(data);
 		break;

@@ -10,6 +10,8 @@ with( BERT, {
 .ADD_USER_BUTTON <- 100;
 .CLEAR_USER_BUTTONS <- 101;
 
+.HISTORY <- 200;
+
 .WATCHFILES <- 1020;
 .CLEAR <- 1021;
 .RELOAD <- 1022;
@@ -209,6 +211,13 @@ setMethod( "show", "xlReference", function(object){
 	}
 	cat( "\n" );
 });
+
+#--------------------------------------------------------
+# overloading history for the console
+#--------------------------------------------------------
+history <- function( max.show=25, reverse=FALSE, pattern="" ){
+	.Call( BERT$.CALLBACK, BERT$.HISTORY, list(max.show, reverse, pattern), 0, PACKAGE=BERT$.MODULE );
+}
 
 #--------------------------------------------------------
 # overload quit method or it will stop the excel process
