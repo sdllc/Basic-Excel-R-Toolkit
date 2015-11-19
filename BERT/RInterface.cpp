@@ -1715,11 +1715,16 @@ SEXP XLOPER2SEXP( LPXLOPER12 px, int depth, bool missingArguments )
 
 }
 
-void RExecVector(std::vector<std::string> &vec, int *err, PARSE_STATUS_2 *status, bool printResult)
+void RExecVector(std::vector<std::string> &vec, int *err, PARSE_STATUS_2 *status, bool printResult, bool excludeFromHistory)
 {
 	ParseStatus ps;
 
 	g_buffering = true;
+
+	// if you want the history() command to appear on the history
+	// stack, like bash, you need to add the line(s) to the buffer
+	// here; and then potentially remove them if you get an INCOMPLETE
+	// response (b/c in that case we'll see it again)
 
 	SEXP rslt = PROTECT(ExecR(vec, err, &ps, true));
 
@@ -1737,10 +1742,12 @@ void RExecVector(std::vector<std::string> &vec, int *err, PARSE_STATUS_2 *status
 		}
 	}
 
-	if (ps == PARSE_OK || ps == PARSE_ERROR) {
-		while (cmdBuffer.size() >= MAX_CMD_HISTORY) cmdBuffer.erase(cmdBuffer.begin());
-		for (std::vector< std::string > ::iterator iter = vec.begin(); iter != vec.end(); iter++ )
-			cmdBuffer.push_back(iter->c_str());
+	if (!excludeFromHistory) {
+		if (ps == PARSE_OK || ps == PARSE_ERROR) {
+			while (cmdBuffer.size() >= MAX_CMD_HISTORY) cmdBuffer.erase(cmdBuffer.begin());
+			for (std::vector< std::string > ::iterator iter = vec.begin(); iter != vec.end(); iter++)
+				cmdBuffer.push_back(iter->c_str());
+		}
 	}
 
 	if (ps == PARSE_OK && printResult && rslt)

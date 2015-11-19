@@ -267,6 +267,10 @@ HRESULT SafeCall( SAFECALL_CMD cmd, std::vector< std::string > *vec, int *presul
 			}
 			break;
 
+		case SCC_CONSOLE_WIDTH:
+			hr = DispatchCall(pdisp, CComVariant(CComBSTR("BERT.SafeCall")), CComVariant(10L), CComVariant(CComBSTR(vec->begin()->c_str())), cvRslt);
+			break;
+
 		case SCC_CALLTIP:
 			hr = DispatchCall(pdisp, CComVariant(CComBSTR("BERT.SafeCall")), CComVariant(0L), CComVariant(CComBSTR(vec->begin()->c_str())), cvRslt);
 			break;

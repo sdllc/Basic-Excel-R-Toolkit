@@ -377,11 +377,11 @@ void getLogText(std::list< std::string > &list)
 }
 
 
-PARSE_STATUS_2 RExecVectorBuffered(std::vector<std::string> &cmd )
+PARSE_STATUS_2 RExecVectorBuffered(std::vector<std::string> &cmd, bool excludeFromHistory )
 {
 	PARSE_STATUS_2 ps2;
 	int err;
-	RExecVector(cmd, &err, &ps2, true);
+	RExecVector(cmd, &err, &ps2, true, excludeFromHistory);
 	return ps2;
 }
 
@@ -483,6 +483,7 @@ void UpdateWordList()
 long BERT_SafeCall(long cmdid, LPXLOPER12 xl)
 {
 	SVECTOR sv;
+	bool excludeFlag = false;
 
 	if (cmdid == 0x08) {
 		userBreak();
@@ -491,11 +492,19 @@ long BERT_SafeCall(long cmdid, LPXLOPER12 xl)
 	{
 		std::string func;
 		NarrowString(func, xl);
+
 		if (cmdid == 4) {
 			return notifyWatch(func);
 		}
-		else if (cmdid == 2) return getNames(moneyList, func);
-		return getCallTip(calltip, func);
+		else if (cmdid == 2) {
+			return getNames(moneyList, func);
+		}
+		else if (cmdid == 10) {
+
+			sv.push_back(func);
+			excludeFlag = true;
+		}
+		else return getCallTip(calltip, func);
 	}
 	else if (xl->xltype & xltypeMulti)
 	{
@@ -516,7 +525,7 @@ long BERT_SafeCall(long cmdid, LPXLOPER12 xl)
 	}
 	if (sv.size())
 	{
-		long rslt = RExecVectorBuffered(sv);
+		long rslt = RExecVectorBuffered(sv, excludeFlag);
 		if (rslt == PARSE2_OK)
 		{
 			UpdateWordList();

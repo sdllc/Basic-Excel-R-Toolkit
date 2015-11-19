@@ -1109,7 +1109,7 @@ void UpdateConsoleWidth( bool force )
 
 	sprintf_s(buffer, 128, "options(\"width\"=%d)", chars);
 	sv.push_back(std::string(buffer));
-	SafeCall(SCC_EXEC, &sv, &r);
+	SafeCall(SCC_CONSOLE_WIDTH, &sv, &r);
 
 	DebugOut("%s\n", buffer);
 

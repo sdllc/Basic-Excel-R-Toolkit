@@ -62,7 +62,7 @@ void RShutdown();
 LPXLOPER12 BERT_RExec(LPXLOPER12 code);
 bool RExec2(LPXLOPER12 rslt, std::string &funcname, std::vector< LPXLOPER12 > &args);
 bool RExec3(LPXLOPER12 rslt, std::string &funcname);
-void RExecVector(std::vector < std::string > &vec, int *err = 0, PARSE_STATUS_2 *parseErr = 0, bool printResult = true);
+void RExecVector(std::vector < std::string > &vec, int *err = 0, PARSE_STATUS_2 *parseErr = 0, bool printResult = true, bool excludeFromHistory = false);
 int UpdateR(std::string &str);
 void MapFunctions();
 void LoadStartupFile();

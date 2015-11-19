@@ -114,7 +114,7 @@ void CloseConsole();
 
 void CloseConsoleAsync();
 
-PARSE_STATUS_2 RExecVectorBuffered(std::vector<std::string> &cmd );
+PARSE_STATUS_2 RExecVectorBuffered(std::vector<std::string> &cmd, bool excludeFromHistory = false );
 
 /** */
 void ExcelStatus(const char *message);
