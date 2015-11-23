@@ -48,8 +48,6 @@
 
 FDVECTOR RFunctions;
 
-
-
 extern HMODULE ghModule;
 SEXP g_Environment = 0;
 
@@ -95,6 +93,103 @@ void R_WriteConsole(const char *buf, int len)
 	else logMessage(buf, len);
 	ReleaseMutex(muxLog);
 }
+
+void SaveHistory() {
+
+	DWORD dw;
+	char buffer[MAX_PATH];
+
+	if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_SAVE_HISTORY) || dw < 0) dw = 0;
+	if (!dw) return;
+
+	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, buffer, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_R_USER))
+		ExpandEnvironmentStringsA(DEFAULT_R_USER, buffer, MAX_PATH);
+
+	strncat_s(buffer, CONSOLE_HISTORY_FILE, sizeof(CONSOLE_HISTORY_FILE));
+
+	HANDLE hFile = ::CreateFileA(buffer, GENERIC_WRITE, FILE_SHARE_READ, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
+	if (hFile != INVALID_HANDLE_VALUE) {
+
+		DWORD dw = 0, written;
+		std::string str;
+
+		for (std::vector< std::string > ::iterator iter = cmdBuffer.begin(); iter != cmdBuffer.end(); iter++) {
+			str += iter->c_str();
+			str += "\n";
+		}
+
+		do {
+			if ( !::WriteFile(hFile, str.c_str(), str.length(), &written, 0)) break;
+			dw += written;
+		} 
+		while (dw < str.length());
+
+		::CloseHandle(hFile);
+
+	}
+	else {
+
+		LPVOID lpMsgBuf;
+		LPVOID lpDisplayBuf;
+		DWORD dw = GetLastError();
+
+		FormatMessageA(
+			FORMAT_MESSAGE_ALLOCATE_BUFFER |
+			FORMAT_MESSAGE_FROM_SYSTEM |
+			FORMAT_MESSAGE_IGNORE_INSERTS,
+			NULL,
+			dw,
+			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+			(LPSTR)&lpMsgBuf,
+			0, NULL);
+
+		DebugOut((char*)lpMsgBuf);
+		DebugOut("\n");
+		
+		LocalFree(lpMsgBuf);
+	}
+
+	//while (cmdBuffer.size() >= MAX_CMD_HISTORY) cmdBuffer.erase(cmdBuffer.begin());
+	//for (std::vector< std::string > ::iterator iter = vec.begin(); iter != vec.end(); iter++)
+	//	cmdBuffer.push_back(iter->c_str());
+
+
+}
+
+void LoadHistory() {
+
+	DWORD dw;
+	char buffer[MAX_PATH];
+
+	if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_SAVE_HISTORY) || dw < 0) dw = 0;
+	if (!dw) return;
+
+	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, buffer, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_R_USER))
+		ExpandEnvironmentStringsA(DEFAULT_R_USER, buffer, MAX_PATH);
+
+	strncat_s(buffer, CONSOLE_HISTORY_FILE, sizeof(CONSOLE_HISTORY_FILE));
+	HANDLE hFile = ::CreateFileA(buffer, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
+	if (hFile != INVALID_HANDLE_VALUE) {
+
+		char buffer[1024];
+		DWORD dwread;
+		std::string str;
+
+		do {
+			::ReadFile(hFile, buffer, 1023, &dwread, 0);
+			if (dwread > 0) {
+				buffer[dwread] = 0;
+				str += buffer;
+			}
+		} while (dwread > 0 );
+
+		Util::split( str, '\n', 1, cmdBuffer, true );
+
+		::CloseHandle(hFile);
+	}
+
+}
+
 
 void flush_log()
 {

@@ -25,7 +25,10 @@
 #include "util.h"
 
 #define MAX_LOGLIST_SIZE	80
-#define MAX_CMD_HISTORY		1000
+#define MAX_CMD_HISTORY		2500
+
+#define CONSOLE_HISTORY_FILE ".BERT-Console.history"
+
 
 #define ENV_NAME "BERT"
 #define R_WORKSPACE_NAME ".BERT-RData"

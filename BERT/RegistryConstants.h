@@ -36,6 +36,7 @@
 #define REGISTRY_VALUE_CONSOLE_MESSAGE	"ConsoleMessageTextColor"
 #define REGISTRY_VALUE_CONSOLE_BACK		"ConsoleBackgroundColor"
 
+#define REGISTRY_VALUE_CONSOLE_SAVE_HISTORY	"ConsoleSaveHistory"
 #define REGISTRY_VALUE_CONSOLE_WIDTH		"ConsoleWidth"
 #define REGISTRY_VALUE_CONSOLE_AUTO_WIDTH	"ConsoleAutoWidth"
 

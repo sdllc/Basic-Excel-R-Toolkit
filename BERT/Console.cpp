@@ -213,6 +213,9 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleOptionsDlgProc(HWND hwndDlg, UINT message, WP
 		::SendMessage(::GetDlgItem(hwndDlg, IDC_CB_AUTO), BM_SETCHECK, dw ? BST_CHECKED : BST_UNCHECKED, 0);
 		::EnableWindow(::GetDlgItem(hwndDlg, IDC_CONSOLE_WIDTH), !dw);
 
+		if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_SAVE_HISTORY)
+			|| dw < 0) dw = 0;
+		::SendMessage(::GetDlgItem(hwndDlg, IDC_SAVE_HISTORY), BM_SETCHECK, dw ? BST_CHECKED : BST_UNCHECKED, 0);
 
 		::EnableWindow(::GetDlgItem(hwndDlg, IDAPPLY), 0);
 
@@ -374,6 +377,9 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleOptionsDlgProc(HWND hwndDlg, UINT message, WP
 			dw = autowidth ? 1 : 0;
 			CRegistryUtils::SetRegDWORD(HKEY_CURRENT_USER, dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_AUTO_WIDTH);
 			UpdateConsoleWidth(true);
+
+			dw = (::SendMessage(::GetDlgItem(hwndDlg, IDC_SAVE_HISTORY), BM_GETCHECK, 0, 0) == BST_CHECKED) ? 1 : 0;
+			CRegistryUtils::SetRegDWORD(HKEY_CURRENT_USER, dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_SAVE_HISTORY);
 
 			EndDialog(hwndDlg, wParam);
 			return TRUE;
