@@ -102,8 +102,8 @@ ClearUserButtons <- function(){
 #--------------------------------------------------------
 # watch file, execute code on change
 #--------------------------------------------------------
-WatchFile <- function( path, code = BERT$ReloadStartup ){
-	.WatchedFiles[[path]] = code;
+WatchFile <- function( path, FUN = BERT$ReloadStartup ){
+	.WatchedFiles[[path]] = FUN;
 	.RestartWatch();
 } 
 
