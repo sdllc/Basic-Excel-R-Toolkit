@@ -44,9 +44,9 @@ ReloadStartup <- function(){ .Call(.CALLBACK, .RELOAD, 0, PACKAGE=.MODULE ); };
 # API for user buttons
 #========================================================
 
-.UserButtonCallbacks <- c();
+.UserButtonCallbacks <- list();
 .UserButtonCallback <- function(index){
-	return(.UserButtonCallbacks[[index+1]]());
+	return(.UserButtonCallbacks[[index+1]]$FUN());
 }
 
 #--------------------------------------------------------
@@ -54,15 +54,30 @@ ReloadStartup <- function(){ .Call(.CALLBACK, .RELOAD, 0, PACKAGE=.MODULE ); };
 # there's a max of 6.  callback is an R function.
 #--------------------------------------------------------
 AddUserButton <- function( label, FUN, imageMso = NULL ){
+
+	ubc <- structure( list(), class = "UserButtonCallback" );
+	ubc$label <- label;
+	ubc$FUN <- FUN;
+	ubc$imageMso <- imageMso;
+
 	.Call(.CALLBACK, .ADD_USER_BUTTON, c( label, "BERT$.UserButtonCallback", imageMso ), 0, PACKAGE=.MODULE);
-	.UserButtonCallbacks <<- c(.UserButtonCallbacks, FUN);
+
+	len <- length( .UserButtonCallbacks );
+	.UserButtonCallbacks[[len+1]] <<- ubc;
+}
+
+#--------------------------------------------------------
+# list user buttons
+#--------------------------------------------------------
+ListUserButtons <- function(){
+	print( .UserButtonCallbacks );
 }
 
 #--------------------------------------------------------
 # remove user buttons
 #--------------------------------------------------------
 ClearUserButtons <- function(){
-	.UserButtonCallbacks <<- c();
+	.UserButtonCallbacks <<- list();
 	.Call(.CALLBACK, .CLEAR_USER_BUTTONS, 0, 0, PACKAGE=.MODULE);
 }
 
