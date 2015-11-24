@@ -235,6 +235,23 @@ history <- function( max.show=25, reverse=FALSE, pattern="" ){
 }
 
 #--------------------------------------------------------
+# history is now returned as a list; but we want to 
+# do some special formatting, so use a generic.
+#--------------------------------------------------------
+print.history.list <- function(h){
+
+	len <- length(h);
+	decimals <- max( 2, floor( log10( len )) + 1 );
+	pattern <- paste( "\t%0", decimals, "d: %s\n", sep="" );
+
+	cat( "\n" );
+	for( i in len ){ cat( sprintf( pattern, i, h[i] )); }
+	cat( "\n" );
+
+}
+
+
+#--------------------------------------------------------
 # overload quit method or it will stop the excel process
 #--------------------------------------------------------
 

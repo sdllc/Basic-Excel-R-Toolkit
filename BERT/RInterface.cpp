@@ -2105,6 +2105,8 @@ SEXP ConsoleHistory(SEXP args) {
 	int histlen = 25;
 	bool rev = false;
 
+	std::vector< std::string > hlist;
+
 	if (len > 1) {
 
 		SEXP s = VECTOR_ELT(args, 0);
@@ -2140,6 +2142,7 @@ SEXP ConsoleHistory(SEXP args) {
 		int start = count - histlen - 1; 
 		if (start < 0) start = 0;
 
+		/*
 		if( start < count ) logMessage("\n", 0, 1);
 		for (; start < count; start++ ) {
 			std::string str = "  ";
@@ -2148,11 +2151,23 @@ SEXP ConsoleHistory(SEXP args) {
 			logMessage(str.c_str(), 0, 1);
 		}
 		logMessage("\n", 0, 1);
+		*/
 
-		return Rf_ScalarLogical(-1);
+		for (; start < count; start++) {
+			hlist.push_back((*sv)[start].c_str());
+		}
+
 	}
 
-	return Rf_ScalarLogical(0);
+	len = hlist.size();
+	SEXP shistory = Rf_allocVector(STRSXP, len );
+	for (int i = 0; i < len; i++ ){
+		SET_STRING_ELT(shistory, i, Rf_mkChar(hlist[i].c_str()));
+	}
+
+	Rf_setAttrib(shistory, Rf_mkString("class"), Rf_mkString("history.list"));
+
+	return shistory;
 
 }
 
