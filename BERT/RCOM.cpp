@@ -59,7 +59,14 @@ static int objectRefCtr = 0;
 
 void STRSXP2BSTR(CComBSTR &bstr, SEXP s) {
 
-	const char *sz = CHAR(STRING_ELT(s, 0));
+	const char *sz;
+	int type = TYPEOF(s);
+
+	if (type == CHARSXP) {
+		sz = CHAR(s);
+	}
+	else sz = CHAR(STRING_ELT(s, 0));
+
 	int strlen = MultiByteToWideChar(CP_UTF8, 0, sz, -1, 0, 0);
 	if (strlen > 0) {
 		WCHAR *wsz = new WCHAR[strlen];

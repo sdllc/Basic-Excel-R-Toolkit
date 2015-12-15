@@ -129,6 +129,8 @@ void SaveHistory() {
 	}
 	else {
 
+#ifdef _DEBUG
+
 		LPVOID lpMsgBuf;
 		LPVOID lpDisplayBuf;
 		DWORD dw = GetLastError();
@@ -147,6 +149,9 @@ void SaveHistory() {
 		DebugOut("\n");
 		
 		LocalFree(lpMsgBuf);
+
+#endif
+
 	}
 
 	//while (cmdBuffer.size() >= MAX_CMD_HISTORY) cmdBuffer.erase(cmdBuffer.begin());
