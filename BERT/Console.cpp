@@ -849,9 +849,9 @@ void testAutocomplete()
 		// this will close the ac list because it's not a character of any of the entries.
 		// we want to keep the list open in that case.  hence the space check.
 
-		if (!fn(ptr, SCI_AUTOCACTIVE, 0, 0) || lastList.compare(autocompleteComps) || (caret > 0 && c[caret - 1] == ' '))
+		//	if (!fn(ptr, SCI_AUTOCACTIVE, 0, 0) || lastList.compare(autocompleteComps) || (caret > 0 && c[caret - 1] == ' '))
+		if (!fn(ptr, SCI_AUTOCACTIVE, 0, 0) || (caret > 0 && !isWordChar2( c[caret - 1] )))
 		{
-
 			int x = caret;
 			for (; x >= 2; x--) {
 				if (!isWordChar2(c[x - 1])) break;
@@ -859,12 +859,18 @@ void testAutocomplete()
 
 			SVECTOR clist;
 			Util::split(autocompleteComps, ' ', 1, clist, true);
+			std::sort(clist.begin(), clist.end());
+
+			char sep[] = "\0";
 			std::string newlist = "";
 			for (int i = 0; i < clist.size(); i++) {
 				const char *sz = lastWord(clist[i].c_str());
-				if (strlen(sz)) {
-					if(i) newlist.append(" ");
+
+				// FIXME: make this optional? dropping hidden (.) symbols
+				if (strlen(sz) && sz[0] != '.' ) {
+					newlist.append(sep);
 					newlist.append(sz);
+					sep[0] = ' ';
 				}
 			}
 
