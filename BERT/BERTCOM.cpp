@@ -224,6 +224,16 @@ HRESULT DispatchCall(LPDISPATCH pdisp, CComVariant &arg1, CComVariant &arg2, CCo
 	return DispatchCall(pdisp, vec, cvResult);
 }
 
+/** convenience overload */
+HRESULT DispatchCall(LPDISPATCH pdisp, CComVariant &arg1, CComVariant &arg2, CComVariant &arg3, CComVariant &arg4, CComVariant &cvResult) {
+	std::vector<CComVariant> vec;
+	vec.push_back(arg1);
+	vec.push_back(arg2);
+	vec.push_back(arg3);
+	vec.push_back(arg4);
+	return DispatchCall(pdisp, vec, cvResult);
+}
+
 /**
  * execute an R call through an asynchronous Excel callback.  we have to 
  * do this when making function calls from the console so we can get on 
@@ -232,7 +242,7 @@ HRESULT DispatchCall(LPDISPATCH pdisp, CComVariant &arg1, CComVariant &arg2, CCo
  * note that this is not used in spreadsheet function calls, only when
  * calling from the console.
  */
-HRESULT SafeCall( SAFECALL_CMD cmd, std::vector< std::string > *vec, int *presult )
+HRESULT SafeCall( SAFECALL_CMD cmd, std::vector< std::string > *vec, long arg, int *presult )
 {
 	HRESULT hr = E_FAIL;
 	LPDISPATCH pdisp = 0;
@@ -271,12 +281,8 @@ HRESULT SafeCall( SAFECALL_CMD cmd, std::vector< std::string > *vec, int *presul
 			hr = DispatchCall(pdisp, CComVariant(CComBSTR("BERT.SafeCall")), CComVariant(10L), CComVariant(CComBSTR(vec->begin()->c_str())), cvRslt);
 			break;
 
-		case SCC_CALLTIP:
-			hr = DispatchCall(pdisp, CComVariant(CComBSTR("BERT.SafeCall")), CComVariant(0L), CComVariant(CComBSTR(vec->begin()->c_str())), cvRslt);
-			break;
-
-		case SCC_NAMES:
-			hr = DispatchCall(pdisp, CComVariant(CComBSTR("BERT.SafeCall")), CComVariant(2L), CComVariant(CComBSTR(vec->begin()->c_str())), cvRslt);
+		case SCC_AUTOCOMPLETE:
+			hr = DispatchCall(pdisp, CComVariant(CComBSTR("BERT.SafeCall")), CComVariant(12L), CComVariant(CComBSTR(vec->begin()->c_str())), CComVariant(arg), cvRslt);
 			break;
 
 		case SCC_WATCH_NOTIFY:

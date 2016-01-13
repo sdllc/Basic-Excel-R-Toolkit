@@ -31,7 +31,7 @@
 #include "DebugOut.h"
 #include "Objbase.h"
 
-extern HRESULT SafeCall(SAFECALL_CMD cmd, std::vector< std::string > *vec, int *presult);
+extern HRESULT SafeCall(SAFECALL_CMD cmd, std::vector< std::string > *vec, long arg, int *presult);
 
 typedef std::vector<std::string> STRVECTOR;
 
@@ -48,7 +48,7 @@ DWORD WINAPI execFunctionThread(void *parameter) {
 	std::string str((const char*)parameter);
 	STRVECTOR svec;
 	svec.push_back(str);
-	SafeCall(SCC_WATCH_NOTIFY, &svec, &pr);
+	SafeCall(SCC_WATCH_NOTIFY, &svec, 0, &pr);
 	::CoUninitialize();
 	return 0;
 

@@ -969,55 +969,48 @@ int getNames(SVECTOR &vec, const std::string &token)
 }
 
 /**
- * get function call tip (if it's a function), using the print representation from "args"
+ *
  */
-int getCallTip(std::string &callTip, const std::string &sym)
+int getAutocomplete(std::string &comps, std::string &addition, const std::string &line, int caret)
 {
-	int err, ret = 0;
-	SEXP obj = resolveObject(sym);
-	if (obj)
-	{
-		SEXP result = PROTECT(R_tryEval(Rf_lang2(Rf_install("capture.output"), Rf_lang2(Rf_install("args"), obj)), R_GlobalEnv, &err));
-		if (result && TYPEOF(result) == STRSXP )
-		{
-			const char *c = CHAR(STRING_ELT(result, 0));
-			if (!strncmp(c, "function ", 9))
-			{
-				callTip = Util::trim(&(c[9]));
-				for (int i = 1; i < Rf_length(result) - 1; i++)
-				{
-					callTip += " ";
-					callTip += Util::trim(CHAR(STRING_ELT(result, i)));
-				}
-				ret = 1;
-			}
-		}
-		UNPROTECT(1);
-	}
-	UNPROTECT(1);
-	return ret;
-}
 
-SVECTOR & getWordList(SVECTOR &wordList)
-{
 	int err;
-	SEXP env = PROTECT(R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString(ENV_NAME)), R_GlobalEnv, &err));
-	if (env)
-	{
-		SEXP rslt = PROTECT(R_tryEvalSilent(Rf_lang1(Rf_install("WordList")), env, &err));
-		if (rslt)
-		{
-			int len = Rf_length(rslt);
-			for (int i = 0; i < len; i++)
-			{
-				 wordList.push_back(std::string(CHAR(STRING_ELT(rslt, i))));
-			}
-		}
-		UNPROTECT(1);
-	}
-	UNPROTECT(1);
-	return wordList;
 
+	SEXP sline = Rf_mkString(line.c_str());
+	SEXP spos = Rf_ScalarInteger(caret);
+
+	// do.call(getFromNamespace(".win32consoleCompletion", "utils"), list(cmd, pos))
+
+	SEXP arglist;
+	PROTECT(arglist = Rf_allocVector(VECSXP, 2));
+
+	SET_VECTOR_ELT(arglist, 0, Rf_mkString(line.c_str()));
+	SET_VECTOR_ELT(arglist, 1, Rf_ScalarInteger(caret));
+
+	SEXP result = PROTECT(R_tryEval(
+		Rf_lang3( Rf_install("do.call"), Rf_lang3(Rf_install("getFromNamespace"), Rf_mkString(".win32consoleCompletion"), Rf_mkString("utils")), arglist ),
+		R_GlobalEnv, &err));
+
+	addition = "";
+	comps = "";
+
+	if (!err && TYPEOF(result) == VECSXP ) {
+
+		SEXP e0 = VECTOR_ELT(result, 0);
+		SEXP e2 = VECTOR_ELT(result, 2);
+
+		if (TYPEOF(e0) == STRSXP) {
+			addition = CHAR(STRING_ELT(e0, 0));
+		}
+		if (TYPEOF(e2) == STRSXP) {
+			comps = CHAR(STRING_ELT(e2, 0));
+		}
+
+	}
+
+	UNPROTECT(2);
+
+	return err;
 }
 
 bool CheckExcelRef(LPXLOPER12 rslt, SEXP s)

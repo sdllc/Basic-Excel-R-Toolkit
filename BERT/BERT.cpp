@@ -43,12 +43,8 @@ HWND hWndConsole = 0;
 /* mutex for locking the console message history */
 HANDLE muxLogList = 0;
 
-/* mutex for locking the autocomplete word list */
-HANDLE muxWordlist = 0;
-
-SVECTOR wlist;
-
-std::string calltip;
+std::string autocompleteComps;
+std::string autocompleteAddition;
 
 extern void FreeStream();
 extern void SetExcelPtr( LPVOID p, LPVOID ribbon );
@@ -227,13 +223,6 @@ short BERT_Reload()
 	LoadStartupFile();
 	MapFunctions();
 	RegisterAddinFunctions();
-
-	// if console is open, re-run wordlists?
-
-	if (hWndConsole)
-	{
-		::SendMessageA(hWndConsole, WM_COMMAND, MAKEWPARAM(WM_REBUILD_WORDLISTS, 0), 0);
-	}
 
 	return 1;
 }
@@ -439,14 +428,12 @@ void SysCleanup()
 	FreeStream();
 
 	CloseHandle(muxLogList);
-	CloseHandle(muxWordlist);
 
 }
 
 void SysInit()
 {
 
-	muxWordlist = CreateMutex(0, 0, 0);
 	muxLogList = CreateMutex(0, 0, 0);
 
 	if (RInit()) return;
@@ -458,21 +445,6 @@ void SysInit()
 
 }
 
-void UpdateWordList()
-{
-	static int a = 2500;
-
-	DWORD stat = WaitForSingleObject(muxWordlist, INFINITE);
-	if (stat == WAIT_OBJECT_0)
-	{
-		wlist.clear();
-		wlist.reserve(a + 100);
-		getWordList(wlist);
-		a = wlist.size();
-		::ReleaseMutex(muxWordlist);
-	}
-}
-
 /**
  * this is the second part of the context-switching callback
  * used when running functions from the console.  it is only
@@ -480,7 +452,7 @@ void UpdateWordList()
  *
  * FIXME: reorganize this around cmdid, clearer switching
  */
-long BERT_SafeCall(long cmdid, LPXLOPER12 xl)
+long BERT_SafeCall(long cmdid, LPXLOPER12 xl, LPXLOPER xl2)
 {
 	SVECTOR sv;
 	bool excludeFlag = false;
@@ -497,14 +469,20 @@ long BERT_SafeCall(long cmdid, LPXLOPER12 xl)
 			return notifyWatch(func);
 		}
 		else if (cmdid == 2) {
-			return getNames(moneyList, func);
+			return -1; // getNames(moneyList, func);
 		}
 		else if (cmdid == 10) {
-
 			sv.push_back(func);
 			excludeFlag = true;
 		}
-		else return getCallTip(calltip, func);
+		else if (cmdid == 12) {
+			int caret = xl2->val.num;
+			return getAutocomplete( autocompleteComps, autocompleteAddition, func, caret);
+			// return 0;
+		}
+		else {
+			return -1; // getCallTip(calltip, func);
+		}
 	}
 	else if (xl->xltype & xltypeMulti)
 	{
@@ -525,12 +503,7 @@ long BERT_SafeCall(long cmdid, LPXLOPER12 xl)
 	}
 	if (sv.size())
 	{
-		long rslt = RExecVectorBuffered(sv, excludeFlag);
-		if (rslt == PARSE2_OK)
-		{
-			UpdateWordList();
-		}
-		return rslt;
+		return RExecVectorBuffered(sv, excludeFlag);
 	}
 	return PARSE2_EOF;
 }

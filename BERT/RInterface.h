@@ -70,16 +70,14 @@ int UpdateR(std::string &str);
 void MapFunctions();
 void LoadStartupFile();
 
-SVECTOR & getWordList( SVECTOR &wordList );
-
 /**
  * asynchronous break, stopping a long-running or runaway function
  */
 void userBreak();
 
-int getCallTip(std::string &callTip, const std::string &sym);
+int getAutocomplete(std::string &comps, std::string &addition, const std::string &line, int caret);
+
 int notifyWatch(std::string &path);
-int getNames(SVECTOR &vec, const std::string &token);
 int setWidth(int w);
 
 short BERT_InstallPackages();

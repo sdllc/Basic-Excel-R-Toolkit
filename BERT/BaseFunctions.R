@@ -137,16 +137,6 @@ ListWatches <- function(){
 .Excel<- function( command, arguments = list() ){ .Call(.CALLBACK, .EXCEL, command, arguments, PACKAGE=.MODULE ); };
 
 #========================================================
-# functions - for internal use
-#========================================================
-
-WordList <- function(){ 
-	wl <- vector();
-	for( i in search()){ wl <- c( wl, ls(i, all.names=1)); }
-	wl;
-}
-
-#========================================================
 # functions for using the Excel COM interface 
 # (experimental)
 #========================================================

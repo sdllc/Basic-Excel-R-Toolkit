@@ -29,11 +29,9 @@
 
 
 extern HMODULE ghModule;
-extern HANDLE muxWordlist;
 
-extern SVECTOR wlist;
-extern SVECTOR moneyList;
-extern std::string calltip;
+extern std::string autocompleteComps;
+extern std::string autocompleteAddition;
 
 static LPWSTR funcTemplates[][16] = {
 
@@ -48,7 +46,7 @@ static LPWSTR funcTemplates[][16] = {
 	{ L"BERT_InstallPackages", L"A#", L"BERT.InstallPackages", L"", L"2", L"BERT", L"", L"94", L"", L"", L"", L"", L"", L"", L"", L"" },
 	{ L"BERT_Reload", L"A#", L"BERT.Reload", L"", L"2", L"BERT", L"", L"93", L"", L"", L"", L"", L"", L"", L"", L"" },
 	{ L"BERT_About", L"A#", L"BERT.About", L"", L"2", L"BERT", L"", L"92", L"", L"", L"", L"", L"", L"", L"", L"" },
-	{ L"BERT_SafeCall", L"JJU#", L"BERT.SafeCall", L"", L"2", L"BERT", L"", L"91", L"", L"", L"", L"", L"", L"", L"", L"" },
+	{ L"BERT_SafeCall", L"JJUU#", L"BERT.SafeCall", L"", L"2", L"BERT", L"", L"91", L"", L"", L"", L"", L"", L"", L"", L"" },
 
 	// type 1 functions
 
@@ -91,7 +89,6 @@ bool RegisterBasicFunctions();
 
 void SysInit();
 void SysCleanup();
-void UpdateWordList();
 
 /** add or remove the menu (old-school menu style) */
 // void SetBERTMenu( bool add = true );

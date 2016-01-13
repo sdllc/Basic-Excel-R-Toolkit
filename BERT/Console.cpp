@@ -39,11 +39,6 @@ typedef SVECTOR::iterator SITER;
 SVECTOR cmdVector;
 SVECTOR historyVector;
 
-SVECTOR wordList;
-SVECTOR moneyList;
-std::string moneyToken;
-
-SVECTOR baseWordList;
 bool wlInit = false;
 
 bool reopenWindow = false;
@@ -69,7 +64,7 @@ std::deque < std::string > pastelines;
 
 RECT rectConsole = { 0, 0, 0, 0 };
 
-extern HRESULT SafeCall(SAFECALL_CMD cmd, std::vector< std::string > *vec, int *presult);
+extern HRESULT SafeCall(SAFECALL_CMD cmd, std::vector< std::string > *vec, long arg, int *presult);
 extern HRESULT Marshal();
 
 std::vector< std::string > fontlist;
@@ -90,9 +85,6 @@ bool ColorDlg(HWND hwnd, DWORD &dwColor )
 {
 	CHOOSECOLOR cc;                 // common dialog box structure 
 	static COLORREF acrCustClr[16]; // array of custom colors 
-
-	HBRUSH hbrush;                  // brush handle
-	//static DWORD rgbCurrent;        // initial color selection
 
 	bool rslt = false;
 
@@ -415,65 +407,6 @@ void ConsoleOptions( HWND hwnd )
 	UpdateConsoleWidth(true);
 }
 
-void initWordList()
-{
-	static int lastWLLen = 2500;
-
-	// fuck it we'll do it live
-
-	wordList.clear();
-	wordList.reserve(lastWLLen + 100);
-
-	if (!wlInit)
-	{
-		HRSRC handle = ::FindResource(ghModule, MAKEINTRESOURCE(IDR_RCDATA2), RT_RCDATA);
-		if (handle != 0)
-		{
-			DWORD len = ::SizeofResource(ghModule, handle);
-			HGLOBAL global = ::LoadResource(ghModule, handle);
-			if (global != 0 && len > 0)
-			{
-				char *str = (char*)::LockResource(global);
-				std::stringstream ss(str);
-				std::string line;
-
-				while (std::getline(ss, line))
-				{
-					line = Util::trim(line);
-					if (line.length() > 0 && line.c_str()[0] != '#')
-					{
-						Util::split(line, ' ', MIN_WORD_LENGTH, baseWordList);
-					}
-				}
-			}
-			wlInit = true;
-		}
-	}
-
-	//SVECTOR tmp;
-	//tmp.reserve(lastWLLen + 100);
-
-	DWORD stat = WaitForSingleObject(muxWordlist, INFINITE);
-	if (stat == WAIT_OBJECT_0)
-	{
-		DebugOut("Length of wl: %d\n", wlist.size());
-		lastWLLen = wlist.size();
-
-		for (SVECTOR::iterator iter = wlist.begin(); iter != wlist.end(); iter++)
-		{
-			std::string str(*iter);
-			wordList.push_back(str);
-		}
-		ReleaseMutex(muxWordlist);
-	}
-	wordList.insert(wordList.end(), baseWordList.begin(), baseWordList.end());
-
-	std::sort(wordList.begin(), wordList.end());
-	wordList.erase(std::unique(wordList.begin(), wordList.end()), wordList.end());
-	moneyToken = "";
-
-}
-
 void AppendLog(const char *buffer, int style, int checkoverlap)
 {
 	// cases: checkoverlap is set UNLESS it's preloading
@@ -565,7 +498,6 @@ void CallComplete(PARSE_STATUS_2 ps, LPARAM lParam)
 		return;
 
 	default:
-		initWordList();
 		break;
 	}
 
@@ -582,7 +514,7 @@ DWORD WINAPI CallThreadProc(LPVOID lpParameter)
 	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 	HWND hwnd = (HWND)lpParameter;
 	int ips = 0;
-	SafeCall(SCC_EXEC, &cmdVector, &ips);
+	SafeCall(SCC_EXEC, &cmdVector, 0, &ips);
 	::PostMessage(hwnd, WM_CALL_COMPLETE, ips, 0);
 	::CoUninitialize();
 	if (exitpending){
@@ -787,7 +719,7 @@ LRESULT CALLBACK SubClassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			// iostreams 
 
 			if (wParam == 'C' && GetKeyState(VK_CONTROL) < 0) {
-				SafeCall(SCC_BREAK, 0, 0);
+				SafeCall(SCC_BREAK, 0, 0, 0);
 			}
 			return 0;
 		}
@@ -876,129 +808,78 @@ bool isWordChar(char c)
 		);
 }
 
-/**
-*/
+bool isWordChar2(char c)
+{
+	return (((c >= 'a') && (c <= 'z'))
+		|| ((c >= 'A') && (c <= 'Z'))
+		|| (c == '_')
+		|| (c == '.')
+		|| (c == '=')
+		);
+}
+
+const char *lastWord(const char *str) {
+	int len = strlen(str);
+	for (; len > 0; len--) {
+		if (!isWordChar2(str[len - 1])) break;
+	}
+	return str + len;
+}
+
 void testAutocomplete()
 {
 	int len = fn(ptr, SCI_GETCURLINE, 0, 0);
 	if (len <= 2) return;
 	char *c = new char[len + 1];
 	int caret = fn(ptr, SCI_GETCURLINE, len + 1, (sptr_t)c);
-	std::string part;
-
 	static std::string lastList;
 
-	// FOR NOW, require that caret is at eol
+	int sc;
+	std::vector< std::string > sv;
+	sv.push_back(c + 2);
 
-	if (caret == len - 1)
-	{
-		bool money = false;
-		for (--caret; caret >= 2 && isWordChar(c[caret]); caret--){ if (c[caret] == '$' || c[caret] == '@') money = true; }
-		caret++;
-		int slen = strlen(&(c[caret]));
-		if (slen > 1)
+	SafeCall(SCC_AUTOCOMPLETE, &sv, caret-1, &sc);
+
+	if (autocompleteComps.length()) {
+
+		int testactive = fn(ptr, SCI_AUTOCACTIVE, 0, 0);
+
+		// there's a case where you are entering a function call, type open paren 
+		// (autocomplete shows parameters) then press space for some breathing room -- 
+		// this will close the ac list because it's not a character of any of the entries.
+		// we want to keep the list open in that case.  hence the space check.
+
+		if (!fn(ptr, SCI_AUTOCACTIVE, 0, 0) || lastList.compare(autocompleteComps) || (caret > 0 && c[caret - 1] == ' '))
 		{
-			std::string str = &(c[caret]);
 
-			if (money)
-			{
-				std::string token = "";
-				int midx = 0;
-				for (int i = 1; i < slen; i++) if (str[i] == '$' || str[i] == '@') midx = i ;
-				if (midx > 0) token = std::string(str.begin(), str.begin() + midx);
-				if (token.compare(moneyToken))
-				{
-					int sc;
-					moneyList.clear();
-					moneyList.reserve(100);
-					std::vector< std::string > sv;
-					sv.push_back(token);
-					SafeCall(SCC_NAMES, &sv, &sc);
-					moneyToken = token;
+			int x = caret;
+			for (; x >= 2; x--) {
+				if (!isWordChar2(c[x - 1])) break;
+			}
+
+			SVECTOR clist;
+			Util::split(autocompleteComps, ' ', 1, clist, true);
+			std::string newlist = "";
+			for (int i = 0; i < clist.size(); i++) {
+				const char *sz = lastWord(clist[i].c_str());
+				if (strlen(sz)) {
+					if(i) newlist.append(" ");
+					newlist.append(sz);
 				}
 			}
 
-			SVECTOR::iterator iter = std::lower_bound(money ? moneyList.begin() : wordList.begin(), money ? moneyList.end() : wordList.end(), str);
-			c[len - 2]++;
-			str = &(c[caret]);
-			SVECTOR::iterator iter2 = std::lower_bound(money ? moneyList.begin() : wordList.begin(), money ? moneyList.end() : wordList.end(), str);
-			int count = iter2 - iter;
+			fn(ptr, SCI_AUTOCSHOW, caret - x, (sptr_t)(newlist.c_str()));
 
-			str = "";
-			if (count > 0 && count <= MAX_AUTOCOMPLETE_LIST_LEN)
-			{
-				DebugOut("count %d\n", count);
-
-				for (count = 0; iter < iter2; iter++, count++)
-				{
-					if (count) str += " ";
-					str += iter->c_str();
-				}
-
-				if ( !fn(ptr, SCI_AUTOCACTIVE, 0, 0 ) || lastList.compare(str))
-					fn(ptr, SCI_AUTOCSHOW, slen, (sptr_t)(str.c_str()));
-				lastList = str;
-			}
 		}
 	}
 
-	// TODO: optimize this over a single bit of typing...
 
-	caret = fn(ptr, SCI_GETCURLINE, len + 1, (sptr_t)c);
-	std::string sc(c, c + caret);
-
-	static std::string empty = "";
-	static std::regex bparen("\\([^\\(]*?\\)");
-	static std::regex rex("[^\\w\\._\\$]([\\w\\._\\$]+)\\s*\\([^\\)\\(]*$");
-	static std::string lasttip;
-
-	while (std::regex_search(sc, bparen))
-		sc = regex_replace(sc, bparen, empty);
-
-	std::smatch mat;
-
-	bool ctvisible = fn(ptr, SCI_CALLTIPACTIVE, 0, 0);
-
-	// so there is the possibility that we have a tip because we're in one
-	// function, but then we close the tip and fall into an enclosing 
-	// function... actually my regex doesn't work, then.
-
-	if (std::regex_search(sc, mat, rex) /* && !ctvisible */)
-	{
-		std::string tip;
-		std::string sym(mat[1].first, mat[1].second);
-
-		if (sym.compare(lasttip))
-		{
-			int sc = 0;
-			std::vector< std::string > sv;
-			sv.push_back(sym);
-			SafeCall(SCC_CALLTIP, &sv, &sc);
-			tip = calltip;
-
-			// if(0)// (getCallTip(tip, sym))
-			if (sc)
-			{
-				DebugOut("%s: %s\n", sym.c_str(), tip.c_str());
-
-				int pos = fn(ptr, SCI_GETCURRENTPOS, 0, 0);
-				// pos -= caret; // start of line
-				pos -= (mat[0].second - mat[0].first - 1); // this is not correct b/c we are munging the string
-				fn(ptr, SCI_CALLTIPSHOW, pos, (sptr_t)tip.c_str());
-			}
-			else if (ctvisible) fn(ptr, SCI_CALLTIPCANCEL, 0, 0);
-			lasttip = sym;
-		}
-	}
-	else
-	{
-		if (ctvisible) fn(ptr, SCI_CALLTIPCANCEL, 0, 0);
-		lasttip = "";
-	}
+	lastList = autocompleteComps;
 
 	delete[] c;
 
 }
+
 
 VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 {
@@ -1115,7 +996,7 @@ void UpdateConsoleWidth( bool force )
 
 	sprintf_s(buffer, 128, "options(\"width\"=%d)", chars);
 	sv.push_back(std::string(buffer));
-	SafeCall(SCC_CONSOLE_WIDTH, &sv, &r);
+	SafeCall(SCC_CONSOLE_WIDTH, &sv, 0, &r);
 
 	DebugOut("%s\n", buffer);
 
@@ -1177,9 +1058,6 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 			fn = (sptr_t(__cdecl *)(sptr_t*, int, uptr_t, sptr_t))SendMessage(hwndScintilla, SCI_GETDIRECTFUNCTION, 0, 0);
 			ptr = (sptr_t*)SendMessage(hwndScintilla, SCI_GETDIRECTPOINTER, 0, 0);
 
-			char buffer[64];
-			DWORD dw;
-
 			fn(ptr, SCI_SETCODEPAGE, SC_CP_UTF8, 0);
 			SetConsoleDefaults();
 			
@@ -1197,9 +1075,6 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 				else AppendLog(iter->c_str(), 1, 0);
 			}
 			Prompt();
-
-			//if (!wlInit) 
-			initWordList();
 
 			tid = ::SetTimer(hwndDlg, TIMERID_FLUSHBUFFER, 1000, TimerProc);
 
@@ -1358,7 +1233,7 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 			break;
 
 		case ID_CONSOLE_INSTALLPACKAGES:
-			SafeCall(SCC_INSTALLPACKAGES, 0, 0);
+			SafeCall(SCC_INSTALLPACKAGES, 0, 0, 0);
 			break;
 
 		case ID_CONSOLE_HOMEDIRECTORY:
@@ -1366,11 +1241,7 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 			break;
 
 		case ID_CONSOLE_RELOADSTARTUPFILE:
-			SafeCall(SCC_RELOAD_STARTUP, 0, 0);
-			break;
-
-		case WM_REBUILD_WORDLISTS:
-			initWordList();
+			SafeCall(SCC_RELOAD_STARTUP, 0, 0, 0);
 			break;
 
 		case ID_CONSOLE_CONSOLEOPTIONS:
@@ -1517,7 +1388,6 @@ void RunThreadedConsole(HWND excel)
 		DWORD dwID;
 
 		Marshal(); // FIXME: do this elsewhere, and once
-		UpdateWordList();
 		::CreateThread(0, 0, ThreadProc, excel, 0, &dwID);
 	}
 
