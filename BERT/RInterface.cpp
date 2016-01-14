@@ -991,6 +991,15 @@ int getAutocomplete(std::string &comps, std::string &addition, const std::string
 		Rf_lang3( Rf_install("do.call"), Rf_lang3(Rf_install("getFromNamespace"), Rf_mkString(".win32consoleCompletion"), Rf_mkString("utils")), arglist ),
 		R_GlobalEnv, &err));
 
+	SEXP cenv = PROTECT(R_tryEval(
+		Rf_lang3(Rf_install("getFromNamespace"), Rf_mkString(".CompletionEnv"), Rf_mkString("utils")),
+		R_GlobalEnv, &err));
+
+	if (!err) {
+		int type = TYPEOF(cenv);
+		DebugOut("type %d\n", type);
+	}
+
 	addition = "";
 	comps = "";
 
@@ -1008,7 +1017,7 @@ int getAutocomplete(std::string &comps, std::string &addition, const std::string
 
 	}
 
-	UNPROTECT(2);
+	UNPROTECT(3);
 
 	return err;
 }
