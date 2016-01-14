@@ -36,6 +36,8 @@
 typedef std::vector< std::string> SVECTOR;
 typedef SVECTOR::iterator SITER;
 
+void showAutocomplete();
+
 SVECTOR cmdVector;
 SVECTOR historyVector;
 
@@ -692,6 +694,13 @@ LRESULT CALLBACK SubClassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			ProcessCommand();
 			return 0;
 
+		case VK_TAB:
+			if (!fn(ptr, SCI_AUTOCACTIVE, 0, 0))
+			{
+				showAutocomplete();
+				return 0;
+			}
+
 		default:
 			p = fn(ptr, SCI_GETCURRENTPOS, 0, 0);
 			if (p < minCaret) fn(ptr, SCI_SETSEL, -1, -1);
@@ -707,6 +716,10 @@ LRESULT CALLBACK SubClassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case VK_DOWN:
 		case VK_RETURN:
 			return 0;
+
+		//case VK_TAB:
+		//	return 0;
+
 		}
 		break;
 
@@ -788,6 +801,14 @@ LRESULT CALLBACK SubClassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			fn(ptr, SCI_AUTOCCANCEL, 0, 0);
 			fn(ptr, SCI_CALLTIPCANCEL, 0, 0);
 			return 0;
+
+		case VK_TAB:
+			if (!fn(ptr, SCI_AUTOCACTIVE, 0, 0))
+			{
+				return 0;
+			}
+			break;
+
 		}
 
 		break;
@@ -850,6 +871,9 @@ void showAutocomplete()
 
 			// sort symbols (NOTE: this is more expensive than necessary because we're
 			// doing it before dropping prefixes; but that might be an overoptimization)
+
+			// UPDATE: I can't figure out why this is necessary, and it's bad for function
+			// definitions because it breaks order.
 
 			std::sort(clist.begin(), clist.end());
 
