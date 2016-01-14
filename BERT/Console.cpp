@@ -802,31 +802,20 @@ bool isWordChar(char c)
 	return (((c >= 'a') && (c <= 'z'))
 		|| ((c >= 'A') && (c <= 'Z'))
 		|| (c == '_')
-		|| (c == '$')
-		|| (c == '@')
 		|| (c == '.')
-		);
-}
-
-bool isWordChar2(char c)
-{
-	return (((c >= 'a') && (c <= 'z'))
-		|| ((c >= 'A') && (c <= 'Z'))
-		|| (c == '_')
-		|| (c == '.')
-		|| (c == '=')
+		|| (c == '=') // for parameter symbols
 		);
 }
 
 const char *lastWord(const char *str) {
 	int len = strlen(str);
 	for (; len > 0; len--) {
-		if (!isWordChar2(str[len - 1])) break;
+		if (!isWordChar(str[len - 1])) break;
 	}
 	return str + len;
 }
 
-void testAutocomplete()
+void showAutocomplete()
 {
 	int len = fn(ptr, SCI_GETCURLINE, 0, 0);
 	if (len <= 2) return;
@@ -849,17 +838,23 @@ void testAutocomplete()
 		// this will close the ac list because it's not a character of any of the entries.
 		// we want to keep the list open in that case.  hence the space check.
 
-		//	if (!fn(ptr, SCI_AUTOCACTIVE, 0, 0) || lastList.compare(autocompleteComps) || (caret > 0 && c[caret - 1] == ' '))
-		if (!fn(ptr, SCI_AUTOCACTIVE, 0, 0) || (caret > 0 && !isWordChar2( c[caret - 1] )))
+		if (!fn(ptr, SCI_AUTOCACTIVE, 0, 0) || (caret > 0 && !isWordChar( c[caret - 1] )))
 		{
 			int x = caret;
 			for (; x >= 2; x--) {
-				if (!isWordChar2(c[x - 1])) break;
+				if (!isWordChar(c[x - 1])) break;
 			}
 
 			SVECTOR clist;
 			Util::split(autocompleteComps, ' ', 1, clist, true);
+
+			// sort symbols (NOTE: this is more expensive than necessary because we're
+			// doing it before dropping prefixes; but that might be an overoptimization)
+
 			std::sort(clist.begin(), clist.end());
+
+			// here we're dropping prefixes and symbols that start with a dot (typically
+			// hidden in R)
 
 			char sep[] = "\0";
 			std::string newlist = "";
@@ -870,7 +865,7 @@ void testAutocomplete()
 				if (strlen(sz) && sz[0] != '.' ) {
 					newlist.append(sep);
 					newlist.append(sz);
-					sep[0] = ' ';
+					sep[0] = ' '; // every time?
 				}
 			}
 
@@ -1190,7 +1185,7 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 			// I think because I switched to utf-8 I'm gettings
 			// double notifications
 
-			if (scn->ch) testAutocomplete();
+			if (scn->ch) showAutocomplete();
 		}
 			break;
 		}
