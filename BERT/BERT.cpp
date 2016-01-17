@@ -44,6 +44,7 @@ HWND hWndConsole = 0;
 HANDLE muxLogList = 0;
 
 std::string autocompleteComps;
+std::string autocompleteSignature;
 std::string autocompleteAddition;
 
 extern void FreeStream();
@@ -477,7 +478,7 @@ long BERT_SafeCall(long cmdid, LPXLOPER12 xl, LPXLOPER xl2)
 		}
 		else if (cmdid == 12) {
 			int caret = xl2->val.num;
-			return getAutocomplete( autocompleteComps, autocompleteAddition, func, caret);
+			return getAutocomplete( autocompleteComps, autocompleteAddition, autocompleteSignature, func, caret);
 			// return 0;
 		}
 		else {

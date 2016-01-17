@@ -173,7 +173,203 @@ ListWatches <- function(){
 	}
 }
 
+#========================================================
+# autocomplete
+#========================================================
+
+.Autocomplete <- function(...){
+	ac <- utils:::.win32consoleCompletion(...);
+	ac$function.signature <- utils:::.CompletionEnv$function.signature;
+	ac;
+}
+
+#--------------------------------------------------------
+# this is a monkeypatch for the existing R autocomplete 
+# functionality. we are making two changes: (1) for 
+# functions, store the signagure for use as a call tip.  
+# (2) for functions within environments, resolve and get 
+# parameters.
+#--------------------------------------------------------
+rc.options( custom.completer= function (.CompletionEnv) 
+{
+	.fqFunc <- function (line, cursor=-1) 
+	{
+		localBreakRE <- "[^\\.\\w\\$\\@\\:]";
+
+		if( cursor == -1 ){ cursor = nchar(line); }
+
+	    parens <- sapply(c("(", ")"), function(s) gregexpr(s, substr(line, 
+		1L, cursor), fixed = TRUE)[[1L]], simplify = FALSE)
+	    parens <- lapply(parens, function(x) x[x > 0])
+	       
+	    
+	    temp <- data.frame(i = c(parens[["("]], parens[[")"]]), c = rep(c(1, 
+		-1), lengths(parens)))
+	    if (nrow(temp) == 0) 
+		return(character())
+		
+	    temp <- temp[order(-temp$i), , drop = FALSE]
+	    wp <- which(cumsum(temp$c) > 0)
+
+	    if (length(wp)) {
+		index <- temp$i[wp[1L]]
+		prefix <- substr(line, 1L, index - 1L)
+		suffix <- substr(line, index + 1L, cursor + 1L)
+		
+		if ((length(grep("=", suffix, fixed = TRUE)) == 0L) && 
+		    (length(grep(",", suffix, fixed = TRUE)) == 0L)) 
+		    utils:::setIsFirstArg(TRUE)
+		if ((length(grep("=", suffix, fixed = TRUE))) && (length(grep(",", 
+		    substr(suffix, utils:::tail.default(gregexpr("=", suffix, 
+			fixed = TRUE)[[1L]], 1L), 1000000L), fixed = TRUE)) == 
+		    0L)) {
+		    return(character())
+		}
+		else {
+		    possible <- suppressWarnings(strsplit(prefix, localBreakRE, 
+			perl = TRUE))[[1L]]
+		    possible <- possible[nzchar(possible)]
+		    if (length(possible)) 
+			return(utils:::tail.default(possible, 1))
+		    else return(character())
+		}
+	    }
+	    else {
+		return(character())
+	    }
+	}
+
+	.fqFunctionArgs <- function (fun, text, S3methods = utils:::.CompletionEnv$settings[["S3"]], 
+	    S4methods = FALSE, add.args = rc.getOption("funarg.suffix")) 
+	{
+	
+		.resolveObject <- function( name ){
+
+			p <- environment();
+			n <- unlist( strsplit( name, "[^\\w\\.]", F, T ));
+			 while( length( n ) > 1 ){
+				if( !exists( n[1], where=p )) return( NULL );
+				p <- get( n[1], envir=p );
+				n <- n[-1];
+			}
+			if( !exists( n[1], where=p )) return( NULL );
+			get( n[1], envir=p );
+		}
+	
+		.function.signature <- function(fun){
+			x <- capture.output( args(fun));
+			paste(trimws(x[-length(x)]), collapse=" ");
+		}
+	
+		.fqArgNames <- function (fname, use.arg.db = utils:::.CompletionEnv$settings[["argdb"]]) 
+		{
+			fun <- .resolveObject( fname );
+			if( !is.null(fun) && is.function(fun )) { 
+				env <- utils:::.CompletionEnv;
+				env$function.signature <- .function.signature(fun);
+				# env$retrieved.arguments <- names(formals(fun));
+				return(names( formals( fun ))); 
+			}
+			return( character());
+		};
+
+		if (length(fun) < 1L || any(fun == "")) 
+			return(character())
+		    specialFunArgs <- utils:::specialFunctionArgs(fun, text)
+		if (S3methods && exists(fun, mode = "function")) 
+			fun <- c(fun, tryCatch(methods(fun), warning = function(w) {
+			}, error = function(e) {
+			}))
+		if (S4methods) 
+			warning("cannot handle S4 methods yet")
+		allArgs <- unique(unlist(lapply(fun, .fqArgNames)))
+		ans <- utils:::findMatches(sprintf("^%s", utils:::makeRegexpSafe(text)), 
+			allArgs)
+		if (length(ans) && !is.null(add.args)) 
+			ans <- sprintf("%s%s", ans, add.args)
+		c(specialFunArgs, ans)
+	}
+
+	.CompletionEnv[["function.signature"]] <- "";
+
+	    text <- .CompletionEnv[["token"]]
+	    if (utils:::isInsideQuotes()) {
+		if (.CompletionEnv$settings[["quotes"]]) {
+		    fullToken <- utils:::.guessTokenFromLine(update = FALSE)
+		    probablyHelp <- (fullToken$start >= 2L && ((substr(.CompletionEnv[["linebuffer"]], 
+			fullToken$start - 1L, fullToken$start - 1L)) == 
+			"?"))
+		    if (probablyHelp) {
+			fullToken$prefix <- utils:::.guessTokenFromLine(end = fullToken$start - 
+			  2, update = FALSE)$token
+		    }
+		    probablyName <- ((fullToken$start > 2L && ((substr(.CompletionEnv[["linebuffer"]], 
+			fullToken$start - 1L, fullToken$start - 1L)) == 
+			"$")) || (fullToken$start > 3L && ((substr(.CompletionEnv[["linebuffer"]], 
+			fullToken$start - 2L, fullToken$start - 1L)) == 
+			"[[")))
+		    probablyNamespace <- (fullToken$start > 3L && ((substr(.CompletionEnv[["linebuffer"]], 
+			fullToken$start - 2L, fullToken$start - 1L)) %in% 
+			c("::")))
+		    probablySpecial <- probablyHelp || probablyName || 
+			probablyNamespace
+		    tentativeCompletions <- if (probablyHelp) {
+			substring(utils:::helpCompletions(fullToken$prefix, fullToken$token), 
+			  2L + nchar(fullToken$prefix), 1000L)
+		    }
+		    else if (!probablySpecial) 
+			utils:::fileCompletions(fullToken$token)
+		    utils:::.setFileComp(FALSE)
+		    .CompletionEnv[["comps"]] <- substring(tentativeCompletions, 
+			1L + nchar(fullToken$token) - nchar(text), 1000L)
+		}
+		else {
+		    .CompletionEnv[["comps"]] <- character()
+		    utils:::.setFileComp(TRUE)
+		}
+	    }
+	    else {
+		utils:::.setFileComp(FALSE)
+		utils:::setIsFirstArg(FALSE)
+		guessedFunction <- if (.CompletionEnv$settings[["args"]]) 
+		    .fqFunc(.CompletionEnv[["linebuffer"]], .CompletionEnv[["start"]])
+		else ""
+		
+		.CompletionEnv[["fguess"]] <- guessedFunction
+		fargComps <- .fqFunctionArgs(guessedFunction, text)
+		
+		if (utils:::getIsFirstArg() && length(guessedFunction) && guessedFunction %in% 
+		    c("library", "require", "data")) {
+		    .CompletionEnv[["comps"]] <- fargComps
+		    return()
+		}
+		lastArithOp <- utils:::tail.default(gregexpr("[\"'^/*+-]", text)[[1L]], 
+		    1)
+		if (haveArithOp <- (lastArithOp > 0)) {
+		    prefix <- substr(text, 1L, lastArithOp)
+		    text <- substr(text, lastArithOp + 1L, 1000000L)
+		}
+		spl <- utils:::specialOpLocs(text)
+		comps <- if (length(spl)) 
+		    utils:::specialCompletions(text, spl)
+		else {
+		    appendFunctionSuffix <- !any(guessedFunction %in% 
+			c("help", "args", "formals", "example", "do.call", 
+			  "environment", "page", "apply", "sapply", "lapply", 
+			  "tapply", "mapply", "methods", "fix", "edit"))
+		    utils:::normalCompletions(text, check.mode = appendFunctionSuffix)
+		}
+		if (haveArithOp && length(comps)) {
+		    comps <- paste0(prefix, comps)
+		}
+		comps <- c(fargComps, comps)
+		.CompletionEnv[["comps"]] <- comps
+	    }
+});
+
+
 }); # end with(BERT)
+
 
 #========================================================
 # utility methods and types

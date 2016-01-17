@@ -822,6 +822,7 @@ bool isWordChar(char c)
 {
 	return (((c >= 'a') && (c <= 'z'))
 		|| ((c >= 'A') && (c <= 'Z'))
+		|| ((c >= '0') && (c <= '9'))
 		|| (c == '_')
 		|| (c == '.')
 		|| (c == '=') // for parameter symbols
@@ -850,6 +851,13 @@ void showAutocomplete()
 
 	SafeCall(SCC_AUTOCOMPLETE, &sv, caret-1, &sc);
 
+	/*
+	if (autocompleteSignature.length()) {
+
+		fn(ptr, SCI_CALLTIPSHOW, 0, (sptr_t)autocompleteSignature.c_str());
+
+	}
+	else */
 	if (autocompleteComps.length()) {
 
 		int testactive = fn(ptr, SCI_AUTOCACTIVE, 0, 0);
@@ -893,7 +901,7 @@ void showAutocomplete()
 				}
 			}
 
-			fn(ptr, SCI_AUTOCSHOW, caret - x, (sptr_t)(newlist.c_str()));
+			if( newlist.length()) fn(ptr, SCI_AUTOCSHOW, caret - x, (sptr_t)(newlist.c_str()));
 
 		}
 	}

@@ -971,13 +971,17 @@ int getNames(SVECTOR &vec, const std::string &token)
 /**
  *
  */
-int getAutocomplete(std::string &comps, std::string &addition, const std::string &line, int caret)
+int getAutocomplete(std::string &comps, std::string &addition, std::string &sig, std::string &line, int caret)
 {
 
 	int err;
 
 	SEXP sline = Rf_mkString(line.c_str());
 	SEXP spos = Rf_ScalarInteger(caret);
+
+	addition = "";
+	comps = "";
+	sig = "";
 
 	// do.call(getFromNamespace(".win32consoleCompletion", "utils"), list(cmd, pos))
 
@@ -987,37 +991,61 @@ int getAutocomplete(std::string &comps, std::string &addition, const std::string
 	SET_VECTOR_ELT(arglist, 0, Rf_mkString(line.c_str()));
 	SET_VECTOR_ELT(arglist, 1, Rf_ScalarInteger(caret));
 
+	/*
 	SEXP result = PROTECT(R_tryEval(
-		Rf_lang3( Rf_install("do.call"), Rf_lang3(Rf_install("getFromNamespace"), Rf_mkString(".win32consoleCompletion"), Rf_mkString("utils")), arglist ),
+		Rf_lang3(Rf_install("do.call"), Rf_lang3(Rf_install("getFromNamespace"), Rf_mkString(".win32consoleCompletion"), Rf_mkString("utils")), arglist),
 		R_GlobalEnv, &err));
+	*/
 
-	SEXP cenv = PROTECT(R_tryEval(
-		Rf_lang3(Rf_install("getFromNamespace"), Rf_mkString(".CompletionEnv"), Rf_mkString("utils")),
+	SEXP result = PROTECT(R_tryEval(
+		Rf_lang5( Rf_install("do.call"),
+			Rf_mkString( ".Autocomplete" ),
+			arglist,
+			Rf_ScalarLogical(0),
+			Rf_lang2( Rf_install("get"), Rf_mkString( "BERT" ))
+			),
 		R_GlobalEnv, &err));
 
 	if (!err) {
-		int type = TYPEOF(cenv);
-		DebugOut("type %d\n", type);
+
+		if (TYPEOF(result) == VECSXP) {
+
+			int len = LENGTH(result);
+
+			if (len > 0) {
+				SEXP sexp = VECTOR_ELT(result, 0);
+				if (TYPEOF(sexp) == STRSXP) addition = CHAR(STRING_ELT(sexp, 0));
+			}
+			if (len > 2) {
+				SEXP sexp = VECTOR_ELT(result, 2);
+				if (TYPEOF(sexp) == STRSXP) comps = CHAR(STRING_ELT(sexp, 0));
+			}
+			if (len > 3) {
+				SEXP sexp = VECTOR_ELT(result, 3);
+				if (TYPEOF(sexp) == STRSXP) sig = CHAR(STRING_ELT(sexp, 0));
+			}
+
+		}
+
+		/*
+		SEXP cenv = PROTECT(R_tryEval(
+			Rf_lang4( Rf_install("get"), 
+				Rf_mkString("function.signature"),
+				Rf_ScalarInteger(-1), 
+				Rf_lang3(Rf_install("getFromNamespace"), Rf_mkString(".CompletionEnv"), Rf_mkString("utils"))),
+			R_GlobalEnv, &err));
+
+		if (!err) {
+			int type = TYPEOF(cenv);
+			DebugOut("type %d\n", type);
+		}
+
+		UNPROTECT(1);
+		*/
+
 	}
 
-	addition = "";
-	comps = "";
-
-	if (!err && TYPEOF(result) == VECSXP ) {
-
-		SEXP e0 = VECTOR_ELT(result, 0);
-		SEXP e2 = VECTOR_ELT(result, 2);
-
-		if (TYPEOF(e0) == STRSXP) {
-			addition = CHAR(STRING_ELT(e0, 0));
-		}
-		if (TYPEOF(e2) == STRSXP) {
-			comps = CHAR(STRING_ELT(e2, 0));
-		}
-
-	}
-
-	UNPROTECT(3);
+	UNPROTECT(2);
 
 	return err;
 }
