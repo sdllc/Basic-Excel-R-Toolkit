@@ -75,7 +75,7 @@ void LoadStartupFile();
  */
 void userBreak();
 
-int getAutocomplete(std::string &comps, std::string &addition, std::string &sig, std::string &line, int caret);
+int getAutocomplete(std::string &comps, std::string &addition, std::string &sig, std::string &token, std::string &fguess, int &tokenIndex, std::string &line, int caret);
 
 int notifyWatch(std::string &path);
 int setWidth(int w);

@@ -971,7 +971,7 @@ int getNames(SVECTOR &vec, const std::string &token)
 /**
  *
  */
-int getAutocomplete(std::string &comps, std::string &addition, std::string &sig, std::string &line, int caret)
+int getAutocomplete(std::string &comps, std::string &addition, std::string &sig, std::string &token, std::string &fguess, int &tokenIndex, std::string &line, int caret)
 {
 
 	int err;
@@ -982,6 +982,9 @@ int getAutocomplete(std::string &comps, std::string &addition, std::string &sig,
 	addition = "";
 	comps = "";
 	sig = "";
+	token = "";
+
+	tokenIndex = 0;
 
 	// do.call(getFromNamespace(".win32consoleCompletion", "utils"), list(cmd, pos))
 
@@ -1023,6 +1026,18 @@ int getAutocomplete(std::string &comps, std::string &addition, std::string &sig,
 			if (len > 3) {
 				SEXP sexp = VECTOR_ELT(result, 3);
 				if (TYPEOF(sexp) == STRSXP) sig = CHAR(STRING_ELT(sexp, 0));
+			}
+			if (len > 4) {
+				SEXP sexp = VECTOR_ELT(result, 4);
+				if (TYPEOF(sexp) == STRSXP) token = CHAR(STRING_ELT(sexp, 0));
+			}
+			if (len > 5) {
+				SEXP sexp = VECTOR_ELT(result, 5);
+				if (TYPEOF(sexp) == STRSXP) fguess = CHAR(STRING_ELT(sexp, 0));
+			}
+			if (len > 6) {
+				SEXP sexp = VECTOR_ELT(result, 6);
+				if (TYPEOF(sexp) == INTSXP) tokenIndex = (INTEGER(sexp))[0] - 1;
 			}
 
 		}

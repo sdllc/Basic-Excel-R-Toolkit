@@ -179,7 +179,10 @@ ListWatches <- function(){
 
 .Autocomplete <- function(...){
 	ac <- utils:::.win32consoleCompletion(...);
-	ac$function.signature <- utils:::.CompletionEnv$function.signature;
+	ac$function.signature <- ifelse( is.null( utils:::.CompletionEnv$function.signature ), "", utils:::.CompletionEnv$function.signature );
+	ac$token <- ifelse( is.null( utils:::.CompletionEnv$token ), "", utils:::.CompletionEnv$token );
+	ac$fguess <- ifelse( is.null( utils:::.CompletionEnv$fguess ), "", utils:::.CompletionEnv$fguess );
+	ac$start <- utils:::.CompletionEnv$start;
 	ac;
 }
 
@@ -253,7 +256,7 @@ rc.options( custom.completer= function (.CompletionEnv)
 				n <- n[-1];
 			}
 			if( !exists( n[1], where=p )) return( NULL );
-			get( n[1], envir=p );
+			list( name=n[1], fun=get( n[1], envir=p ));
 		}
 	
 		.function.signature <- function(fun){
@@ -263,11 +266,11 @@ rc.options( custom.completer= function (.CompletionEnv)
 	
 		.fqArgNames <- function (fname, use.arg.db = utils:::.CompletionEnv$settings[["argdb"]]) 
 		{
-			fun <- .resolveObject( fname );
+			funlist <- .resolveObject( fname );
+			fun <- funlist$fun;
 			if( !is.null(fun) && is.function(fun )) { 
 				env <- utils:::.CompletionEnv;
-				env$function.signature <- .function.signature(fun);
-				# env$retrieved.arguments <- names(formals(fun));
+				env$function.signature <- sub( '^function ', paste0( funlist$name, ' ' ), .function.signature(fun));
 				return(names( formals( fun ))); 
 			}
 			return( character());

@@ -31,8 +31,12 @@
 extern HMODULE ghModule;
 
 extern std::string autocompleteComps;
+extern std::string autocompleteToken;
 extern std::string autocompleteSignature;
 extern std::string autocompleteAddition;
+extern std::string autocompleteFunction;
+
+extern int autocompleteTokenIndex;
 
 static LPWSTR funcTemplates[][16] = {
 

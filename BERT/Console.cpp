@@ -843,7 +843,8 @@ void showAutocomplete()
 	if (len <= 2) return;
 	char *c = new char[len + 1];
 	int caret = fn(ptr, SCI_GETCURLINE, len + 1, (sptr_t)c);
-	static std::string lastList;
+
+	std::string strline = c;
 
 	int sc;
 	std::vector< std::string > sv;
@@ -851,14 +852,22 @@ void showAutocomplete()
 
 	SafeCall(SCC_AUTOCOMPLETE, &sv, caret-1, &sc);
 
-	/*
-	if (autocompleteSignature.length()) {
+	if (autocompleteSignature.length() && autocompleteToken.length() == 0 ) {
 
-		fn(ptr, SCI_CALLTIPSHOW, 0, (sptr_t)autocompleteSignature.c_str());
+		int cp = fn(ptr, SCI_GETCURRENTPOS, 0, 0);
+		int lfp = fn(ptr, SCI_LINEFROMPOSITION, cp, 0);
+		int pfl = fn(ptr, SCI_POSITIONFROMLINE, lfp, 0);
+		
+		std::string function = autocompleteFunction;
+		int index = autocompleteSignature.find_first_of(" (");
+		if (index != std::string::npos) function = autocompleteSignature.substr(0, index);
+
+		index = strline.find(function.c_str());
+
+		fn(ptr, SCI_CALLTIPSHOW, pfl + index, (sptr_t)autocompleteSignature.c_str());
 
 	}
-	else */
-	if (autocompleteComps.length()) {
+	else if (autocompleteComps.length()) {
 
 		int testactive = fn(ptr, SCI_AUTOCACTIVE, 0, 0);
 
@@ -906,8 +915,6 @@ void showAutocomplete()
 		}
 	}
 
-
-	lastList = autocompleteComps;
 
 	delete[] c;
 
