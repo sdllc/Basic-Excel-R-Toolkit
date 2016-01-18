@@ -31,6 +31,8 @@
 #include "Scintilla.h"
 #include "Objbase.h"
 
+#include "Shlwapi.h"
+
 #include <deque>
 
 typedef std::vector< std::string> SVECTOR;
@@ -53,8 +55,9 @@ extern HMODULE ghModule;
 
 int minCaret = 0;
 WNDPROC lpfnEditWndProc = 0;
-sptr_t(*fn)(sptr_t*, int, uptr_t, sptr_t);
-sptr_t* ptr;
+
+sptr_t(*sci_fn)(sptr_t*, int, uptr_t, sptr_t);
+sptr_t * sci_ptr;
 
 extern void flush_log();
 
@@ -340,20 +343,20 @@ DIALOG_RESULT_TYPE CALLBACK ConsoleOptionsDlgProc(HWND hwndDlg, UINT message, WP
 			::GetWindowTextA(::GetDlgItem(hwndDlg, IDC_COMBO_FONTSIZE), buffer, 64);
 			dw = atoi(buffer);
 			if (dw < 1) dw = 1;
-			fn(ptr, SCI_STYLESETSIZE, STYLE_DEFAULT, dw);
+			sci_fn(sci_ptr, SCI_STYLESETSIZE, STYLE_DEFAULT, dw);
 
 			::GetWindowTextA(::GetDlgItem(hwndDlg, IDC_COMBO_FONTS), buffer, 64);
-			fn(ptr, SCI_STYLESETFONT, STYLE_DEFAULT, (sptr_t)buffer);
+			sci_fn(sci_ptr, SCI_STYLESETFONT, STYLE_DEFAULT, (sptr_t)buffer);
 
-			fn(ptr, SCI_STYLESETFORE, 1, dwMessage);
-			fn(ptr, SCI_STYLESETFORE, 0, dwUser);
-			fn(ptr, SCI_STYLESETBACK, 0, dwBack);
-			fn(ptr, SCI_STYLESETBACK, 1, dwBack);
-			fn(ptr, SCI_STYLESETBACK, 32, dwBack);
+			sci_fn(sci_ptr, SCI_STYLESETFORE, 1, dwMessage);
+			sci_fn(sci_ptr, SCI_STYLESETFORE, 0, dwUser);
+			sci_fn(sci_ptr, SCI_STYLESETBACK, 0, dwBack);
+			sci_fn(sci_ptr, SCI_STYLESETBACK, 1, dwBack);
+			sci_fn(sci_ptr, SCI_STYLESETBACK, 32, dwBack);
 			::EnableWindow(::GetDlgItem(hwndDlg, IDAPPLY), 0);
 
 			// caret color.  for dark backgrounds, set caret to white.
-			fn(ptr, SCI_SETCARETFORE, getCaretColor(dwBack), 0);
+			sci_fn(sci_ptr, SCI_SETCARETFORE, getCaretColor(dwBack), 0);
 
 			if (LOWORD(wParam) == IDAPPLY) break;
 
@@ -426,15 +429,15 @@ void AppendLog(const char *buffer, int style, int checkoverlap)
 
 	if (!checkoverlap || inputlock)
 	{
-		int start = fn(ptr, SCI_GETLENGTH, 0, 0);
+		int start = sci_fn(sci_ptr, SCI_GETLENGTH, 0, 0);
 
-		fn(ptr, SCI_SETSEL, -1, -1);
-		fn(ptr, SCI_APPENDTEXT, len, (sptr_t)buffer);
+		sci_fn(sci_ptr, SCI_SETSEL, -1, -1);
+		sci_fn(sci_ptr, SCI_APPENDTEXT, len, (sptr_t)buffer);
 
 		if (style != 0)
 		{
-			fn(ptr, SCI_STARTSTYLING, start, 0x31);
-			fn(ptr, SCI_SETSTYLING, len, style);
+			sci_fn(sci_ptr, SCI_STARTSTYLING, start, 0x31);
+			sci_fn(sci_ptr, SCI_SETSTYLING, len, style);
 		}
 
 	}
@@ -445,7 +448,7 @@ void AppendLog(const char *buffer, int style, int checkoverlap)
 
 		// insert
 		appappend = true;
-		fn(ptr, SCI_INSERTTEXT, np, (sptr_t)buffer);
+		sci_fn(sci_ptr, SCI_INSERTTEXT, np, (sptr_t)buffer);
 		appappend = false;
 
 		// update our marker, pos should move
@@ -453,14 +456,14 @@ void AppendLog(const char *buffer, int style, int checkoverlap)
 
 		if (style != 0)
 		{
-			fn(ptr, SCI_STARTSTYLING, np, 0x31);
-			fn(ptr, SCI_SETSTYLING, len, style);
+			sci_fn(sci_ptr, SCI_STARTSTYLING, np, 0x31);
+			sci_fn(sci_ptr, SCI_SETSTYLING, len, style);
 		}
 
 	}
 	appappend = false;
 
-	fn(ptr, SCI_SCROLLCARET, 0, 0);
+	sci_fn(sci_ptr, SCI_SCROLLCARET, 0, 0);
 
 }
 
@@ -468,10 +471,10 @@ void Prompt(const char *prompt = DEFAULT_PROMPT)
 {
 	appappend = true;
 	promptwidth = strlen(prompt);
-	fn(ptr, SCI_APPENDTEXT, promptwidth, (sptr_t)prompt);
-	fn(ptr, SCI_SETXOFFSET, 0, 0);
-	fn(ptr, SCI_SETSEL, -1, -1);
-	minCaret = fn(ptr, SCI_GETCURRENTPOS, 0, 0);
+	sci_fn(sci_ptr, SCI_APPENDTEXT, promptwidth, (sptr_t)prompt);
+	sci_fn(sci_ptr, SCI_SETXOFFSET, 0, 0);
+	sci_fn(sci_ptr, SCI_SETSEL, -1, -1);
+	minCaret = sci_fn(sci_ptr, SCI_GETCURRENTPOS, 0, 0);
 	historyPointer = 0;
 	appappend = false;
 }
@@ -531,9 +534,9 @@ void CancelCommand(){
 	cmdVector.clear();
 
 	appappend = true;
-	fn(ptr, SCI_APPENDTEXT, 1, (sptr_t)"\n");
-	fn(ptr, SCI_AUTOCCANCEL, 0, 0);
-	fn(ptr, SCI_CALLTIPCANCEL, 0, 0);
+	sci_fn(sci_ptr, SCI_APPENDTEXT, 1, (sptr_t)"\n");
+	sci_fn(sci_ptr, SCI_AUTOCCANCEL, 0, 0);
+	sci_fn(sci_ptr, SCI_CALLTIPCANCEL, 0, 0);
 	appappend = false;
 
 	Prompt();
@@ -543,12 +546,12 @@ void ProcessCommand()
 {
 	DebugOut("ProcessCommand:\t%d\n", GetTickCount());
 
-	int len = fn(ptr, SCI_GETLENGTH, 0, 0);
+	int len = sci_fn(sci_ptr, SCI_GETLENGTH, 0, 0);
 
 	// close tip, autoc
 
-	fn(ptr, SCI_AUTOCCANCEL, 0, 0);
-	fn(ptr, SCI_CALLTIPCANCEL, 0, 0);
+	sci_fn(sci_ptr, SCI_AUTOCCANCEL, 0, 0);
+	sci_fn(sci_ptr, SCI_CALLTIPCANCEL, 0, 0);
 	
 	int linelen = len - minCaret;
 	std::string cmd;
@@ -563,7 +566,7 @@ void ProcessCommand()
 		str.chrg.cpMin = minCaret;
 		str.chrg.cpMax = len;
 		str.lpstrText = new char[linelen + 1];
-		fn(ptr, SCI_GETTEXTRANGE, 0, (sptr_t)(&str));
+		sci_fn(sci_ptr, SCI_GETTEXTRANGE, 0, (sptr_t)(&str));
 
 		cmd = str.lpstrText;
 		cmd = Util::trim(cmd);
@@ -578,7 +581,7 @@ void ProcessCommand()
 		str.chrg.cpMin = minCaret - 2;
 		str.chrg.cpMax = len;
 		str.lpstrText = new char[str.chrg.cpMax - str.chrg.cpMin + 2];
-		fn(ptr, SCI_GETTEXTRANGE, 0, (sptr_t)(&str));
+		sci_fn(sci_ptr, SCI_GETTEXTRANGE, 0, (sptr_t)(&str));
 		int len = strlen(str.lpstrText);
 		str.lpstrText[len] = '\n';
 		str.lpstrText[len + 1] = 0;
@@ -587,7 +590,7 @@ void ProcessCommand()
 	}
 
 	appappend = true;
-	fn(ptr, SCI_APPENDTEXT, 1, (sptr_t)"\n");
+	sci_fn(sci_ptr, SCI_APPENDTEXT, 1, (sptr_t)"\n");
 	appappend = false;
 	bool wl = false;
 
@@ -632,7 +635,7 @@ void ProcessCommand()
 */
 void ClearHistory()
 {
-	fn(ptr, SCI_SETTEXT, 0, (sptr_t)"");
+	sci_fn(sci_ptr, SCI_SETTEXT, 0, (sptr_t)"");
 	clearLogText();
 	cmdVector.clear();
 	Prompt();
@@ -643,7 +646,7 @@ void CmdHistory(int scrollBy)
 	int to = historyPointer + scrollBy;
 	if (to > 0) return; // can't go to future
 	if (-to > historyVector.size()) return; // too far back
-	int end = fn(ptr, SCI_GETLENGTH, 0, 0);
+	int end = sci_fn(sci_ptr, SCI_GETLENGTH, 0, 0);
 	std::string repl;
 
 	// ok, it's valid.  one thing to check: if on line 0, store it
@@ -656,7 +659,7 @@ void CmdHistory(int scrollBy)
 		str.chrg.cpMin = minCaret;
 		str.chrg.cpMax = end;
 		str.lpstrText = new char[linelen + 1];
-		fn(ptr, SCI_GETTEXTRANGE, 0, (sptr_t)(&str));
+		sci_fn(sci_ptr, SCI_GETTEXTRANGE, 0, (sptr_t)(&str));
 		historyCurrentLine = str.lpstrText;
 		delete[] str.lpstrText;
 	}
@@ -668,9 +671,9 @@ void CmdHistory(int scrollBy)
 		repl = historyVector[check];
 	}
 
-	fn(ptr, SCI_SETSEL, minCaret, end);
-	fn(ptr, SCI_REPLACESEL, 0, (sptr_t)(repl.c_str()));
-	fn(ptr, SCI_SETSEL, -1, -1);
+	sci_fn(sci_ptr, SCI_SETSEL, minCaret, end);
+	sci_fn(sci_ptr, SCI_REPLACESEL, 0, (sptr_t)(repl.c_str()));
+	sci_fn(sci_ptr, SCI_SETSEL, -1, -1);
 
 	historyPointer = to;
 
@@ -695,15 +698,15 @@ LRESULT CALLBACK SubClassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			return 0;
 
 		case VK_TAB:
-			if (!fn(ptr, SCI_AUTOCACTIVE, 0, 0))
+			if (!sci_fn(sci_ptr, SCI_AUTOCACTIVE, 0, 0))
 			{
 				showAutocomplete();
 				return 0;
 			}
 
 		default:
-			p = fn(ptr, SCI_GETCURRENTPOS, 0, 0);
-			if (p < minCaret) fn(ptr, SCI_SETSEL, -1, -1);
+			p = sci_fn(sci_ptr, SCI_GETCURRENTPOS, 0, 0);
+			if (p < minCaret) sci_fn(sci_ptr, SCI_SETSEL, -1, -1);
 
 		}
 		break;
@@ -748,8 +751,8 @@ LRESULT CALLBACK SubClassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case 'C':
 			if (GetKeyState(VK_CONTROL) < 0){
 				DebugOut("Control-c\n");
-				int start = fn(ptr, SCI_GETSELECTIONSTART, 0, 0);
-				int end = fn(ptr, SCI_GETSELECTIONEND, 0, 0);
+				int start = sci_fn(sci_ptr, SCI_GETSELECTIONSTART, 0, 0);
+				int end = sci_fn(sci_ptr, SCI_GETSELECTIONEND, 0, 0);
 				if (end == start){
 					DebugOut("Cancel");
 					CancelCommand();
@@ -758,8 +761,8 @@ LRESULT CALLBACK SubClassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case VK_ESCAPE:
-			if (!fn(ptr, SCI_AUTOCACTIVE, 0, 0)
-				&& !fn(ptr, SCI_CALLTIPACTIVE, 0, 0))
+			if (!sci_fn(sci_ptr, SCI_AUTOCACTIVE, 0, 0)
+				&& !sci_fn(sci_ptr, SCI_CALLTIPACTIVE, 0, 0))
 			{
 				::PostMessage(::GetParent(hwnd), WM_COMMAND, WM_CLOSE_CONSOLE, 0);
 				return 0;
@@ -767,22 +770,22 @@ LRESULT CALLBACK SubClassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case VK_HOME:
-			fn(ptr, SCI_SETSEL, minCaret, minCaret);
+			sci_fn(sci_ptr, SCI_SETSEL, minCaret, minCaret);
 			return 0;
 			break;
 
 		case VK_END:
-			fn(ptr, SCI_SETSEL, -1, -1);
+			sci_fn(sci_ptr, SCI_SETSEL, -1, -1);
 			break;
 
 		case VK_LEFT:
 		case VK_BACK:
-			p = fn(ptr, SCI_GETCURRENTPOS, 0, 0);
+			p = sci_fn(sci_ptr, SCI_GETCURRENTPOS, 0, 0);
 			if (p <= minCaret) return 0;
 			break;
 
 		case VK_UP:
-			if (!fn(ptr, SCI_AUTOCACTIVE, 0, 0))
+			if (!sci_fn(sci_ptr, SCI_AUTOCACTIVE, 0, 0))
 			{
 				CmdHistory(-1);
 				return 0;
@@ -790,7 +793,7 @@ LRESULT CALLBACK SubClassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case VK_DOWN:
-			if (!fn(ptr, SCI_AUTOCACTIVE, 0, 0))
+			if (!sci_fn(sci_ptr, SCI_AUTOCACTIVE, 0, 0))
 			{
 				CmdHistory(1);
 				return 0;
@@ -798,12 +801,12 @@ LRESULT CALLBACK SubClassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case VK_RETURN:
-			fn(ptr, SCI_AUTOCCANCEL, 0, 0);
-			fn(ptr, SCI_CALLTIPCANCEL, 0, 0);
+			sci_fn(sci_ptr, SCI_AUTOCCANCEL, 0, 0);
+			sci_fn(sci_ptr, SCI_CALLTIPCANCEL, 0, 0);
 			return 0;
 
 		case VK_TAB:
-			if (!fn(ptr, SCI_AUTOCACTIVE, 0, 0))
+			if (!sci_fn(sci_ptr, SCI_AUTOCACTIVE, 0, 0))
 			{
 				return 0;
 			}
@@ -839,10 +842,10 @@ const char *lastWord(const char *str) {
 
 void showAutocomplete()
 {
-	int len = fn(ptr, SCI_GETCURLINE, 0, 0);
+	int len = sci_fn(sci_ptr, SCI_GETCURLINE, 0, 0);
 	if (len <= 2) return;
 	char *c = new char[len + 1];
-	int caret = fn(ptr, SCI_GETCURLINE, len + 1, (sptr_t)c);
+	int caret = sci_fn(sci_ptr, SCI_GETCURLINE, len + 1, (sptr_t)c);
 
 	std::string strline = c;
 
@@ -852,31 +855,109 @@ void showAutocomplete()
 
 	SafeCall(SCC_AUTOCOMPLETE, &sv, caret-1, &sc);
 
-	if (autocompleteSignature.length() && autocompleteToken.length() == 0 ) {
+	if (autocomplete.signature.length() && autocomplete.token.length() == 0 ) {
 
-		int cp = fn(ptr, SCI_GETCURRENTPOS, 0, 0);
-		int lfp = fn(ptr, SCI_LINEFROMPOSITION, cp, 0);
-		int pfl = fn(ptr, SCI_POSITIONFROMLINE, lfp, 0);
+		int cp = sci_fn(sci_ptr, SCI_GETCURRENTPOS, 0, 0);
+		int lfp = sci_fn(sci_ptr, SCI_LINEFROMPOSITION, cp, 0);
+		int pfl = sci_fn(sci_ptr, SCI_POSITIONFROMLINE, lfp, 0);
 		
-		std::string function = autocompleteFunction;
-		int index = autocompleteSignature.find_first_of(" (");
-		if (index != std::string::npos) function = autocompleteSignature.substr(0, index);
+		std::string function = autocomplete.function;
+		int index = autocomplete.signature.find_first_of(" (");
+		if (index != std::string::npos) function = autocomplete.signature.substr(0, index);
 
 		index = strline.find(function.c_str());
 
-		fn(ptr, SCI_CALLTIPSHOW, pfl + index, (sptr_t)autocompleteSignature.c_str());
+		sci_fn(sci_ptr, SCI_CALLTIPSHOW, pfl + index, (sptr_t)autocomplete.signature.c_str());
 
 	}
-	else if (autocompleteComps.length()) {
+	else if (autocomplete.file && autocomplete.token.length()) {
 
-		int testactive = fn(ptr, SCI_AUTOCACTIVE, 0, 0);
+		/*
+
+		if (autocomplete.token.find(":\\") != std::string::npos
+			|| (autocomplete.token.length() > 3) && !autocomplete.token.substr(0, 2).compare("\\\\")) {
+
+			int len = MultiByteToWideChar(CP_UTF8, 0, autocomplete.token.c_str(), -1, 0, 0);
+			if (len > 0) {
+
+				SVECTOR clist;
+				WCHAR wsz[MAX_PATH + 8];
+				WCHAR wszFile[MAX_PATH + 8];
+				
+				MultiByteToWideChar(CP_UTF8, 0, autocomplete.token.c_str(), -1, wsz, MAX_PATH + 8);
+				wcscpy_s(wszFile, wsz);
+
+				PathRemoveFileSpecW(wsz);
+				PathStripPath(wszFile);
+
+				DebugOut("token: %s\n", autocomplete.token.c_str());
+
+				// PathCchRemoveBackslash is below our target version, and the other function
+				// doesn't work with network paths, so... manually?
+
+				int wlen = wcslen(wsz);
+				while (wlen > 0 && wsz[wlen - 1] == '\\') {
+					wlen--;
+					wsz[wlen] = 0;
+				}
+				wcscat_s(wsz, len + 8, L"\\*");
+
+				HANDLE hFind;
+				WIN32_FIND_DATA data;
+
+				char sz[MAX_PATH * 2];
+
+				hFind = FindFirstFileW( wsz, &data );
+				if( hFind != INVALID_HANDLE_VALUE ) {
+
+					do {
+						WideCharToMultiByte(CP_UTF8, 0, data.cFileName, -1, sz, MAX_PATH * 2, 0, 0);
+						clist.push_back(sz);
+					} 
+					while (FindNextFile(hFind, &data));
+					FindClose(hFind);
+				}
+
+				if (clist.size()) {
+
+					std::sort(clist.begin(), clist.end());
+
+					char sep[] = "\0";
+					std::string newlist = "";
+					for (int i = 0; i < clist.size(); i++) {
+						const char *sz = clist[i].c_str();
+						if (strlen(sz) && sz[0] != '.' && sz[0] != '$') {
+							newlist.append(sep);
+							newlist.append(sz);
+							sep[0] = '\n'; // every time?
+						} 
+					}
+
+					if (newlist.length()) {
+						//sci_fn(sci_ptr, SCI_AUTOCSHOW, caret - X, (sptr_t)(newlist.c_str()));
+						sci_fn(sci_ptr, SCI_AUTOCSHOW, wcslen(wszFile), (sptr_t)(newlist.c_str()));
+					}
+				}
+
+			}
+
+
+		}
+
+		*/
+
+
+	}
+	else if (autocomplete.comps.length()) {
+
+		int testactive = sci_fn(sci_ptr, SCI_AUTOCACTIVE, 0, 0);
 
 		// there's a case where you are entering a function call, type open paren 
 		// (autocomplete shows parameters) then press space for some breathing room -- 
 		// this will close the ac list because it's not a character of any of the entries.
 		// we want to keep the list open in that case.  hence the space check.
 
-		if (!fn(ptr, SCI_AUTOCACTIVE, 0, 0) || (caret > 0 && !isWordChar( c[caret - 1] )))
+		if (!sci_fn(sci_ptr, SCI_AUTOCACTIVE, 0, 0) || (caret > 0 && !isWordChar( c[caret - 1] )))
 		{
 			int x = caret;
 			for (; x >= 2; x--) {
@@ -884,13 +965,16 @@ void showAutocomplete()
 			}
 
 			SVECTOR clist;
-			Util::split(autocompleteComps, ' ', 1, clist, true);
+			Util::split(autocomplete.comps, '\n', 1, clist, true);
 
 			// sort symbols (NOTE: this is more expensive than necessary because we're
 			// doing it before dropping prefixes; but that might be an overoptimization)
 
 			// UPDATE: I can't figure out why this is necessary, and it's bad for function
 			// definitions because it breaks order.
+
+			// UPDATE2: we now use call tips for function definitions which preserve order.
+			// sort the ac list so it behaves properly.
 
 			std::sort(clist.begin(), clist.end());
 
@@ -906,11 +990,11 @@ void showAutocomplete()
 				if (strlen(sz) && sz[0] != '.' ) {
 					newlist.append(sep);
 					newlist.append(sz);
-					sep[0] = ' '; // every time?
+					sep[0] = '\n'; // every time?
 				}
 			}
 
-			if( newlist.length()) fn(ptr, SCI_AUTOCSHOW, caret - x, (sptr_t)(newlist.c_str()));
+			if( newlist.length()) sci_fn(sci_ptr, SCI_AUTOCSHOW, caret - x, (sptr_t)(newlist.c_str()));
 
 		}
 	}
@@ -933,32 +1017,32 @@ void SetConsoleDefaults()
 
 	if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, buffer, 63, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_FONT)
 		|| !strlen(buffer)) strcpy_s(buffer, 64, SCINTILLA_FONT_NAME);
-	fn(ptr, SCI_STYLESETFONT, STYLE_DEFAULT, (sptr_t)buffer);
+	sci_fn(sci_ptr, SCI_STYLESETFONT, STYLE_DEFAULT, (sptr_t)buffer);
 
 	if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_SIZE)
 		|| dw <= 0) dw = SCINTILLA_FONT_SIZE;
-	fn(ptr, SCI_STYLESETSIZE, STYLE_DEFAULT, dw);
+	sci_fn(sci_ptr, SCI_STYLESETSIZE, STYLE_DEFAULT, dw);
 
 	if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_MESSAGE)
 		|| dw < 0) dw = SCINTILLA_R_TEXT_COLOR;
-	fn(ptr, SCI_STYLESETFORE, 1, dw);
+	sci_fn(sci_ptr, SCI_STYLESETFORE, 1, dw);
 
 	if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_USER)
 		|| dw < 0) dw = SCINTILLA_USER_TEXT_COLOR;
-	fn(ptr, SCI_STYLESETFORE, 0, dw);
+	sci_fn(sci_ptr, SCI_STYLESETFORE, 0, dw);
 
 	if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_USER)
 		|| dw < 0) dw = SCINTILLA_USER_TEXT_COLOR;
-	fn(ptr, SCI_STYLESETFORE, 0, dw);
+	sci_fn(sci_ptr, SCI_STYLESETFORE, 0, dw);
 
 	if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_BACK)
 		|| dw < 0) dw = SCINTILLA_BACK_COLOR;
-	fn(ptr, SCI_STYLESETBACK, 0, dw);
-	fn(ptr, SCI_STYLESETBACK, 1, dw);
-	fn(ptr, SCI_STYLESETBACK, 32, dw);
+	sci_fn(sci_ptr, SCI_STYLESETBACK, 0, dw);
+	sci_fn(sci_ptr, SCI_STYLESETBACK, 1, dw);
+	sci_fn(sci_ptr, SCI_STYLESETBACK, 32, dw);
 
 	// caret color.  for dark backgrounds, set caret to white.
-	fn(ptr, SCI_SETCARETFORE, getCaretColor(dw), 0);
+	sci_fn(sci_ptr, SCI_SETCARETFORE, getCaretColor(dw), 0);
 
 	if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_AUTO_WIDTH)
 		|| dw < 0) dw = DEFAULT_CONSOLE_AUTO_WIDTH;
@@ -979,7 +1063,7 @@ void UpdateConsoleWidth( bool force )
 	static int lastWidth = 0;
 	static int lastChars = 0;
 
-	if (!fn) return;
+	if (!sci_fn) return;
 	if (!force && !autowidth) return;
 
 	::GetClientRect(hWndConsole, &rc);
@@ -1095,14 +1179,19 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 			lpfnEditWndProc = (WNDPROC)SetWindowLongPtr(hwndScintilla, GWLP_WNDPROC, (LONG_PTR)SubClassProc);
 			::SetFocus(hwndScintilla);
 
-			fn = (sptr_t(__cdecl *)(sptr_t*, int, uptr_t, sptr_t))SendMessage(hwndScintilla, SCI_GETDIRECTFUNCTION, 0, 0);
-			ptr = (sptr_t*)SendMessage(hwndScintilla, SCI_GETDIRECTPOINTER, 0, 0);
+			sci_fn = (sptr_t(__cdecl *)(sptr_t*, int, uptr_t, sptr_t))SendMessage(hwndScintilla, SCI_GETDIRECTFUNCTION, 0, 0);
+			sci_ptr = (sptr_t*)SendMessage(hwndScintilla, SCI_GETDIRECTPOINTER, 0, 0);
 
-			fn(ptr, SCI_SETCODEPAGE, SC_CP_UTF8, 0);
+			sci_fn(sci_ptr, SCI_SETCODEPAGE, SC_CP_UTF8, 0);
 			SetConsoleDefaults();
 			
-			fn(ptr, SCI_SETMARGINWIDTHN, 1, 0);
-			fn(ptr, SCI_CLEARCMDKEY, 'Z' | ((SCMOD_CTRL) << 16), 0); // has no meaning in shell context
+			sci_fn(sci_ptr, SCI_SETMARGINWIDTHN, 1, 0);
+			sci_fn(sci_ptr, SCI_CLEARCMDKEY, 'Z' | ((SCMOD_CTRL) << 16), 0); // has no meaning in shell context
+
+			// we use newline as a separator in the AC list so we can support
+			// windows paths (with spaces)
+
+			sci_fn(sci_ptr, SCI_AUTOCSETSEPARATOR, '\n', 0);
 
 			std::list< std::string > loglist;
 			getLogText(loglist);
@@ -1164,16 +1253,16 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 	{
 		DebugOut("Cleanup paste: %d len %d\n", wParam, lParam);
 		appappend = true;
-		fn(ptr, SCI_UNDO, 0, 0);
-		fn(ptr, SCI_SETSEL, -1, -1);
+		sci_fn(sci_ptr, SCI_UNDO, 0, 0);
+		sci_fn(sci_ptr, SCI_SETSEL, -1, -1);
 
 		while(pastelines.size() > 0 && !inputlock) {
 			std::string &line = pastelines[0];
 			appappend = true;
-			fn(ptr, SCI_APPENDTEXT, line.length(), (sptr_t)line.c_str());
+			sci_fn(sci_ptr, SCI_APPENDTEXT, line.length(), (sptr_t)line.c_str());
 			appappend = false;
 			pastelines.pop_front();
-			fn(ptr, SCI_SETSEL, -1, -1);
+			sci_fn(sci_ptr, SCI_SETSEL, -1, -1);
 			ProcessCommand();
 		}
 
@@ -1195,8 +1284,8 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 		case SCN_MODIFIED: // what am I trapping this for? // A: was thinking about handling PASTE
 		{
 			SCNotification *scn = (SCNotification*)lParam;
-			int line = fn(ptr, SCI_LINEFROMPOSITION, scn->position, 0);
-			int last = fn(ptr, SCI_GETLINECOUNT, 0, 0);
+			int line = sci_fn(sci_ptr, SCI_LINEFROMPOSITION, scn->position, 0);
+			int last = sci_fn(sci_ptr, SCI_GETLINECOUNT, 0, 0);
 			if (!appappend && (scn->modificationType & 0x01) && line != last - 1) {
 				DebugOut("0x%x Paste in line %d (%d), LEN IS %d\n", scn->modificationType, line, last, scn->length);
 				pastebuffer.assign(scn->text, scn->length);
@@ -1254,10 +1343,10 @@ LRESULT CALLBACK WindowProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lP
 		while (pastelines.size() > 0 && !inputlock) {
 			std::string &line = pastelines[0];
 			appappend = true;
-			fn(ptr, SCI_APPENDTEXT, line.length(), (sptr_t)line.c_str());
+			sci_fn(sci_ptr, SCI_APPENDTEXT, line.length(), (sptr_t)line.c_str());
 			appappend = false;
 			pastelines.pop_front();
-			fn(ptr, SCI_SETSEL, -1, -1);
+			sci_fn(sci_ptr, SCI_SETSEL, -1, -1);
 			ProcessCommand();
 		}
 

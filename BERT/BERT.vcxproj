@@ -243,6 +243,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Autocomplete.h" />
     <ClInclude Include="BERT.h" />
     <ClInclude Include="BERT_Version.h" />
     <ClInclude Include="Console.h" />

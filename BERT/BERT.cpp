@@ -43,13 +43,7 @@ HWND hWndConsole = 0;
 /* mutex for locking the console message history */
 HANDLE muxLogList = 0;
 
-std::string autocompleteComps;
-std::string autocompleteToken;
-std::string autocompleteSignature;
-std::string autocompleteAddition;
-std::string autocompleteFunction;
-
-int autocompleteTokenIndex;
+AutocompleteData autocomplete;
 
 extern void FreeStream();
 extern void SetExcelPtr( LPVOID p, LPVOID ribbon );
@@ -482,7 +476,7 @@ long BERT_SafeCall(long cmdid, LPXLOPER12 xl, LPXLOPER xl2)
 		}
 		else if (cmdid == 12) {
 			int caret = xl2->val.num;
-			return getAutocomplete( autocompleteComps, autocompleteAddition, autocompleteSignature, autocompleteToken, autocompleteFunction, autocompleteTokenIndex, func, caret);
+			return getAutocomplete( autocomplete, func, caret);
 			// return 0;
 		}
 		else {

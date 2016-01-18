@@ -971,7 +971,7 @@ int getNames(SVECTOR &vec, const std::string &token)
 /**
  *
  */
-int getAutocomplete(std::string &comps, std::string &addition, std::string &sig, std::string &token, std::string &fguess, int &tokenIndex, std::string &line, int caret)
+int getAutocomplete(AutocompleteData &ac, std::string &line, int caret)
 {
 
 	int err;
@@ -979,12 +979,14 @@ int getAutocomplete(std::string &comps, std::string &addition, std::string &sig,
 	SEXP sline = Rf_mkString(line.c_str());
 	SEXP spos = Rf_ScalarInteger(caret);
 
-	addition = "";
-	comps = "";
-	sig = "";
-	token = "";
+	ac.addition = "";
+	ac.comps = "";
+	ac.signature = "";
+	ac.token = "";
+	ac.function = "";
 
-	tokenIndex = 0;
+	ac.tokenIndex = 0;
+	ac.file = false;
 
 	// do.call(getFromNamespace(".win32consoleCompletion", "utils"), list(cmd, pos))
 
@@ -1017,27 +1019,34 @@ int getAutocomplete(std::string &comps, std::string &addition, std::string &sig,
 
 			if (len > 0) {
 				SEXP sexp = VECTOR_ELT(result, 0);
-				if (TYPEOF(sexp) == STRSXP) addition = CHAR(STRING_ELT(sexp, 0));
+				if (TYPEOF(sexp) == STRSXP) ac.addition = CHAR(STRING_ELT(sexp, 0));
 			}
 			if (len > 2) {
 				SEXP sexp = VECTOR_ELT(result, 2);
-				if (TYPEOF(sexp) == STRSXP) comps = CHAR(STRING_ELT(sexp, 0));
+				if (TYPEOF(sexp) == STRSXP) ac.comps = CHAR(STRING_ELT(sexp, 0));
 			}
 			if (len > 3) {
 				SEXP sexp = VECTOR_ELT(result, 3);
-				if (TYPEOF(sexp) == STRSXP) sig = CHAR(STRING_ELT(sexp, 0));
+				if (TYPEOF(sexp) == STRSXP) ac.signature = CHAR(STRING_ELT(sexp, 0));
 			}
 			if (len > 4) {
 				SEXP sexp = VECTOR_ELT(result, 4);
-				if (TYPEOF(sexp) == STRSXP) token = CHAR(STRING_ELT(sexp, 0));
+				if (TYPEOF(sexp) == STRSXP) ac.token = CHAR(STRING_ELT(sexp, 0));
 			}
 			if (len > 5) {
 				SEXP sexp = VECTOR_ELT(result, 5);
-				if (TYPEOF(sexp) == STRSXP) fguess = CHAR(STRING_ELT(sexp, 0));
+				if (TYPEOF(sexp) == STRSXP) ac.function = CHAR(STRING_ELT(sexp, 0));
 			}
 			if (len > 6) {
 				SEXP sexp = VECTOR_ELT(result, 6);
-				if (TYPEOF(sexp) == INTSXP) tokenIndex = (INTEGER(sexp))[0] - 1;
+				if (TYPEOF(sexp) == INTSXP) ac.tokenIndex = (INTEGER(sexp))[0] - 1;
+			}
+			if (len > 7) {
+				SEXP sexp = VECTOR_ELT(result, 6);
+				int type = TYPEOF(sexp);
+				if( type == LGLSXP || type == INTSXP ){
+					ac.file = (INTEGER(sexp))[0] ? true : false;
+				}
 			}
 
 		}

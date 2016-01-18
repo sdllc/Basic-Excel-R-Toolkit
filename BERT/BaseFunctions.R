@@ -178,11 +178,18 @@ ListWatches <- function(){
 #========================================================
 
 .Autocomplete <- function(...){
+	
 	ac <- utils:::.win32consoleCompletion(...);
+	if( length( utils:::.CompletionEnv$comps) > 0 ){
+		ac$comps <- paste( utils:::.CompletionEnv$comps, collapse='\n' );
+	}
+
 	ac$function.signature <- ifelse( is.null( utils:::.CompletionEnv$function.signature ), "", utils:::.CompletionEnv$function.signature );
 	ac$token <- ifelse( is.null( utils:::.CompletionEnv$token ), "", utils:::.CompletionEnv$token );
 	ac$fguess <- ifelse( is.null( utils:::.CompletionEnv$fguess ), "", utils:::.CompletionEnv$fguess );
 	ac$start <- utils:::.CompletionEnv$start;
+	ac$file.name <- utils:::.CompletionEnv$fileName;
+
 	ac;
 }
 
@@ -192,6 +199,9 @@ ListWatches <- function(){
 # functions, store the signagure for use as a call tip.  
 # (2) for functions within environments, resolve and get 
 # parameters.
+#
+# update: now delegating file completion to C (probably
+# more to come).
 #--------------------------------------------------------
 rc.options( custom.completer= function (.CompletionEnv) 
 {
@@ -297,36 +307,7 @@ rc.options( custom.completer= function (.CompletionEnv)
 
 	    text <- .CompletionEnv[["token"]]
 	    if (utils:::isInsideQuotes()) {
-		if (.CompletionEnv$settings[["quotes"]]) {
-		    fullToken <- utils:::.guessTokenFromLine(update = FALSE)
-		    probablyHelp <- (fullToken$start >= 2L && ((substr(.CompletionEnv[["linebuffer"]], 
-			fullToken$start - 1L, fullToken$start - 1L)) == 
-			"?"))
-		    if (probablyHelp) {
-			fullToken$prefix <- utils:::.guessTokenFromLine(end = fullToken$start - 
-			  2, update = FALSE)$token
-		    }
-		    probablyName <- ((fullToken$start > 2L && ((substr(.CompletionEnv[["linebuffer"]], 
-			fullToken$start - 1L, fullToken$start - 1L)) == 
-			"$")) || (fullToken$start > 3L && ((substr(.CompletionEnv[["linebuffer"]], 
-			fullToken$start - 2L, fullToken$start - 1L)) == 
-			"[[")))
-		    probablyNamespace <- (fullToken$start > 3L && ((substr(.CompletionEnv[["linebuffer"]], 
-			fullToken$start - 2L, fullToken$start - 1L)) %in% 
-			c("::")))
-		    probablySpecial <- probablyHelp || probablyName || 
-			probablyNamespace
-		    tentativeCompletions <- if (probablyHelp) {
-			substring(utils:::helpCompletions(fullToken$prefix, fullToken$token), 
-			  2L + nchar(fullToken$prefix), 1000L)
-		    }
-		    else if (!probablySpecial) 
-			utils:::fileCompletions(fullToken$token)
-		    utils:::.setFileComp(FALSE)
-		    .CompletionEnv[["comps"]] <- substring(tentativeCompletions, 
-			1L + nchar(fullToken$token) - nchar(text), 1000L)
-		}
-		else {
+		{
 		    .CompletionEnv[["comps"]] <- character()
 		    utils:::.setFileComp(TRUE)
 		}

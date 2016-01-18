@@ -24,6 +24,8 @@
 #include "XLCALL.H"
 #include "util.h"
 
+#include "Autocomplete.h"
+
 #define MAX_LOGLIST_SIZE	80
 #define MAX_CMD_HISTORY		2500
 
@@ -75,7 +77,7 @@ void LoadStartupFile();
  */
 void userBreak();
 
-int getAutocomplete(std::string &comps, std::string &addition, std::string &sig, std::string &token, std::string &fguess, int &tokenIndex, std::string &line, int caret);
+int getAutocomplete( AutocompleteData &autocomplete, std::string &line, int caret);
 
 int notifyWatch(std::string &path);
 int setWidth(int w);
