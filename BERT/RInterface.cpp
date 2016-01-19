@@ -19,6 +19,7 @@
  */
 
 #include "stdafx.h"
+#include "Shlwapi.h"
 
 #define Win32
 
@@ -524,6 +525,52 @@ int RInit()
 	Rp->rhome = RHome;
 	Rp->home = RUser;
 
+	/*
+	{
+		char szConsole[MAX_PATH];
+		PathCombineA(szConsole, RHome, "etc\\RConsole");
+		HANDLE hFile = ::CreateFileA(szConsole, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+		if (hFile) {
+
+			std::string contents;
+			std::regex rex("^language\\s*=\\s*$");
+			char buffer[1024];
+			DWORD dwRead;
+			DWORD dwOffset = 0;
+
+			while (true) {
+				::ReadFile(hFile, buffer, 1023, &dwRead, 0);
+				if (dwRead <= 0 ) break;
+				buffer[dwRead] = 0;
+				contents += buffer;
+			}
+
+			if (std::regex_search(contents, rex)) {
+
+				LANGID lcid = GetUserDefaultLangID();
+				char lang[32];
+				GetLocaleInfoA(lcid, LOCALE_SISO639LANGNAME, lang, 32);
+				sprintf_s(buffer, "language = %s\n", lang);
+				std::string updated = regex_replace(contents, rex, buffer);
+
+				const char *c = updated.c_str();
+				DWORD dwLen = updated.length();
+				DWORD dwWritten;
+
+				::SetFilePointer(hFile, 0, 0, FILE_BEGIN);
+				
+				while (dwLen) {
+					if (::WriteFile(hFile, c + dwOffset, dwLen, &dwWritten, 0)) break;
+					dwLen -= dwWritten;
+				}
+
+			}
+			
+			::CloseHandle(hFile);
+		}
+	}
+	*/
+
 	Rp->CharacterMode = LinkDLL;
 	Rp->ReadConsole = R_ReadConsole;
 	Rp->WriteConsole = R_WriteConsole;
@@ -533,7 +580,6 @@ int RInit()
 	Rp->Busy = myBusy;
 
 	Rp->R_Quiet = FALSE;// TRUE;        /* Default is FALSE */
-	Rp->R_Interactive = TRUE;// FALSE; /* Default is TRUE */
 
 	Rp->RestoreAction = SA_RESTORE;
 	Rp->SaveAction = SA_NOSAVE;
@@ -988,19 +1034,12 @@ int getAutocomplete(AutocompleteData &ac, std::string &line, int caret)
 	ac.tokenIndex = 0;
 	ac.file = false;
 
-	// do.call(getFromNamespace(".win32consoleCompletion", "utils"), list(cmd, pos))
-
 	SEXP arglist;
 	PROTECT(arglist = Rf_allocVector(VECSXP, 2));
 
 	SET_VECTOR_ELT(arglist, 0, Rf_mkString(line.c_str()));
 	SET_VECTOR_ELT(arglist, 1, Rf_ScalarInteger(caret));
 
-	/*
-	SEXP result = PROTECT(R_tryEval(
-		Rf_lang3(Rf_install("do.call"), Rf_lang3(Rf_install("getFromNamespace"), Rf_mkString(".win32consoleCompletion"), Rf_mkString("utils")), arglist),
-		R_GlobalEnv, &err));
-	*/
 
 	SEXP result = PROTECT(R_tryEval(
 		Rf_lang5( Rf_install("do.call"),
@@ -1050,22 +1089,6 @@ int getAutocomplete(AutocompleteData &ac, std::string &line, int caret)
 			}
 
 		}
-
-		/*
-		SEXP cenv = PROTECT(R_tryEval(
-			Rf_lang4( Rf_install("get"), 
-				Rf_mkString("function.signature"),
-				Rf_ScalarInteger(-1), 
-				Rf_lang3(Rf_install("getFromNamespace"), Rf_mkString(".CompletionEnv"), Rf_mkString("utils"))),
-			R_GlobalEnv, &err));
-
-		if (!err) {
-			int type = TYPEOF(cenv);
-			DebugOut("type %d\n", type);
-		}
-
-		UNPROTECT(1);
-		*/
 
 	}
 
