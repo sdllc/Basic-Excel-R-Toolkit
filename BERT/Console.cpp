@@ -872,86 +872,79 @@ void showAutocomplete()
 	}
 	else if (autocomplete.file && autocomplete.token.length()) {
 
-		/*
+		if (!sci_fn(sci_ptr, SCI_AUTOCACTIVE, 0, 0)) {
+			if (autocomplete.token.find(":\\") != std::string::npos
+				|| (autocomplete.token.length() > 3) && !autocomplete.token.substr(0, 2).compare("\\\\")) {
 
-		if (autocomplete.token.find(":\\") != std::string::npos
-			|| (autocomplete.token.length() > 3) && !autocomplete.token.substr(0, 2).compare("\\\\")) {
+				int len = MultiByteToWideChar(CP_UTF8, 0, autocomplete.token.c_str(), -1, 0, 0);
+				if (len > 0) {
 
-			int len = MultiByteToWideChar(CP_UTF8, 0, autocomplete.token.c_str(), -1, 0, 0);
-			if (len > 0) {
+					SVECTOR clist;
+					WCHAR wsz[MAX_PATH + 8];
+					WCHAR wszFile[MAX_PATH + 8];
 
-				SVECTOR clist;
-				WCHAR wsz[MAX_PATH + 8];
-				WCHAR wszFile[MAX_PATH + 8];
-				
-				MultiByteToWideChar(CP_UTF8, 0, autocomplete.token.c_str(), -1, wsz, MAX_PATH + 8);
-				wcscpy_s(wszFile, wsz);
+					MultiByteToWideChar(CP_UTF8, 0, autocomplete.token.c_str(), -1, wsz, MAX_PATH + 8);
+					wcscpy_s(wszFile, wsz);
 
-				PathRemoveFileSpecW(wsz);
-				PathStripPath(wszFile);
+					PathRemoveFileSpecW(wsz);
+					PathStripPath(wszFile);
 
-				DebugOut("token: %s\n", autocomplete.token.c_str());
+					// PathCchRemoveBackslash is below our target version, and the other function
+					// doesn't work with network paths, so... manually?
 
-				// PathCchRemoveBackslash is below our target version, and the other function
-				// doesn't work with network paths, so... manually?
+					int wlen = wcslen(wsz);
+					while (wlen > 0 && wsz[wlen - 1] == '\\') {
+						wlen--;
+						wsz[wlen] = 0;
+					}
+					wcscat_s(wsz, len + 8, L"\\*");
 
-				int wlen = wcslen(wsz);
-				while (wlen > 0 && wsz[wlen - 1] == '\\') {
-					wlen--;
-					wsz[wlen] = 0;
-				}
-				wcscat_s(wsz, len + 8, L"\\*");
+					HANDLE hFind;
+					WIN32_FIND_DATA data;
 
-				HANDLE hFind;
-				WIN32_FIND_DATA data;
+					char sz[MAX_PATH * 2];
 
-				char sz[MAX_PATH * 2];
+					hFind = FindFirstFileW(wsz, &data);
+					if (hFind != INVALID_HANDLE_VALUE) {
 
-				hFind = FindFirstFileW( wsz, &data );
-				if( hFind != INVALID_HANDLE_VALUE ) {
-
-					do {
-						WideCharToMultiByte(CP_UTF8, 0, data.cFileName, -1, sz, MAX_PATH * 2, 0, 0);
-						clist.push_back(sz);
-					} 
-					while (FindNextFile(hFind, &data));
-					FindClose(hFind);
-				}
-
-				if (clist.size()) {
-
-					std::sort(clist.begin(), clist.end());
-
-					char sep[] = "\0";
-					std::string newlist = "";
-					for (int i = 0; i < clist.size(); i++) {
-						const char *sz = clist[i].c_str();
-						if (strlen(sz) && sz[0] != '.' && sz[0] != '$') {
-							newlist.append(sep);
-							newlist.append(sz);
-							sep[0] = '\n'; // every time?
-						} 
+						do {
+							WideCharToMultiByte(CP_UTF8, 0, data.cFileName, -1, sz, MAX_PATH * 2, 0, 0);
+							clist.push_back(sz);
+						} while (FindNextFile(hFind, &data));
+						FindClose(hFind);
 					}
 
-					if (newlist.length()) {
-						//sci_fn(sci_ptr, SCI_AUTOCSHOW, caret - X, (sptr_t)(newlist.c_str()));
-						sci_fn(sci_ptr, SCI_AUTOCSHOW, wcslen(wszFile), (sptr_t)(newlist.c_str()));
+					if (clist.size()) {
+
+						std::sort(clist.begin(), clist.end());
+
+						char sep[] = "\0";
+						std::string newlist = "";
+						for (int i = 0; i < clist.size(); i++) {
+							const char *sz = clist[i].c_str();
+							if (strlen(sz) && sz[0] != '.' && sz[0] != '$') {
+								newlist.append(sep);
+								newlist.append(sz);
+								sep[0] = '\n'; // every time?
+							}
+						}
+
+						if (newlist.length()) {
+							int x = wcslen(wszFile);
+							if (x > 0 && wszFile[x - 1] == '\\') x = 0;
+							sci_fn(sci_ptr, SCI_AUTOCSHOW, x, (sptr_t)(newlist.c_str()));
+						}
 					}
+
 				}
+
 
 			}
 
-
 		}
-
-		*/
-
-
 	}
 	else if (autocomplete.comps.length()) {
-
-		int testactive = sci_fn(sci_ptr, SCI_AUTOCACTIVE, 0, 0);
-
+		
 		// there's a case where you are entering a function call, type open paren 
 		// (autocomplete shows parameters) then press space for some breathing room -- 
 		// this will close the ac list because it's not a character of any of the entries.
