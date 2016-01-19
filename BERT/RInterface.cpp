@@ -1054,39 +1054,30 @@ int getAutocomplete(AutocompleteData &ac, std::string &line, int caret)
 
 		if (TYPEOF(result) == VECSXP) {
 
-			int len = LENGTH(result);
+			SEXP sexp, getelement = PROTECT(Rf_install("getElement"));
 
-			if (len > 0) {
-				SEXP sexp = VECTOR_ELT(result, 0);
-				if (TYPEOF(sexp) == STRSXP) ac.addition = CHAR(STRING_ELT(sexp, 0));
-			}
-			if (len > 2) {
-				SEXP sexp = VECTOR_ELT(result, 2);
-				if (TYPEOF(sexp) == STRSXP) ac.comps = CHAR(STRING_ELT(sexp, 0));
-			}
-			if (len > 3) {
-				SEXP sexp = VECTOR_ELT(result, 3);
-				if (TYPEOF(sexp) == STRSXP) ac.signature = CHAR(STRING_ELT(sexp, 0));
-			}
-			if (len > 4) {
-				SEXP sexp = VECTOR_ELT(result, 4);
-				if (TYPEOF(sexp) == STRSXP) ac.token = CHAR(STRING_ELT(sexp, 0));
-			}
-			if (len > 5) {
-				SEXP sexp = VECTOR_ELT(result, 5);
-				if (TYPEOF(sexp) == STRSXP) ac.function = CHAR(STRING_ELT(sexp, 0));
-			}
-			if (len > 6) {
-				SEXP sexp = VECTOR_ELT(result, 6);
-				if (TYPEOF(sexp) == INTSXP) ac.tokenIndex = (INTEGER(sexp))[0] - 1;
-			}
-			if (len > 7) {
-				SEXP sexp = VECTOR_ELT(result, 6);
-				int type = TYPEOF(sexp);
-				if( type == LGLSXP || type == INTSXP ){
-					ac.file = (INTEGER(sexp))[0] ? true : false;
-				}
-			}
+			sexp = R_tryEval(Rf_lang3(getelement, result, Rf_mkString("addition")), R_GlobalEnv, &err);
+			if( !err && TYPEOF(sexp) == STRSXP) ac.addition = CHAR(STRING_ELT(sexp, 0));
+
+			sexp = R_tryEval(Rf_lang3(getelement, result, Rf_mkString("comps")), R_GlobalEnv, &err);
+			if (!err && TYPEOF(sexp) == STRSXP) ac.comps = CHAR(STRING_ELT(sexp, 0));
+
+			sexp = R_tryEval(Rf_lang3(getelement, result, Rf_mkString("function.signature")), R_GlobalEnv, &err);
+			if (!err && TYPEOF(sexp) == STRSXP) ac.signature = CHAR(STRING_ELT(sexp, 0));
+
+			sexp = R_tryEval(Rf_lang3(getelement, result, Rf_mkString("token")), R_GlobalEnv, &err);
+			if (!err && TYPEOF(sexp) == STRSXP) ac.token = CHAR(STRING_ELT(sexp, 0));
+
+			sexp = R_tryEval(Rf_lang3(getelement, result, Rf_mkString("function")), R_GlobalEnv, &err);
+			if (!err && TYPEOF(sexp) == STRSXP) ac.function = CHAR(STRING_ELT(sexp, 0));
+
+			sexp = R_tryEval(Rf_lang3(getelement, result, Rf_mkString("start")), R_GlobalEnv, &err);
+			if (!err && TYPEOF(sexp) == INTSXP) ac.tokenIndex = (INTEGER(sexp))[0] - 1;
+
+			sexp = R_tryEval(Rf_lang3(getelement, result, Rf_mkString("in.quotes")), R_GlobalEnv, &err);
+			if (!err && ( TYPEOF(sexp) == INTSXP || TYPEOF(sexp) == LGLSXP )) ac.file = (INTEGER(sexp))[0] ? true : false;
+
+			UNPROTECT(1);
 
 		}
 
