@@ -1,0 +1,29 @@
+
+# target directories and generated build files
+Release
+x64
+ipch
+.vs
+*.ilk
+*.user
+*.aps
+*.opensdf
+*.sdf
+
+# generated interface files
+BERTRibbon2/BERTRibbon2_i.c
+BERTRibbon2/BERTRibbon2_i.h
+
+# these aren't distributed (get them from MS)
+BERT/ExcelLib
+
+# generated typelib headers
+*.tlh
+
+# generated binaries
+*.xll
+*.dll
+*.lib
+*.exp
+
+# ??
