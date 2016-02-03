@@ -33,10 +33,10 @@ typedef enum
 } 
 UPDATE_CHECK_RESULT;
 
-#define USER_AGENT_STRING L"StructuredDataLLC/Basic-Excel-R-Toolkit/v" BERT_VERSION
+#define USER_AGENT_STRING L"sdllc/Basic-Excel-R-Toolkit/v" BERT_VERSION
 
 #define GITHUB_HOST L"api.github.com"
-#define RELEASE_URL L"/repos/StructuredDataLLC/Basic-Excel-R-Toolkit/releases/latest"
+#define RELEASE_URL L"/repos/sdllc/Basic-Excel-R-Toolkit/releases/latest"
 
 // this is the URL for downloading (linked in the dialog)
 #define LATEST_RELEASE_URL L"https://github.com/StructuredDataLLC/Basic-Excel-R-Toolkit/releases/latest"
