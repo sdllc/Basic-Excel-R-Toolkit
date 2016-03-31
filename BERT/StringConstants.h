@@ -35,8 +35,8 @@
 #define BERT_LINK			L"http://" BERT_LINK_TEXT
 
 #define ABOUT_R_TEXT \
-	L"Includes R version 3.2.3 (2015 - 12 - 10) -- \"Wooden Christmas-Tree\"\r\n" \
-	L"Copyright (C) 2015 The R Foundation for Statistical Computing"
+	L"Includes R version 3.2.4 Revised (2016-03-16 r70336) -- \"Very Secure Dishes\"\r\n" \
+	L"Copyright (C) 2016 The R Foundation for Statistical Computing"
 
 #define R_LINK_TEXT			L"www.r-project.org"
 #define R_LINK				L"http://" R_LINK_TEXT
