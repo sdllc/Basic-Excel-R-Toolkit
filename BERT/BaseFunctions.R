@@ -47,6 +47,11 @@ ReloadStartup <- function(){ .Call(.CALLBACK, .RELOAD, 0, PACKAGE=.MODULE ); };
 
 .FunctionMap <- new.env();
 
+#--------------------------------------------------------
+# map a function.  if you call this from the console
+# (as opposed to a source()d file) it will get added
+# immediately, which is handy.
+#--------------------------------------------------------
 MapFunction <- function( name, expr=name, envir=.GlobalEnv ){
 	if( missing(name)){
 		if( is.character( expr )){ name = expr; }
@@ -56,12 +61,17 @@ MapFunction <- function( name, expr=name, envir=.GlobalEnv ){
 	.Call( .CALLBACK, .REMAP_FUNCTIONS, 0, PACKAGE=.MODULE );
 }
 
-MapEnvironment <- function(env, prefix){
+#--------------------------------------------------------
+# map all functions in an environment.  the ... arguments
+# are passed to ls(), so use pattern='X' to subset 
+# functions in the environment. 
+#--------------------------------------------------------
+MapEnvironment <- function(env, prefix, ...){
 	count <- 0;
 	if( missing( prefix )){ prefix = ""; }
 	else { prefix = paste0( prefix, "." ); }
 	if(is.character(env)){ env = as.environment(env); }
-	lapply( ls( env ), function( name ){
+	lapply( ls( env, ... ), function( name ){
 		if( is.function( get( name, envir=env ))){
 			fname <- paste0( prefix, name );
 			BERT$.FunctionMap[[fname]] <- list( name=fname, expr=name, envir=env );
