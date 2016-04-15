@@ -11,6 +11,7 @@ with( BERT, {
 .CLEAR_USER_BUTTONS <- 101;
 
 .HISTORY <- 200;
+.REMAP_FUNCTIONS <- 300;
 
 .WATCHFILES <- 1020;
 .CLEAR <- 1021;
@@ -39,6 +40,45 @@ CloseConsole <- function(){ invisible(.Call(.CALLBACK, .CLOSECONSOLE, 0, PACKAGE
 # reload the startup file
 #--------------------------------------------------------
 ReloadStartup <- function(){ .Call(.CALLBACK, .RELOAD, 0, PACKAGE=.MODULE ); };
+
+#========================================================
+# explicit function registration
+#========================================================
+
+.FunctionMap <- new.env();
+
+MapFunction <- function( name, expr=name, envir=.GlobalEnv ){
+	if( missing(name)){
+		if( is.character( expr )){ name = expr; }
+		else { name = toString( substitute( expr )); }
+	}
+	.FunctionMap[[name]] <- list( name=name, expr=expr, envir=envir );
+	.Call( .CALLBACK, .REMAP_FUNCTIONS, 0, PACKAGE=.MODULE );
+}
+
+MapEnvironment <- function(env, prefix){
+	count <- 0;
+	if( missing( prefix )){ prefix = ""; }
+	else { prefix = paste0( prefix, "." ); }
+	if(is.character(env)){ env = as.environment(env); }
+	lapply( ls( env ), function( name ){
+		if( is.function( get( name, envir=env ))){
+			fname <- paste0( prefix, name );
+			BERT$.FunctionMap[[fname]] <- list( name=fname, expr=name, envir=env );
+			count <<- count + 1;
+		}
+	});
+	if( count > 0 ){ .Call( .CALLBACK, .REMAP_FUNCTIONS, 0, PACKAGE=.MODULE ); }
+	return( count > 0 );
+}
+
+UnmapFunction <- function( name ){
+	.FunctionMap[[name]] <- NULL;
+}
+
+ClearMappedFunctions <- function(){
+	.FunctionMap <- new.env();
+}
 
 #========================================================
 # API for user buttons

@@ -76,7 +76,8 @@ LPXLOPER12 BERTFunctionCall(
 
 	if (index < 0 || index >= RFunctions.size()) return rslt;
 
-	RFUNCDESC func = RFunctions[index];
+//	RFUNCDESC func = RFunctions[index];
+	RFuncDesc2 func = RFunctions[index];
 
 	std::vector< LPXLOPER12 > args;
 
@@ -112,7 +113,8 @@ LPXLOPER12 BERTFunctionCall(
 
 	while (args.size() > 0 && args[args.size() - 1]->xltype == xltypeMissing) args.pop_back();
 
-	RExec2(rslt, func[0].first, args);
+	//RExec2(rslt, func[0].first, args);
+	RExec4(rslt, func, args);
 
 	return rslt;
 }
@@ -219,6 +221,7 @@ LPXLOPER BERT_Volatile(LPXLOPER arg)
 
 short BERT_Reload()
 {
+	ClearFunctions();
 	LoadStartupFile();
 	MapFunctions();
 	RegisterAddinFunctions();
@@ -532,6 +535,8 @@ LPXLOPER12 BERT_UpdateScript(LPXLOPER12 script)
 
 	if (script->xltype == xltypeStr)
 	{
+		ClearFunctions();
+
 		std::string str;
 		NarrowString(str, script);
 
@@ -669,7 +674,8 @@ bool RegisterAddinFunctions()
 
 	for (int i = 0; i< fcount && i< MAX_FUNCTION_COUNT; i++)
 	{
-		RFUNCDESC func = RFunctions[i];
+		//RFUNCDESC func = RFunctions[i];
+		RFuncDesc2 func = RFunctions[i];
 		int scount = 0;
 
 		for (int j = 1; j < alistCount; j++)
@@ -693,19 +699,19 @@ bool RegisterAddinFunctions()
 
 				// FIXME: this is correct, if messy, but unecessary: tokens in R can't 
 				// use unicode.  if there are high-byte characters in here the function 
-				// name is illegal.
+				// name is illegal. [FIXME: is that true? I don't think so].
 
-				tlen = MultiByteToWideChar(CP_UTF8, 0, func[0].first.c_str(), -1, 0, 0);
-				if (tlen > 0) MultiByteToWideChar(CP_UTF8, 0, func[0].first.c_str(), -1, wtmp, 64);
+				tlen = MultiByteToWideChar(CP_UTF8, 0, func.pairs[0].first.c_str(), -1, 0, 0);
+				if (tlen > 0) MultiByteToWideChar(CP_UTF8, 0, func.pairs[0].first.c_str(), -1, wtmp, 64);
 				else wtmp[0] = 0;
 				StringCbPrintf(wbuffer, 256, L"R.%s", wtmp); 
 				break;
 			case 3: 
 				wbuffer[0] = 0;
-				for (int k = 1; k < func.size(); k++)
+				for (int k = 1; k < func.pairs.size(); k++)
 				{
-					tlen = MultiByteToWideChar(CP_UTF8, 0, func[k].first.c_str(), -1, 0, 0);
-					if (tlen > 0) MultiByteToWideChar(CP_UTF8, 0, func[k].first.c_str(), -1, wtmp, 64);
+					tlen = MultiByteToWideChar(CP_UTF8, 0, func.pairs[k].first.c_str(), -1, 0, 0);
+					if (tlen > 0) MultiByteToWideChar(CP_UTF8, 0, func.pairs[k].first.c_str(), -1, wtmp, 64);
 					else wtmp[0] = 0;
 					
 					if (wcslen(wbuffer)) StringCbCat(wbuffer, 256, L",");
@@ -735,13 +741,13 @@ bool RegisterAddinFunctions()
 
 		// also, quote default strings.
 
-		for (int j = 0; j < func.size() - 1 && j< MAX_ARGUMENT_COUNT; j++)
+		for (int j = 0; j < func.pairs.size() - 1 && j< MAX_ARGUMENT_COUNT; j++)
 		{
-			int len = MultiByteToWideChar(CP_UTF8, 0, func[j + 1].second.c_str(), -1, 0, 0);
+			int len = MultiByteToWideChar(CP_UTF8, 0, func.pairs[j + 1].second.c_str(), -1, 0, 0);
 			xlParm[scount + 1]->xltype = xltypeStr;
 			xlParm[scount + 1]->val.str = new XCHAR[len + 2];
 			xlParm[scount + 1]->val.str[0] = len > 0 ? len-1 : 0;
-			MultiByteToWideChar(CP_UTF8, 0, func[j + 1].second.c_str(), -1, &(xlParm[scount + 1]->val.str[1]), len+1);
+			MultiByteToWideChar(CP_UTF8, 0, func.pairs[j + 1].second.c_str(), -1, &(xlParm[scount + 1]->val.str[1]), len+1);
 			scount++;
 		}
 		
@@ -908,4 +914,409 @@ BFC(1096);
 BFC(1097);
 BFC(1098);
 BFC(1099);
+
+BFC(1100);
+BFC(1101);
+BFC(1102);
+BFC(1103);
+BFC(1104);
+BFC(1105);
+BFC(1106);
+BFC(1107);
+BFC(1108);
+BFC(1109);
+BFC(1110);
+BFC(1111);
+BFC(1112);
+BFC(1113);
+BFC(1114);
+BFC(1115);
+BFC(1116);
+BFC(1117);
+BFC(1118);
+BFC(1119);
+BFC(1120);
+BFC(1121);
+BFC(1122);
+BFC(1123);
+BFC(1124);
+BFC(1125);
+BFC(1126);
+BFC(1127);
+BFC(1128);
+BFC(1129);
+BFC(1130);
+BFC(1131);
+BFC(1132);
+BFC(1133);
+BFC(1134);
+BFC(1135);
+BFC(1136);
+BFC(1137);
+BFC(1138);
+BFC(1139);
+BFC(1140);
+BFC(1141);
+BFC(1142);
+BFC(1143);
+BFC(1144);
+BFC(1145);
+BFC(1146);
+BFC(1147);
+BFC(1148);
+BFC(1149);
+BFC(1150);
+BFC(1151);
+BFC(1152);
+BFC(1153);
+BFC(1154);
+BFC(1155);
+BFC(1156);
+BFC(1157);
+BFC(1158);
+BFC(1159);
+BFC(1160);
+BFC(1161);
+BFC(1162);
+BFC(1163);
+BFC(1164);
+BFC(1165);
+BFC(1166);
+BFC(1167);
+BFC(1168);
+BFC(1169);
+BFC(1170);
+BFC(1171);
+BFC(1172);
+BFC(1173);
+BFC(1174);
+BFC(1175);
+BFC(1176);
+BFC(1177);
+BFC(1178);
+BFC(1179);
+BFC(1180);
+BFC(1181);
+BFC(1182);
+BFC(1183);
+BFC(1184);
+BFC(1185);
+BFC(1186);
+BFC(1187);
+BFC(1188);
+BFC(1189);
+BFC(1190);
+BFC(1191);
+BFC(1192);
+BFC(1193);
+BFC(1194);
+BFC(1195);
+BFC(1196);
+BFC(1197);
+BFC(1198);
+BFC(1199);
+
+BFC(1200);
+BFC(1201);
+BFC(1202);
+BFC(1203);
+BFC(1204);
+BFC(1205);
+BFC(1206);
+BFC(1207);
+BFC(1208);
+BFC(1209);
+BFC(1210);
+BFC(1211);
+BFC(1212);
+BFC(1213);
+BFC(1214);
+BFC(1215);
+BFC(1216);
+BFC(1217);
+BFC(1218);
+BFC(1219);
+BFC(1220);
+BFC(1221);
+BFC(1222);
+BFC(1223);
+BFC(1224);
+BFC(1225);
+BFC(1226);
+BFC(1227);
+BFC(1228);
+BFC(1229);
+BFC(1230);
+BFC(1231);
+BFC(1232);
+BFC(1233);
+BFC(1234);
+BFC(1235);
+BFC(1236);
+BFC(1237);
+BFC(1238);
+BFC(1239);
+BFC(1240);
+BFC(1241);
+BFC(1242);
+BFC(1243);
+BFC(1244);
+BFC(1245);
+BFC(1246);
+BFC(1247);
+BFC(1248);
+BFC(1249);
+BFC(1250);
+BFC(1251);
+BFC(1252);
+BFC(1253);
+BFC(1254);
+BFC(1255);
+BFC(1256);
+BFC(1257);
+BFC(1258);
+BFC(1259);
+BFC(1260);
+BFC(1261);
+BFC(1262);
+BFC(1263);
+BFC(1264);
+BFC(1265);
+BFC(1266);
+BFC(1267);
+BFC(1268);
+BFC(1269);
+BFC(1270);
+BFC(1271);
+BFC(1272);
+BFC(1273);
+BFC(1274);
+BFC(1275);
+BFC(1276);
+BFC(1277);
+BFC(1278);
+BFC(1279);
+BFC(1280);
+BFC(1281);
+BFC(1282);
+BFC(1283);
+BFC(1284);
+BFC(1285);
+BFC(1286);
+BFC(1287);
+BFC(1288);
+BFC(1289);
+BFC(1290);
+BFC(1291);
+BFC(1292);
+BFC(1293);
+BFC(1294);
+BFC(1295);
+BFC(1296);
+BFC(1297);
+BFC(1298);
+BFC(1299);
+
+BFC(1300);
+BFC(1301);
+BFC(1302);
+BFC(1303);
+BFC(1304);
+BFC(1305);
+BFC(1306);
+BFC(1307);
+BFC(1308);
+BFC(1309);
+BFC(1310);
+BFC(1311);
+BFC(1312);
+BFC(1313);
+BFC(1314);
+BFC(1315);
+BFC(1316);
+BFC(1317);
+BFC(1318);
+BFC(1319);
+BFC(1320);
+BFC(1321);
+BFC(1322);
+BFC(1323);
+BFC(1324);
+BFC(1325);
+BFC(1326);
+BFC(1327);
+BFC(1328);
+BFC(1329);
+BFC(1330);
+BFC(1331);
+BFC(1332);
+BFC(1333);
+BFC(1334);
+BFC(1335);
+BFC(1336);
+BFC(1337);
+BFC(1338);
+BFC(1339);
+BFC(1340);
+BFC(1341);
+BFC(1342);
+BFC(1343);
+BFC(1344);
+BFC(1345);
+BFC(1346);
+BFC(1347);
+BFC(1348);
+BFC(1349);
+BFC(1350);
+BFC(1351);
+BFC(1352);
+BFC(1353);
+BFC(1354);
+BFC(1355);
+BFC(1356);
+BFC(1357);
+BFC(1358);
+BFC(1359);
+BFC(1360);
+BFC(1361);
+BFC(1362);
+BFC(1363);
+BFC(1364);
+BFC(1365);
+BFC(1366);
+BFC(1367);
+BFC(1368);
+BFC(1369);
+BFC(1370);
+BFC(1371);
+BFC(1372);
+BFC(1373);
+BFC(1374);
+BFC(1375);
+BFC(1376);
+BFC(1377);
+BFC(1378);
+BFC(1379);
+BFC(1380);
+BFC(1381);
+BFC(1382);
+BFC(1383);
+BFC(1384);
+BFC(1385);
+BFC(1386);
+BFC(1387);
+BFC(1388);
+BFC(1389);
+BFC(1390);
+BFC(1391);
+BFC(1392);
+BFC(1393);
+BFC(1394);
+BFC(1395);
+BFC(1396);
+BFC(1397);
+BFC(1398);
+BFC(1399);
+
+BFC(1400);
+BFC(1401);
+BFC(1402);
+BFC(1403);
+BFC(1404);
+BFC(1405);
+BFC(1406);
+BFC(1407);
+BFC(1408);
+BFC(1409);
+BFC(1410);
+BFC(1411);
+BFC(1412);
+BFC(1413);
+BFC(1414);
+BFC(1415);
+BFC(1416);
+BFC(1417);
+BFC(1418);
+BFC(1419);
+BFC(1420);
+BFC(1421);
+BFC(1422);
+BFC(1423);
+BFC(1424);
+BFC(1425);
+BFC(1426);
+BFC(1427);
+BFC(1428);
+BFC(1429);
+BFC(1430);
+BFC(1431);
+BFC(1432);
+BFC(1433);
+BFC(1434);
+BFC(1435);
+BFC(1436);
+BFC(1437);
+BFC(1438);
+BFC(1439);
+BFC(1440);
+BFC(1441);
+BFC(1442);
+BFC(1443);
+BFC(1444);
+BFC(1445);
+BFC(1446);
+BFC(1447);
+BFC(1448);
+BFC(1449);
+BFC(1450);
+BFC(1451);
+BFC(1452);
+BFC(1453);
+BFC(1454);
+BFC(1455);
+BFC(1456);
+BFC(1457);
+BFC(1458);
+BFC(1459);
+BFC(1460);
+BFC(1461);
+BFC(1462);
+BFC(1463);
+BFC(1464);
+BFC(1465);
+BFC(1466);
+BFC(1467);
+BFC(1468);
+BFC(1469);
+BFC(1470);
+BFC(1471);
+BFC(1472);
+BFC(1473);
+BFC(1474);
+BFC(1475);
+BFC(1476);
+BFC(1477);
+BFC(1478);
+BFC(1479);
+BFC(1480);
+BFC(1481);
+BFC(1482);
+BFC(1483);
+BFC(1484);
+BFC(1485);
+BFC(1486);
+BFC(1487);
+BFC(1488);
+BFC(1489);
+BFC(1490);
+BFC(1491);
+BFC(1492);
+BFC(1493);
+BFC(1494);
+BFC(1495);
+BFC(1496);
+BFC(1497);
+BFC(1498);
+BFC(1499);
+
 

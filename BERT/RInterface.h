@@ -41,8 +41,10 @@ typedef enum
 
 	CC_ADD_USER_BUTTON =		100,
 	CC_CLEAR_USER_BUTTONS =		101,
-
+	
 	CC_HISTORY =				200,
+
+	CC_REMAP_FUNCTIONS =		300,
 
 	CC_WATCHFILES =				1020,
 	CC_CLEAR =					1021,
@@ -57,9 +59,53 @@ typedef std::pair < std::string, std::string > SPAIR;
 typedef std::vector< SPAIR > RFUNCDESC;
 typedef std::vector< RFUNCDESC > FDVECTOR;
 
+/**
+ * new class allows (optional) storage of actual functions, plus 
+ * (also optional) evaluation environment.  
+ */
+class RFuncDesc2 {
+
+public:
+	void * func;
+	void * env;
+
+public:
+	std::vector < SPAIR > pairs;
+
+public:
+	RFuncDesc2(void *func = 0, void *env = 0);
+	~RFuncDesc2();
+	RFuncDesc2(const RFuncDesc2 &rhs);
+
+		/*
+	RFuncDesc2( SEXP func = 0, SEXP env = 0) : func(func), env(env) {
+		if (this->func) PROTECT(this->func);
+		if (this->env) PROTECT(this->env);
+	}
+	
+	~RFuncDesc2() {
+		if (func) UNPROTECT_PTR(func);
+		if (env) UNPROTECT_PTR(env);
+	}
+
+	RFuncDesc2( const RFuncDesc2 &rhs ) {
+		this->func = rhs.func;
+		this->env = rhs.env;
+		if (this->func) PROTECT(this->func);
+		if (this->env) PROTECT(this->env);
+		for ( std::vector < SPAIR > :: const_iterator iter = rhs.pairs.begin(); iter != rhs.pairs.end(); iter++) {
+			pairs.push_back(*iter);
+		}
+	}
+	*/
+};
+
+typedef std::vector< RFuncDesc2 > FD2VECTOR;
+
+
 extern std::string dllpath;
 
-extern FDVECTOR RFunctions;
+extern FD2VECTOR RFunctions;
 
 int RInit();
 void RShutdown();
@@ -67,8 +113,12 @@ void RShutdown();
 LPXLOPER12 BERT_RExec(LPXLOPER12 code);
 bool RExec2(LPXLOPER12 rslt, std::string &funcname, std::vector< LPXLOPER12 > &args);
 bool RExec3(LPXLOPER12 rslt, std::string &funcname);
+bool RExec4(LPXLOPER12 rslt, RFuncDesc2 &func, std::vector< LPXLOPER12 > &args);
+
 void RExecVector(std::vector < std::string > &vec, int *err = 0, PARSE_STATUS_2 *parseErr = 0, bool printResult = true, bool excludeFromHistory = false);
 int UpdateR(std::string &str);
+
+void ClearFunctions();
 void MapFunctions();
 void LoadStartupFile();
 

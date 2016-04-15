@@ -47,7 +47,8 @@
 
 #include "RCOM.h"
 
-FDVECTOR RFunctions;
+//FDVECTOR RFunctions;
+FD2VECTOR RFunctions;
 
 extern HMODULE ghModule;
 SEXP g_Environment = 0;
@@ -67,6 +68,9 @@ std::vector< std::string > cmdBuffer;
 HANDLE muxLog;
 HANDLE muxExecR;
 
+// this doesn't need to be a lock, just a flag
+bool loadingStartupFile = false;
+
 //
 // for whatever reason these are not exposed in the embedded headers.
 //
@@ -79,6 +83,24 @@ extern void R_SaveGlobalEnvToFile(const char *);
 
 extern void RibbonClearUserButtons();
 extern void RibbonAddUserButton(std::string &strLabel, std::string &strFunc, std::string &strImgMso);
+
+///
+
+RFuncDesc2::RFuncDesc2(void * func, void * env) : func(func), env(env) {
+}
+
+RFuncDesc2::~RFuncDesc2() {
+}
+
+RFuncDesc2::RFuncDesc2(const RFuncDesc2 &rhs) {
+	func = rhs.func;
+	env = rhs.env;
+	for (std::vector < SPAIR > ::const_iterator iter = rhs.pairs.begin(); iter != rhs.pairs.end(); iter++) {
+		pairs.push_back(*iter);
+	}
+}
+
+///
 
 int R_ReadConsole(const char *prompt, char *buf, int len, int addtohistory)
 {
@@ -287,6 +309,93 @@ int UpdateR(std::string &str)
 
 }
 
+//void MapFunction(const char *name, SEXP func, const char *category /* placeholder */) {
+void MapFunction( const char *name, SEXP func, SEXP env ){
+
+	int err = 0;
+
+//	RFUNCDESC funcdesc;
+	RFuncDesc2 funcdesc(func, env);
+	funcdesc.pairs.push_back(SPAIR(name, ""));
+
+	SEXP args = PROTECT(R_tryEval(Rf_lang2(Rf_install("formals"), func), R_GlobalEnv, &err));
+	if (args && isList(args))
+	{
+		SEXP asvec = PROTECT(Rf_PairToVectorList(args));
+		SEXP names = PROTECT(R_tryEval(Rf_lang2(R_NamesSymbol, args), R_GlobalEnv, &err));
+		if (names)
+		{
+			int plen = Rf_length(names);
+			for (int j = 0; j < plen; j++)
+			{
+				std::string dflt = "";
+				std::string arg = CHAR(STRING_ELT(names, j));
+				SEXP vecelt = VECTOR_ELT(asvec, j);
+				int type = TYPEOF(vecelt);
+
+				if (type != 1)
+				{
+					dflt = "Default: ";
+					const char *a = CHAR(asChar(vecelt));
+					if (type == STRSXP)
+					{
+						dflt += "\"";
+						dflt += a;
+						dflt += "\"";
+					}
+					else if (type == LGLSXP)
+					{
+						if ((LOGICAL(vecelt))[0]) dflt += "TRUE";
+						else dflt += "FALSE";
+					}
+					else dflt += a;
+				}
+
+				funcdesc.pairs.push_back(SPAIR(arg, dflt));
+			}
+		}
+		UNPROTECT(2);
+	}
+
+	UNPROTECT(1);
+	RFunctions.push_back(funcdesc);
+	
+}
+
+void MapEnvironment(SEXP envir, const char *prefix /* placeholder */, const char *category /* placeholder */) {
+
+	int err = 0;
+
+	int i, j, len = 0;
+	SEXP lst = PROTECT(R_tryEval(Rf_lang1(Rf_install("lsf.str")), envir, &err));
+	if (lst) len = Rf_length(lst);
+
+	for (i = 0; i < len; i++)
+	{
+		const char *name = CHAR(STRING_ELT(lst, i));
+		SEXP func = R_tryEval(Rf_lang2(Rf_install("get"), Rf_mkString(name)), envir, &err);
+		if (func) MapFunction(name, func, envir);
+		else {
+			DebugOut("Function failed: %s, err %d\n", CHAR(STRING_ELT(lst, i)), err);
+		}
+	}
+
+	UNPROTECT(1);
+
+}
+
+void ClearFunctions() {
+
+	// this probably doesn't need to be locked, it used to be 
+	// part of "MapFunctions".  We're splitting that into a couple
+	// of parts to support express function assignment.
+
+	::WaitForSingleObject(muxExecR, INFINITE);
+	RFunctions.clear();
+	::ReleaseMutex(muxExecR);
+
+}
+
 void MapFunctions()
 {
 	SEXP s = 0;
@@ -295,7 +404,7 @@ void MapFunctions()
 
 	::WaitForSingleObject(muxExecR, INFINITE);
 
-	RFunctions.clear();
+// moved //	RFunctions.clear();
 
 	SVECTOR fnames;
 
@@ -325,73 +434,61 @@ void MapFunctions()
 
 		PROTECT(g_Environment); // hold this ref [FIXME: performance?]
 	}
+	MapEnvironment(g_Environment ? g_Environment : R_GlobalEnv, 0, 0);
 
-	// get all functions in the target environment 
-	// (except q and quit, if we're in the global env)
+	// mapped functions: these are explicitly registered
 
-	SEXP cmd = PROTECT(Rf_lang1(Rf_install("lsf.str")));
-	if (cmd)
-	{
-		int i, j, len = 0;
-		SEXP useEnv = g_Environment ? g_Environment : R_GlobalEnv;
-		SEXP lst = PROTECT(R_tryEval(cmd, useEnv, &err));
-		if ( lst ) len = Rf_length(lst);
-		SEXP formals = PROTECT(Rf_install("formals"));
-		for (i = 0; i < len; i++)
-		{
-			RFUNCDESC funcdesc;
-			std::string funcName = CHAR(STRING_ELT(lst, i));
+	SEXP bertenv = PROTECT(R_tryEval(Rf_lang2(Rf_install("get"), Rf_mkString("BERT")), R_GlobalEnv, &err));
+	if (bertenv) {
+		SEXP mapped = PROTECT(R_tryEval(Rf_lang2(Rf_install("get"), Rf_mkString(".FunctionMap")), bertenv, &err));
+		if (mapped) {
+			SEXP list = PROTECT(R_tryEval(Rf_lang2(Rf_install("ls"), mapped), R_GlobalEnv, &err));
+			if (list) {
+				int len = Rf_length(list);
+				for (int i = 0; i < len; i++ ){
+					const char *name = CHAR(STRING_ELT(list, i));
+					SEXP elt = PROTECT(R_tryEval(Rf_lang2(Rf_install("get"), Rf_mkString(name)), mapped, &err));
+					if (elt) {
+						int type = TYPEOF(elt);
+						if (type == VECSXP) {
 
-			if (!g_Environment && strcmp("q", funcName.c_str()) && strcmp("quit", funcName.c_str()))
-			{
-				funcdesc.push_back(SPAIR(funcName, ""));
-				SEXP args = PROTECT(R_tryEval(Rf_lang2(formals, Rf_mkString(funcName.c_str())), useEnv, &err));
-				if (args && isList(args))
-				{
-					SEXP asvec = PROTECT(Rf_PairToVectorList(args));
-					SEXP names = PROTECT(R_tryEval(Rf_lang2(R_NamesSymbol, args), useEnv, &err));
-					if (names)
-					{
-						int plen = Rf_length(names);
-						for (j = 0; j < plen; j++)
-						{
-							std::string dflt = "";
-							std::string arg = CHAR(STRING_ELT(names, j));
-							SEXP vecelt = VECTOR_ELT(asvec, j);
-							int type = TYPEOF(vecelt);
+							SEXP expr = VECTOR_ELT(elt, 1);
+							SEXP env = VECTOR_ELT(elt, 2);
 
-							if ( type != 1 )
-							{
-								dflt = "Default: ";
-								const char *a = CHAR(asChar(vecelt));
-								if (type == STRSXP)
-								{
-									dflt += "\"";
-									dflt += a;
-									dflt += "\"";
-								}
-								else if (type == LGLSXP)
-								{
-									if ((LOGICAL(vecelt))[0]) dflt += "TRUE";
-									else dflt += "FALSE";
-								}
-								else dflt += a;
+							if (Rf_isString(expr)) {
+								expr = R_tryEval(Rf_lang2(Rf_install("get"), expr), env, &err);
 							}
+							MapFunction(name, expr, env);
 
-							funcdesc.push_back(SPAIR(arg, dflt));
 						}
+						UNPROTECT(1);
 					}
-					UNPROTECT(2);
 				}
 				UNPROTECT(1);
-				RFunctions.push_back(funcdesc);
 			}
+			UNPROTECT(1);
 		}
-		UNPROTECT(2);
+		UNPROTECT(1);
 	}
-	UNPROTECT(1);
+
 
 	::ReleaseMutex(muxExecR);
+	
+}
+
+/**
+ * remap functions and load them into excel, unless code is running --
+ * in that case, assume that we're being source()d
+ */
+SEXP RemapFunctions() {
+
+	if (loadingStartupFile) {
+		return Rf_ScalarLogical(0);
+	}
+	ClearFunctions();
+	MapFunctions();
+	RegisterAddinFunctions();
+	return Rf_ScalarLogical(1);
 
 }
 
@@ -403,7 +500,9 @@ void LoadStartupFile()
 	char path[MAX_PATH];
 	char buffer[MAX_PATH];
 
-	::WaitForSingleObject(muxExecR, INFINITE);
+	loadingStartupFile = true;
+
+	DWORD dwStatus = ::WaitForSingleObject(muxExecR, INFINITE);
 
 	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, RUser, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_R_USER))
 		ExpandEnvironmentStringsA( DEFAULT_R_USER, RUser, MAX_PATH );
@@ -449,6 +548,7 @@ void LoadStartupFile()
 	}
 
 	::ReleaseMutex(muxExecR);
+	loadingStartupFile = false;
 
 }
 
@@ -648,6 +748,8 @@ int RInit()
 
 	}
 
+	::ReleaseMutex(muxExecR);
+
 	// run embedded code (if any)
 
 	HRSRC handle = ::FindResource(ghModule, MAKEINTRESOURCE(IDR_RCDATA1), RT_RCDATA);
@@ -678,8 +780,6 @@ int RInit()
 		}
 	}
 
-	::ReleaseMutex(muxExecR);
-
 	{
 		// BERT banner in the console.  needs to be narrow, though.
 		std::string strBanner = "---\n\n";
@@ -689,6 +789,7 @@ int RInit()
 		logMessage(strBanner.c_str(), 0, 1);
 	}
 
+	ClearFunctions();
 	LoadStartupFile();
 	MapFunctions();
 
@@ -760,7 +861,7 @@ SEXP ExecR(const char *code, int *err, ParseStatus *pStatus)
 			if (errorOccurred) {
 				if (err) *err = errorOccurred;
 				UNPROTECT(2);
-				::ReleaseMutex(muxExecR);
+				 ::ReleaseMutex(muxExecR);
 				return 0;
 			}
 		}
@@ -784,7 +885,7 @@ SEXP ExecR(const char *code, int *err, ParseStatus *pStatus)
 
 	UNPROTECT(2);
 
-	::ReleaseMutex(muxExecR);
+	 ::ReleaseMutex(muxExecR);
 	return ans;
 
 }
@@ -829,7 +930,7 @@ SEXP ExecR(std::vector < std::string > &vec, int *err, ParseStatus *pStatus, boo
 				if (errorOccurred) {
 					if (err) *err = errorOccurred;
 					UNPROTECT(2);
-					::ReleaseMutex(muxExecR);
+					 ::ReleaseMutex(muxExecR);
 
 					return 0;
 				}
@@ -854,7 +955,7 @@ SEXP ExecR(std::vector < std::string > &vec, int *err, ParseStatus *pStatus, boo
 	}
 
 	UNPROTECT(2);
-	::ReleaseMutex(muxExecR);
+	 ::ReleaseMutex(muxExecR);
 
 	return ans;
 
@@ -943,7 +1044,7 @@ int notifyWatch(std::string &path) {
 		UNPROTECT(1);
 	}
 	UNPROTECT(1);
-	::ReleaseMutex(muxExecR);
+	 ::ReleaseMutex(muxExecR);
 
 	return 0;
 
@@ -1931,7 +2032,7 @@ void RExecVector(std::vector<std::string> &vec, int *err, PARSE_STATUS_2 *status
 		if (*pVisible) {
 			::WaitForSingleObject(muxExecR, INFINITE);
 			Rf_PrintValue(VECTOR_ELT(rslt, 0));
-			::ReleaseMutex(muxExecR);
+			 ::ReleaseMutex(muxExecR);
 		}
 	}
 
@@ -1939,6 +2040,49 @@ void RExecVector(std::vector<std::string> &vec, int *err, PARSE_STATUS_2 *status
 
 	g_buffering = false;
 	flush_log();
+}
+
+bool RExec4(LPXLOPER12 rslt, RFuncDesc2 &func, std::vector< LPXLOPER12 > &args) {
+
+	SEXP sargs;
+	SEXP lns, ans = 0;
+	int i, errorOccurred;
+
+	resetXlOper(rslt);
+
+	::WaitForSingleObject(muxExecR, INFINITE);
+
+	PROTECT(sargs = Rf_allocVector(VECSXP, args.size()));
+	for (i = 0; i < args.size(); i++)
+	{
+		SET_VECTOR_ELT(sargs, i, XLOPER2SEXP(args[i], 0, true));
+	}
+
+	SEXP envir = g_Environment ? g_Environment : R_GlobalEnv;
+	if (func.env) envir = (SEXP)func.env;
+
+	/*
+	SVECTOR elts;
+	Util::split(funcname, '$', 1, elts);
+	if (elts.size() > 1) {
+
+		envir = R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString(elts[0].c_str())), R_GlobalEnv, &errorOccurred);
+		funcname = elts[1];
+	}
+	*/
+
+	SEXP callee = func.func ? (SEXP)func.func : Rf_mkString(func.pairs[0].first.c_str());
+
+	lns = PROTECT(Rf_lang5(Rf_install("do.call"), callee, sargs, R_MissingArg, envir));
+	PROTECT(ans = R_tryEval(lns, R_GlobalEnv, &errorOccurred));
+
+	ParseResult(rslt, ans);
+
+	UNPROTECT(3);
+	 ::ReleaseMutex(muxExecR);
+
+	return true;
+
 }
 
 bool RExec2(LPXLOPER12 rslt, std::string &funcname, std::vector< LPXLOPER12 > &args)
@@ -1973,7 +2117,7 @@ bool RExec2(LPXLOPER12 rslt, std::string &funcname, std::vector< LPXLOPER12 > &a
 	ParseResult(rslt, ans);
 
 	UNPROTECT(3);
-	::ReleaseMutex(muxExecR);
+	 ::ReleaseMutex(muxExecR);
 
 	return true;
 }
@@ -2274,6 +2418,10 @@ SEXP BERT_Callback(SEXP cmd, SEXP data, SEXP data2)
 	}
 	switch (command)
 	{
+	case CC_REMAP_FUNCTIONS:
+		return RemapFunctions();
+		break;
+
 	case CC_HISTORY:
 		return ConsoleHistory(data);
 		break;
