@@ -1457,6 +1457,10 @@ void ParseResult(LPXLOPER12 rslt, SEXP ans)
 					CPLXSXP2XLOPER(&(rslt->val.array.lparray[idx]), (COMPLEX(s))[r]);
 					break;
 
+				case VECSXP: // 19
+					ParseResult(&(rslt->val.array.lparray[idx]), VECTOR_ELT(s, r));
+					break;
+
 				default:
 					DebugOut("** Unexpected type in data frame: %d\n", type);
 					break;
