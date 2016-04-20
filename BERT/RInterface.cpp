@@ -1439,32 +1439,7 @@ void ParseResult(LPXLOPER12 rslt, SEXP ans)
 			{
 				// offset for column names, row names
 				int idx = (r+1) * nc + i + 1; 
-
-				switch (type)
-				{
-				case INTSXP:	//  13	  /* integer vectors */
-					rslt->val.array.lparray[idx].xltype = xltypeInt;
-					rslt->val.array.lparray[idx].val.w = (INTEGER(s))[r];
-					break;
-				case REALSXP:	//  14	  /* real variables */  
-					rslt->val.array.lparray[idx].xltype = xltypeNum;
-					rslt->val.array.lparray[idx].val.num = (REAL(s))[r];
-					break;
-				case STRSXP:	//  16	  /* string vectors - legal? */ 
-					STRSXP2XLOPER(&(rslt->val.array.lparray[idx]), STRING_ELT(s, r));
-					break;
-				case CPLXSXP:	//	15	  /* complex variables */
-					CPLXSXP2XLOPER(&(rslt->val.array.lparray[idx]), (COMPLEX(s))[r]);
-					break;
-
-				case VECSXP: // 19
-					ParseResult(&(rslt->val.array.lparray[idx]), VECTOR_ELT(s, r));
-					break;
-
-				default:
-					DebugOut("** Unexpected type in data frame: %d\n", type);
-					break;
-				}
+				ParseResult(&(rslt->val.array.lparray[idx]), VECTOR_ELT(s, r));
 			}
 
 		}
