@@ -990,14 +990,11 @@ __inline void CPLXSXP2XLOPER(LPXLOPER12 result, Rcomplex &c)
 
 __inline void STRSXP2XLOPER(LPXLOPER12 result, SEXP str)
 {
-	// this is just for our reference, as we do not call
-	// xlFree on this object (also, don't call xlFree on
-	// this object).
+	// we will manage this memory, but we use a shared
+	// resource for 0-len strings (so don't delete them)
 
 	result->xltype = xltypeStr | xlbitDLLFree;
-
 	const char *sz = CHAR(Rf_asChar(str));
-
 	int len = MultiByteToWideChar(CP_UTF8, 0, sz, -1, 0, 0);
 
 	if (len == 0) {
@@ -1300,10 +1297,9 @@ bool CheckExcelRef(LPXLOPER12 rslt, SEXP s)
  */
 void SEXP2XLOPER(LPXLOPER12 xloper, SEXP sexp, bool inner = false, int r_offset = 0) {
 
-	// we want to fill up the space, not showing errors 
-	// if the data is smaller than the excel range.  
-	// the only way to do that is with strings ("") -- 
-	// the types nil and missing don't do it 
+	// we want to fill up the space, not showing errors if the data 
+	// is smaller than the excel range.  the only way to do that is 
+	// with strings ("") -- the types nil and missing don't do it 
 	
 	int xlrows = 1;
 	int xlcols = 1;
@@ -1422,8 +1418,43 @@ void SEXP2XLOPER(LPXLOPER12 xloper, SEXP sexp, bool inner = false, int r_offset 
 			}
 		}
 	}
-	else if (Rf_isInteger(sexp)) 
-	{
+	else if (Rf_isFactor(sexp)) {
+
+		// FIXME: if this comes in from a frame, we are passing
+		// one element at a time (for ordering reasons).  should
+		// we pass in the levels as well to avoid repeated lookups?
+
+		SEXP levels = Rf_getAttrib(sexp, R_LevelsSymbol);
+		int levels_len = Rf_length(levels);
+
+		for (int r = 0; r < n_rows && r < xlrows; r++) {
+			for (int c = 0; c < n_cols && c < xlcols; c++) {
+				LPXLOPER12 ref = firstRef + (r * xlcols + c);
+				int val = (INTEGER(sexp))[c * n_rows + r + r_offset];
+				
+				if (val == NA_INTEGER) {
+					ref->xltype = xltypeErr;
+					ref->val.err = xlerrNA;
+				}
+				else if (val < 1 || val > levels_len) {
+					ref->xltype = xltypeErr;
+					ref->val.err = xlerrValue;
+				}
+				else {
+					SEXP strsxp = STRING_ELT(levels, val-1); // because this uses 1-based indexing
+					if (strsxp == NA_STRING) {
+						ref->xltype = xltypeErr;
+						ref->val.err = xlerrNA;
+					}
+					else {
+						STRSXP2XLOPER(ref, strsxp);
+					}
+				}
+			}
+		}
+
+	}
+	else if (Rf_isInteger(sexp)){
 		for (int r = 0; r < n_rows && r < xlrows; r++) {
 			for (int c = 0; c < n_cols && c < xlcols; c++) {
 
