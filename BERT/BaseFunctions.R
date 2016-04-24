@@ -73,6 +73,7 @@ UseEnvironment <- function(env, prefix, ...){
 # package: for convenience.
 #--------------------------------------------------------
 UsePackage <- function( pkg, prefix, ... ){
+	require( pkg );
 	UseEnvironment( paste0( "package:", pkg ), prefix, ... );
 }
 

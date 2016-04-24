@@ -2213,17 +2213,6 @@ SEXP ConsoleHistory(SEXP args) {
 		int start = count - histlen - 1; 
 		if (start < 0) start = 0;
 
-		/*
-		if( start < count ) logMessage("\n", 0, 1);
-		for (; start < count; start++ ) {
-			std::string str = "  ";
-			str += (*sv)[start].c_str();
-			str += "\n";
-			logMessage(str.c_str(), 0, 1);
-		}
-		logMessage("\n", 0, 1);
-		*/
-
 		for (; start < count; start++) {
 			hlist.push_back((*sv)[start].c_str());
 		}
