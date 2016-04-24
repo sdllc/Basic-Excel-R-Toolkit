@@ -69,35 +69,31 @@ public:
 	void * func;
 	void * env;
 
+	std::string r_name;
+
 public:
 	std::vector < SPAIR > pairs;
 
 public:
-	RFuncDesc2(void *func = 0, void *env = 0);
-	~RFuncDesc2();
-	RFuncDesc2(const RFuncDesc2 &rhs);
 
-		/*
-	RFuncDesc2( SEXP func = 0, SEXP env = 0) : func(func), env(env) {
-		if (this->func) PROTECT(this->func);
-		if (this->env) PROTECT(this->env);
-	}
-	
-	~RFuncDesc2() {
-		if (func) UNPROTECT_PTR(func);
-		if (env) UNPROTECT_PTR(env);
-	}
+	/* ctor */
+	RFuncDesc2(void * func, void * env, const char *name ) : func(func), env(env), r_name(name) {}
 
-	RFuncDesc2( const RFuncDesc2 &rhs ) {
-		this->func = rhs.func;
-		this->env = rhs.env;
-		if (this->func) PROTECT(this->func);
-		if (this->env) PROTECT(this->env);
-		for ( std::vector < SPAIR > :: const_iterator iter = rhs.pairs.begin(); iter != rhs.pairs.end(); iter++) {
+	/* dtor */
+	~RFuncDesc2() {}
+
+	/* copy constructor (for containers) */
+	RFuncDesc2(const RFuncDesc2 &rhs) {
+
+		func = rhs.func;
+		env = rhs.env;
+		r_name = rhs.r_name;
+
+		for (std::vector < SPAIR > ::const_iterator iter = rhs.pairs.begin(); iter != rhs.pairs.end(); iter++) {
 			pairs.push_back(*iter);
 		}
 	}
-	*/
+
 };
 
 typedef std::vector< RFuncDesc2 > FD2VECTOR;

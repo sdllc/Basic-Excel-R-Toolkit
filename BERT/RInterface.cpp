@@ -92,20 +92,6 @@ extern void RibbonAddUserButton(std::string &strLabel, std::string &strFunc, std
 
 ///
 
-RFuncDesc2::RFuncDesc2(void * func, void * env) : func(func), env(env) {
-}
-
-RFuncDesc2::~RFuncDesc2() {
-}
-
-RFuncDesc2::RFuncDesc2(const RFuncDesc2 &rhs) {
-	func = rhs.func;
-	env = rhs.env;
-	for (std::vector < SPAIR > ::const_iterator iter = rhs.pairs.begin(); iter != rhs.pairs.end(); iter++) {
-		pairs.push_back(*iter);
-	}
-}
-
 ///
 
 int R_ReadConsole(const char *prompt, char *buf, int len, int addtohistory)
@@ -315,13 +301,15 @@ int UpdateR(std::string &str)
 
 }
 
-//void MapFunction(const char *name, SEXP func, const char *category /* placeholder */) {
-void MapFunction( const char *name, SEXP func, SEXP env ){
+void MapFunction( const char *name, const char *r_name, SEXP func, SEXP env ){
 
 	int err = 0;
 
-//	RFUNCDESC funcdesc;
-	RFuncDesc2 funcdesc(func, env);
+	// for now, at least, do not use the function pointer.
+	// we may come back to that.  for the time being use
+	// names.
+
+	RFuncDesc2 funcdesc(0, env, r_name);
 	funcdesc.pairs.push_back(SPAIR(name, ""));
 
 	SEXP args = PROTECT(R_tryEval(Rf_lang2(Rf_install("formals"), func), R_GlobalEnv, &err));
@@ -379,8 +367,9 @@ void MapEnvironment(SEXP envir, const char *prefix /* placeholder */, const char
 	for (i = 0; i < len; i++)
 	{
 		const char *name = CHAR(STRING_ELT(lst, i));
-		SEXP func = R_tryEval(Rf_lang2(Rf_install("get"), Rf_mkString(name)), envir, &err);
-		if (func) MapFunction(name, func, envir);
+		SEXP rname = Rf_mkString(name);
+		SEXP func = R_tryEval(Rf_lang2(Rf_install("get"), rname), envir, &err);
+		if (func) MapFunction(name, name, func, envir);
 		else {
 			DebugOut("Function failed: %s, err %d\n", CHAR(STRING_ELT(lst, i)), err);
 		}
@@ -446,7 +435,7 @@ void MapFunctions()
 
 	SEXP bertenv = PROTECT(R_tryEval(Rf_lang2(Rf_install("get"), Rf_mkString("BERT")), R_GlobalEnv, &err));
 	if (bertenv) {
-		SEXP mapped = PROTECT(R_tryEval(Rf_lang2(Rf_install("get"), Rf_mkString(".FunctionMap")), bertenv, &err));
+		SEXP mapped = PROTECT(R_tryEval(Rf_lang2(Rf_install("get"), Rf_mkString(".function.map")), bertenv, &err));
 		if (mapped) {
 			SEXP list = PROTECT(R_tryEval(Rf_lang2(Rf_install("ls"), mapped), R_GlobalEnv, &err));
 			if (list) {
@@ -458,13 +447,14 @@ void MapFunctions()
 						int type = TYPEOF(elt);
 						if (type == VECSXP) {
 
-							SEXP expr = VECTOR_ELT(elt, 1);
-							SEXP env = VECTOR_ELT(elt, 2);
+							// see note in MapFunction 
 
-							if (Rf_isString(expr)) {
-								expr = R_tryEval(Rf_lang2(Rf_install("get"), expr), env, &err);
+							SEXP rname = VECTOR_ELT(elt, 1);
+							if (TYPEOF(rname) == STRSXP) {
+								SEXP env = VECTOR_ELT(elt, 2);
+								SEXP expr = R_tryEval(Rf_lang2(Rf_install("get"), rname), env, &err);
+								if (expr) MapFunction(name, CHAR(STRING_ELT(rname,0)), expr, env);
 							}
-							MapFunction(name, expr, env);
 
 						}
 						UNPROTECT(1);
@@ -1935,7 +1925,7 @@ bool RExec4(LPXLOPER12 rslt, RFuncDesc2 &func, std::vector< LPXLOPER12 > &args) 
 	}
 	*/
 
-	SEXP callee = func.func ? (SEXP)func.func : Rf_mkString(func.pairs[0].first.c_str());
+	SEXP callee = Rf_mkString(func.r_name.length() ? func.r_name.c_str() : func.pairs[0].first.c_str());
 
 	lns = PROTECT(Rf_lang5(Rf_install("do.call"), callee, sargs, R_MissingArg, envir));
 	PROTECT(ans = R_tryEval(lns, R_GlobalEnv, &errorOccurred));
@@ -1991,7 +1981,7 @@ SEXP BERTWatchFiles(SEXP list) {
 	int len = Rf_length(list);
 	std::vector< std::string > files;
 
-	// must be list of strings
+	// must be list of stringsre
 	if (len > 0 && TYPEOF(list) != STRSXP) {
 		R_WriteConsole("Invalid parameter\n", 0);
 		return Rf_ScalarLogical(0);

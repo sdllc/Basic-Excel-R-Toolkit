@@ -45,28 +45,14 @@ ReloadStartup <- function(){ .Call(.CALLBACK, .RELOAD, 0, PACKAGE=.MODULE ); };
 # explicit function registration
 #========================================================
 
-.FunctionMap <- new.env();
-
-#--------------------------------------------------------
-# map a function.  if you call this from the console
-# (as opposed to a source()d file) it will get added
-# immediately, which is handy.
-#--------------------------------------------------------
-MapFunction <- function( name, expr=name, envir=.GlobalEnv ){
-	if( missing(name)){
-		if( is.character( expr )){ name = expr; }
-		else { name = toString( substitute( expr )); }
-	}
-	.FunctionMap[[name]] <- list( name=name, expr=expr, envir=envir );
-	.Call( .CALLBACK, .REMAP_FUNCTIONS, 0, PACKAGE=.MODULE );
-}
+.function.map <- new.env();
 
 #--------------------------------------------------------
 # map all functions in an environment.  the ... arguments
 # are passed to ls(), so use pattern='X' to subset 
 # functions in the environment. 
 #--------------------------------------------------------
-MapEnvironment <- function(env, prefix, ...){
+UseEnvironment <- function(env, prefix, ...){
 	count <- 0;
 	if( missing( prefix )){ prefix = ""; }
 	else { prefix = paste0( prefix, "." ); }
@@ -74,7 +60,7 @@ MapEnvironment <- function(env, prefix, ...){
 	lapply( ls( env, ... ), function( name ){
 		if( is.function( get( name, envir=env ))){
 			fname <- paste0( prefix, name );
-			BERT$.FunctionMap[[fname]] <- list( name=fname, expr=name, envir=env );
+			assign( fname, list( name=fname, expr=name, envir=env ), envir=.function.map );
 			count <<- count + 1;
 		}
 	});
@@ -82,12 +68,20 @@ MapEnvironment <- function(env, prefix, ...){
 	return( count > 0 );
 }
 
-UnmapFunction <- function( name ){
-	.FunctionMap[[name]] <- NULL;
+#--------------------------------------------------------
+# this is an alias for UseEnvironment that prepends the
+# package: for convenience.
+#--------------------------------------------------------
+UsePackage <- function( pkg, prefix, ... ){
+	UseEnvironment( paste0( "package:", pkg ), prefix, ... );
 }
 
+#--------------------------------------------------------
+# remove mapped environment/package functions
+#--------------------------------------------------------
 ClearMappedFunctions <- function(){
-	.FunctionMap <- new.env();
+	rm( list=ls(.function.map), envir=.function.map );
+	.Call( .CALLBACK, .REMAP_FUNCTIONS, 0, PACKAGE=.MODULE );
 }
 
 #========================================================

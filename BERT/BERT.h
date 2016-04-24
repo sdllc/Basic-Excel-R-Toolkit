@@ -68,7 +68,7 @@ const char WRAP_ERR[] = "Error in eval(expr, envir, enclos) :";
 	s[0] = wcslen((WCHAR*)s + 1);	\
 	x.val.str = s; 
 
-#define MAX_FUNCTION_COUNT 500
+#define MAX_FUNCTION_COUNT 2048
 #define MAX_ARGUMENT_COUNT 16
 
 LPXLOPER12 BERT_UpdateScript(LPXLOPER12 script);
