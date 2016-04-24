@@ -47,6 +47,10 @@
 
 #include "RCOM.h"
 
+#ifndef MIN
+#define MIN(a,b) ( a < b ? a : b )
+#endif 
+
 //FDVECTOR RFunctions;
 FD2VECTOR RFunctions;
 
@@ -70,6 +74,8 @@ HANDLE muxExecR;
 
 // this doesn't need to be a lock, just a flag
 bool loadingStartupFile = false;
+
+XCHAR emptyStr[] = L"\0\0";
 
 //
 // for whatever reason these are not exposed in the embedded headers.
@@ -966,7 +972,7 @@ __inline void CPLXSXP2XLOPER(LPXLOPER12 result, Rcomplex &c)
 	// thread issues, FIXME: use TLS
 	static char sz[MAX_PATH];
 
-	// see STRSXP2XLOPER
+	// see STRSXP2XLOPER.  note that this is never 0-len
 	result->xltype = xltypeStr | xlbitDLLFree;
 
 	// FIXME: make this configurable (i/j/etc)
@@ -994,10 +1000,14 @@ __inline void STRSXP2XLOPER(LPXLOPER12 result, SEXP str)
 
 	int len = MultiByteToWideChar(CP_UTF8, 0, sz, -1, 0, 0);
 
-	result->val.str = new XCHAR[len + 1];
-	result->val.str[0] = len == 0 ? 0 : len - 1;
-
-	MultiByteToWideChar(CP_UTF8, 0, sz, -1, &(result->val.str[1]), len);
+	if (len == 0) {
+		result->val.str = emptyStr;
+	}
+	else {
+		result->val.str = new XCHAR[len + 1];
+		result->val.str[0] = len == 0 ? 0 : len - 1;
+		MultiByteToWideChar(CP_UTF8, 0, sz, -1, &(result->val.str[1]), len);
+	}
 
 }
 
@@ -1285,400 +1295,244 @@ bool CheckExcelRef(LPXLOPER12 rslt, SEXP s)
 	return true;
 }
 
-void ParseResult(LPXLOPER12 rslt, SEXP ans)
-{
-	// there are a couple of different return semantics 
-	// that we need to handle here.
+/**
+ * reimplementation of translation
+ */
+void SEXP2XLOPER(LPXLOPER12 xloper, SEXP sexp, bool inner = false, int r_offset = 0) {
 
-	// simple types (scalars) are returned as arrays of 
-	// a particular type. 
+	// we want to fill up the space, not showing errors 
+	// if the data is smaller than the excel range.  
+	// the only way to do that is with strings ("") -- 
+	// the types nil and missing don't do it 
+	
+	int xlrows = 1;
+	int xlcols = 1;
+	int xllen = 1;
 
-	// lists are the same thing, except they hold more 
-	// than one value.  in this case, return values in a 
-	// single column.
+	if (!inner) {
 
-	// matrices are the same thing again, except they have
-	// defined row and column counts.  
+		XLOPER12 xlrslt;
+		Excel12(xlfCaller, &xlrslt, 0, 0);
+		if (xlrslt.xltype == xltypeSRef) {
+			xlrows = xlrslt.val.sref.ref.rwLast - xlrslt.val.sref.ref.rwFirst + 1;
+			xlcols = xlrslt.val.sref.ref.colLast - xlrslt.val.sref.ref.colFirst + 1;
+		}
+		Excel12(xlFree, 0, 1, (LPXLOPER12)&xlrslt);
 
-	// and finally vectors of vectors; these are arrays
-	// of the generic type (VECSXP) of which each entry 
-	// is itself an array.  this is the type used by
-	// data frames, but it's also used by things which
-	// are not data frames.
+		xllen = xlrows * xlcols;
 
-	// FOR NOW, we are not returning row names / column 
-	// names for things which are not data frames.
+		if (xllen > 1) {
+			xloper->xltype = xltypeMulti;
+			xloper->val.array.rows = xlrows;
+			xloper->val.array.columns = xlcols;
+			xloper->val.array.lparray = new XLOPER12[xlrows * xlcols];
+			for (int i = 0; i < xllen; i++) {
+				xloper->val.array.lparray[i].xltype = xltypeStr | xlbitDLLFree;
+				xloper->val.array.lparray[i].val.str = emptyStr;
+			}
+		}
+		
+	}
 
-	if (!ans)
-	{
-		rslt->xltype = xltypeErr;
-		rslt->val.err = xlerrValue;
+	// always do this (unless it's an array)
+
+	if (xllen == 1) {
+		xloper->xltype = xltypeNil;
+		xloper->val.num = 0;
+	}
+
+	LPXLOPER12 firstRef = xloper->xltype == xltypeMulti ? xloper->val.array.lparray : xloper;
+	
+	// check early and return
+
+	if (!sexp || Rf_isNull( sexp )) {
+		firstRef->xltype = xltypeErr;
+		firstRef->val.err = xlerrNull;
 		return;
 	}
 
-	int len = Rf_length(ans);
-	int type = TYPEOF(ans);
+	// len, type
 
-	// FIXME: there's starting to be a lot of repeated code here...
+	int len = Rf_length(sexp);
+	int type = TYPEOF(sexp);
 
-	if (Rf_isFrame(ans))
-	{
+	int n_rows = len;
+	int n_cols = 1;
+
+	// can't handle these in Excel; so print the name 
+	// to a string and return that, should indicate to 
+	// user what is wrong
+
+	if (Rf_isEnvironment(sexp)) {
+
 		int err;
-		int nc = len + 1; 
-		SEXP s = VECTOR_ELT(ans, 0);
-		int nr = Rf_length(s) + 1;
-
-		// data frames always have row, column names
-
-		rslt->xltype = xltypeMulti;
-		rslt->val.array.rows = nr;
-		rslt->val.array.columns = nc;
-		rslt->val.array.lparray = new XLOPER12[nr*nc];
-
-		// init or excel will show errors for ALL elements
-		// include a "" for the top-left corner
-
-		rslt->val.array.lparray[0].xltype = xltypeStr;
-		rslt->val.array.lparray[0].val.str = new XCHAR[1];
-		rslt->val.array.lparray[0].val.str[0] = 0;
-
-		for (int i = 1; i < nr*nc; i++) rslt->val.array.lparray[i].xltype = xltypeMissing;
-		
-		// column (member) names
-
-		SEXP cn = PROTECT(R_tryEval(Rf_lang2(R_NamesSymbol, ans), R_GlobalEnv, &err));
-		if (cn)
-		{
-			len = Rf_length(cn);
-			type = TYPEOF(cn);
-
-			if (len != nc-1)
-			{
-				DebugOut("** Len != NC-1\n");
-			}
-
-			for (int c = 0; c < len; c++)
-			{
-				int idx = c + 1;
-				switch (type)
-				{
-				case INTSXP:	//  13	  /* integer vectors */
-					if (!ISNA((INTEGER(cn))[c]))
-					{
-						rslt->val.array.lparray[idx].xltype = xltypeInt;
-						rslt->val.array.lparray[idx].val.w = (INTEGER(cn))[c];
-					}
-					break;
-				case REALSXP:	//  14	  /* real variables */  
-					rslt->val.array.lparray[idx].xltype = xltypeNum;
-					rslt->val.array.lparray[idx].val.num = (REAL(cn))[c];
-					break;
-				case STRSXP:	//  16	  /* string vectors - legal? */ 
-					STRSXP2XLOPER(&(rslt->val.array.lparray[idx]), STRING_ELT(cn, c));
-					break;
-				case CPLXSXP:	//	15	  /* complex variables */
-					CPLXSXP2XLOPER(&(rslt->val.array.lparray[idx]), (COMPLEX(cn))[c]);
-					break;
-				default:
-					DebugOut("** Unexpected type in data frame (col) names: %d\n", type);
-					break;
-				}
-			}
-
+		SEXP rslt = R_tryEval(Rf_lang2(Rf_install("capture.output"), Rf_lang2(Rf_install("print"), sexp )), R_GlobalEnv, &err);
+		if (!err) STRSXP2XLOPER(firstRef, rslt);
+		else {
+			firstRef->xltype = xltypeErr;
+			firstRef->val.err = xlerrValue;
 		}
-		UNPROTECT(1);
-
-		// get row names, we'll stick them in column 0
-
-		SEXP rn = PROTECT(R_tryEval(Rf_lang2( R_RowNamesSymbol, ans), R_GlobalEnv, &err));
-		if (rn)
-		{
-			len = Rf_length(rn);
-			type = TYPEOF(rn);
-
-			if (len != nr-1)
-			{
-				DebugOut("** Len != NR-1\n");
-			}
-			for (int r = 0; r < len; r++)
-			{
-				int idx = (r+1) * nc + 0;
-				switch (type)
-				{
-				case INTSXP:	//  13	  /* integer vectors */
-					rslt->val.array.lparray[idx].xltype = xltypeInt;
-					rslt->val.array.lparray[idx].val.w = (INTEGER(rn))[r];
-					break;
-				case STRSXP:	//  16	  /* string vectors - legal? */ 
-					STRSXP2XLOPER(&(rslt->val.array.lparray[idx]), STRING_ELT(rn, r));
-					break;
-				case CPLXSXP:	//	15	  /* complex variables */
-					CPLXSXP2XLOPER(&(rslt->val.array.lparray[idx]), (COMPLEX(rn))[r]);
-					break;
-
-				default:
-					DebugOut( "** Unexpected type in data frame row names: %d\n", type);
-					break;
-				}
-			}
-		}
-		UNPROTECT(1);
-
-		for (int i = 0; i < nc - 1; i++) 
-		{
-			s = VECTOR_ELT(ans, i);
-			type = TYPEOF(s);
-			len = Rf_length(s);
-
-			if (len != nr)
-			{
-				DebugOut("** Len != NR\n");
-			}
-
-			for (int r = 0; r < len; r++)
-			{
-				// offset for column names, row names
-				int idx = (r+1) * nc + i + 1; 
-				ParseResult(&(rslt->val.array.lparray[idx]), VECTOR_ELT(s, r));
-			}
-
-		}
+		return;
 
 	}
-	else if (type == VECSXP)
+
+	// check 0-len here, otherwise the environment code 
+	// above won't run if environment is empty
+
+	if (len == 0) return;
+
+	// matrices have column counts, but items are in a 
+	// single vector.  frames have columns and the length()
+	// returned by a frame is the number of columns.  this
+	// is a little problematic because excel is row-dominant
+	// -- could we transpose?
+
+	if (Rf_isMatrix(sexp)) {
+		n_rows = Rf_nrows(sexp);
+		n_cols = Rf_ncols(sexp);
+	}
+	
+	n_rows = MIN(n_rows, xlrows);
+	n_cols = MIN(n_cols, xlcols);
+
+	int index = 0;
+
+	if (Rf_isLogical(sexp)) {
+		for (int r = 0; r < n_rows && r < xlrows; r++) {
+			for (int c = 0; c < n_cols && c < xlcols; c++) {
+				LPXLOPER12 ref = firstRef + (r * xlcols + c);
+				int lgl = (LOGICAL(sexp))[c * n_rows + r + r_offset];
+				if (lgl== NA_LOGICAL) {
+					ref->xltype = xltypeErr;
+					ref->val.err = xlerrNA;
+				}
+				else {
+					ref->xltype = xltypeBool;
+					ref->val.xbool = lgl ? true : false;
+				}
+			}
+		}
+	}
+	else if (Rf_isComplex(sexp)) {
+		for (int r = 0; r < n_rows && r < xlrows; r++) {
+			for (int c = 0; c < n_cols && c < xlcols; c++) {
+				LPXLOPER12 ref = firstRef + (r * xlcols + c);
+				Rcomplex cpx = (COMPLEX(sexp))[c * n_rows + r + r_offset];
+				CPLXSXP2XLOPER(ref, cpx);
+			}
+		}
+	}
+	else if (Rf_isInteger(sexp)) 
 	{
-		// this could be a vector-of-vectors, or it could 
-		// be a matrix.  for a matrix, we can only handle
-		// two dimensions.
+		for (int r = 0; r < n_rows && r < xlrows; r++) {
+			for (int c = 0; c < n_cols && c < xlcols; c++) {
 
-		int nc = len, nr = 0;
+				LPXLOPER12 ref = firstRef + (r * xlcols + c);
+				int val = (INTEGER(sexp))[c * n_rows + r + r_offset];
 
-		if (Rf_isMatrix(ans))
-		{
-			nr = Rf_nrows(ans);
-			nc = Rf_ncols(ans);
-
-			rslt->xltype = xltypeMulti;
-			rslt->val.array.rows = nr;
-			rslt->val.array.columns = nc;
-			rslt->val.array.lparray = new XLOPER12[nr*nc];
-
-			int idx = 0;
-			for (int i = 0; i < nc; i++)
-			{
-				for (int j = 0; j < nr; j++)
-				{
-					SEXP v = VECTOR_ELT(ans, idx);
-					type = TYPEOF(v);
-
-					switch (type)
-					{
-					case INTSXP:	//  13	  /* integer vectors */
-
-						// this is not working as expected...
-						if (!ISNA((INTEGER(v))[0]) && (INTEGER(v))[0] != NA_INTEGER )
-						{
-							rslt->val.array.lparray[j*nc + i].xltype = xltypeInt;
-							rslt->val.array.lparray[j*nc + i].val.w = (INTEGER(v))[0];
-						}
-						else
-						{
-							rslt->val.array.lparray[j*nc + i].xltype = xltypeStr;
-							rslt->val.array.lparray[j*nc + i].val.str = new XCHAR[1];
-							rslt->val.array.lparray[j*nc + i].val.str[0] = 0;
-						}
-						break;
-
-					case REALSXP:	//  14	  /* real variables */  
-						rslt->val.array.lparray[j*nc + i].xltype = xltypeNum;
-						rslt->val.array.lparray[j*nc + i].val.num = (REAL(v))[0];
-						break;
-
-					case STRSXP:	//  16	  /* string vectors */ 
-						STRSXP2XLOPER(&(rslt->val.array.lparray[j*nc + i]), STRING_ELT(v, 0));
-						// ParseResult(&(rslt->val.array.lparray[j*nc + i]), STRING_ELT(ans, idx)); // this is lazy
-						break;
-
-					case CPLXSXP:	//	15	  /* complex variables */
-						CPLXSXP2XLOPER(&(rslt->val.array.lparray[j*nc + i]), (COMPLEX(v))[0]);
-						break;
-
-					default:
-						DebugOut("Unexpected type in list: %d\n", type);
-						break;
-
-					}
-
-					idx++;
+				if (val == NA_INTEGER) {
+					ref->xltype = xltypeErr;
+					ref->val.err = xlerrNA;
 				}
-			}
-
-		}
-		else // VofV?
-		{
-			// need to figure out the max length first
-
-			for (int c = 0; c < nc; c++)
-			{
-				SEXP s = VECTOR_ELT(ans, c);
-				int r = Rf_length(s);
-				if (r > nr) nr = r;
-			}
-
-			rslt->xltype = xltypeMulti;
-			rslt->val.array.rows = nr;
-			rslt->val.array.columns = nc;
-			rslt->val.array.lparray = new XLOPER12[nr*nc];
-
-			// in the event there are any holes (sparse)
-
-			for (int i = 0; i < nr*nc; i++) rslt->val.array.lparray[i].xltype = xltypeMissing;
-
-			// the rest is just like a data frame but without headers
-
-			for (int c = 0; c < nc; c++)
-			{
-				SEXP v = VECTOR_ELT(ans, c);
-				int vlen = Rf_length(v);
-				type = TYPEOF(v);
-				for (int r = 0; r < vlen; r++)
-				{
-					int idx = r * nc + c;
-					switch (type)
-					{
-					case INTSXP:	//  13	  /* integer vectors */
-						rslt->val.array.lparray[idx].xltype = xltypeInt;
-						rslt->val.array.lparray[idx].val.w = (INTEGER(v))[r];
-						break;
-					case REALSXP:	//  14	  /* real variables */  
-						rslt->val.array.lparray[idx].xltype = xltypeNum;
-						rslt->val.array.lparray[idx].val.num = (REAL(v))[r];
-						break;
-					case STRSXP:	//  16	  /* string vectors - legal? */ 
-						STRSXP2XLOPER(&(rslt->val.array.lparray[idx]), STRING_ELT(v, r));
-						break;
-					case CPLXSXP:	//	15	  /* complex variables */
-						CPLXSXP2XLOPER(&(rslt->val.array.lparray[idx]), (COMPLEX(v))[r]);
-						break;
-					default:
-						DebugOut("** Unexpected type in vector/vector: %d\n", type);
-						break;
-					}
+				else {
+					ref->xltype = xltypeInt;
+					ref->val.w = val;
 				}
 			}
 		}
 	}
-	else if (len > 1)
+	else if (isReal(sexp) || Rf_isNumber(sexp))
 	{
-		// for normal vector, use rows
+		for (int r = 0; r < n_rows && r < xlrows; r++) {
+			for (int c = 0; c < n_cols && c < xlcols; c++) {
 
-		int nc = 1, nr = len;
+				LPXLOPER12 ref = firstRef + (r * xlcols + c);
+				double dbl = (REAL(sexp))[c * n_rows + r + r_offset];
 
-		// for matrix, guaranteed to be 2 dimensions and we 
-		// can use the convenient functions to get r/c
-
-		if (Rf_isMatrix(ans))
-		{
-			nc = Rf_ncols(ans);
-			nr = Rf_nrows(ans);
-		}
-
-		rslt->xltype = xltypeMulti;
-		rslt->val.array.rows = nr;
-		rslt->val.array.columns = nc;
-		rslt->val.array.lparray = new XLOPER12[nr*nc];
-		
-		// FIXME: LOOP ON THE INSIDE (CHECK OPTIM)
-
-		int idx = 0;
-		for (int i = 0; i < nc; i++)
-		{
-			for (int j = 0; j < nr; j++)
-			{
-				switch (type)
-				{
-				case INTSXP:	//  13	  /* integer vectors */
-					rslt->val.array.lparray[j*nc + i].xltype = xltypeInt;
-					rslt->val.array.lparray[j*nc + i].val.w = (INTEGER(ans))[idx];
-					break;
-
-				case REALSXP:	//  14	  /* real variables */  
-
-					if (ISNA( (REAL(ans))[idx] )) {
-						rslt->val.array.lparray[j*nc + i].xltype = xltypeStr;
-						rslt->val.array.lparray[j*nc + i].val.str = new XCHAR[1];
-						rslt->val.array.lparray[j*nc + i].val.str[0] = 0;
-					}
-					else {
-						rslt->val.array.lparray[j*nc + i].xltype = xltypeNum;
-						rslt->val.array.lparray[j*nc + i].val.num = (REAL(ans))[idx];
-					}
-					break;
-
-				case STRSXP:	//  16	  /* string vectors */ 
-					STRSXP2XLOPER(&(rslt->val.array.lparray[j*nc + i]), STRING_ELT(ans, idx));
-					// ParseResult(&(rslt->val.array.lparray[j*nc + i]), STRING_ELT(ans, idx)); // this is lazy
-					break;
-
-				case CPLXSXP:	//	15	  /* complex variables */
-					CPLXSXP2XLOPER(&(rslt->val.array.lparray[j*nc + i]), (COMPLEX(ans))[idx]);
-					break;
-
-				default:
-					DebugOut("Unexpected type in list: %d\n", type);
-					break;
-
+				if (dbl == NA_REAL ) {
+					ref->xltype = xltypeErr;
+					ref->val.err = xlerrNA;
 				}
-
-				idx++;
+				else {
+					ref->xltype = xltypeNum;
+					ref->val.num = dbl;
+				}
 			}
 		}
 	}
-	else
-	{
-		// single value
-
-		if (isLogical(ans)) 
-		{
-			// it seems wasteful having this first, 
-			// but I think one of the other types is 
-			// intercepting it.  figure out how to do
-			// tighter checks and then move this down
-			// so real->integer->string->logical->NA->?
-
-			// this is weird, but NA seems to be a logical
-			// with a particular value.
-
-			int lgl = Rf_asLogical(ans);
-			if (lgl == NA_LOGICAL)
-			{
-				rslt->xltype = xltypeMissing;
+	else if (isString(sexp)) {
+		for (int r = 0; r < n_rows && r < xlrows; r++) {
+			for (int c = 0; c < n_cols && c < xlcols; c++) {
+				LPXLOPER12 ref = firstRef + (r * xlcols + c);
+				SEXP strsxp = STRING_ELT(sexp, c * n_rows + r + r_offset);
+				if (strsxp == NA_STRING) {
+					ref->xltype = xltypeErr;
+					ref->val.err = xlerrNA;
+				}
+				else {
+					STRSXP2XLOPER(ref, strsxp);
+				}
 			}
-			else
-			{
-				rslt->xltype = xltypeBool;
-				rslt->val.xbool = lgl ? true : false;
-			}
-		}
-		else if (Rf_isComplex(ans))
-		{
-			CPLXSXP2XLOPER(rslt, *(COMPLEX(ans)));
-		}
-		else if (Rf_isInteger(ans))
-		{
-			rslt->xltype = xltypeInt;
-			rslt->val.w = Rf_asInteger(ans);
-		}
-		else if (isReal(ans) || Rf_isNumber(ans))
-		{
-			rslt->xltype = xltypeNum;
-			rslt->val.num = Rf_asReal(ans);
-		}
-		else if (isString(ans))
-		{
-			STRSXP2XLOPER(rslt, ans);
 		}
 	}
+	else if (type == VECSXP) {
+
+		if (Rf_isFrame(sexp)) {
+
+			// special handling for frames because the counts work 
+			// differently, and because we deref lists.  also we include
+			// row, column names for frames but not for anything else
+			// (even if they have them -- FIXME?)
+
+			n_cols = len;
+
+			// data
+
+			for (int c = 0; c < n_cols && c < xlcols-1; c++) {
+				SEXP sexp_col = PROTECT(VECTOR_ELT(sexp, c));
+				n_rows = Rf_length(sexp_col);
+				for (int r = 0; r < n_rows && r < xlrows-1; r++) {
+					LPXLOPER12 ref = firstRef + ((r+1) * xlcols + (c+1));
+					SEXP2XLOPER(ref, sexp_col, true, r);
+				}
+				UNPROTECT(1);
+			}
+
+			// names
+
+			SEXP rownames = getAttrib(sexp, R_RowNamesSymbol);
+			if (rownames && TYPEOF(rownames) != 0) {
+				for (int r = 0; r < n_rows && r < xlrows - 1; r++) {
+					LPXLOPER12 ref = firstRef + ((r + 1) * xlcols);
+					SEXP2XLOPER(ref, rownames, true, r);
+				}
+			}
+
+			SEXP colnames = getAttrib(sexp, R_NamesSymbol);
+			if (colnames && TYPEOF(colnames) != 0) {
+				for (int c = 0; c < n_cols && c < xlcols - 1; c++) {
+					LPXLOPER12 ref = firstRef + (c + 1);
+					SEXP2XLOPER(ref, colnames, true, c);
+				}
+			}
+		}
+		else {
+			for (int r = 0; r < n_rows && r < xlrows; r++) {
+				for (int c = 0; c < n_cols && c < xlcols; c++) {
+					LPXLOPER12 ref = firstRef + (r * xlcols + c);
+					SEXP vector_elt = VECTOR_ELT(sexp, c * n_rows + r + r_offset);
+					SEXP2XLOPER(ref, vector_elt, true);
+				}
+			}
+		}
+	}
+	else {
+
+		firstRef->xltype = xltypeErr;
+		firstRef->val.err = xlerrValue;
+
+	}
+
 }
 
 LPXLOPER12 BERT_RExec(LPXLOPER12 code)
@@ -1727,7 +1581,7 @@ LPXLOPER12 BERT_RExec(LPXLOPER12 code)
 		}
 
 		// if (sz) 
-		ParseResult(&result, ans);
+		SEXP2XLOPER(&result, ans);
 		delete[] sz;
 
 	}
@@ -2055,7 +1909,7 @@ bool RExec4(LPXLOPER12 rslt, RFuncDesc2 &func, std::vector< LPXLOPER12 > &args) 
 	lns = PROTECT(Rf_lang5(Rf_install("do.call"), callee, sargs, R_MissingArg, envir));
 	PROTECT(ans = R_tryEval(lns, R_GlobalEnv, &errorOccurred));
 
-	ParseResult(rslt, ans);
+	SEXP2XLOPER(rslt, ans);
 
 	UNPROTECT(3);
 	 ::ReleaseMutex(muxExecR);
@@ -2093,7 +1947,7 @@ bool RExec2(LPXLOPER12 rslt, std::string &funcname, std::vector< LPXLOPER12 > &a
 	lns = PROTECT(Rf_lang5(Rf_install("do.call"), Rf_mkString(funcname.c_str()), sargs, R_MissingArg, envir));
 	PROTECT(ans = R_tryEval(lns, R_GlobalEnv, &errorOccurred));
 
-	ParseResult(rslt, ans);
+	SEXP2XLOPER(rslt, ans);
 
 	UNPROTECT(3);
 	 ::ReleaseMutex(muxExecR);
@@ -2154,11 +2008,11 @@ SEXP ExcelCall(SEXP cmd, SEXP data)
 			{
 				SEXP tmp = VECTOR_ELT(data, i);
 				if (!CheckExcelRef(xdata[i], tmp))
-					ParseResult(xdata[i], tmp);
+					SEXP2XLOPER(xdata[i], tmp);
 			}
 			break;
 		case STRSXP:
-			ParseResult(xdata[i], STRING_ELT(data, i));
+			SEXP2XLOPER(xdata[i], STRING_ELT(data, i));
 			break;
 		case INTSXP:
 			xdata[i]->xltype = xltypeInt;

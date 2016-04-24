@@ -50,8 +50,10 @@ void WINAPI xlAutoFree12(LPXLOPER12 pxFree)
 	}
 	else if (pxFree->xltype == (xltypeStr | xlbitDLLFree))
 	{
-		// NOTE: ALWAYS NEW XCHAR[] FOR STRINGS
-		delete[] pxFree->val.str;
+		// always new XCHAR[] for strings, except for zero-length strings
+		// which should use static fields somewhere
+
+		if( pxFree->val.str[0] != 0 ) delete[] pxFree->val.str;
 	}
 	else
 	{
