@@ -449,8 +449,10 @@ Activate.Sheet <- function( name ){
 
 #
 # now attach to add them to the console search path
+# (UPDATE: only once, in case this file is reloaded)
 #
 
-suppressMessages(attach( BERT.Excel ));
-
+if( !any(search() == "BERT.Excel")){
+	suppressMessages(attach( BERT.Excel ));
+}
 
