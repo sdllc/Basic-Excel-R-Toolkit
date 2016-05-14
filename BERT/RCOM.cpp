@@ -33,7 +33,9 @@
 #include <stdio.h>
 #include <Rversion.h>
 
+// hash map deprecated?
 #include <hash_map>
+#include <unordered_map>
 
 // #define USE_RINTERNALS
 
@@ -51,11 +53,6 @@
 
 #include "RCOM.h"
 
-#ifdef _DEBUG
-
-static int objectRefCtr = 0;
-
-#endif
 
 void STRSXP2BSTR(CComBSTR &bstr, SEXP s) {
 
@@ -92,20 +89,33 @@ __inline LPDISPATCH SEXP2Ptr(SEXP p) {
 
 	ULONG_PTR up = 0;
 	int type = TYPEOF(p);
-	if (type == EXTPTRSXP) up = (ULONG_PTR)(R_ExternalPtrAddr(p));
+	if (type == EXTPTRSXP) {
+		up = (ULONG_PTR)(R_ExternalPtrAddr(p));
+	}
+
+#ifdef _DEBUG
+	DebugOut("[*] SEXP to pointer: 0x%I64X\n", up);
+#endif // #ifdef _DEBUG
+
 	return (LPDISPATCH)up;
 }
 
 void releaseMappedPtr(SEXP ptr) {
-	void* p = R_ExternalPtrAddr(ptr);
+	
+	ULONG_PTR p = (ULONG_PTR)R_ExternalPtrAddr(ptr);
+
 	if (p) {
 
+		int refcount = ((LPUNKNOWN)p)->Release();
+
 #ifdef _DEBUG
-		objectRefCtr--;
-		DebugOut("[-] Object ref counter: %d\n", objectRefCtr);
+		DebugOut("[-] Release pointer (%d): 0x%I64X\n", refcount, p);
 #endif
 
-		((LPDISPATCH)p)->Release();
+//		((LPUNKNOWN)p)->Release()
+
+		//((LPDISPATCH)p)->Release();
+		//removeStoredPointer(pp);
 	}
 }
 
@@ -157,15 +167,17 @@ bool getCoClassForDispatch(ITypeInfo **ppCoClass, IDispatch *pdisp)
 								{
 									CComBSTR bstr;
 									TYPEATTR *pTatt2 = nullptr;
-									CComPtr<IUnknown> punk = 0;
+									// CComPtr<IUnknown> punk = 0;
+									LPUNKNOWN lpunk = 0;
 
 									hr = spTypeInfo3->GetTypeAttr(&pTatt2);
-									if (SUCCEEDED(hr)) hr = pdisp->QueryInterface(pTatt2->guid, (void**)&punk);
+									if (SUCCEEDED(hr)) hr = pdisp->QueryInterface(pTatt2->guid, (void**)&lpunk);
 									if (SUCCEEDED(hr))
 									{
 										*ppCoClass = spTypeInfo2;
-										// ... (*ppCoClass)->AddRef();
+										(*ppCoClass)->AddRef();
 										matchIface = true;
+										lpunk->Release();
 									}
 
 									if (pTatt2) spTypeInfo3->ReleaseTypeAttr(pTatt2);
@@ -432,7 +444,7 @@ SEXP wrapDispatch(ULONG_PTR pdisp, bool enums) {
 	if (getObjectInterface(bstrIface, (LPDISPATCH)pdisp)) {
 		mapObject((LPDISPATCH)pdisp, mrlist, bstrIface);
 
-		CComPtr<ITypeInfo> pCoClass;
+		ITypeInfo *pCoClass = 0;
 		if (getCoClassForDispatch(&pCoClass, (LPDISPATCH)pdisp)) {
 
 			CComBSTR bstrName;
@@ -448,6 +460,9 @@ SEXP wrapDispatch(ULONG_PTR pdisp, bool enums) {
 			else {
 				DebugOut(" * Coclass failed (2)\n");
 			}
+
+			pCoClass->Release();
+
 		}
 		else {
 			DebugOut(" * Coclass failed (1)\n");
@@ -469,14 +484,16 @@ SEXP wrapDispatch(ULONG_PTR pdisp, bool enums) {
 		PROTECT(result = R_tryEval(Rf_lang5(Rf_install("do.call"), Rf_mkString(".WrapDispatch"), wdargs, R_MissingArg, env), env, &err));
 		if (result) {
 
+			// install pointer.  refcount should be dropped for !debug builds
+
+			int refcount = ((LPDISPATCH)pdisp)->AddRef();
+			SEXP rptr = R_MakeExternalPtr((void*)pdisp, install("COM dispatch pointer"), R_NilValue);
+
 #ifdef _DEBUG
-			objectRefCtr++;
-			DebugOut("[+] Object ref counter: %d\n", objectRefCtr);
+			DebugOut("[+] Map pointer (%d): 0x%I64X\n", refcount, pdisp);
 #endif
 
-			// install pointer
-			((LPDISPATCH)pdisp)->AddRef();
-			SEXP rptr = R_MakeExternalPtr((void*)pdisp, install("COM dispatch pointer"), R_NilValue);
+
 			R_RegisterCFinalizerEx(rptr, (R_CFinalizer_t)releaseMappedPtr, TRUE);
 			Rf_defineVar(Rf_install(".p"), rptr, result);
 
@@ -1044,7 +1061,7 @@ SEXP invokeFunc(std::string name, LPDISPATCH pdisp, SEXP args)
 									else {
 
 										int tx = TYPEOF(arg);
-										DebugOut("Unhandled argument type; tx = %d\n", tx);
+										DebugOut("Unhandled argument type: index %d, type %d\n", i, tx);
 
 										// equivalent to "missing"
 										pcv[k] = CComVariant(DISP_E_PARAMNOTFOUND, VT_ERROR);
@@ -1099,7 +1116,7 @@ SEXP invokeFunc(std::string name, LPDISPATCH pdisp, SEXP args)
 			spTypeInfo->ReleaseTypeAttr(pTatt);
 		}
 	}
-
+	
 	if (errmsg.length()) Rf_error(errmsg.c_str());
 	return result ? result : R_NilValue;
 
