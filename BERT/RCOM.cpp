@@ -167,7 +167,6 @@ bool getCoClassForDispatch(ITypeInfo **ppCoClass, IDispatch *pdisp)
 								{
 									CComBSTR bstr;
 									TYPEATTR *pTatt2 = nullptr;
-									// CComPtr<IUnknown> punk = 0;
 									LPUNKNOWN lpunk = 0;
 
 									hr = spTypeInfo3->GetTypeAttr(&pTatt2);
@@ -175,7 +174,8 @@ bool getCoClassForDispatch(ITypeInfo **ppCoClass, IDispatch *pdisp)
 									if (SUCCEEDED(hr))
 									{
 										*ppCoClass = spTypeInfo2;
-										(*ppCoClass)->AddRef();
+										int refcount = (*ppCoClass)->AddRef();
+										DebugOut("RC on coClass addRef: %d\n", refcount);
 										matchIface = true;
 										lpunk->Release();
 									}
@@ -461,7 +461,8 @@ SEXP wrapDispatch(ULONG_PTR pdisp, bool enums) {
 				DebugOut(" * Coclass failed (2)\n");
 			}
 
-			pCoClass->Release();
+			int refcount = pCoClass->Release();
+			DebugOut("RC on coClass release: %d\n", refcount);
 
 		}
 		else {
