@@ -307,11 +307,11 @@ rc.options( custom.completer= function (.CompletionEnv)
 			p <- environment();
 			n <- unlist( strsplit( name, "[^\\w\\.]", F, T ));
 			 while( length( n ) > 1 ){
-				if( !exists( n[1], where=p )) return( NULL );
+				if( n == "" || !exists( n[1], where=p )) return( NULL );
 				p <- get( n[1], envir=p );
 				n <- n[-1];
 			}
-			if( !exists( n[1], where=p )) return( NULL );
+			if( n == "" || !exists( n[1], where=p )) return( NULL );
 			list( name=n[1], fun=get( n[1], envir=p ));
 		}
 	
