@@ -4,7 +4,7 @@
 # R functions exposed in Excel.  These are just some simple 
 # examples.  See the page
 #
-# http://bert-org/example-functions
+# http://bert-toolkit.org/example-functions
 #
 # for more examples.  You can add functions directly to this
 # file, but it's probably better to put them in a separate file
@@ -76,4 +76,7 @@ source( "ExcelFunctions.R" );
 # BERT$ReloadStartup, but you can pass a function to run any arbitrary
 # R code when the file changes.
 
-# WatchFile( paste( BERT$HOME, "\\functions.R", sep=""))
+# BERT$WatchFile( file.path( BERT$HOME, "functions.R" ))
+
+
+

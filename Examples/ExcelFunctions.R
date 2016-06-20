@@ -11,6 +11,10 @@
 # available in the console but don't get added as Excel functions.
 #
 
+if( any(search() == "BERT.Excel")){
+	suppressMessages(detach( BERT.Excel ));
+}
+
 BERT.Excel <- new.env();
 with( BERT.Excel, {
 
@@ -449,10 +453,7 @@ Activate.Sheet <- function( name ){
 
 #
 # now attach to add them to the console search path
-# (UPDATE: only once, in case this file is reloaded)
 #
 
-if( !any(search() == "BERT.Excel")){
-	suppressMessages(attach( BERT.Excel ));
-}
+suppressMessages(attach( BERT.Excel ));
 

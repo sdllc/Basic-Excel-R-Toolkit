@@ -1285,17 +1285,28 @@ bool CheckExcelRef(LPXLOPER12 rslt, SEXP s)
 /**
  * reimplementation of translation
  */
-void SEXP2XLOPER(LPXLOPER12 xloper, SEXP sexp, bool inner = false, int r_offset = 0) {
+void SEXP2XLOPER(LPXLOPER12 xloper, SEXP sexp, bool inner = false, int r_offset = 0, bool api_call = false ) {
 
 	// we want to fill up the space, not showing errors if the data 
 	// is smaller than the excel range.  the only way to do that is 
 	// with strings ("") -- the types nil and missing don't do it 
 	
+	// NOTE: while this is good for returning values from functions, it's
+	// not good for Excel API functions from the shell, which also use this 
+	// function.  in fact it breaks them completely.  so need a flag to repair...
+
+	// (1) API calls should set the "inner" flag to prevent the "caller" lookup.
+	//     both because it's time-consuming and because it won't work properly.
+	//     actually, use a separate flag...
+	//
+	// (2) API calls should pass explicit range sizes...
+	 
+
 	int xlrows = 1;
 	int xlcols = 1;
 	int xllen = 1;
 
-	if (!inner) {
+	if (!inner && !api_call ) {
 
 		XLOPER12 xlrslt;
 		Excel12(xlfCaller, &xlrslt, 0, 0);
@@ -1378,9 +1389,36 @@ void SEXP2XLOPER(LPXLOPER12 xloper, SEXP sexp, bool inner = false, int r_offset 
 		n_cols = Rf_ncols(sexp);
 	}
 	
+	if (api_call) {
+
+		if (Rf_isFrame(sexp)) {
+			n_cols = len + 1;
+			SEXP sexp_col = PROTECT(VECTOR_ELT(sexp, 0));
+			n_rows = Rf_length(sexp_col) + 1;
+			UNPROTECT(1);
+		};
+
+		xlrows = n_rows;
+		xlcols = n_cols;
+		xllen = xlrows * xlcols;
+
+		if (xllen > 1) {
+			xloper->xltype = xltypeMulti;
+			xloper->val.array.rows = xlrows;
+			xloper->val.array.columns = xlcols;
+			xloper->val.array.lparray = new XLOPER12[xlrows * xlcols];
+			for (int i = 0; i < xllen; i++) {
+				xloper->val.array.lparray[i].xltype = xltypeStr | xlbitDLLFree;
+				xloper->val.array.lparray[i].val.str = emptyStr;
+			}
+		}
+		firstRef = xloper->xltype == xltypeMulti ? xloper->val.array.lparray : xloper;
+
+	}
+
 	n_rows = MIN(n_rows, xlrows);
 	n_cols = MIN(n_cols, xlcols);
-
+	
 	int index = 0;
 
 	if (Rf_isLogical(sexp)) {
@@ -2029,11 +2067,11 @@ SEXP ExcelCall(SEXP cmd, SEXP data)
 			{
 				SEXP tmp = VECTOR_ELT(data, i);
 				if (!CheckExcelRef(xdata[i], tmp))
-					SEXP2XLOPER(xdata[i], tmp);
+					SEXP2XLOPER(xdata[i], tmp, false, 0, true );
 			}
 			break;
 		case STRSXP:
-			SEXP2XLOPER(xdata[i], STRING_ELT(data, i));
+			SEXP2XLOPER(xdata[i], STRING_ELT(data, i), false, 0, true);
 			break;
 		case INTSXP:
 			xdata[i]->xltype = xltypeInt;
