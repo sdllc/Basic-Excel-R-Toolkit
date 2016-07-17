@@ -54,7 +54,7 @@ Text.Ref <- function( reference.text ) {
 		# in R1C1 notation, try again
 		ref <- BERT$.Excel( 147, list( reference.text, FALSE ));
 	}
-	
+
 	# this function (xlfTextref) returns a non-usable sheet ID.
 	# not sure what it actually refers to, but don't use it
 	ref@SheetID <- c(0L,0L);
@@ -63,11 +63,13 @@ Text.Ref <- function( reference.text ) {
 	if( mm >= 0 )
 	{
 		sname <- substr( reference.text, mm, attr( mm, "match.length") - mm );
+		sname <- sub( "^'(.*)'", "\\1", sname );
 		ref@SheetID <- .GetSheetID( sname );
 	}
 
 	return( ref );
 }
+
 
 #--------------------------------------------------------------------
 #
