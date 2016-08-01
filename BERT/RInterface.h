@@ -31,7 +31,6 @@
 
 #define CONSOLE_HISTORY_FILE ".BERT-Console.history"
 
-
 #define ENV_NAME "BERT"
 #define R_WORKSPACE_NAME ".BERT-RData"
 
@@ -59,6 +58,9 @@ typedef std::pair < std::string, std::string > SPAIR;
 typedef std::vector< SPAIR > RFUNCDESC;
 typedef std::vector< RFUNCDESC > FDVECTOR;
 
+typedef std::unordered_map< std::string, std::string > STRING2STRINGMAP;
+
+
 /**
  * new class allows (optional) storage of actual functions, plus 
  * (also optional) evaluation environment.  
@@ -70,6 +72,7 @@ public:
 	void * env;
 
 	std::string r_name;
+	std::string function_description;
 
 public:
 	std::vector < SPAIR > pairs;
@@ -88,10 +91,12 @@ public:
 		func = rhs.func;
 		env = rhs.env;
 		r_name = rhs.r_name;
+		function_description = rhs.function_description;
 
 		for (std::vector < SPAIR > ::const_iterator iter = rhs.pairs.begin(); iter != rhs.pairs.end(); iter++) {
 			pairs.push_back(*iter);
 		}
+
 	}
 
 };

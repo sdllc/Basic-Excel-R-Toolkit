@@ -312,6 +312,45 @@ void MapFunction( const char *name, const char *r_name, SEXP func, SEXP env ){
 	RFuncDesc2 funcdesc(0, env, r_name);
 	funcdesc.pairs.push_back(SPAIR(name, ""));
 
+	STRING2STRINGMAP argument_descriptions;
+
+	SEXP descAttr = PROTECT(getAttrib( func, Rf_install("description")));
+	if (descAttr) {
+
+		int type = TYPEOF(descAttr);
+		int len = Rf_length(descAttr);
+
+		if ( type == 16 && len > 0 ) {
+			funcdesc.function_description = CHAR(STRING_ELT(descAttr, 0));
+		}
+		else if (type == 19 && len > 0) {
+			SEXP names = PROTECT(R_tryEval(Rf_lang2(R_NamesSymbol, descAttr), R_GlobalEnv, &err));
+			if (names)
+			{
+				int nameslen = Rf_length(names);
+				if (TYPEOF(names) == STRSXP && nameslen > 0 ) {
+					for (int i = 0; i < nameslen; i++) {
+						SEXP sval = PROTECT( VECTOR_ELT(descAttr, i));
+						if (sval) {
+							if (TYPEOF(sval) == STRSXP) {
+								std::string key = CHAR(STRING_ELT(names, i));
+								if (key.length() == 0) funcdesc.function_description = CHAR(STRING_ELT(sval, 0));
+								else argument_descriptions[key] = CHAR(STRING_ELT(sval, 0));
+
+								DebugOut("Key %s\n", key.c_str());
+							}
+							else DebugOut("Unexpected type %d\n", TYPEOF(sval));
+							UNPROTECT(1);
+						}
+					}
+				}
+				UNPROTECT(1);
+			}
+		}
+
+		UNPROTECT(1);
+	}
+
 	SEXP args = PROTECT(R_tryEval(Rf_lang2(Rf_install("formals"), func), R_GlobalEnv, &err));
 	if (args && isList(args))
 	{
@@ -324,25 +363,33 @@ void MapFunction( const char *name, const char *r_name, SEXP func, SEXP env ){
 			{
 				std::string dflt = "";
 				std::string arg = CHAR(STRING_ELT(names, j));
-				SEXP vecelt = VECTOR_ELT(asvec, j);
-				int type = TYPEOF(vecelt);
 
-				if (type != 1)
-				{
-					dflt = "Default: ";
-					const char *a = CHAR(asChar(vecelt));
-					if (type == STRSXP)
+				STRING2STRINGMAP::iterator iter = argument_descriptions.find(arg);
+
+				if (iter != argument_descriptions.end()) {
+					dflt = iter->second;
+				}
+				else {
+					SEXP vecelt = VECTOR_ELT(asvec, j);
+					int type = TYPEOF(vecelt);
+
+					if (type != 1)
 					{
-						dflt += "\"";
-						dflt += a;
-						dflt += "\"";
+						dflt = "Default: ";
+						const char *a = CHAR(asChar(vecelt));
+						if (type == STRSXP)
+						{
+							dflt += "\"";
+							dflt += a;
+							dflt += "\"";
+						}
+						else if (type == LGLSXP)
+						{
+							if ((LOGICAL(vecelt))[0]) dflt += "TRUE";
+							else dflt += "FALSE";
+						}
+						else dflt += a;
 					}
-					else if (type == LGLSXP)
-					{
-						if ((LOGICAL(vecelt))[0]) dflt += "TRUE";
-						else dflt += "FALSE";
-					}
-					else dflt += a;
 				}
 
 				funcdesc.pairs.push_back(SPAIR(arg, dflt));

@@ -720,8 +720,17 @@ bool RegisterAddinFunctions()
 				break;
 			case 4: StringCbPrintf(wbuffer, 256, L"1"); break;
 			case 5: StringCbPrintf(wbuffer, 256, L"Exported R functions"); break;
-			case 6: StringCbPrintf(wbuffer, 256, L"%d", 100 + i); break;
-			case 7: StringCbPrintf(wbuffer, 256, L"Exported R function"); break; // ??
+			case 7: StringCbPrintf(wbuffer, 256, L"%d", 100 + i); break;
+			case 8: 
+				if (func.function_description.length() > 0) {
+					tlen = MultiByteToWideChar(CP_UTF8, 0, func.function_description.c_str(), -1, 0, 0);
+					if (tlen > 255) tlen = 255;
+					if (tlen > 0) MultiByteToWideChar(CP_UTF8, 0, func.function_description.c_str(), -1, wbuffer, 256);
+					wbuffer[tlen] = 0;
+				}
+				else StringCbPrintf(wbuffer, 256, L"Exported R function"); 
+				break; // ??
+
 			default: StringCbPrintf(wbuffer, 256, L""); break;
 			}
 			
