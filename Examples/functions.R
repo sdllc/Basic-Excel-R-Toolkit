@@ -71,6 +71,20 @@ matrix.to.frame <- function( mat )
 #
 source( "ExcelFunctions.R" );
 
+# add custom documentation to the Excel "insert function" dialog for 
+# exported R functions using attributes.  NOTE: this is experimental
+# and the interface may change in the future.
+
+documented.function <- function( A, B ){
+	A + B;
+}
+
+attributes( documented.function ) <- list( description=list( 
+	"Example of documenting a function.  It will add arguments together.", 
+	A="A number", 
+	B="Another number"
+));
+
 # this is the new file watcher utility.  uncomment the line below and
 # this file will be reloaded any time it's saved.  by default, it will run
 # BERT$ReloadStartup, but you can pass a function to run any arbitrary
