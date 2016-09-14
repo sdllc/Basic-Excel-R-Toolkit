@@ -116,6 +116,19 @@ public:
 		return elems;
 	}
 
+	//
+	// thanks to
+	// http://stackoverflow.com/questions/874134/find-if-string-ends-with-another-string-in-c
+	//
+	static bool endsWith(std::string const &fullString, std::string const &ending) {
+		if (fullString.length() >= ending.length()) {
+			return (0 == fullString.compare(fullString.length() - ending.length(), ending.length(), ending));
+		}
+		else {
+			return false;
+		}
+	}
+
 };
 
 #endif // #ifndef __UTIL_H

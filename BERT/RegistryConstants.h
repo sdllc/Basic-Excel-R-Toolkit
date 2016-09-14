@@ -30,6 +30,8 @@
 #define REGISTRY_VALUE_INSTALL_DIR		"InstallDir"
 #define REGISTRY_VALUE_PRESERVE_ENV		"PreserveEnvironment"
 
+#define REGISTRY_VALUE_PIPE_OVERRIDE	"OverridePipeName"
+
 #define REGISTRY_VALUE_CONSOLE_FONT		"ConsoleFont"
 #define REGISTRY_VALUE_CONSOLE_SIZE		"ConsoleFontSize"
 #define REGISTRY_VALUE_CONSOLE_USER		"ConsoleUserTextColor"

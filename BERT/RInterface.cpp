@@ -46,6 +46,7 @@
 #include "FileWatcher.h"
 
 #include "RCOM.h"
+#include "Comms.h"
 
 #ifndef MIN
 #define MIN(a,b) ( a < b ? a : b )
@@ -76,6 +77,8 @@ HANDLE muxExecR;
 bool loadingStartupFile = false;
 
 XCHAR emptyStr[] = L"\0\0";
+
+
 
 //
 // for whatever reason these are not exposed in the embedded headers.
@@ -836,6 +839,8 @@ int RInit()
 	LoadStartupFile();
 	MapFunctions();
 
+	comms_connect();
+
 	return 0;
 
 }
@@ -844,6 +849,8 @@ void RShutdown()
 {
 	char RUser[MAX_PATH];
 	DWORD dwPreserve = 0;
+
+	comms_disconnect();
 
 	// save session data here, if desired
 
@@ -1218,6 +1225,9 @@ int getAutocomplete(AutocompleteData &ac, std::string &line, int caret)
 
 			sexp = R_tryEval(Rf_lang3(getelement, result, Rf_mkString("start")), R_GlobalEnv, &err);
 			if (!err && TYPEOF(sexp) == INTSXP) ac.tokenIndex = (INTEGER(sexp))[0] - 1;
+
+			sexp = R_tryEval(Rf_lang3(getelement, result, Rf_mkString("end")), R_GlobalEnv, &err);
+			if (!err && TYPEOF(sexp) == INTSXP) ac.end = (INTEGER(sexp))[0] - 1;
 
 			sexp = R_tryEval(Rf_lang3(getelement, result, Rf_mkString("in.quotes")), R_GlobalEnv, &err);
 			if (!err && ( TYPEOF(sexp) == INTSXP || TYPEOF(sexp) == LGLSXP )) ac.file = (INTEGER(sexp))[0] ? true : false;

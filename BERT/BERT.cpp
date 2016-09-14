@@ -35,6 +35,8 @@
 #include <shellapi.h>
 #include <strsafe.h>
 
+#include "Comms.h"
+
 std::vector < double > functionEntries;
 std::list< std::string > loglist;
 
@@ -184,6 +186,8 @@ void logMessage(const char *buf, int len, bool console)
 		while (loglist.size() > MAX_LOGLIST_SIZE) loglist.pop_front();
 		ReleaseMutex(muxLogList);
 	}
+
+	if( console ) comms_send(entry.c_str());
 
 	if (console && hWndConsole)
 	{

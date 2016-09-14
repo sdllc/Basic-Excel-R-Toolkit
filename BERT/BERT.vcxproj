@@ -30,6 +30,7 @@
     <ProjectGuid>{82277CDB-4EEB-4E64-A248-0F6D6C6AA2F4}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>BERT</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -246,11 +247,13 @@
     <ClInclude Include="Autocomplete.h" />
     <ClInclude Include="BERT.h" />
     <ClInclude Include="BERT_Version.h" />
+    <ClInclude Include="Comms.h" />
     <ClInclude Include="Console.h" />
     <ClInclude Include="DebugOut.h" />
     <ClInclude Include="Dialogs.h" />
     <ClInclude Include="ExcelLib\XLCALL.H" />
     <ClInclude Include="FileWatcher.h" />
+    <ClInclude Include="json11.hpp" />
     <ClInclude Include="LinkLabel.h" />
     <ClInclude Include="RCOM.h" />
     <ClInclude Include="RegistryConstants.h" />
@@ -267,6 +270,7 @@
   <ItemGroup>
     <ClCompile Include="BERT.cpp" />
     <ClCompile Include="BERTCOM.cpp" />
+    <ClCompile Include="Comms.cpp" />
     <ClCompile Include="Console.cpp" />
     <ClCompile Include="Dialogs.cpp" />
     <ClCompile Include="dllmain.cpp">
@@ -292,6 +296,7 @@
     <ClCompile Include="ExcelFunctions.cpp" />
     <ClCompile Include="ExcelLib\XLCALL.CPP" />
     <ClCompile Include="FileWatcher.cpp" />
+    <ClCompile Include="json11.cpp" />
     <ClCompile Include="LinkLabel.cpp" />
     <ClCompile Include="RCOM.cpp" />
     <ClCompile Include="RInterface.cpp">

@@ -327,6 +327,16 @@ HRESULT SafeCall( SAFECALL_CMD cmd, std::vector< std::string > *vec, long arg, i
 }
 
 /**
+* marshal pointer for use by other threads
+*/
+HRESULT Marshal()
+{
+	if (!pdispApp) return E_FAIL;
+	if (pstream) return S_OK; // only once
+	return AtlMarshalPtrInProc(pdispApp, IID_IDispatch, &pstream);
+}
+
+/**
  * cache pointer to excel, for use by the console
  */
 void SetExcelPtr(LPVOID p, LPVOID ribbon)
@@ -334,6 +344,8 @@ void SetExcelPtr(LPVOID p, LPVOID ribbon)
 	pdispApp = (IDispatch*)p;
 	pdispRibbon = (IDispatch*)ribbon;
 	installApplicationObject((ULONG_PTR)p);
+
+	Marshal();
 
 }
 
@@ -346,15 +358,4 @@ void FreeStream()
 	if (pstream) AtlFreeMarshalStream(pstream);
 	pstream = 0;
 }
-
-/**
- * marshal pointer for use by other threads
- */
-HRESULT Marshal()
-{
-	if (!pdispApp) return E_FAIL;
-	if (pstream) return S_OK; // only once
-	return AtlMarshalPtrInProc(pdispApp, IID_IDispatch, &pstream);
-}
-
 

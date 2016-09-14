@@ -233,6 +233,7 @@ ListWatches <- function(){
 	ac$token <- ifelse( is.null( utils:::.CompletionEnv$token ), "", utils:::.CompletionEnv$token );
 	ac$fguess <- ifelse( is.null( utils:::.CompletionEnv$fguess ), "", utils:::.CompletionEnv$fguess );
 	ac$start <- utils:::.CompletionEnv$start;
+	ac$end <- utils:::.CompletionEnv$end;
 	# ac$file.name <- utils:::.CompletionEnv$fileName;
 	ac$in.quotes <- utils:::.CompletionEnv$in.quotes;
 

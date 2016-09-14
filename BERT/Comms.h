@@ -18,26 +18,11 @@
 *
 */
 
-#ifndef __AUTOCOMPLETE_H
-#define __AUTOCOMPLETE_H
+void comms_connect();
+void comms_disconnect();
+void comms_send( const char *message, int flag = 0 );
+void comms_receive();
 
-#include <string>
 
-/** class encapsulating AC data */
-class AutocompleteData {
 
-public:
-	std::string comps;
-	std::string token;
-	std::string signature;
-	std::string addition;
-	std::string function;
 
-	int tokenIndex; // start
-	int end;
-
-	bool file;
-
-};
-
-#endif // #ifndef __AUTOCOMPLETE_H
