@@ -2378,14 +2378,6 @@ SEXP BERT_Callback(SEXP cmd, SEXP data, SEXP data2)
 	case CC_EXCEL:
 		return ExcelCall(data, data2);
 
-	case CC_CLEAR:
-		ClearConsole();
-		break;
-
-	case CC_CLOSECONSOLE:
-		CloseConsoleAsync();
-		break;
-
 	case CC_RELOAD:
 		BERT_Reload();
 		break;

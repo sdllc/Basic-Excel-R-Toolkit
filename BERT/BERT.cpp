@@ -26,7 +26,7 @@
 
 #include "RInterface.h"
 #include "Dialogs.h"
-#include "Console.h"
+//#include "Console.h"
 #include "resource.h"
 #include <Richedit.h>
 
@@ -189,10 +189,12 @@ void logMessage(const char *buf, int len, bool console)
 
 	if( console ) comms_send(entry.c_str());
 
+	/*
 	if (console && hWndConsole)
 	{
 		::SendMessage(hWndConsole, WM_APPEND_LOG, 0, (LPARAM)entry.c_str());
 	}
+	*/
 }
 
 void resetXlOper(LPXLOPER12 x)
@@ -274,6 +276,7 @@ short BERT_Configure()
 	return 1;
 }
 
+/*
 void ClearConsole()
 {
 	if (hWndConsole)
@@ -297,6 +300,7 @@ void CloseConsoleAsync()
 		::PostMessageA(hWndConsole, WM_COMMAND, MAKEWPARAM(WM_CLOSE_CONSOLE_ASYNC, 0), 0);
 	}
 }
+*/
 
 short BERT_About()
 {
@@ -386,6 +390,7 @@ short BERT_Console()
 	return 1;
 }
 
+/*
 short old_BERT_Console()
 {
 	static HANDLE hModScintilla = 0;
@@ -427,6 +432,7 @@ short old_BERT_Console()
 	Excel12(xlFree, 0, 1, (LPXLOPER12)&xWnd);
 	return 1;
 }
+*/
 
 void SysCleanup()
 {

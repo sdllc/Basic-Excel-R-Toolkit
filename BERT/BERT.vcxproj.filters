@@ -107,9 +107,6 @@
     <ClCompile Include="BERTCOM.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Console.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="RInterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

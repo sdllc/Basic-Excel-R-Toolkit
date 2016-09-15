@@ -271,7 +271,6 @@
     <ClCompile Include="BERT.cpp" />
     <ClCompile Include="BERTCOM.cpp" />
     <ClCompile Include="Comms.cpp" />
-    <ClCompile Include="Console.cpp" />
     <ClCompile Include="Dialogs.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
