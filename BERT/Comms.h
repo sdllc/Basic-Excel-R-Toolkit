@@ -23,6 +23,8 @@ void comms_disconnect();
 void comms_send( const char *message, int flag = 0 );
 void comms_receive();
 
+void open_console();
+
 
 
 

@@ -382,6 +382,12 @@ PARSE_STATUS_2 RExecVectorBuffered(std::vector<std::string> &cmd, bool excludeFr
 
 short BERT_Console()
 {
+	open_console();
+	return 1;
+}
+
+short old_BERT_Console()
+{
 	static HANDLE hModScintilla = 0;
 
 	XLOPER12 xWnd;

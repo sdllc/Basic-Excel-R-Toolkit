@@ -25,6 +25,8 @@
 
 #define STATE_NULL 0
 
+char pipename[256];
+
 static HANDLE hThread = NULL;
 static DWORD threadID = 0;
 static bool threadFlag = false;
@@ -44,6 +46,97 @@ BOOL pipePendingIO;
 SVECTOR cmd_buffer;
 
 extern HRESULT SafeCall(SAFECALL_CMD cmd, SVECTOR *vec, long arg, int *presult);
+
+HWND g_HWND = NULL;
+DWORD childProcessId;
+
+/*
+BOOL CALLBACK EnumWindowsProcMy(HWND hwnd, LPARAM lParam)
+{
+	DWORD lpdwProcessId;
+	GetWindowThreadProcessId(hwnd, &lpdwProcessId);
+
+	char buffer[256];
+	GetWindowTextA(hwnd, buffer, 256);
+	if (lpdwProcessId == lParam)
+	{
+		g_HWND = hwnd;
+		return FALSE;
+	}
+	return TRUE;
+}
+*/
+
+BOOL CALLBACK EnumWindowsProcHide(HWND hwnd, LPARAM lParam)
+{
+	DWORD pid;
+	GetWindowThreadProcessId(hwnd, &pid);
+
+	bool show = (bool)lParam;
+
+	char buffer[256];
+	char className[256];
+
+	if ( pid == childProcessId )
+	{
+		//
+		// FIXME: watch out, this could be fragile...
+		//
+
+		::RealGetWindowClassA(hwnd, className, 256);
+		if (!strcmp(className, "Chrome_WidgetWin_1")) {
+
+			GetWindowTextA(hwnd, buffer, 256);
+			DebugOut("WINDOW %X: %s\n", pid, buffer);
+
+			long style = GetWindowLong(hwnd, GWL_STYLE);
+			long exstyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+			DebugOut("PRE: 0x%X, 0x%X\n", style, exstyle);
+
+			if (show) {
+				style |= WS_VISIBLE;    
+				exstyle |= WS_EX_APPWINDOW;   
+				exstyle &= ~(WS_EX_TOOLWINDOW);
+			}
+			else {
+				style &= ~(WS_VISIBLE);
+				exstyle |= WS_EX_TOOLWINDOW;
+				exstyle &= ~(WS_EX_APPWINDOW);
+			}
+
+			ShowWindow(hwnd, SW_HIDE);
+
+			SetWindowLong(hwnd, GWL_STYLE, style);
+			SetWindowLong(hwnd, GWL_EXSTYLE, exstyle);
+
+			if (show) {
+				ShowWindow(hwnd, SW_SHOW);
+				::SetForegroundWindow(hwnd);
+			}
+
+			style = GetWindowLong(hwnd, GWL_STYLE);
+			exstyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+			DebugOut("POST: 0x%X, 0x%X\n", style, exstyle);
+
+		}
+	}
+	return TRUE;
+}
+
+void hide_console() {
+
+	DebugOut("Hide Console\n");
+	BOOL rslt = EnumWindows(EnumWindowsProcHide, false);
+
+}
+
+void show_console() {
+
+	DebugOut("Show Console\n");
+	BOOL rslt = EnumWindows(EnumWindowsProcHide, true);
+
+}
+
 
 /**
  * write message, if one is on the queue.  
@@ -120,6 +213,9 @@ void handle_internal(const std::vector<json11::Json> &commands) {
 				{ "end", autocomplete.end }
 			};
 
+		}
+		else if (!cmd.compare("hide")) {
+			hide_console();
 		}
 	}
 
@@ -203,6 +299,106 @@ void exec(std::string line) {
 	push_json(obj);
 }
 
+void endProcess() {
+
+	json11::Json obj = json11::Json::object{
+		{ "type", "control" },
+		{ "message", "quit" }
+	};
+	push_json(obj);
+
+	// ...
+
+}
+
+
+void startProcess() {
+
+	char tmp[256];
+	char args[512];
+	char dir[512];
+
+	/*
+	//////////////
+
+	HANDLE ghJob = CreateJobObject(NULL, NULL); // GLOBAL
+	if (ghJob == NULL)
+	{
+		DebugOut("Could not create job object\n");
+	}
+	else
+	{
+		JOBOBJECT_EXTENDED_LIMIT_INFORMATION jeli = { 0 };
+
+		// Configure all child processes associated with the job to terminate when the
+		jeli.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+		if (0 == SetInformationJobObject(ghJob, JobObjectExtendedLimitInformation, &jeli, sizeof(jeli)))
+		{
+			DebugOut("Could not SetInformationJobObject");
+		}
+	}
+
+	///////////////
+	*/
+
+	// FIXME: home dir
+
+	if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, tmp, 255, REGISTRY_KEY, "ShellPath") || !strlen(tmp))
+		strcpy_s(tmp, "BertShell");
+
+	sprintf_s(args, "\"%s\" ", tmp);
+
+	if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, tmp, 255, REGISTRY_KEY, "ShellArgs") || !strlen(tmp))
+		strcpy_s(tmp, "");
+	strcat_s(args, tmp);
+
+	if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, dir, 511, REGISTRY_KEY, "ShellDir") || !strlen(dir))
+		strcpy_s(dir, "");
+
+//	strcat_s(args, " --pipename ");
+//	strcat_s(args, pipename);
+	SetEnvironmentVariableA("BERT_PIPE_NAME", pipename);
+
+	// set env vars
+
+	STARTUPINFOA si;
+	PROCESS_INFORMATION pi;
+
+	ZeroMemory(&si, sizeof(si));
+	si.cb = sizeof(si);
+
+	ZeroMemory(&pi, sizeof(pi));
+
+	if (!CreateProcessA(0,
+		args,        // Command line
+		NULL,           // Process handle not inheritable
+		NULL,           // Thread handle not inheritable
+		FALSE,          // Set handle inheritance to FALSE
+		0,              // No creation flags
+		NULL,           // Use parent's environment block
+		dir[0] ? dir : NULL,           // Use parent's starting directory 
+		&si,            // Pointer to STARTUPINFO structure
+		&pi)           // Pointer to PROCESS_INFORMATION structure
+		)
+	{
+		DebugOut("CreateProcess failed (%d).\n", GetLastError());
+		return;
+	}
+
+	childProcessId = pi.dwProcessId;
+
+	/*
+	if (0 == AssignProcessToJobObject(ghJob, pi.hProcess))
+	{
+		DebugOut("Could not AssignProcessToObject\n");
+	}
+
+	CloseHandle(pi.hProcess); 
+	CloseHandle(pi.hThread);
+	*/
+
+}
+
 DWORD WINAPI threadProc(LPVOID lpvParam) {
 
 	DebugOut("[COMMS] thread starting\n");
@@ -213,25 +409,18 @@ DWORD WINAPI threadProc(LPVOID lpvParam) {
 	io.hEvent = CreateEvent(0, 0, TRUE, 0);
 
 	// create pipe
-
-	char tmp[64];
-	char pipename[256];
-
-	if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, tmp, 63, REGISTRY_KEY, REGISTRY_VALUE_PIPE_OVERRIDE ) || !strlen(buffer))
-		sprintf_s(tmp, "bert-pipe-%d", GetCurrentProcessId());
-	sprintf_s(pipename, "\\\\.\\pipe\\%s", tmp);
+	char tmp[256];
+	sprintf_s(tmp, "\\\\.\\pipe\\%s", pipename);
 
 	hPipe = CreateNamedPipeA(
-		pipename,
+		tmp,
 		PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
-		PIPE_TYPE_MESSAGE |       // message type pipe 
-		PIPE_READMODE_MESSAGE |   // message-read mode 
-		PIPE_WAIT,                // blocking mode 
-		PIPE_UNLIMITED_INSTANCES, // max. instances  
-		4096,                  // output buffer size 
-		4096,                  // input buffer size 
-		100,                        // client time-out 
-		NULL);                    // default security attribute 
+		PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
+		PIPE_UNLIMITED_INSTANCES, 
+		4096,
+		4096,
+		100,
+		NULL);
 
 	if (NULL == hPipe || hPipe == INVALID_HANDLE_VALUE) {
 		DebugOut("[COMMS] create pipe failed\n");
@@ -240,6 +429,10 @@ DWORD WINAPI threadProc(LPVOID lpvParam) {
 	}
 
 	DebugOut("[COMMS] Create pipe OK\n");
+
+	DebugOut("[COMMS] calling startProcess\n");
+	startProcess();
+
 	DebugOut("[COMMS] calling connect (overlapped)\n");
 
 	DWORD dwBytes, dwRead = 0, dwWrite = 0;
@@ -380,8 +573,25 @@ DWORD WINAPI threadProc(LPVOID lpvParam) {
 
 }
 
+int initialized = false;
+
+void open_console() {
+
+	if (initialized) show_console();
+	else comms_connect();
+
+}
+
 void comms_connect() {
 
+	initialized = true;
+
+	// create the pipe name here.  we only write this once, 
+	// but we may read it from different threads.
+
+	if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, pipename, 63, REGISTRY_KEY, REGISTRY_VALUE_PIPE_OVERRIDE) || !strlen(pipename))
+		sprintf_s(pipename, "bert-pipe-%d", GetCurrentProcessId());
+	
 	DebugOut("[COMMS] Create thread\n");
 	threadFlag = true;
 	hThread = CreateThread( NULL, 0, threadProc, 0, 0, &threadID);

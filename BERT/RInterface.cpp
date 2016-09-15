@@ -839,7 +839,7 @@ int RInit()
 	LoadStartupFile();
 	MapFunctions();
 
-	comms_connect();
+	//open_console();
 
 	return 0;
 
