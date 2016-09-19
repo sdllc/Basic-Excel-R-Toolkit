@@ -28,14 +28,14 @@
 #include "Dialogs.h"
 //#include "Console.h"
 #include "resource.h"
-#include <Richedit.h>
+//#include <Richedit.h>
 
 #include "RegistryUtils.h"
 
 #include <shellapi.h>
 #include <strsafe.h>
 
-#include "Comms.h"
+#include "RemoteShell.h"
 
 std::vector < double > functionEntries;
 std::list< std::string > loglist;
@@ -187,7 +187,7 @@ void logMessage(const char *buf, int len, bool console)
 		ReleaseMutex(muxLogList);
 	}
 
-	if( console ) comms_send(entry.c_str());
+	if( console ) rshell_send(entry.c_str());
 
 	/*
 	if (console && hWndConsole)
@@ -386,53 +386,9 @@ PARSE_STATUS_2 RExecVectorBuffered(std::vector<std::string> &cmd, bool excludeFr
 
 short BERT_Console()
 {
-	open_console();
+	open_remote_shell();
 	return 1;
 }
-
-/*
-short old_BERT_Console()
-{
-	static HANDLE hModScintilla = 0;
-
-	XLOPER12 xWnd;
-	Excel12(xlGetHwnd, &xWnd, 0);
-
-	if (!hModScintilla)
-	{
-		char buffer[MAX_PATH];
-		if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, buffer, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_R_USER))
-			ExpandEnvironmentStringsA(DEFAULT_R_USER, buffer, MAX_PATH);
-
-		if (strlen(buffer) > 0)
-		{
-			if (buffer[strlen(buffer) - 1] != '\\') strcat_s(buffer, MAX_PATH, "\\");
-		}
-
-#ifdef _WIN64
-		strcat_s( buffer, MAX_PATH, "SciLexer64.DLL");
-#else // #ifdef _WIN64
-		strcat_s(buffer, MAX_PATH, "SciLexer32.DLL");
-#endif // #ifdef _WIN64
-		hModScintilla = LoadLibraryA(buffer);
-		if (!hModScintilla)
-		{
-			DebugOut(buffer, MAX_PATH, "Failed to load scintilla module: 0x%x\n", ::GetLastError());
-			OutputDebugStringA(buffer);
-			::MessageBoxA(0, buffer, "ERR", MB_OK);
-		}
-		else
-		{
-			//OutputDebugStringA("Scintilla loaded OK\n");
-		}
-	}
-
-	RunThreadedConsole((HWND)xWnd.val.w);
-
-	Excel12(xlFree, 0, 1, (LPXLOPER12)&xWnd);
-	return 1;
-}
-*/
 
 void SysCleanup()
 {

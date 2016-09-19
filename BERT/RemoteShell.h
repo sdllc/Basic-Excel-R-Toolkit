@@ -18,12 +18,15 @@
 *
 */
 
-void comms_connect();
-void comms_disconnect();
-void comms_send( const char *message, int flag = 0 );
-void comms_receive();
+/**
+ * API for the out-of-process console (remote shell).
+ */
 
-void open_console();
+void rshell_connect();
+void rshell_disconnect();
+void rshell_send( const char *message, int flag = 0 );
+
+void open_remote_shell();
 
 
 

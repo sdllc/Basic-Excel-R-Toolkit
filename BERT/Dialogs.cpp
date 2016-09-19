@@ -135,11 +135,9 @@ DIALOG_RESULT_TYPE CALLBACK AboutDlgProc(HWND hwndDlg, UINT message, WPARAM wPar
 
 		::SetWindowText(::GetDlgItem(hwndDlg, IDC_STATIC_ABOUT_BERT), ABOUT_BERT_TEXT);
 		::SetWindowText(::GetDlgItem(hwndDlg, IDC_STATIC_ABOUT_R), ABOUT_R_TEXT);
-		::SetWindowText(::GetDlgItem(hwndDlg, IDC_STATIC_ABOUT_SCINTILLA), ABOUT_SCINTILLA_TEXT);
 
 		SubclassLinkLabel(::GetDlgItem(hwndDlg, IDC_STATIC_BERT_LINK), BERT_LINK, BERT_LINK_TEXT);
 		SubclassLinkLabel(::GetDlgItem(hwndDlg, IDC_STATIC_R_LINK), R_LINK, R_LINK_TEXT);
-		SubclassLinkLabel(::GetDlgItem(hwndDlg, IDC_STATIC_SCINTILLA_LINK), SCINTILLA_LINK, SCINTILLA_LINK_TEXT);
 
 		hbmp = loadPNG(ghModule, IDB_PNG1);
 
@@ -236,11 +234,9 @@ DIALOG_RESULT_TYPE CALLBACK AboutDlgProc(HWND hwndDlg, UINT message, WPARAM wPar
 			
 			::ShowWindow(::GetDlgItem(hwndDlg, IDC_STATIC_ABOUT_BERT), SW_HIDE);
 			::ShowWindow(::GetDlgItem(hwndDlg, IDC_STATIC_ABOUT_R), SW_HIDE);
-			::ShowWindow(::GetDlgItem(hwndDlg, IDC_STATIC_ABOUT_SCINTILLA), SW_HIDE);
 
 			::ShowWindow(::GetDlgItem(hwndDlg, IDC_STATIC_BERT_LINK), SW_HIDE);
 			::ShowWindow(::GetDlgItem(hwndDlg, IDC_STATIC_R_LINK), SW_HIDE);
-			::ShowWindow(::GetDlgItem(hwndDlg, IDC_STATIC_SCINTILLA_LINK), SW_HIDE);
 
 			::ShowWindow(::GetDlgItem(hwndDlg, IDC_STATIC_UPDATE_MESSAGE), SW_SHOW);
 			::SetTimer(hwndDlg, TIMER_ID_UPDATE, UPDATE_CHECK_DELAY, 0);

@@ -1,8 +1,8 @@
 
 #include "DebugOut.h"
-#include "Comms.h"
-#include "stdafx.h"
+#include "RemoteShell.h"
 
+#include "stdafx.h"
 #include <Objbase.h>
 
 #include <vector>
@@ -49,23 +49,6 @@ extern HRESULT SafeCall(SAFECALL_CMD cmd, SVECTOR *vec, long arg, int *presult);
 
 HWND g_HWND = NULL;
 DWORD childProcessId;
-
-/*
-BOOL CALLBACK EnumWindowsProcMy(HWND hwnd, LPARAM lParam)
-{
-	DWORD lpdwProcessId;
-	GetWindowThreadProcessId(hwnd, &lpdwProcessId);
-
-	char buffer[256];
-	GetWindowTextA(hwnd, buffer, 256);
-	if (lpdwProcessId == lParam)
-	{
-		g_HWND = hwnd;
-		return FALSE;
-	}
-	return TRUE;
-}
-*/
 
 BOOL CALLBACK EnumWindowsProcHide(HWND hwnd, LPARAM lParam)
 {
@@ -173,6 +156,9 @@ BOOL writeNextMessage() {
 	}
 }
 
+/**
+ * push a message onto the outbound list 
+ */
 void push_json(const json11::Json &obj) {
 
 	std::string str = obj.dump();
@@ -279,11 +265,11 @@ void exec(std::string line) {
 		cmd_buffer.clear();
 		break;
 	case PARSE2_EXTERNAL_ERROR:
-		comms_send("processing error: is Excel busy?\n", 1);
+		rshell_send("processing error: is Excel busy?\n", 1);
 		cmd_buffer.clear();
 		break;
 	case PARSE2_ERROR:
-		comms_send("parse error\n", 1);
+		rshell_send("parse error\n", 1);
 		cmd_buffer.clear();
 		break;
 	default:
@@ -306,11 +292,9 @@ void endProcess() {
 		{ "message", "quit" }
 	};
 	push_json(obj);
-
 	// ...
 
 }
-
 
 void startProcess() {
 
@@ -318,30 +302,15 @@ void startProcess() {
 	char args[512];
 	char dir[512];
 
-	/*
-	//////////////
+	// this is the home directory (R_USER or BERT_HOME)
 
-	HANDLE ghJob = CreateJobObject(NULL, NULL); // GLOBAL
-	if (ghJob == NULL)
-	{
-		DebugOut("Could not create job object\n");
-	}
-	else
-	{
-		JOBOBJECT_EXTENDED_LIMIT_INFORMATION jeli = { 0 };
+	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, args, 511, REGISTRY_KEY, REGISTRY_VALUE_R_USER))
+		ExpandEnvironmentStringsA(DEFAULT_R_USER, args, 512);
+	
+	SetEnvironmentVariableA("BERT_HOME", args);
+	args[0] = 0;
 
-		// Configure all child processes associated with the job to terminate when the
-		jeli.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
-		if (0 == SetInformationJobObject(ghJob, JobObjectExtendedLimitInformation, &jeli, sizeof(jeli)))
-		{
-			DebugOut("Could not SetInformationJobObject");
-		}
-	}
-
-	///////////////
-	*/
-
-	// FIXME: home dir
+	// FIXME: default shell path (relative to home?)
 
 	if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, tmp, 255, REGISTRY_KEY, "ShellPath") || !strlen(tmp))
 		strcpy_s(tmp, "BertShell");
@@ -352,14 +321,12 @@ void startProcess() {
 		strcpy_s(tmp, "");
 	strcat_s(args, tmp);
 
+	// FIXME: default to home dir?
+
 	if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, dir, 511, REGISTRY_KEY, "ShellDir") || !strlen(dir))
 		strcpy_s(dir, "");
 
-//	strcat_s(args, " --pipename ");
-//	strcat_s(args, pipename);
 	SetEnvironmentVariableA("BERT_PIPE_NAME", pipename);
-
-	// set env vars
 
 	STARTUPINFOA si;
 	PROCESS_INFORMATION pi;
@@ -386,16 +353,6 @@ void startProcess() {
 	}
 
 	childProcessId = pi.dwProcessId;
-
-	/*
-	if (0 == AssignProcessToJobObject(ghJob, pi.hProcess))
-	{
-		DebugOut("Could not AssignProcessToObject\n");
-	}
-
-	CloseHandle(pi.hProcess); 
-	CloseHandle(pi.hThread);
-	*/
 
 }
 
@@ -575,14 +532,14 @@ DWORD WINAPI threadProc(LPVOID lpvParam) {
 
 int initialized = false;
 
-void open_console() {
+void open_remote_shell() {
 
 	if (initialized) show_console();
-	else comms_connect();
+	else rshell_connect();
 
 }
 
-void comms_connect() {
+void rshell_connect() {
 
 	initialized = true;
 
@@ -600,7 +557,7 @@ void comms_connect() {
 
 }
 
-void comms_disconnect() {
+void rshell_disconnect() {
 
 	if (hThread) {
 		threadFlag = false;
@@ -613,7 +570,7 @@ void comms_disconnect() {
 
 }
 
-void comms_send(const char *message, int flag ) {
+void rshell_send(const char *message, int flag ) {
 
 	std::string msg = message;
 

@@ -247,7 +247,7 @@
     <ClInclude Include="Autocomplete.h" />
     <ClInclude Include="BERT.h" />
     <ClInclude Include="BERT_Version.h" />
-    <ClInclude Include="Comms.h" />
+    <ClInclude Include="RemoteShell.h" />
     <ClInclude Include="Console.h" />
     <ClInclude Include="DebugOut.h" />
     <ClInclude Include="Dialogs.h" />
@@ -270,7 +270,7 @@
   <ItemGroup>
     <ClCompile Include="BERT.cpp" />
     <ClCompile Include="BERTCOM.cpp" />
-    <ClCompile Include="Comms.cpp" />
+    <ClCompile Include="RemoteShell.cpp" />
     <ClCompile Include="Dialogs.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
@@ -323,10 +323,6 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="RWordlist.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="..\images\bert-logo.ico" />
-    <Image Include="..\images\bert-logo.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

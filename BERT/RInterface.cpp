@@ -46,7 +46,7 @@
 #include "FileWatcher.h"
 
 #include "RCOM.h"
-#include "Comms.h"
+#include "RemoteShell.h"
 
 #ifndef MIN
 #define MIN(a,b) ( a < b ? a : b )
@@ -850,7 +850,7 @@ void RShutdown()
 	char RUser[MAX_PATH];
 	DWORD dwPreserve = 0;
 
-	comms_disconnect();
+	rshell_disconnect();
 
 	// save session data here, if desired
 

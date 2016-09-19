@@ -41,13 +41,6 @@
 #define R_LINK_TEXT			L"www.r-project.org"
 #define R_LINK				L"http://" R_LINK_TEXT
 
-#define ABOUT_SCINTILLA_TEXT \
-	L"Includes Scintilla text component\r\n" \
-	L"Copyright 1998-2002 by Neil Hodgson <neilh@scintilla.org>"
-
-#define SCINTILLA_LINK_TEXT	L"scintilla.org"
-#define SCINTILLA_LINK		L"http://" SCINTILLA_LINK_TEXT
-
 #define PARSE_ERROR_MESSAGE "(parse error)\n"
 #define USER_BREAK_MESSAGE "(break)\n"
 #define EXTERNAL_ERROR_MESSAGE "(an error occurred processing the command.  is excel busy?)\n"
