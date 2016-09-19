@@ -200,6 +200,21 @@ void handle_internal(const std::vector<json11::Json> &commands) {
 			};
 
 		}
+		else if (!cmd.compare("set-console-width")) {
+
+			SVECTOR sv;
+			int r;
+			int chars = commands[1].int_value();
+			char buffer[128];
+
+			// min/max?
+			if (chars < 10) chars = 10;
+
+			sprintf_s(buffer, 128, "options(\"width\"=%d)", chars);
+			sv.push_back(std::string(buffer));
+			SafeCall(SCC_CONSOLE_WIDTH, &sv, 0, &r);
+
+		}
 		else if (!cmd.compare("hide")) {
 			hide_console();
 		}
