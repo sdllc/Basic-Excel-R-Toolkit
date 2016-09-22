@@ -330,17 +330,18 @@ void startProcess() {
 	if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, tmp, 255, REGISTRY_KEY, "ShellPath") || !strlen(tmp))
 		strcpy_s(tmp, "BertShell");
 
-	sprintf_s(args, "\"%s\" ", tmp);
-
-	if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, tmp, 255, REGISTRY_KEY, "ShellArgs") || !strlen(tmp))
-		strcpy_s(tmp, "");
-	strcat_s(args, tmp);
+//	if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, tmp, 255, REGISTRY_KEY, "ShellArgs") || !strlen(tmp))
+//		strcpy_s(tmp, "");
+//	strcat_s(args, tmp);
 
 	// FIXME: default to home dir?
 
 	if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, dir, 511, REGISTRY_KEY, "ShellDir") || !strlen(dir))
 		strcpy_s(dir, "");
 
+	sprintf_s(args, "\"%s\\%s\" ", dir, tmp);
+
+	SetEnvironmentVariableA("BERT_SHELL_HOME", dir);
 	SetEnvironmentVariableA("BERT_PIPE_NAME", pipename);
 
 	STARTUPINFOA si;
@@ -575,6 +576,13 @@ void rshell_connect() {
 void rshell_disconnect() {
 
 	if (hThread) {
+
+		json11::Json obj = json11::Json::object{
+			{ "type", "control" },
+			{ "data", "quit" }
+		};
+		push_json(obj);
+
 		threadFlag = false;
 		WaitForSingleObject(hThread, INFINITE);
 		DebugOut("[COMMS] Done\n");

@@ -4,7 +4,7 @@
 # R functions exposed in Excel.  These are just some simple 
 # examples.  See the page
 #
-# http://bert-toolkit.org/example-functions
+# https://bert-toolkit.com/example-functions
 #
 # for more examples.  You can add functions directly to this
 # file, but it's probably better to put them in a separate file
@@ -12,85 +12,83 @@
 #
 #====================================================================
 
+#--------------------------------------------------------------------
 #
-# performance testing
+# 1. The basics: adding functions to Excel.  Any function in this 
+#    file (or in a file you include using source()) will be added to 
+#    Excel.  BERT will add "R." to the name, so the first function 
+#    will be called "R.EigenValues" in Excel.
 #
-NOOP <- function( a, b ){ 0 }
+#--------------------------------------------------------------------
 
 #
-# using arrays - output is a range of d x d
+# first example: takes a matrix as input.  we can't return a list,
+# so here we just return the eigenvalues from the result.
 #
-Identity <- function( d ){ diag(d); }
-
-#
-# matrix types (input is a range; should be REAL)
-#
-EigenValues <- function(x) 
-{
-	E <- eigen(x) 
-	E$values
+EigenValues <- function(mat) {
+  E <- eigen(x) 
+  E$values
 }
 
 #
-# matrix types (input is a range; should be REAL)
+# the same thing, but for the vectors.
 #
-EigenVectors <- function(x) 
-{
-	E <- eigen(x) 
-	E$vectors
+EigenVectors <- function(mat) {
+  E <- eigen(x) 
+  E$vectors
 }
 
 #
-# variable arguments (...)
+# you can use ... (three-dots) arguments to pass a variable 
+# number of parameters to the function.
 #
-SUM <- function( ... )
-{
-	sum(...);
+Add <- function( ... ) {
+  sum(...);
 }
 
+#--------------------------------------------------------------------
 #
-# data frames - output is a range
+# 3. Documentation: you can add documentation to your functions, 
+#    which will show up in the Excel insert function dialog.  The
+#    attribute "description" is a list.  The first (unnamed) entry
+#    will be the main documentation.  Named list entries match 
+#    named arguments.
 #
-cars <- function(){mtcars}
+#--------------------------------------------------------------------
 
-#
-# utility function
-#
-matrix.to.frame <- function( mat )
-{
-	r = nrow(mat);
-	c = ncol(mat);
-	data <- as.data.frame( mat[2:r,2:c] );
-	colnames(data) <- mat[1,2:c];
-	rownames(data) <- mat[2:r,1];
-	data;
+Example.Function <- function(A, B) {
+  A + B;
 }
 
+attr( Example.Function, "description" ) <- list( 
+  "This function adds two arguments together", 
+  A="A number", 
+  B="Another number"
+);
+
+#--------------------------------------------------------------------
 #
-# include Excel functions for the console
+# 4. Including files: use source() to include other code files.
+#    The "ExcelFunctions.R" file includes a number of useful 
+#    functions for calling the Excel API.  See the website for 
+#    documentation and examples.
 #
+#--------------------------------------------------------------------
+
 source( "ExcelFunctions.R" );
 
-# add custom documentation to the Excel "insert function" dialog for 
-# exported R functions using attributes.  NOTE: this is experimental
-# and the interface may change in the future.
+#--------------------------------------------------------------------
+#
+# 5. Watching files: with the code below, BERT will reload this 
+#    file whenever you save changes.  To turn that off, remove 
+#    the code.  You can watch other files too, and you can execute
+#    any function when the file changes.
+#
+#--------------------------------------------------------------------
 
-documented.function <- function( A, B ){
-	A + B;
-}
+BERT$WatchFile( file.path( BERT$HOME, "functions.R" ))
 
-attributes( documented.function ) <- list( description=list( 
-	"Example of documenting a function.  It will add arguments together.", 
-	A="A number", 
-	B="Another number"
-));
 
-# this is the new file watcher utility.  uncomment the line below and
-# this file will be reloaded any time it's saved.  by default, it will run
-# BERT$ReloadStartup, but you can pass a function to run any arbitrary
-# R code when the file changes.
-
-# BERT$WatchFile( file.path( BERT$HOME, "functions.R" ))
 
 
 
