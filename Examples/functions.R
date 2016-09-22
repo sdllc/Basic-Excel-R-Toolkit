@@ -26,7 +26,7 @@
 # so here we just return the eigenvalues from the result.
 #
 EigenValues <- function(mat) {
-  E <- eigen(x) 
+  E <- eigen(mat) 
   E$values
 }
 
@@ -34,7 +34,7 @@ EigenValues <- function(mat) {
 # the same thing, but for the vectors.
 #
 EigenVectors <- function(mat) {
-  E <- eigen(x) 
+  E <- eigen(mat) 
   E$vectors
 }
 
