@@ -46,14 +46,21 @@ void WINAPI xlAutoFree12(LPXLOPER12 pxFree)
 	if (pxFree->xltype == (xltypeMulti | xlbitDLLFree))
 	{
 		// NOTE: ALWAYS NEW ARRAYS (wait, what about multidim? CHECKME FIXME TODO)
-		delete[] pxFree->val.array.lparray;
+		//if(pxFree->val.array.lparray ) 
+		//	delete[] pxFree->val.array.lparray;
+		//pxFree->val.array.lparray = 0;
+		resetXlOper(pxFree);
+
 	}
 	else if (pxFree->xltype == (xltypeStr | xlbitDLLFree))
 	{
 		// always new XCHAR[] for strings, except for zero-length strings
 		// which should use static fields somewhere
 
-		if( pxFree->val.str[0] != 0 ) delete[] pxFree->val.str;
+		//if( pxFree->val.str[0] != 0 ) delete[] pxFree->val.str;
+		//pxFree->val.str[0] = 0;
+		resetXlOper(pxFree);
+
 	}
 	else
 	{

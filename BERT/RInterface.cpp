@@ -1376,12 +1376,12 @@ void SEXP2XLOPER(LPXLOPER12 xloper, SEXP sexp, bool inner = false, int r_offset 
 		xllen = xlrows * xlcols;
 
 		if (xllen > 1) {
-			xloper->xltype = xltypeMulti;
+			xloper->xltype = xltypeMulti | xlbitDLLFree;
 			xloper->val.array.rows = xlrows;
 			xloper->val.array.columns = xlcols;
 			xloper->val.array.lparray = new XLOPER12[xlrows * xlcols];
 			for (int i = 0; i < xllen; i++) {
-				xloper->val.array.lparray[i].xltype = xltypeStr | xlbitDLLFree;
+				xloper->val.array.lparray[i].xltype = xltypeStr; // no free bit: this is static
 				xloper->val.array.lparray[i].val.str = emptyStr;
 			}
 		}
@@ -1395,11 +1395,12 @@ void SEXP2XLOPER(LPXLOPER12 xloper, SEXP sexp, bool inner = false, int r_offset 
 		xloper->val.num = 0;
 	}
 
-	LPXLOPER12 firstRef = xloper->xltype == xltypeMulti ? xloper->val.array.lparray : xloper;
+	LPXLOPER12 firstRef = xloper->xltype == ( xltypeMulti | xlbitDLLFree ) ? xloper->val.array.lparray : xloper;
 	
 	// check early and return
 
 	if (!sexp || Rf_isNull( sexp )) {
+		resetXlOper(firstRef);
 		firstRef->xltype = xltypeErr;
 		firstRef->val.err = xlerrNull;
 		return;
@@ -1423,6 +1424,7 @@ void SEXP2XLOPER(LPXLOPER12 xloper, SEXP sexp, bool inner = false, int r_offset 
 		SEXP rslt = R_tryEval(Rf_lang2(Rf_install("capture.output"), Rf_lang2(Rf_install("print"), sexp )), R_GlobalEnv, &err);
 		if (!err) STRSXP2XLOPER(firstRef, rslt);
 		else {
+			resetXlOper(firstRef);
 			firstRef->xltype = xltypeErr;
 			firstRef->val.err = xlerrValue;
 		}
@@ -1460,16 +1462,16 @@ void SEXP2XLOPER(LPXLOPER12 xloper, SEXP sexp, bool inner = false, int r_offset 
 		xllen = xlrows * xlcols;
 
 		if (xllen > 1) {
-			xloper->xltype = xltypeMulti;
+			xloper->xltype = xltypeMulti | xlbitDLLFree;
 			xloper->val.array.rows = xlrows;
 			xloper->val.array.columns = xlcols;
 			xloper->val.array.lparray = new XLOPER12[xlrows * xlcols];
 			for (int i = 0; i < xllen; i++) {
-				xloper->val.array.lparray[i].xltype = xltypeStr | xlbitDLLFree;
+				xloper->val.array.lparray[i].xltype = xltypeStr; // no free bit
 				xloper->val.array.lparray[i].val.str = emptyStr;
 			}
 		}
-		firstRef = xloper->xltype == xltypeMulti ? xloper->val.array.lparray : xloper;
+		firstRef = xloper->xltype == ( xltypeMulti | xlbitDLLFree ) ? xloper->val.array.lparray : xloper;
 
 	}
 
@@ -2000,6 +2002,9 @@ bool RExec4(LPXLOPER12 rslt, RFuncDesc2 &func, std::vector< LPXLOPER12 > &args) 
 	resetXlOper(rslt);
 
 	::WaitForSingleObject(muxExecR, INFINITE);
+
+	DebugOut(" ** Function call\n");
+	DebugOut(" ** Function: %s\n", func.r_name.c_str());
 
 	PROTECT(sargs = Rf_allocVector(VECSXP, args.size()));
 	for (i = 0; i < args.size(); i++)

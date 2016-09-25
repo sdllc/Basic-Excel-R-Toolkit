@@ -199,12 +199,15 @@ void logMessage(const char *buf, int len, bool console)
 
 void resetXlOper(LPXLOPER12 x)
 {
-	if (x->xltype == xltypeStr && x->val.str)
+	if ( x->xltype == (xltypeStr | xlbitDLLFree) && x->val.str)
 	{
-		delete[] x->val.str;
+		// we pass a static string with zero length -- don't delete that
+
+		if( x->val.str[0] )
+			delete[] x->val.str;
 		x->val.str = 0;
 	}
-	else if (x->xltype == xltypeMulti && x->val.array.lparray)
+	else if ((x->xltype == xltypeMulti || x->xltype == ( xltypeMulti | xlbitDLLFree )) && x->val.array.lparray)
 	{
 		// have to consider the case that there are strings
 		// in the array, or even nested multis (not that that
@@ -216,8 +219,10 @@ void resetXlOper(LPXLOPER12 x)
 		delete[] x->val.array.lparray;
 		x->val.array.lparray = 0;
 	}
+
 	x->val.err = xlerrNull;
 	x->xltype = xltypeNil;
+
 }
 
 LPXLOPER BERT_Volatile(LPXLOPER arg)
