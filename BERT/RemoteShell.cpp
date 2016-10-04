@@ -573,6 +573,19 @@ void rshell_connect() {
 
 }
 
+void rshell_block(bool block) {
+
+	if (hThread && initialized) {
+		std::string msg = block ? "block" : "unblock";
+		json11::Json obj = json11::Json::object{
+			{ "type", "control" },
+			{ "data", msg }
+		};
+		push_json(obj);
+	}
+
+}
+
 void rshell_disconnect() {
 
 	if (hThread) {

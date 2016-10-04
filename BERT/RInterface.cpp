@@ -1088,6 +1088,8 @@ int notifyWatch(std::string &path) {
 	int err;
 	::WaitForSingleObject(muxExecR, INFINITE);
 
+	rshell_block(true);
+
 	SEXP env = PROTECT(R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString(ENV_NAME)), R_GlobalEnv, &err));
 	if (env)
 	{
@@ -1095,6 +1097,9 @@ int notifyWatch(std::string &path) {
 		UNPROTECT(1);
 	}
 	UNPROTECT(1);
+
+	rshell_block(false);
+
 	 ::ReleaseMutex(muxExecR);
 
 	return 0;
