@@ -575,14 +575,11 @@ void rshell_connect() {
 
 void rshell_block(bool block) {
 
-	if (hThread && initialized) {
-		std::string msg = block ? "block" : "unblock";
-		json11::Json obj = json11::Json::object{
-			{ "type", "control" },
-			{ "data", msg }
-		};
-		push_json(obj);
-	}
+	std::string msg = block ? "block" : "unblock";
+	push_json(json11::Json::object{
+		{ "type", "control" },
+		{ "data", msg }
+	});
 
 }
 
@@ -590,11 +587,10 @@ void rshell_disconnect() {
 
 	if (hThread) {
 
-		json11::Json obj = json11::Json::object{
+		push_json(json11::Json::object{
 			{ "type", "control" },
 			{ "data", "quit" }
-		};
-		push_json(obj);
+		});
 
 		threadFlag = false;
 		WaitForSingleObject(hThread, INFINITE);
@@ -608,18 +604,10 @@ void rshell_disconnect() {
 
 void rshell_send(const char *message, int flag ) {
 
-	std::string msg = message;
-
-	json11::Json my_json = json11::Json::object{
+	push_json( json11::Json::object{
 		{ "type", "console" },
-		{ "message", msg },
+		{ "message", message },
 		{ "flag", flag }
-	};
-	std::string json_str = my_json.dump();
-	json_str.append("\n");
-
-	::WaitForSingleObject(hOutboundMessagesMutex, INFINITE);
-	outboundMessages.push_back(json_str);
-	::ReleaseMutex(hOutboundMessagesMutex);
+	});
 
 }

@@ -547,6 +547,7 @@ void LoadStartupFile()
 	char buffer[MAX_PATH];
 
 	loadingStartupFile = true;
+	rshell_block(true);
 
 	DWORD dwStatus = ::WaitForSingleObject(muxExecR, INFINITE);
 
@@ -594,6 +595,7 @@ void LoadStartupFile()
 	}
 
 	::ReleaseMutex(muxExecR);
+	rshell_block(false);
 	loadingStartupFile = false;
 
 }

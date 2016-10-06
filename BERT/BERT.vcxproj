@@ -322,9 +322,6 @@
     <ResourceCompile Include="BERT.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="RWordlist.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <Image Include="..\images\bert-logo.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

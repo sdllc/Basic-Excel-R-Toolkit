@@ -48,7 +48,7 @@ Add <- function( ... ) {
 
 #--------------------------------------------------------------------
 #
-# 3. Documentation: you can add documentation to your functions, 
+# 2. Documentation: you can add documentation to your functions, 
 #    which will show up in the Excel insert function dialog.  The
 #    attribute "description" is a list.  The first (unnamed) entry
 #    will be the main documentation.  Named list entries match 
@@ -68,7 +68,7 @@ attr( Example.Function, "description" ) <- list(
 
 #--------------------------------------------------------------------
 #
-# 4. Including files: use source() to include other code files.
+# 3. Including files: use source() to include other code files.
 #    The "ExcelFunctions.R" file includes a number of useful 
 #    functions for calling the Excel API.  See the website for 
 #    documentation and examples.
@@ -79,7 +79,7 @@ source( "ExcelFunctions.R" );
 
 #--------------------------------------------------------------------
 #
-# 5. Watching files: with the code below, BERT will reload this 
+# 4. Watching files: with the code below, BERT will reload this 
 #    file whenever you save changes.  To turn that off, remove 
 #    the code.  You can watch other files too, and you can execute
 #    any function when the file changes.
