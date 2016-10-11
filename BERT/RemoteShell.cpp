@@ -22,10 +22,10 @@
 #define PIPE_TIMEOUT 5000
 #define BUFSIZE 4096
 
-
 #define STATE_NULL 0
 
 char pipename[256];
+bool block_state = false;
 std::string buffered_messages[2];
 
 static HANDLE hThread = NULL;
@@ -617,8 +617,6 @@ void rshell_connect() {
 	hConsoleMutex = ::CreateMutex(0, false, 0);
 
 }
-
-bool block_state = false;
 
 void rshell_block(bool block) {
 
