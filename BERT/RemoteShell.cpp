@@ -26,6 +26,7 @@
 #define STATE_NULL 0
 
 char pipename[256];
+std::string buffered_messages[2];
 
 static HANDLE hThread = NULL;
 static DWORD threadID = 0;
@@ -40,6 +41,7 @@ void exec_cmd_buffer();
 void cmd_buffer_internal();
 
 HANDLE hOutboundMessagesMutex = NULL;
+HANDLE hConsoleMutex = NULL;
 
 DWORD dwState = -1;
 HANDLE hPipe;
@@ -278,6 +280,31 @@ void exec_line(std::string line) {
 
 }
 
+void flushMessageBuffer() {
+
+	DWORD mutexStatus = ::WaitForSingleObject(hConsoleMutex, 0);
+	if (mutexStatus == WAIT_OBJECT_0) {
+		if (buffered_messages[1].length()) {
+			push_json(json11::Json::object{
+				{ "type", "console" },
+				{ "message", buffered_messages[1] },
+				{ "flag", 1 }
+			});
+			buffered_messages[1] = "";
+		}
+		if (buffered_messages[0].length()) {
+			push_json(json11::Json::object{
+				{ "type", "console" },
+				{ "message", buffered_messages[0] },
+				{ "flag", 0 }
+			});
+			buffered_messages[0] = "";
+		}
+		::ReleaseMutex(hConsoleMutex);
+	}
+
+}
+
 void cmd_buffer_internal() {
 
 	//cmd_buffer.push_back(line);
@@ -300,6 +327,8 @@ void cmd_buffer_internal() {
 		cmd_buffer.clear();
 		break;
 	}
+
+	flushMessageBuffer();
 
 	json11::Json obj = json11::Json::object{
 		{ "type", "exec-response" },
@@ -448,6 +477,10 @@ DWORD WINAPI threadProc(LPVOID lpvParam) {
 		DWORD dw = WaitForSingleObject(io.hEvent,  500);
 		bool fSuccess = GetOverlappedResult(hPipe, &io, &dwBytes, 0);
 
+		flushMessageBuffer();
+
+		// /message buffering
+
 		if (fSuccess) {
 
 			DebugOut("FS: State = %d\n", dwState);
@@ -581,11 +614,19 @@ void rshell_connect() {
 	hThread = CreateThread( NULL, 0, threadProc, 0, 0, &threadID);
 
 	hOutboundMessagesMutex = ::CreateMutex(0, false, 0);
+	hConsoleMutex = ::CreateMutex(0, false, 0);
 
 }
 
+bool block_state = false;
+
 void rshell_block(bool block) {
 
+	if (block_state == block) return; // don't double up
+
+	if (!block) flushMessageBuffer();
+
+	block_state = block;
 	std::string msg = block ? "block" : "unblock";
 	push_json(json11::Json::object{
 		{ "type", "control" },
@@ -610,6 +651,7 @@ void rshell_disconnect() {
 		DebugOut("[COMMS] Done\n");
 		::CloseHandle(hThread);
 		::CloseHandle(hOutboundMessagesMutex);
+		::CloseHandle(hConsoleMutex);
 	}
 	hThread = NULL;
 
@@ -617,10 +659,15 @@ void rshell_disconnect() {
 
 void rshell_send(const char *message, int flag ) {
 
+	/*
 	push_json( json11::Json::object{
 		{ "type", "console" },
 		{ "message", message },
 		{ "flag", flag }
 	});
+	*/
+	::WaitForSingleObject(hConsoleMutex, INFINITE);
+	buffered_messages[flag ? 1 : 0].append(message);
+	::ReleaseMutex(hConsoleMutex);
 
 }
