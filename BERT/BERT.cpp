@@ -380,15 +380,6 @@ void getLogText(std::list< std::string > &list)
 	}
 }
 
-
-PARSE_STATUS_2 RExecVectorBuffered(std::vector<std::string> &cmd, bool excludeFromHistory )
-{
-	PARSE_STATUS_2 ps2;
-	int err;
-	RExecVector(cmd, &err, &ps2, true, excludeFromHistory);
-	return ps2;
-}
-
 short BERT_Console()
 {
 	open_remote_shell();
@@ -482,7 +473,10 @@ long BERT_SafeCall(long cmdid, LPXLOPER12 xl, LPXLOPER xl2)
 	}
 	if (sv.size())
 	{
-		return RExecVectorBuffered(sv, excludeFlag);
+		PARSE_STATUS_2 ps2;
+		int err;
+		RExecVector(sv, &err, &ps2, true, excludeFlag);
+		return ps2;
 	}
 	return PARSE2_EOF;
 }

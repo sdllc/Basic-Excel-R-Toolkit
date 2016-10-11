@@ -101,7 +101,12 @@ int R_ReadConsole(const char *prompt, char *buf, int len, int addtohistory)
 {
 	fputs(prompt, stdout);
 	fflush(stdout);
-	if (fgets(buf, len, stdin)) return 1; else return 0;
+	if (fgets(buf, len, stdin)) {
+		return 1;
+	}
+	else {
+		return 0;
+	}
 }
 
 void R_WriteConsole(const char *buf, int len)
@@ -1457,15 +1462,17 @@ void SEXP2XLOPER(LPXLOPER12 xloper, SEXP sexp, bool inner = false, int r_offset 
 	
 	if (api_call) {
 
+		int check_len = n_cols;
+
 		if (Rf_isFrame(sexp)) {
-			n_cols = len + 1;
+			check_len = n_cols = len + 1;
 			SEXP sexp_col = PROTECT(VECTOR_ELT(sexp, 0));
 			n_rows = Rf_length(sexp_col) + 1;
 			UNPROTECT(1);
-		};
+		}
 
 		xlrows = n_rows;
-		xlcols = n_cols;
+		xlcols = check_len; //  n_cols;
 		xllen = xlrows * xlcols;
 
 		if (xllen > 1) {
@@ -1478,8 +1485,8 @@ void SEXP2XLOPER(LPXLOPER12 xloper, SEXP sexp, bool inner = false, int r_offset 
 				xloper->val.array.lparray[i].val.str = emptyStr;
 			}
 		}
-		firstRef = xloper->xltype == ( xltypeMulti | xlbitDLLFree ) ? xloper->val.array.lparray : xloper;
-
+		firstRef = xloper->xltype == (xltypeMulti | xlbitDLLFree) ? xloper->val.array.lparray : xloper;
+					
 	}
 
 	n_rows = MIN(n_rows, xlrows);
@@ -1618,7 +1625,7 @@ void SEXP2XLOPER(LPXLOPER12 xloper, SEXP sexp, bool inner = false, int r_offset 
 				n_rows = Rf_length(sexp_col);
 				for (int r = 0; r < n_rows && r < xlrows-1; r++) {
 					LPXLOPER12 ref = firstRef + ((r+1) * xlcols + (c+1));
-					SEXP2XLOPER(ref, sexp_col, true, r);
+					SEXP2XLOPER(ref, sexp_col, true, r, false); // no API call here; this should work out... ?
 				}
 				UNPROTECT(1);
 			}
@@ -1646,7 +1653,7 @@ void SEXP2XLOPER(LPXLOPER12 xloper, SEXP sexp, bool inner = false, int r_offset 
 				for (int c = 0; c < n_cols && c < xlcols; c++) {
 					LPXLOPER12 ref = firstRef + (r * xlcols + c);
 					SEXP vector_elt = VECTOR_ELT(sexp, c * n_rows + r + r_offset);
-					SEXP2XLOPER(ref, vector_elt, true);
+					SEXP2XLOPER(ref, vector_elt, true, 0, api_call);
 				}
 			}
 		}
@@ -1946,7 +1953,7 @@ void RExecVector(std::vector<std::string> &vec, int *err, PARSE_STATUS_2 *status
 {
 	ParseStatus ps;
 
-	g_buffering = true;
+	// ?? // g_buffering = true;
 
 	// if you want the history() command to appear on the history
 	// stack, like bash, you need to add the line(s) to the buffer
@@ -2075,7 +2082,7 @@ bool RExec2(LPXLOPER12 rslt, std::string &funcname, std::vector< LPXLOPER12 > &a
 	lns = PROTECT(Rf_lang5(Rf_install("do.call"), Rf_mkString(funcname.c_str()), sargs, R_MissingArg, envir));
 	PROTECT(ans = R_tryEval(lns, R_GlobalEnv, &errorOccurred));
 
-	SEXP2XLOPER(rslt, ans);
+	SEXP2XLOPER(rslt, ans, false, 0, true);
 
 	UNPROTECT(3);
 	 ::ReleaseMutex(muxExecR);

@@ -35,6 +35,9 @@ static std::vector < std::string > outboundMessages;
 
 extern AutocompleteData autocomplete;
 
+static SVECTOR cmd_buffer;
+void exec_cmd_buffer();
+void cmd_buffer_internal();
 
 HANDLE hOutboundMessagesMutex = NULL;
 
@@ -42,8 +45,6 @@ DWORD dwState = -1;
 HANDLE hPipe;
 OVERLAPPED io;
 BOOL pipePendingIO;
-
-SVECTOR cmd_buffer;
 
 extern HRESULT SafeCall(SAFECALL_CMD cmd, SVECTOR *vec, long arg, int *presult);
 
@@ -226,7 +227,8 @@ void handle_internal(const std::vector<json11::Json> &commands) {
 
 std::string buffer;
 
-void exec(std::string line) {
+void exec_line(std::string line) {
+
 
 	SVECTOR cmds;
 	buffer += line;
@@ -271,6 +273,13 @@ void exec(std::string line) {
 		return;
 	}
 
+	//exec_cmd_buffer();
+	cmd_buffer_internal();
+
+}
+
+void cmd_buffer_internal() {
+
 	//cmd_buffer.push_back(line);
 	int ips = 0;
 	SafeCall(SCC_EXEC, &cmd_buffer, 0, &ips);
@@ -298,6 +307,7 @@ void exec(std::string line) {
 	};
 
 	push_json(obj);
+
 }
 
 void endProcess() {
@@ -450,7 +460,7 @@ DWORD WINAPI threadProc(LPVOID lpvParam) {
 			else if (dwState == READING_STATE) {
 				buffer[dwBytes] = 0;
 				DebugOut("[COMMS] Reading state sucess (%d): ``%s''\n", dwBytes, buffer);
-				exec(buffer);
+				exec_line(buffer);
 			}
 
 			if (connected) {
@@ -465,7 +475,7 @@ DWORD WINAPI threadProc(LPVOID lpvParam) {
 				{
 					buffer[dwBytes] = 0;
 					DebugOut("[COMMS] immediate read success (%d): ``%s''\n", dwBytes, buffer);
-					exec(buffer);
+					exec_line(buffer);
 
 
 					dwState = CONNECTED_STATE;
@@ -567,6 +577,7 @@ void rshell_connect() {
 	
 	DebugOut("[COMMS] Create thread\n");
 	threadFlag = true;
+
 	hThread = CreateThread( NULL, 0, threadProc, 0, 0, &threadID);
 
 	hOutboundMessagesMutex = ::CreateMutex(0, false, 0);
@@ -593,7 +604,9 @@ void rshell_disconnect() {
 		});
 
 		threadFlag = false;
+
 		WaitForSingleObject(hThread, INFINITE);
+
 		DebugOut("[COMMS] Done\n");
 		::CloseHandle(hThread);
 		::CloseHandle(hOutboundMessagesMutex);
