@@ -1370,12 +1370,20 @@ void SEXP2XLOPER(LPXLOPER12 xloper, SEXP sexp, bool inner = false, int r_offset 
 	//
 	// (2) API calls should pass explicit range sizes...
 	 
+	// check length first.  if the R function returns a scalar,
+	// use standard excel behavior (which is to fill up the output range)
+
+	int len = -1, type = -1;
+	if (sexp) {
+		len = Rf_length(sexp);
+		type = TYPEOF(sexp);
+	}
 
 	int xlrows = 1;
 	int xlcols = 1;
 	int xllen = 1;
 
-	if (!inner && !api_call ) {
+	if (!inner && !api_call && len > 1) {
 
 		XLOPER12 xlrslt;
 		Excel12(xlfCaller, &xlrslt, 0, 0);
@@ -1420,8 +1428,8 @@ void SEXP2XLOPER(LPXLOPER12 xloper, SEXP sexp, bool inner = false, int r_offset 
 
 	// len, type
 
-	int len = Rf_length(sexp);
-	int type = TYPEOF(sexp);
+	//int len = Rf_length(sexp);
+	//int type = TYPEOF(sexp);
 
 	int n_rows = len;
 	int n_cols = 1;
