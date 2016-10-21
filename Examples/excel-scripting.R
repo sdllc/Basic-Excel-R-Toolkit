@@ -34,4 +34,4 @@ range$put_Value( as.matrix( iris ));
 # add column headers
 #
 header.range <- new.sheet$get_Range( "B2:F2" );
-header.range$put_Value( colnames( iris ));
+header.range$put_Value( t( colnames( iris )));
