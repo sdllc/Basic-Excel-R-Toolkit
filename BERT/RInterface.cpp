@@ -1391,21 +1391,32 @@ void SEXP2XLOPER(LPXLOPER12 xloper, SEXP sexp, bool inner = false, int r_offset 
 			xlrows = xlrslt.val.sref.ref.rwLast - xlrslt.val.sref.ref.rwFirst + 1;
 			xlcols = xlrslt.val.sref.ref.colLast - xlrslt.val.sref.ref.colFirst + 1;
 		}
+		else if (xlrslt.xltype == xltypeErr && xlrslt.val.err == xlerrRef ) {
+
+			// this probably indicates it's being called from VBA -- so we should treat
+			// as an API call? FIXME: testing
+
+			// note that this is still less efficient than calling BERT.Call, because that
+			// xlfCaller call is rather expensive
+
+			api_call = true;
+
+		}
 		Excel12(xlFree, 0, 1, (LPXLOPER12)&xlrslt);
 
-		xllen = xlrows * xlcols;
-
-		if (xllen > 1) {
-			xloper->xltype = xltypeMulti | xlbitDLLFree;
-			xloper->val.array.rows = xlrows;
-			xloper->val.array.columns = xlcols;
-			xloper->val.array.lparray = new XLOPER12[xlrows * xlcols];
-			for (int i = 0; i < xllen; i++) {
-				xloper->val.array.lparray[i].xltype = xltypeStr; // no free bit: this is static
-				xloper->val.array.lparray[i].val.str = emptyStr;
+		if (!api_call) {
+			xllen = xlrows * xlcols;
+			if (xllen > 1) {
+				xloper->xltype = xltypeMulti | xlbitDLLFree;
+				xloper->val.array.rows = xlrows;
+				xloper->val.array.columns = xlcols;
+				xloper->val.array.lparray = new XLOPER12[xlrows * xlcols];
+				for (int i = 0; i < xllen; i++) {
+					xloper->val.array.lparray[i].xltype = xltypeStr; // no free bit: this is static
+					xloper->val.array.lparray[i].val.str = emptyStr;
+				}
 			}
 		}
-		
 	}
 
 	// always do this (unless it's an array)
