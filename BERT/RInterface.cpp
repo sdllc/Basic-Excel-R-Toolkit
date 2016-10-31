@@ -1971,7 +1971,9 @@ SEXP XLOPER2SEXP( LPXLOPER12 px, int depth, bool missingArguments )
 
 void RExecVector(std::vector<std::string> &vec, int *err, PARSE_STATUS_2 *status, bool printResult, bool excludeFromHistory)
 {
+	static std::regex rex_empty("^\\s*#.*$");
 	ParseStatus ps;
+	SEXP rslt = 0;
 
 	// ?? // g_buffering = true;
 
@@ -1980,7 +1982,19 @@ void RExecVector(std::vector<std::string> &vec, int *err, PARSE_STATUS_2 *status
 	// here; and then potentially remove them if you get an INCOMPLETE
 	// response (b/c in that case we'll see it again)
 
-	SEXP rslt = PROTECT(ExecR(vec, err, &ps, true));
+	bool empty = true;
+	for (std::vector<std::string>::iterator iter = vec.begin(); empty && iter != vec.end(); iter++) {
+		std::string &test = *iter;
+		empty = empty && (!test.length() || std::regex_match(*iter, rex_empty));
+	}
+
+	if (empty) {
+		ps = PARSE_OK;
+	}
+	else {
+		rslt = PROTECT(ExecR(vec, err, &ps, true));
+	}
+
 
 	if (status)
 	{
@@ -2004,7 +2018,7 @@ void RExecVector(std::vector<std::string> &vec, int *err, PARSE_STATUS_2 *status
 		}
 	}
 
-	if (ps == PARSE_OK && printResult && rslt)
+	if (ps == PARSE_OK && !empty && printResult && rslt)
 	{
 		int checkLen = Rf_length(rslt);
 
@@ -2021,7 +2035,9 @@ void RExecVector(std::vector<std::string> &vec, int *err, PARSE_STATUS_2 *status
 		}
 	}
 
-	UNPROTECT(1);
+	if (!empty) {
+		UNPROTECT(1);
+	}
 
 	g_buffering = false;
 	flush_log();
