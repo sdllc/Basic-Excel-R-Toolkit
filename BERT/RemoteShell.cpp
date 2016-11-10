@@ -380,6 +380,8 @@ void startProcess() {
 
 	sprintf_s(args, "\"%s\\%s\" ", dir, tmp);
 
+	SetEnvironmentVariableW(L"BERT_VERSION", BERT_VERSION);
+
 	SetEnvironmentVariableA("BERT_SHELL_HOME", dir);
 	SetEnvironmentVariableA("BERT_PIPE_NAME", pipename);
 

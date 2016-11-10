@@ -4,18 +4,18 @@ HKCU
 	{
 		Classes
 		{
-			BERTRibbon.Connect.2 = s 'Connect Class'
+			BERTRibbon.Connect.2 = s 'BERT Ribbon Menu Class'
 			{
 				CLSID = s '{0445D07A-354A-4FD2-9B38-B42221BA53B7}'
 			}
-			BERTRibbon.Connect = s 'Connect Class'
+			BERTRibbon.Connect = s 'BERT Ribbon Menu Class'
 			{
 				CLSID = s '{0445D07A-354A-4FD2-9B38-B42221BA53B7}'
 				CurVer = s 'BERTRibbon.Connect.2'
 			}
 			NoRemove CLSID
 			{
-				ForceRemove '{0445D07A-354A-4FD2-9B38-B42221BA53B7}' = s 'Connect Class'
+				ForceRemove '{0445D07A-354A-4FD2-9B38-B42221BA53B7}' = s 'BERT Ribbon Menu Class'
 				{
 					ProgID = s 'BERTRibbon.Connect.2'
 					VersionIndependentProgID = s 'BERTRibbon.Connect'
@@ -38,7 +38,7 @@ HKCU
 					{
 						ForceRemove BERTRibbon.Connect
 						{
-							val Description = s 'BERTRibbon Connect Class'	
+							val Description = s 'BERTRibbon BERT Ribbon Menu Class'	
 							val FriendlyName = s 'BERT Ribbon Menu'
 							val LoadBehavior = d 3
 						}
