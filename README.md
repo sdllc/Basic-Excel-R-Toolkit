@@ -1,44 +1,48 @@
 
+![BERT logo][logo]
+
 Basic Excel R Toolkit (BERT)
 ============================
 
-Please note: user documentation is moving to [the wiki] [1].  We'll
-leave this file here, and may update it from time to time, but if 
-there's a conflict between the two the wiki should be presumed to be
-correct.
+The most up-to-date documentation for BERT is on the website 
+([https://bert-toolkit.org](https://bert-toolkit.org)):
 
+ * [Quick Start](http://bert-toolkit.com/bert-quick-start)
+ * [Example Functions](http://bert-toolkit.com/bert-example-functions)
+ * [Talking to Excel from R](http://bert-toolkit.com/talking-to-excel-from-r)
+ * [The Excel Scripting Interface](http://bert-toolkit.com/excel-scripting-interface-in-r)
+
+To install BERT, download the [latest release](https://github.com/sdllc/Basic-Excel-R-Toolkit/releases/latest).
+
+For more, visit the website.  Additional documentation is on the [wiki][1], 
+which is a little older but still accurate.  This page will contain some more 
+technical information for anyone interested in building or forking.
 
 Overview
 --------
 
-BERT is a simple connector for Excel and R.  Put some R functions in a file;
+BERT is a connector for Excel and R.  Put some R functions in a file;
 open Excel, and use those functions in your spreadsheets.  Essentially
 anything you can do in R, you can call from an Excel spreadsheet cell.
-There's also a rudimentary (working on that) console for debugging.  You can,
-if necessary, execute arbitrary R code from VBA as well.
+There's also a console for talking to Excel from R, and (if you want) you can
+run R functions from VBA as well.
 
-Usage
------
+The Console
+-----------
 
-The binary installer includes some simple example functions.
+The BERT console, which includes an integrated R shell and a code editor, has 
+grown into its [own project](https://github.com/sdllc/BERT-Console).  The console
+is separate from BERT by design; you can run BERT entirely without using the console.
 
- 1. Run the installer
+The Ribbon Menu
+---------------
 
- 2. Open a new spreadsheet
-
- 3. Select a cell and type `=R.Fibonacci(10)`
-
-That's pretty much it.  Next step is to add your own functions:
-
- 1. From the **Add-ins** tab in Excel, click the **BERT** menu and
-    **Home Directory**.
-
- 2. Add your code to the `Functions.R` file and save it
-
- 3. From the **Add-ins** tab again, click the **BERT** menu and
-    **Reload Startup File**.  Your functions should now be available in Excel.
-    If there's been an error in reading your file, it will show up in Excel's
-    status bar.
+The BERT ribbon menu is an Excel COM add-in which contains the ribbon menu/toolbar, but
+more importantly the ribbon menu is used to load the rest of BERT into Excel.  If you 
+don't want to use the ribbon menu, there's a separate Excel add-in (BERTMGR) which can 
+load it.  In general we recommend using the ribbon menu.  Note: you can run _BERT_
+without the console and without the ribbon menu, but you can't run the _console_ without
+the ribbon menu.
 
 Construction
 ------------
@@ -50,7 +54,6 @@ won't affect any other workspaces you have on your machine.
 By default it picks out functions from the global environment (via `lsf.str`);
 you can use a different environment if you want, but that environment must
 be exposed from the global environment (we will locate it with `get`).
-
 For each function, it creates an Excel function with the same arguments
 (which we determine via `formals`).  When you type in the function, or
 recalculate, the Add-in executes the function using `do.call`.
@@ -63,11 +66,11 @@ Arguments and Return Types
 
 Single-value arguments are passed to functions as basic types (Real, Integer,
 String or Boolean) depending on what Excel types they are.  If you pass a range
-of cells as an argument, that will get passed to the R function as a matrix.
+of cells as an argument, that will get passed to the R function as a matrix or a list.
 
-If all cells in the range are numeric, the matrix will be passed as a Real matrix.
-If any cell is not numeric (including Nil and Boolean) a generic matrix will
-be used instead.
+If all cells in the range are numeric, the range will be passed as a Real matrix.
+If any cell is not numeric (including Nil and Boolean) it will be passed as a list of 
+lists; you may need to do some validation or normalization before using the range.
 
 Return values work the same way; single values are mapped directly to types,
 and any result with length > 1 is returned as an Excel Array (see below).
@@ -84,7 +87,7 @@ only have to do that once.
 
 It is possible, although we don't recommend it.  Have a look at the sources
 and figure out how to do that.  Also if you use a different version of R than
-the one used to build it (currently 3.1.0), it will break.
+the one used to build it (currently 3.3.1), it will break.
 
 If you just want to reuse existing R code, you can `source` it from the BERT
 startup file.
@@ -125,7 +128,7 @@ need to know the size of the Array beforehand.
 
 This will enter the Array into the selected cells.  You can spot Arrays by
 looking at the function bar; here you'll see `{=R.Identity(4)}`.  You can
-change the shape of the array, but it's a pain.
+change the shape of the array.
 
 The other thing you can do with Excel Arrays is pass them into functions
 which can handle them.  For example, the function `=SUM( R.Identity(4))`.
@@ -135,7 +138,6 @@ headers.  That makes them better for building spreadsheet reports, but
 less useful when passing into functions.  If you intend to pass a data
 frame into a function, your R code should convert the data (less headers) into
 a matrix.
-
 
 Limitations / Issues
 --------------------
@@ -162,24 +164,27 @@ libraries you need should be explicitly loaded in your startup file.
 #### Case-Sensitivity ####
 
 R is case-sensitive, but Excel is not.  If you have two functions with the
-same name with different casing, one will get overwritten.
+same name with different casing, one will get overwritten.  
 
 #### Function Limit ####
 
-Currently BERT is limited to 100 functions.  This is essentially arbitrary, and
-can be increased.
+Currently BERT is limited to 2048 functions.  This is essentially arbitrary, and
+can be increased.  (This might sound like a lot.  It used to be 100, so this note
+used to be more important).
 
 #### Argument Limit ####
 
 Currently BERT functions have a maximum 16 arguments functions.  This is
-arbitrary but there is a hard Excel limit of 32 (?) arguments.  Although sloppy,
+arbitrary, but there is a hard Excel limit of 32 (?) arguments.  Although sloppy,
 if you need more inputs you can usually accomplish this using ranges (matrices).
 
 Compatibility
 -------------
 
-BERT is compatible with Windows Excel 2007, 2010 and 2013, both 32- and 64-bit.  
-There is no support for Excel 2003 or Macintosh.
+BERT is compatible with Windows Excel 2007, 2010, 2013 and 2016 (including Office 365), 
+in both 32- and 64-bit flavors.  There is no support for Excel 2003 or Macintosh.  The 
+console now only supports 64-bit Windows (32-bit Excel is fine, as long as it's running
+on 64-bit Windows).
 
 Building From Source
 --------------------
@@ -218,7 +223,11 @@ Default values:
     Startup file:    Functions.R
     Bitness:         32
 
+The console has some additional registry requirements; see that project for more 
+information.
 
 [1]: https://github.com/StructuredDataLLC/Basic-Excel-R-Toolkit/wiki
 
 [2]: http://msdn.microsoft.com/en-us/library/office/bb687883(v=office.15).aspx
+
+[logo]: https://cdn.rawgit.com/sdllc/Basic-Excel-R-Toolkit/90a3ba29330b7322aa3d5b84045d6df7b609fe11/bert-logo.svg
