@@ -174,9 +174,9 @@ used to be more important).
 
 #### Argument Limit ####
 
-Currently BERT functions have a maximum 16 arguments functions.  This is
-arbitrary, but there is a hard Excel limit of 32 (?) arguments.  Although sloppy,
-if you need more inputs you can usually accomplish this using ranges (matrices).
+Currently BERT functions have a maximum of 16 arguments.  This is arbitrary, but 
+there is a hard Excel limit of 32 (?) arguments.  If you need more inputs you can 
+usually accomplish this using ranges (matrices).
 
 Compatibility
 -------------
