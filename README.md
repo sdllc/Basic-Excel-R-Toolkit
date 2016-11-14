@@ -1,5 +1,5 @@
 
-![BERT logo][logo]
+[<img src="https://cdn.rawgit.com/sdllc/Basic-Excel-R-Toolkit/90a3ba29330b7322aa3d5b84045d6df7b609fe11/bert-logo.svg">](https://bert-toolkit.org/)
 
 Basic Excel R Toolkit (BERT)
 ============================
@@ -230,4 +230,4 @@ information.
 
 [2]: http://msdn.microsoft.com/en-us/library/office/bb687883(v=office.15).aspx
 
-[logo]: https://cdn.rawgit.com/sdllc/Basic-Excel-R-Toolkit/90a3ba29330b7322aa3d5b84045d6df7b609fe11/bert-logo.svg
+
