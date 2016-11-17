@@ -1,11 +1,11 @@
 
-[<img src="https://cdn.rawgit.com/sdllc/Basic-Excel-R-Toolkit/90a3ba29330b7322aa3d5b84045d6df7b609fe11/bert-logo.svg">](https://bert-toolkit.org/)
+[<img src="https://cdn.rawgit.com/sdllc/Basic-Excel-R-Toolkit/90a3ba29330b7322aa3d5b84045d6df7b609fe11/bert-logo.svg">](https://bert-toolkit.com/)
 
 Basic Excel R Toolkit (BERT)
 ============================
 
 The most up-to-date documentation for BERT is on the website 
-([https://bert-toolkit.org](https://bert-toolkit.org)):
+([https://bert-toolkit.com](https://bert-toolkit.com)):
 
  * [Quick Start](http://bert-toolkit.com/bert-quick-start)
  * [Example Functions](http://bert-toolkit.com/bert-example-functions)
