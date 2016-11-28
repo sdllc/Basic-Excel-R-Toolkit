@@ -54,10 +54,6 @@ STDMETHODIMP CConnect::OnConnection(IDispatch *pApplication, AddInDesignerObject
 	}
 
 	::SetEnvironmentVariableA("PATH", buffer);
-	::SetEnvironmentVariableA("HOME", Home);
-
-
-	delete[] buffer;
 
 	// load xll
 
@@ -109,6 +105,15 @@ STDMETHODIMP CConnect::OnConnection(IDispatch *pApplication, AddInDesignerObject
 			}
 		}
 	}
+
+	// restore original path.  note that R apparently caches environment 
+	// variables so (at least at first) the PATH variable will include 
+	// the BERT path.  since this is local to BERT, it shouldn't be a problem.
+	// however if necessary we can explicitly fix the R value.
+
+	::SetEnvironmentVariableA("PATH", buffer + blen); 
+
+	delete[] buffer;
 
 	return S_OK;
 }
