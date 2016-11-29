@@ -322,6 +322,20 @@ void MapFunction( const char *name, const char *r_name, SEXP func, SEXP env ){
 
 	STRING2STRINGMAP argument_descriptions;
 
+	// category attribute: defines the category in the Excel insert function box
+
+	SEXP categoryAttr = PROTECT(getAttrib(func, Rf_install("category")));
+	if (categoryAttr) {
+		int type = TYPEOF(categoryAttr);
+		int len = Rf_length(categoryAttr);
+		if (type == 16 && len > 0) {
+			funcdesc.function_category = CHAR(STRING_ELT(categoryAttr, 0));
+		}
+		UNPROTECT(1);
+	}
+
+	// description attrribute: function (and parameter) documentation
+
 	SEXP descAttr = PROTECT(getAttrib( func, Rf_install("description")));
 	if (descAttr) {
 

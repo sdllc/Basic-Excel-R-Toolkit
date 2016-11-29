@@ -73,6 +73,7 @@ public:
 
 	std::string r_name;
 	std::string function_description;
+	std::string function_category;
 
 public:
 	std::vector < SPAIR > pairs;
@@ -92,6 +93,7 @@ public:
 		env = rhs.env;
 		r_name = rhs.r_name;
 		function_description = rhs.function_description;
+		function_category = rhs.function_category;
 
 		for (std::vector < SPAIR > ::const_iterator iter = rhs.pairs.begin(); iter != rhs.pairs.end(); iter++) {
 			pairs.push_back(*iter);
