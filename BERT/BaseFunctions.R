@@ -52,15 +52,16 @@ ReloadStartup <- function(){ .Call(.CALLBACK, .RELOAD, 0, PACKAGE=.MODULE ); };
 # are passed to ls(), so use pattern='X' to subset 
 # functions in the environment. 
 #--------------------------------------------------------
-UseEnvironment <- function(env, prefix, ...){
+UseEnvironment <- function(env, prefix, category, ...){
 	count <- 0;
 	if( missing( prefix )){ prefix = ""; }
 	else { prefix = paste0( prefix, "." ); }
+	if( missing( category )){ category = ""; }
 	if(is.character(env)){ env = as.environment(env); }
 	lapply( ls( env, ... ), function( name ){
 		if( is.function( get( name, envir=env ))){
 			fname <- paste0( prefix, name );
-			assign( fname, list( name=fname, expr=name, envir=env ), envir=.function.map );
+			assign( fname, list( name=fname, expr=name, envir=env, category=category ), envir=.function.map );
 			count <<- count + 1;
 		}
 	});
@@ -72,9 +73,9 @@ UseEnvironment <- function(env, prefix, ...){
 # this is an alias for UseEnvironment that prepends the
 # package: for convenience.
 #--------------------------------------------------------
-UsePackage <- function( pkg, prefix, ... ){
+UsePackage <- function( pkg, prefix, category, ... ){
 	require( pkg );
-	UseEnvironment( paste0( "package:", pkg ), prefix, ... );
+	UseEnvironment( paste0( "package:", pkg ), prefix, category, ... );
 }
 
 #--------------------------------------------------------

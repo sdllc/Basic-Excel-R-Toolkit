@@ -309,7 +309,7 @@ int UpdateR(std::string &str)
 
 }
 
-void MapFunction( const char *name, const char *r_name, SEXP func, SEXP env ){
+void MapFunction( const char *name, const char *r_name, SEXP func, SEXP env, SEXP category = NULL ){
 
 	int err = 0;
 
@@ -332,6 +332,17 @@ void MapFunction( const char *name, const char *r_name, SEXP func, SEXP env ){
 			funcdesc.function_category = CHAR(STRING_ELT(categoryAttr, 0));
 		}
 		UNPROTECT(1);
+	}
+
+	// alternative (for package mapping): explicit category.  the attribute controls, 
+	// this is a fallback.
+
+	if (category && !funcdesc.function_category.length()) {
+		int type = TYPEOF(category);
+		int len = Rf_length(category);
+		if (type == 16 && len > 0) {
+			funcdesc.function_category = CHAR(STRING_ELT(category, 0));
+		}
 	}
 
 	// description attrribute: function (and parameter) documentation
@@ -522,7 +533,8 @@ void MapFunctions()
 							if (TYPEOF(rname) == STRSXP) {
 								SEXP env = VECTOR_ELT(elt, 2);
 								SEXP expr = R_tryEval(Rf_lang2(Rf_install("get"), rname), env, &err);
-								if (expr) MapFunction(name, CHAR(STRING_ELT(rname,0)), expr, env);
+								SEXP category = VECTOR_ELT(elt, 3);
+								if (expr) MapFunction(name, CHAR(STRING_ELT(rname,0)), expr, env, category);
 							}
 
 						}
