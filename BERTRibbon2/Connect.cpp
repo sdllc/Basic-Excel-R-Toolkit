@@ -7,6 +7,79 @@
 
 extern CBERTRibbon2Module _AtlModule;
 
+STDMETHODIMP CConnect::GetCustomUI(BSTR RibbonID, BSTR *pbstrRibbonXML)
+{
+	// prior to valid locales, we will support a locale/dev folder
+	// FIXME: require a registry entry to support this? 
+	
+	// or is that too far, considering you have to create this directory in the first place, 
+	// and if you have directory access you essentially have registry access as well?
+
+	char buffer[MAX_PATH];
+	if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, buffer, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_INSTALL_DIR))
+		sprintf_s(buffer, MAX_PATH, "");
+
+	int len = strlen(buffer);
+	if (len > 0) if (buffer[len - 1] != '\\') strcat_s(buffer, MAX_PATH - 1, "\\");
+
+	std::string sdir = buffer;
+	sdir += "locale\\dev\\ribbon-menu-template.xml";
+	
+	HANDLE hFile = ::CreateFileA(sdir.c_str(), GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0 );
+	if (hFile != INVALID_HANDLE_VALUE) {
+
+		std::string strContents;
+		DWORD dwRead = 0;
+		DWORD dwBuffer;
+		DWORD dwPtr = 0;
+		while (::ReadFile(hFile, buffer, MAX_PATH-1, &dwRead, 0)){
+			if (dwRead > 0) {
+				buffer[dwRead] = 0;
+				strContents += buffer;
+			}
+			else break;
+		}
+		::CloseHandle(hFile);
+		if (strContents.length() > 0) {
+			int req = ::MultiByteToWideChar(CP_UTF8, 0, strContents.c_str(), strContents.length(), 0, 0);
+			if (req > 0) {
+				WCHAR *wsz = new WCHAR[req + 1];
+				::MultiByteToWideChar(CP_UTF8, 0, strContents.c_str(), strContents.length(), wsz, req);
+				wsz[req] = 0;
+				CComBSTR bstrXML = wsz;
+				delete[] wsz;
+				*pbstrRibbonXML = bstrXML.Detach();
+				return S_OK;
+			}
+		}
+	}
+	else {
+		DWORD dwErr = ::GetLastError();
+		ATLTRACE(L"Read err: %d\n", dwErr);
+	}
+
+	HRSRC hRsrc = ::FindResource(_AtlBaseModule.m_hInstResource, MAKEINTRESOURCE(IDR_XML1), L"XML");
+	if (hRsrc)
+	{
+		DWORD dwLen = SizeofResource(_AtlBaseModule.m_hInstResource, hRsrc);
+		if (dwLen > 0)
+		{
+			HGLOBAL hGbl = LoadResource(_AtlBaseModule.m_hInstResource, hRsrc);
+			if (hGbl)
+			{
+				LPVOID pData = LockResource(hGbl);
+				if (pData)
+				{
+					CComBSTR bstrData(dwLen, (char*)pData);
+					UnlockResource(hGbl);
+					*pbstrRibbonXML = bstrData.Detach();
+				}
+			}
+		}
+	}
+	return S_OK;
+}
+
 // CConnect
 STDMETHODIMP CConnect::OnConnection(IDispatch *pApplication, AddInDesignerObjects::ext_ConnectMode /*ConnectMode*/, IDispatch *pAddInInst, SAFEARRAY ** /*custom*/)
 {

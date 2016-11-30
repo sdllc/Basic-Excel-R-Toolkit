@@ -115,29 +115,7 @@ public:
 	UBVECTOR userbuttons;
 
 	// IRibbonExtensibility Methods
-	STDMETHOD(GetCustomUI)(BSTR RibbonID, BSTR *pbstrRibbonXML)
-	{
-		HRSRC hRsrc = ::FindResource(_AtlBaseModule.m_hInstResource, MAKEINTRESOURCE(IDR_XML1), L"XML");
-		if (hRsrc)
-		{
-			DWORD dwLen = SizeofResource(_AtlBaseModule.m_hInstResource, hRsrc);
-			if (dwLen > 0)
-			{
-				HGLOBAL hGbl = LoadResource(_AtlBaseModule.m_hInstResource, hRsrc);
-				if (hGbl)
-				{
-					LPVOID pData = LockResource(hGbl);
-					if (pData)
-					{
-						CComBSTR bstrData(dwLen, (char*)pData);
-						UnlockResource(hGbl);
-						*pbstrRibbonXML = bstrData.Detach();
-					}
-				}
-			}
-		}
-		return S_OK;
-	}
+	STDMETHOD(GetCustomUI)(BSTR RibbonID, BSTR *pbstrRibbonXML);
 
 	// IDispatch methods
 	STDMETHOD(GetIDsOfNames)(REFIID riid, LPOLESTR* rgszNames, UINT cNames, LCID lcid, DISPID* rgdispid)
