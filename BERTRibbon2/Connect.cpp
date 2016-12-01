@@ -22,10 +22,37 @@ STDMETHODIMP CConnect::GetCustomUI(BSTR RibbonID, BSTR *pbstrRibbonXML)
 	int len = strlen(buffer);
 	if (len > 0) if (buffer[len - 1] != '\\') strcat_s(buffer, MAX_PATH - 1, "\\");
 
-	std::string sdir = buffer;
-	sdir += "locale\\dev\\ribbon-menu-template.xml";
+	LCID lcid = ::GetUserDefaultLCID();
+	WCHAR wstrNameBuffer[LOCALE_NAME_MAX_LENGTH];
+	DWORD error = ERROR_SUCCESS;
+	HANDLE hFile = INVALID_HANDLE_VALUE;
+
+	// FIXME: allow user override -- registry?
+
+	if (!::LCIDToLocaleName(lcid, wstrNameBuffer, LOCALE_NAME_MAX_LENGTH, 0) == 0)
+	{
+		// Success, display the locale name we found
+		char strNameBuffer[6];
+		int len = wcslen(wstrNameBuffer);
+		if (len > 5) len = 5;
+		for (int i = 0; i < len; i++) {
+			strNameBuffer[i] = wstrNameBuffer[i] & 0xff;
+		}
+		strNameBuffer[len] = 0;
+
+		std::string sdir = buffer;
+		sdir += "locale\\";
+		sdir += strNameBuffer;
+		sdir += "\\ribbon-menu-template.xml";
+		hFile = ::CreateFileA(sdir.c_str(), GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+	}
+
+	if (hFile == INVALID_HANDLE_VALUE) {
+		std::string sdir = buffer;
+		sdir += "locale\\dev\\ribbon-menu-template.xml";
+		hFile = ::CreateFileA(sdir.c_str(), GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+	}
 	
-	HANDLE hFile = ::CreateFileA(sdir.c_str(), GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0 );
 	if (hFile != INVALID_HANDLE_VALUE) {
 
 		std::string strContents;
