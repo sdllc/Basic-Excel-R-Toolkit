@@ -23,35 +23,44 @@ STDMETHODIMP CConnect::GetCustomUI(BSTR RibbonID, BSTR *pbstrRibbonXML)
 	if (len > 0) if (buffer[len - 1] != '\\') strcat_s(buffer, MAX_PATH - 1, "\\");
 
 	LCID lcid = ::GetUserDefaultLCID();
+	std::string localeStr;
 	WCHAR wstrNameBuffer[LOCALE_NAME_MAX_LENGTH];
 	DWORD error = ERROR_SUCCESS;
 	HANDLE hFile = INVALID_HANDLE_VALUE;
+	char strLocale[LOCALE_NAME_MAX_LENGTH] = { 0 };
 
 	// FIXME: allow user override -- registry?
 
-	if (!::LCIDToLocaleName(lcid, wstrNameBuffer, LOCALE_NAME_MAX_LENGTH, 0) == 0)
+	int lclen = ::LCIDToLocaleName(lcid, wstrNameBuffer, LOCALE_NAME_MAX_LENGTH, 0);
+	if (lclen > 1) // returned length includes trailing null
 	{
-		// Success, display the locale name we found
-		char strNameBuffer[6];
-		int len = wcslen(wstrNameBuffer);
-		if (len > 5) len = 5;
-		for (int i = 0; i < len; i++) {
-			strNameBuffer[i] = wstrNameBuffer[i] & 0xff;
+		for (int i = 0; i < lclen; i++) {
+			strLocale[i] = wstrNameBuffer[i] & 0xff;
 		}
-		strNameBuffer[len] = 0;
 
-		std::string sdir = buffer;
-		sdir += "locale\\";
-		sdir += strNameBuffer;
-		sdir += "\\ribbon-menu-template.xml";
-		hFile = ::CreateFileA(sdir.c_str(), GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+		// set env here, so we can use it in shell, don't need to check in app
+		::SetEnvironmentVariableA("BERT_LOCALE_ID", strLocale);
 	}
 
-	if (hFile == INVALID_HANDLE_VALUE) {
+	// check for dev template first.  this always overrides.
+
+	{
 		std::string sdir = buffer;
 		sdir += "locale\\dev\\ribbon-menu-template.xml";
 		hFile = ::CreateFileA(sdir.c_str(), GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
 	}
+
+	// if no dev, and we have locale, check that
+
+	if( hFile == INVALID_HANDLE_VALUE && strLocale[0] ){
+		std::string sdir = buffer;
+		sdir += "locale\\";
+		sdir += strLocale;
+		sdir += "\\ribbon-menu-template.xml";
+		hFile = ::CreateFileA(sdir.c_str(), GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+	}
+
+	// if either locale or dev are available, read and exit
 	
 	if (hFile != INVALID_HANDLE_VALUE) {
 
@@ -84,6 +93,8 @@ STDMETHODIMP CConnect::GetCustomUI(BSTR RibbonID, BSTR *pbstrRibbonXML)
 		DWORD dwErr = ::GetLastError();
 		ATLTRACE(L"Read err: %d\n", dwErr);
 	}
+
+	// at this point nothing worked. default to resource.  
 
 	HRSRC hRsrc = ::FindResource(_AtlBaseModule.m_hInstResource, MAKEINTRESOURCE(IDR_XML1), L"XML");
 	if (hRsrc)
