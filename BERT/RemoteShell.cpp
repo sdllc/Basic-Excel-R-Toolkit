@@ -356,6 +356,14 @@ void startProcess() {
 	char args[512];
 	char dir[512];
 
+	// install dir (for locating files)
+
+	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, args, 511, REGISTRY_KEY, REGISTRY_VALUE_INSTALL_DIR))
+		strcpy_s(args, "");
+
+	SetEnvironmentVariableA("BERT_INSTALL", args);
+	args[0] = 0;
+
 	// this is the home directory (R_USER or BERT_HOME)
 
 	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, args, 511, REGISTRY_KEY, REGISTRY_VALUE_R_USER))

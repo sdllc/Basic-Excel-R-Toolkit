@@ -7,6 +7,7 @@ ipch
 *.ilk
 *.user
 *.aps
+*.pdb
 *.opensdf
 *.sdf
 
@@ -25,5 +26,9 @@ BERT/ExcelLib
 *.dll
 *.lib
 *.exp
+
+# locale dev
+
+BERT/locale/dev
 
 # ??
