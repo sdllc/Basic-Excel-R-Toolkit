@@ -1627,7 +1627,7 @@ void SEXP2XLOPER(LPXLOPER12 xloper, SEXP sexp, bool inner = false, int r_offset 
 				LPXLOPER12 ref = firstRef + (r * xlcols + c);
 				double dbl = (REAL(sexp))[c * n_rows + r + r_offset];
 
-				if (dbl == NA_REAL || isnan(dbl)) {
+				if( !R_finite(dbl)){ 
 					ref->xltype = xltypeErr;
 					ref->val.err = xlerrNA;
 				}
