@@ -48,6 +48,8 @@
 #include "RCOM.h"
 #include "RemoteShell.h"
 
+#include "BERTJSON.h"
+
 #ifndef MIN
 #define MIN(a,b) ( a < b ? a : b )
 #endif 
@@ -1995,7 +1997,7 @@ SEXP XLOPER2SEXP( LPXLOPER12 px, int depth, bool missingArguments )
 
 }
 
-void RExecVector(std::vector<std::string> &vec, int *err, PARSE_STATUS_2 *status, bool printResult, bool excludeFromHistory)
+void RExecVector(std::vector<std::string> &vec, int *err, PARSE_STATUS_2 *status, bool printResult, bool excludeFromHistory, std::string *pjresult )
 {
 	static std::regex rex_empty("^\\s*#.*$");
 	ParseStatus ps;
@@ -2044,23 +2046,31 @@ void RExecVector(std::vector<std::string> &vec, int *err, PARSE_STATUS_2 *status
 		}
 	}
 
-	if (ps == PARSE_OK && !empty && printResult && rslt)
+	if (ps == PARSE_OK && rslt)
 	{
-		int checkLen = Rf_length(rslt);
+		if (printResult) {
 
-		SEXP elt = VECTOR_ELT(rslt, 1);
-		int *pVisible = LOGICAL(elt);
+			if (!empty) {
+				int checkLen = Rf_length(rslt);
 
-		SEXP v0 = VECTOR_ELT(rslt, 0);
-		int vt = TYPEOF(v0);
+				SEXP elt = VECTOR_ELT(rslt, 1);
+				int *pVisible = LOGICAL(elt);
 
-		if (*pVisible) {
-			::WaitForSingleObject(muxExecR, INFINITE);
-			Rf_PrintValue(VECTOR_ELT(rslt, 0));
-			 ::ReleaseMutex(muxExecR);
+				SEXP v0 = VECTOR_ELT(rslt, 0);
+				int vt = TYPEOF(v0);
+
+				if (*pVisible) {
+					::WaitForSingleObject(muxExecR, INFINITE);
+					Rf_PrintValue(VECTOR_ELT(rslt, 0));
+					::ReleaseMutex(muxExecR);
+				}
+			}
+		}
+		else {
+			if( pjresult ) (*pjresult) = SEXP2JSONstring(rslt);
 		}
 	}
-
+	
 	if (!empty) {
 		UNPROTECT(1);
 	}

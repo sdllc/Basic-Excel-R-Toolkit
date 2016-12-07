@@ -246,6 +246,7 @@
   <ItemGroup>
     <ClInclude Include="Autocomplete.h" />
     <ClInclude Include="BERT.h" />
+    <ClInclude Include="BERTJSON.h" />
     <ClInclude Include="BERT_Version.h" />
     <ClInclude Include="RemoteShell.h" />
     <ClInclude Include="Console.h" />
@@ -270,6 +271,7 @@
   <ItemGroup>
     <ClCompile Include="BERT.cpp" />
     <ClCompile Include="BERTCOM.cpp" />
+    <ClCompile Include="BERTJSON.cpp" />
     <ClCompile Include="RemoteShell.cpp" />
     <ClCompile Include="Dialogs.cpp" />
     <ClCompile Include="dllmain.cpp">

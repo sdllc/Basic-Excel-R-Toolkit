@@ -45,6 +45,7 @@ HWND hWndConsole = 0;
 /* mutex for locking the console message history */
 HANDLE muxLogList = 0;
 
+std::string strresult;
 AutocompleteData autocomplete;
 
 extern void FreeStream();
@@ -475,7 +476,8 @@ long BERT_SafeCall(long cmdid, LPXLOPER12 xl, LPXLOPER xl2)
 	{
 		PARSE_STATUS_2 ps2;
 		int err;
-		RExecVector(sv, &err, &ps2, true, excludeFlag);
+		if( cmdid == 1 ) RExecVector(sv, &err, &ps2, false, true, &strresult); // internal 
+		else RExecVector(sv, &err, &ps2, true, excludeFlag);
 		return ps2;
 	}
 	return PARSE2_EOF;

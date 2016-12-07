@@ -118,7 +118,7 @@ bool RExec2(LPXLOPER12 rslt, std::string &funcname, std::vector< LPXLOPER12 > &a
 bool RExec3(LPXLOPER12 rslt, std::string &funcname);
 bool RExec4(LPXLOPER12 rslt, RFuncDesc2 &func, std::vector< LPXLOPER12 > &args);
 
-void RExecVector(std::vector < std::string > &vec, int *err = 0, PARSE_STATUS_2 *parseErr = 0, bool printResult = true, bool excludeFromHistory = false);
+void RExecVector(std::vector < std::string > &vec, int *err = 0, PARSE_STATUS_2 *parseErr = 0, bool printResult = true, bool excludeFromHistory = false, std::string *pjresult = 0);
 int UpdateR(std::string &str);
 
 void ClearFunctions();

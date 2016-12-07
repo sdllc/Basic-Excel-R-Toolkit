@@ -34,6 +34,7 @@ static bool threadFlag = false;
 
 static std::vector < std::string > outboundMessages;
 
+extern std::string strresult;
 extern AutocompleteData autocomplete;
 
 static SVECTOR cmd_buffer;
@@ -220,6 +221,42 @@ void handle_internal(const std::vector<json11::Json> &commands) {
 		}
 		else if (!cmd.compare("hide")) {
 			hide_console();
+		}
+		else if (!cmd.compare("exec")) {
+
+			int ips = 0;
+			std::string err;
+			json11::Json obj;
+			SVECTOR sv;
+
+			for (int i = 1; i < commands.size(); i++ )
+				sv.push_back(commands[i].string_value());
+
+			SafeCall(SCC_EXEC, &sv, 1, &ips);
+			DebugOut("[COMMS] safecall result: %d\n", ips);
+			switch ((PARSE_STATUS_2)ips) {
+			case PARSE2_INCOMPLETE:
+			case PARSE2_EXTERNAL_ERROR:
+			case PARSE2_ERROR:
+				response = json11::Json::object{
+					{ "type", "error" },
+					{ "error", ips }};
+				break;
+			default:
+				obj = json11::Json::parse(strresult, err);
+				if (err.length()) {
+					response = json11::Json::object{
+						{ "type", "error" },
+						{ "error", err } };
+				}
+				else {
+					response = json11::Json::object{
+						{ "type", "response" },
+						{ "response",  obj } };
+				}
+				break;
+			}
+
 		}
 	}
 

@@ -272,7 +272,8 @@ HRESULT SafeCall( SAFECALL_CMD cmd, std::vector< std::string > *vec, long arg, i
 					iter++;
 				}
 
-				hr = DispatchCall(pdisp, CComVariant(CComBSTR("BERT.SafeCall")), CComVariant(0L), CComVariant((LPSAFEARRAY)cc), cvRslt);
+				// internally this calls back to BERT_SafeCall
+				hr = DispatchCall(pdisp, CComVariant(CComBSTR("BERT.SafeCall")), CComVariant(arg), CComVariant((LPSAFEARRAY)cc), cvRslt);
 				cc.Destroy();
 			}
 			break;
