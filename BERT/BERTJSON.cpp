@@ -34,6 +34,8 @@
 #include <R_ext\Parse.h>
 #include <R_ext\Rdynload.h>
 
+#undef length
+
 #ifndef MIN
 #define MIN(a,b) ( a < b ? a : b )
 #endif 
@@ -287,35 +289,36 @@ json11::Json& SEXP2JSON(SEXP sexp, json11::Json &jresult, bool compress_array = 
 		// pairs as in the R list.  however in javascript/json, order isn't 
 		// necessarily retained, so it's questionable whether this is a good thing.
 
-		/*
 		if (names) {
 
-			//JSONDocument hash;
-			json11::Json hash;
+			// JSONDocument hash;
+			std::map< std::string, json11::Json > hash;
 			char buffer[64];
-			json11::Json *target = (attrs ? &hash : &jresult);
+			std::map< std::string, json11::Json > *target = attrs ? &hash : &result;
 
 			for (int i = 0; i< len; i++) {
-				std::string strname = jnames[i];
-
+				std::string strname = jnames[i].string_value();
 				if (strname.length() == 0) {
-					snprintf(buffer, 64, "$%d", i + 1); // 1-based per R convention
+					sprintf_s(buffer, 64, "$%d", i + 1); // 1-based per R convention
 					strname = buffer;
 				}
 
-				JSONValue jv = vector[(size_t)i];
-				target->add(strname.c_str(), jv);
+				//JSONValue jv = vector[(size_t)i];
+				//target->add(strname.c_str(), jv);
+
+				target->insert(std::pair< std::string, json11::Json >( strname, vector[i] ));
+
 			}
 			if (attrs) {
-				jresult.add("$data", hash);
-				jresult.add("$names", jnames);
+				result.insert(std::pair< std::string, json11::Json>("$data", hash));
+				result.insert(std::pair< std::string, json11::Json>("$names", jnames));
 			}
-			else jresult.add("$type", rtype);
+			else result.insert(std::pair< std::string, json11::Json>("$type", rtype));
+
+			jresult = result;
 
 		}
-		else 
-		*/
-		{
+		else {
 			if (attrs) {
 				result.insert(std::pair< std::string, json11::Json>("$data", vector));
 				jresult = result;
