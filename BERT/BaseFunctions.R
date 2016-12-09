@@ -18,6 +18,8 @@ with( BERT, {
 .RELOAD <- 1022;
 .CLOSECONSOLE <- 1023;
 
+.PROGRESSBAR <- 2000;
+
 .CALLBACK <- "BERT_Callback";
 .COM_CALLBACK <- "BERT_COM_Callback";
 
@@ -401,9 +403,99 @@ rc.options( custom.completer= function (.CompletionEnv)
 	    }
 });
 
+#========================================================
+# progress bars
+#========================================================
+
+	progress.bars <- new.env();
+	with( progress.bars, {
+
+		progress.bar.list <- list();
+		progress.bar.key <- 1;
+
+		js.client.progress.bar <- function( min=0, max=1, initial=min, ... ){
+
+			key <- progress.bar.key;
+			struct <- list( key=key, min=min, max=max, initial=initial, value=initial, ... );
+			handle <- list( key=key );
+			class(handle) <- "js.client.progress.bar";
+			progress.bar.list[[toString(key)]] <<- struct;
+			# .js.client.callback( "progress.bar", struct );
+		
+			invisible(.Call(.CALLBACK, .PROGRESSBAR, struct, PACKAGE=.MODULE ));
+
+			# increment key	for next call
+			progress.bar.key <<- progress.bar.key + 1;	
+	
+			return(handle);
+		}
+
+		js.client.get.progress.bar <- function( pb ){
+			struct <- progress.bar.list[[toString(pb$key)]];
+			return( struct$value );	
+		}
+
+		js.client.set.progress.bar <- function( pb, value ){
+			struct <- progress.bar.list[[toString(pb$key)]];
+			struct$value <- value;
+			progress.bar.list[[toString(pb$key)]] <<- struct;
+			# .js.client.callback( "progress.bar", struct );
+			invisible(.Call(.CALLBACK, .PROGRESSBAR, struct, PACKAGE=.MODULE ));
+			return( struct$value );	
+		}
+
+		close.js.client.progress.bar <- function( pb ){
+			struct <- progress.bars[[toString(pb$key)]];
+			struct$closed <- T;
+			# .js.client.callback( "progress.bar", struct );
+			invisible(.Call(.CALLBACK, .PROGRESSBAR, struct, PACKAGE=.MODULE ));
+			progress.bar.list[[toString(pb$key)]] <<- NULL;
+		}
+
+
+		(function(){
+
+		#-----------------------------------------------------------------------------
+		# replace win progress bar with an inline progress bar.  there's a slight
+		# difference in that these functions might not exist on linux.
+		#-----------------------------------------------------------------------------
+
+		override.binding <- function( name, func, ns, assign.in.namespace=T ){
+			if( exists( name ) ){ 
+				package <- paste0( "package:", ns );
+				unlockBinding( name, as.environment(package)); 
+				assign( name, func, as.environment(package));
+				if( assign.in.namespace ){
+					ns <- asNamespace( ns );
+					if (bindingIsLocked(name, ns)) {
+						unlockBinding(name, ns)
+						assign(name, func, envir = ns, inherits = FALSE)
+						w <- options("warn")
+						on.exit(options(w))
+						options(warn = -1)
+						lockBinding(name, ns)
+					}
+					else assign(name, func, envir = ns, inherits = FALSE);
+				}
+				lockBinding( name, as.environment(package)); 
+			}
+		}
+
+		override.binding( "winProgressBar", js.client.progress.bar, "utils");
+		override.binding( "setWinProgressBar", js.client.set.progress.bar, "utils");
+		override.binding( "getWinProgressBar", js.client.get.progress.bar, "utils");
+
+		override.binding( "txtProgressBar", js.client.progress.bar, "utils");
+		override.binding( "setTxtProgressBar", js.client.set.progress.bar, "utils");
+		override.binding( "getTxtProgressBar", js.client.get.progress.bar, "utils");
+
+		})();
+
+	}); # end with (progress.bars)
 
 }); # end with(BERT)
 
+attach( BERT$progress.bars );
 
 #========================================================
 # utility methods and types

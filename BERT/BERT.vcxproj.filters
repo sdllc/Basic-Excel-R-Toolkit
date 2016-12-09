@@ -84,6 +84,9 @@
     <ClInclude Include="BERTJSON.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="UtilityContainers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

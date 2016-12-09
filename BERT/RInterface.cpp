@@ -247,7 +247,7 @@ void R_CallBack(void)
 void myBusy(int which)
 {
 	/* set a busy cursor ... if which = 1, unset if which = 0 */
-	DebugOut("busy\n");
+	DebugOut("busy? %d\n", which);
 }
 
 /** 
@@ -2183,6 +2183,14 @@ SEXP BERTWatchFiles(SEXP list) {
 
 }
 
+SEXP ProgressBarCallback(SEXP data) {
+
+	std::string str = SEXP2JSONstring(data);
+	rshell_push_packet("progress", str.c_str());
+	return R_NilValue;
+
+}
+
 SEXP ExcelCall(SEXP cmd, SEXP data)
 {
 	int dlen = Rf_length(data);
@@ -2447,6 +2455,10 @@ SEXP BERT_Callback(SEXP cmd, SEXP data, SEXP data2)
 	}
 	switch (command)
 	{
+	case CC_PROGRESS_BAR:
+		return ProgressBarCallback(data);
+		break;
+
 	case CC_REMAP_FUNCTIONS:
 		return RemapFunctions();
 		break;

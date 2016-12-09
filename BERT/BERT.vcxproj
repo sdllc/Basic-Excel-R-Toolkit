@@ -267,6 +267,7 @@
     <ClInclude Include="ThreadLocalStorage.h" />
     <ClInclude Include="Updates.h" />
     <ClInclude Include="util.h" />
+    <ClInclude Include="UtilityContainers.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BERT.cpp" />

@@ -6,6 +6,7 @@
 #include <Objbase.h>
 
 #include <vector>
+#include <deque>
 #include <string>
 
 #include "util.h"
@@ -14,46 +15,91 @@
 #include "BERT.h"
 #include "RegistryUtils.h"
 
-#define CONNECTING_STATE 1 
-#define CONNECTED_STATE 2
-#define READING_STATE 4 
-#define WRITING_STATE 8 
+#include "UtilityContainers.h"
+
+typedef enum {
+
+	UNDEFINED = 0,
+
+	CONNECTING,
+	CONNECTED,
+	READING,
+	WRITING
+
+} PIPE_STATE;
+
 #define INSTANCES 4 
 #define PIPE_TIMEOUT 5000
 #define BUFSIZE 4096
 
-#define STATE_NULL 0
+/** flag: have we created the process? */
+int initialized = false;
 
+/** randomly generated pipe name */
 char pipename[256];
-bool block_state = false;
-std::string buffered_messages[2];
 
+/** flag: console is blocking. */
+bool block_state = false;
+
+/** console output buffers */
+locked_string_buffer buffered_messages[2];
+
+/** pipe read/write thread */
 static HANDLE hThread = NULL;
-static DWORD threadID = 0;
+
+/** control flag */
 static bool threadFlag = false;
 
-static std::vector < std::string > outboundMessages;
+/** outbound message queue */
+locked_deque<std::string> outboundMessages;
+
+/** exec thread handle */
+HANDLE hExecThread = 0;
+
+/** queue for exec thread */
+locked_deque< std::string > exec_queue;
+
+/** event for notifying exec thread */
+HANDLE hExecEvent = 0;
+HANDLE hExecMutex = 0;
+
+/** buffer for command processing */
+locked_deque < string > exec_buffer;
+
+/** timer queue for pushing writes */
+HANDLE hTimerQueue = 0;
+
+/** single timer event (we can push forward) */
+HANDLE hTimerQueueTimer = 0;
+
+/** signal event for timer */
+HANDLE hTimerEvent = 0;
 
 extern std::string strresult;
 extern AutocompleteData autocomplete;
+extern HRESULT SafeCall(SAFECALL_CMD cmd, SVECTOR *vec, long arg, int *presult);
 
-static SVECTOR cmd_buffer;
-void exec_cmd_buffer();
-void cmd_buffer_internal();
+PIPE_STATE pipeState = PIPE_STATE::UNDEFINED;
 
-HANDLE hOutboundMessagesMutex = NULL;
-HANDLE hConsoleMutex = NULL;
-
-DWORD dwState = -1;
 HANDLE hPipe;
 OVERLAPPED io;
 BOOL pipePendingIO;
 
-extern HRESULT SafeCall(SAFECALL_CMD cmd, SVECTOR *vec, long arg, int *presult);
-
-HWND g_HWND = NULL;
+/** PID for created child process */
 DWORD childProcessId;
 
+/** fwd: batch and push out buffered console messages */
+void flushMessageBuffer();
+
+//=============================================================================
+//
+// window management
+//
+//=============================================================================
+
+/** 
+ * tail routine for enum windows proc; hides or shows matching windows.
+ */
 BOOL CALLBACK EnumWindowsProcHide(HWND hwnd, LPARAM lParam)
 {
 	DWORD pid;
@@ -68,6 +114,8 @@ BOOL CALLBACK EnumWindowsProcHide(HWND hwnd, LPARAM lParam)
 	{
 		//
 		// FIXME: watch out, this could be fragile...
+		// probably match on just the Chrome_ part, should be 
+		// specific enough (since we're matching PID)
 		//
 
 		::RealGetWindowClassA(hwnd, className, 256);
@@ -110,20 +158,26 @@ BOOL CALLBACK EnumWindowsProcHide(HWND hwnd, LPARAM lParam)
 	return TRUE;
 }
 
+/** hide console window(s) */
 void hide_console() {
-
 	DebugOut("Hide Console\n");
-	BOOL rslt = EnumWindows(EnumWindowsProcHide, false);
+	EnumWindows(EnumWindowsProcHide, false);
+
+	// FIXME: focus on the excel window
 
 }
 
+/** show console window(s) */
 void show_console() {
-
 	DebugOut("Show Console\n");
-	BOOL rslt = EnumWindows(EnumWindowsProcHide, true);
-
+	EnumWindows(EnumWindowsProcHide, true);
 }
 
+//=============================================================================
+//
+// shell api
+//
+//=============================================================================
 
 /**
  * write message, if one is on the queue.  
@@ -135,25 +189,16 @@ BOOL writeNextMessage() {
 
 	while (true) {
 
-		::WaitForSingleObject(hOutboundMessagesMutex, INFINITE);
-		int len = outboundMessages.size();
-		if (len){
-			str = outboundMessages[0];
-			outboundMessages.erase(outboundMessages.begin());
-		}
-		::ReleaseMutex(hOutboundMessagesMutex);
-
+		int len = outboundMessages.locked_size();
 		if (!len) return FALSE; // nothing to write
 
-		// DebugOut("[COMMS] writing\n");
+		str = outboundMessages.locked_pop_front();
 
-		dwState = WRITING_STATE;
+		pipeState = PIPE_STATE::WRITING;
 		BOOL fSuccess = ::WriteFile(hPipe, str.c_str(), str.length(), &dwBytes, &io);
 		if (fSuccess && dwBytes > 0)
 		{
-			// DebugOut("[COMMS] immediate write success (%d)\n", dwBytes);
-			dwState = CONNECTED_STATE;
-			// return FALSE;
+			pipeState = PIPE_STATE::CONNECTED;
 		}
 		else return TRUE; // op pending
 
@@ -167,12 +212,18 @@ void push_json(const json11::Json &obj) {
 
 	std::string str = obj.dump();
 	str.append("\n");
+	outboundMessages.locked_push_back(str);
 
-	::WaitForSingleObject(hOutboundMessagesMutex, INFINITE);
-	outboundMessages.push_back(str);
-	::ReleaseMutex(hOutboundMessagesMutex);
+	// short timer
+	::ChangeTimerQueueTimer(hTimerQueue, hTimerQueueTimer, 25, 25);
+
 }
 
+/**
+ * handle an "internal" command.  we're moving away from these in
+ * favor of more generic function calls, but these are here for
+ * the time being.
+ */
 void handle_internal(const std::vector<json11::Json> &commands) {
 
 	json11::Json response = json11::Json::object{
@@ -182,6 +233,7 @@ void handle_internal(const std::vector<json11::Json> &commands) {
 	int csize = commands.size();
 
 	if (csize) {
+
 		std::string cmd = commands[0].string_value();
 		if (!cmd.compare("autocomplete") && csize == 3 ) {
 
@@ -233,7 +285,7 @@ void handle_internal(const std::vector<json11::Json> &commands) {
 				sv.push_back(commands[i].string_value());
 
 			SafeCall(SCC_EXEC, &sv, 1, &ips);
-			DebugOut("[COMMS] safecall result: %d\n", ips);
+			//DebugOut("[COMMS] safecall result: %d (%u)\n", ips, GetTickCount());
 			switch ((PARSE_STATUS_2)ips) {
 			case PARSE2_INCOMPLETE:
 			case PARSE2_EXTERNAL_ERROR:
@@ -264,18 +316,23 @@ void handle_internal(const std::vector<json11::Json> &commands) {
 
 }
 
-std::string buffer;
+void exec_commands_internal(std::string line) {
 
-void exec_line(std::string line) {
+	static SVECTOR cmd_buffer;
 
+	// now we expect fully-formed command packets (potentially more than one) 
+	// instead of just partial lines.  so we're not buffering strings here.
+	// packets are separated by newlines (internal newlines are escaped).
 
 	SVECTOR cmds;
-	buffer += line;
 	Util::split(line, '\n', 0, cmds);
-	buffer = "";
+
+	if (cmd_buffer.size()) {
+		DebugOut(" ** CBS \n");
+	}
 
 	for (SVECTOR::iterator iter = cmds.begin(); iter != cmds.end(); iter++) {
-		DebugOut("ITER: %s\n", iter->c_str());
+
 		if (Util::endsWith(*iter, "}")) {
 
 			std::string err;
@@ -291,102 +348,97 @@ void exec_line(std::string line) {
 			}
 			else if (!jcommand.compare("internal")) {
 				const std::vector< json11::Json > arr = j["commands"].array_items();
+
+				// why does this return, instead of just processing and continuing on?
+				// what happens if there are other commands on the (local) queue?
+
+				// I guess put another way, is there a case where internal and external (exec) 
+				// calls are mixed?  if not, then there's no need for the command buffer
+				// to be static.  (in fact I think that's the case).
+
 				return handle_internal(arr);
 			}
-			else DebugOut("c? %s\n", jcommand.c_str());
-
-		}
+			else {
+				DebugOut("c? %s\n", jcommand.c_str());
+			}
+		} 
 		else {
-			buffer = *iter;
+			DebugOut(" ** MALFORMED PACKET\n%s\n\n", iter->c_str());
 		}
+
 	}
 
-	if (!cmd_buffer.size()) {
+	if (cmd_buffer.size()) {
 
-		json11::Json obj = json11::Json::object{
+		int ips = 0;
+		SafeCall(SCC_EXEC, &cmd_buffer, 0, &ips);
+
+		switch ((PARSE_STATUS_2)ips) {
+		case PARSE2_INCOMPLETE:
+			cmd_buffer.clear();
+			break;
+		case PARSE2_EXTERNAL_ERROR:
+			rshell_send("processing error: is Excel busy?\n", 1);
+			cmd_buffer.clear();
+			break;
+		case PARSE2_ERROR:
+			rshell_send("parse error\n", 1);
+			cmd_buffer.clear();
+			break;
+		default:
+			cmd_buffer.clear();
+			break;
+		}
+
+		flushMessageBuffer();
+
+		push_json(json11::Json::object{
 			{ "type", "exec-response" },
-			{ "parsestatus", 0}
-		};
-		push_json(obj);
+			{ "parsestatus", ips }
+		});
 
-		return;
+	}
+	else {
+		push_json(json11::Json::object{
+			{ "type", "exec-response" },
+			{ "parsestatus", 0 }
+		});
 	}
 
-	//exec_cmd_buffer();
-	cmd_buffer_internal();
+}
 
+void exec_commands(std::string line) {
+
+	// ...
+	::WaitForSingleObject(hExecMutex, INFINITE);
+	exec_buffer.locked_push_back(line);
+	::SetEvent(hExecEvent);
+	::ReleaseMutex(hExecMutex);
+
+	// exec_commands_internal(line);
 }
 
 void flushMessageBuffer() {
 
-	DWORD mutexStatus = ::WaitForSingleObject(hConsoleMutex, 0);
-	if (mutexStatus == WAIT_OBJECT_0) {
-		if (buffered_messages[1].length()) {
+	string s;
+
+	// send buffer 1, then buffer 0
+	// wait: how does that make any sense? what's up with the two buffers, anyway?
+
+	for (int i = 1; i >= 0; i--) {
+		buffered_messages[i].take(s);
+		if (s.length()) {
 			push_json(json11::Json::object{
-				{ "type", "console" },
-				{ "message", buffered_messages[1] },
-				{ "flag", 1 }
+				{ "type", "console" }, { "message", s }, { "flag", i }
 			});
-			buffered_messages[1] = "";
 		}
-		if (buffered_messages[0].length()) {
-			push_json(json11::Json::object{
-				{ "type", "console" },
-				{ "message", buffered_messages[0] },
-				{ "flag", 0 }
-			});
-			buffered_messages[0] = "";
-		}
-		::ReleaseMutex(hConsoleMutex);
 	}
 
 }
 
-void cmd_buffer_internal() {
-
-	//cmd_buffer.push_back(line);
-	int ips = 0;
-	SafeCall(SCC_EXEC, &cmd_buffer, 0, &ips);
-	DebugOut("[COMMS] safecall result: %d\n", ips);
-	switch ((PARSE_STATUS_2)ips) {
-	case PARSE2_INCOMPLETE:
-		cmd_buffer.clear();
-		break;
-	case PARSE2_EXTERNAL_ERROR:
-		rshell_send("processing error: is Excel busy?\n", 1);
-		cmd_buffer.clear();
-		break;
-	case PARSE2_ERROR:
-		rshell_send("parse error\n", 1);
-		cmd_buffer.clear();
-		break;
-	default:
-		cmd_buffer.clear();
-		break;
-	}
-
-	flushMessageBuffer();
-
-	json11::Json obj = json11::Json::object{
-		{ "type", "exec-response" },
-		{ "parsestatus", ips }
-	};
-
-	push_json(obj);
-
-}
-
-void endProcess() {
-
-	json11::Json obj = json11::Json::object{
-		{ "type", "control" },
-		{ "message", "quit" }
-	};
-	push_json(obj);
-	// ...
-
-}
-
+/**
+ * start the console process 
+ */
 void startProcess() {
 
 	char tmp[256];
@@ -458,9 +510,57 @@ void startProcess() {
 
 }
 
+DWORD WINAPI execThreadProc(LPVOID lpvParam) {
+
+	DebugOut("[EXEC] thread starting\n");
+
+	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+	deque< string > buffer;
+
+	while (threadFlag) {
+		DWORD dw = ::WaitForSingleObject(hExecEvent, 500);
+		if (dw == WAIT_OBJECT_0) {
+
+			::WaitForSingleObject(hExecMutex, INFINITE);
+			exec_buffer.locked_consume(buffer);
+			::ResetEvent(hExecEvent);
+			::ReleaseMutex(hExecMutex);
+
+			for (deque<string>::iterator iter = buffer.begin(); iter != buffer.end(); iter++ )
+				exec_commands_internal(*iter);
+			buffer.clear();
+
+		}
+	}
+
+	// done 
+	::CoUninitialize();
+
+	DebugOut("[EXEC] thread done\n");
+	return 0;
+}
+
+/**
+ * timer proc
+ */
+VOID CALLBACK timerProc(PVOID lpParam, BOOLEAN TimerOrWaitFired) {
+
+	if (!threadFlag) return; // closing 
+
+	// signal io
+	SetEvent(hTimerEvent);
+
+	// reset to slow timer
+	ChangeTimerQueueTimer(hTimerQueue, hTimerQueueTimer, 1000, 1000);
+}
+
+/**
+ * pipe thread proc
+ */
 DWORD WINAPI threadProc(LPVOID lpvParam) {
 
 	DebugOut("[COMMS] thread starting\n");
+	
 	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 
 	bool fConnected = false;
@@ -471,11 +571,19 @@ DWORD WINAPI threadProc(LPVOID lpvParam) {
 	char tmp[256];
 	sprintf_s(tmp, "\\\\.\\pipe\\%s", pipename);
 
+	// re: buffer sizes, from docs:
+	//
+	// The input and output buffer sizes are advisory.The actual buffer size reserved for each end of the 
+	// named pipe is either the system default, the system minimum or maximum, or the specified size rounded 
+	// up to the next allocation boundary.The buffer size specified should be small enough that your process 
+	// will not run out of nonpaged pool, but large enough to accommodate typical requests.
+	//
+
 	hPipe = CreateNamedPipeA(
 		tmp,
 		PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
 		PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
-		PIPE_UNLIMITED_INSTANCES, 
+		8, // PIPE_UNLIMITED_INSTANCES, // we really only need 1, except for dev/debug
 		4096,
 		4096,
 		100,
@@ -488,18 +596,18 @@ DWORD WINAPI threadProc(LPVOID lpvParam) {
 	}
 
 	DebugOut("[COMMS] Create pipe OK\n");
-
 	DebugOut("[COMMS] calling startProcess\n");
+
 	startProcess();
 
 	DebugOut("[COMMS] calling connect (overlapped)\n");
 
 	DWORD dwBytes, dwRead = 0, dwWrite = 0;
 	bool connected = false;
-	dwState = CONNECTING_STATE;
+	pipeState = PIPE_STATE::CONNECTING;
 
-	// all these async calls _may_ return immediately, so 
-	// you need to handle everything twice.
+	// all these async calls _may_ return immediately, so you need to handle 
+	// everything twice. [really? how does that make any sense?]
 
 	if (ConnectNamedPipe(hPipe, &io)) {
 		// this is an error
@@ -519,9 +627,17 @@ DWORD WINAPI threadProc(LPVOID lpvParam) {
 		}
 	}
 
+	HANDLE handles[2];
+	handles[1] = hTimerEvent;
+	handles[0] = io.hEvent;
+
 	while (threadFlag) {
 
-		DWORD dw = WaitForSingleObject(io.hEvent,  500);
+		DWORD dw = WaitForMultipleObjects(2, handles, FALSE, 500);
+		ResetEvent(hTimerEvent);
+
+		//DWORD dw = WaitForSingleObject(io.hEvent,  500);
+
 		bool fSuccess = GetOverlappedResult(hPipe, &io, &dwBytes, 0);
 
 		flushMessageBuffer();
@@ -530,17 +646,17 @@ DWORD WINAPI threadProc(LPVOID lpvParam) {
 
 		if (fSuccess) {
 
-			DebugOut("FS: State = %d\n", dwState);
+			// DebugOut("FS: State = %d\n", pipeState);
 
-			if (dwState == CONNECTING_STATE) {
+			if (pipeState == PIPE_STATE::CONNECTING) {
 				connected = true;
-				dwState = CONNECTED_STATE;
+				pipeState = PIPE_STATE::CONNECTED;
 				DebugOut("[COMMS] Connecting state OK; connected\n");
 			}
-			else if (dwState == READING_STATE) {
+			else if (pipeState == PIPE_STATE::READING) {
 				buffer[dwBytes] = 0;
 				DebugOut("[COMMS] Reading state sucess (%d): ``%s''\n", dwBytes, buffer);
-				exec_line(buffer);
+				exec_commands(buffer);
 			}
 
 			if (connected) {
@@ -549,16 +665,16 @@ DWORD WINAPI threadProc(LPVOID lpvParam) {
 
 				DebugOut("[COMMS] reading");
 
-				dwState = READING_STATE;
+				pipeState = PIPE_STATE::READING;
 				fSuccess = ::ReadFile(hPipe, buffer, 4095, &dwBytes, &io);
 				if (fSuccess && dwBytes > 0)
 				{
 					buffer[dwBytes] = 0;
 					DebugOut("[COMMS] immediate read success (%d): ``%s''\n", dwBytes, buffer);
-					exec_line(buffer);
+					exec_commands(buffer);
 
 
-					dwState = CONNECTED_STATE;
+					pipeState = PIPE_STATE::CONNECTED;
 					continue;
 				}
 
@@ -569,24 +685,20 @@ DWORD WINAPI threadProc(LPVOID lpvParam) {
 		} 
 		else if (GetLastError() == ERROR_IO_INCOMPLETE) {
 
-			if (connected && dwState == READING_STATE) {
-				int len;
-				::WaitForSingleObject(hOutboundMessagesMutex, INFINITE);
-				len = outboundMessages.size();
-				::ReleaseMutex(hOutboundMessagesMutex);
-
+			if (connected && pipeState == PIPE_STATE::READING) {
+				size_t len = outboundMessages.locked_size();
 				if (len > 0) {
 					::CancelIo(hPipe);
 					if (!writeNextMessage()) {
 						DebugOut("[COMMS] reading\n");
 
-						dwState = READING_STATE;
+						pipeState = PIPE_STATE::READING;
 						fSuccess = ::ReadFile(hPipe, buffer, 4095, &dwBytes, &io);
 						if (fSuccess && dwBytes > 0)
 						{
 							buffer[dwBytes] = 0;
 							DebugOut("[COMMS] immediate read success (%d): ``%s''\n", dwBytes, buffer);
-							dwState = CONNECTED_STATE;
+							pipeState = PIPE_STATE::CONNECTED;
 							continue;
 						}
 
@@ -606,7 +718,7 @@ DWORD WINAPI threadProc(LPVOID lpvParam) {
 			}
 
 			connected = false;
-			dwState = CONNECTING_STATE;
+			pipeState = PIPE_STATE::CONNECTING;
 
 			if (ConnectNamedPipe(hPipe, &io)) {
 				// this is an error
@@ -636,35 +748,54 @@ DWORD WINAPI threadProc(LPVOID lpvParam) {
 
 }
 
-int initialized = false;
-
+/**
+ * open the console, either creating a new process or showing the window.
+ */
 void open_remote_shell() {
 
-	if (initialized) show_console();
-	else rshell_connect();
+	// if it's already open (but hidden), just show
+	if (initialized) return show_console();
 
-}
-
-void rshell_connect() {
-
+	// set flag
 	initialized = true;
 
-	// create the pipe name here.  we only write this once, 
-	// but we may read it from different threads.
+	// create the pipe name here.  we only write this once, but we may read it 
+	// from different threads.  possible to override in registry for debug (seems 
+	// like overkill)
 
 	if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, pipename, 63, REGISTRY_KEY, REGISTRY_VALUE_PIPE_OVERRIDE) || !strlen(pipename))
 		sprintf_s(pipename, "bert-pipe-%d", GetCurrentProcessId());
 	
 	DebugOut("[COMMS] Create thread\n");
+	
+	// control flag
 	threadFlag = true;
 
-	hThread = CreateThread( NULL, 0, threadProc, 0, 0, &threadID);
+	// we don't care about ids
+	DWORD id;
 
-	hOutboundMessagesMutex = ::CreateMutex(0, false, 0);
-	hConsoleMutex = ::CreateMutex(0, false, 0);
+	// create event for exec
+	hExecEvent = ::CreateEvent(0, TRUE, FALSE, 0);
+	hExecMutex = ::CreateMutex(0, FALSE, 0);
 
+	// timer event (signal)
+	hTimerEvent = ::CreateEvent(0, TRUE, FALSE, 0);
+
+	// start exec thread
+	hExecThread = CreateThread(NULL, 0, execThreadProc, 0, 0, &id);
+
+	// start
+	hThread = CreateThread( NULL, 0, threadProc, 0, 0, &id);
+
+	// timer queue and timer.  1 second period.
+	hTimerQueue = CreateTimerQueue();
+	CreateTimerQueueTimer(&hTimerQueueTimer, hTimerQueue, timerProc, 0, 1000, 1000, 0);
 }
 
+/**
+ * block the shell, meaning don't allow processing (or unblock a 
+ * blocked shell).  this is done when R is running in another context. 
+ */
 void rshell_block(bool block) {
 
 	if (block_state == block) return; // don't double up
@@ -680,6 +811,9 @@ void rshell_block(bool block) {
 
 }
 
+/**
+ * disconnect and shut down
+ */
 void rshell_disconnect() {
 
 	if (hThread) {
@@ -692,27 +826,53 @@ void rshell_disconnect() {
 		threadFlag = false;
 
 		WaitForSingleObject(hThread, INFINITE);
-
-		DebugOut("[COMMS] Done\n");
 		::CloseHandle(hThread);
-		::CloseHandle(hOutboundMessagesMutex);
-		::CloseHandle(hConsoleMutex);
-	}
-	hThread = NULL;
+		DebugOut("[COMMS] Done\n");
 
+		WaitForSingleObject(hExecThread, INFINITE);
+		::CloseHandle(hExecThread);
+		DebugOut("[EXEC] Done\n");
+
+		::DeleteTimerQueueEx(hTimerQueue, INVALID_HANDLE_VALUE);
+
+		::CloseHandle(hTimerQueueTimer);
+		::CloseHandle(hTimerQueue);
+		::CloseHandle(hTimerEvent);
+
+		::CloseHandle(hExecEvent);
+		::CloseHandle(hExecMutex);
+	}
+
+	hThread = NULL;
 }
 
+/**
+ * push packet.  for now, the packet may be json text.  FIXME.
+ */
+void rshell_push_packet(const char *channel, const char *data) {
+	push_json(json11::Json::object{
+		{ "type", "push" },
+		{ "channel", channel },
+		{ "data", data }
+	});
+}
+
+/**
+ * push text for the console.  because we receive tiny text chunks,
+ * we do a little but of buffering into larger packets.
+ */
 void rshell_send(const char *message, int flag ) {
 
-	/*
-	push_json( json11::Json::object{
-		{ "type", "console" },
-		{ "message", message },
-		{ "flag", flag }
-	});
-	*/
-	::WaitForSingleObject(hConsoleMutex, INFINITE);
+	static int last_flag = 0;
+
+	// buffering doesn't make much sense if we get messages out of 
+	// order.  this should be rare, as flagged messages tend to be 
+	// rare.  if the flag toggles, then push out any pending data.
+
+	if (flag != last_flag) flushMessageBuffer();
+	last_flag = flag;
+
 	buffered_messages[flag ? 1 : 0].append(message);
-	::ReleaseMutex(hConsoleMutex);
 
 }
+
