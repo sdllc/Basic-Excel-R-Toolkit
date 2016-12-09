@@ -64,7 +64,8 @@ HANDLE hExecEvent = 0;
 HANDLE hExecMutex = 0;
 
 /** buffer for command processing */
-locked_deque < string > exec_buffer;
+// locked_deque < string > exec_buffer;
+locked_deque < json11::Json > json_exec_buffer;
 
 /** timer queue for pushing writes */
 HANDLE hTimerQueue = 0;
@@ -75,9 +76,15 @@ HANDLE hTimerQueueTimer = 0;
 /** signal event for timer */
 HANDLE hTimerEvent = 0;
 
+/** "sync" callbacks */
+HANDLE hSyncResponseEvent = 0;
+
 extern std::string strresult;
 extern AutocompleteData autocomplete;
 extern HRESULT SafeCall(SAFECALL_CMD cmd, SVECTOR *vec, long arg, int *presult);
+
+extern void setSyncResponse(int rslt);
+extern void setSyncResponse(double rslt);
 
 PIPE_STATE pipeState = PIPE_STATE::UNDEFINED;
 
@@ -235,6 +242,8 @@ void handle_internal(const std::vector<json11::Json> &commands) {
 	if (csize) {
 
 		std::string cmd = commands[0].string_value();
+		DebugOut(" ** INTERNAL %s\n", cmd.c_str());
+
 		if (!cmd.compare("autocomplete") && csize == 3 ) {
 
 			int sc, c;
@@ -273,6 +282,10 @@ void handle_internal(const std::vector<json11::Json> &commands) {
 		}
 		else if (!cmd.compare("hide")) {
 			hide_console();
+		}
+		else if (!cmd.compare("sync-response")) {
+			DebugOut(" ** sync response\n");
+			::SetEvent(hSyncResponseEvent);
 		}
 		else if (!cmd.compare("exec")) {
 
@@ -316,56 +329,33 @@ void handle_internal(const std::vector<json11::Json> &commands) {
 
 }
 
-void exec_commands_internal(std::string line) {
+void exec_commands_internal(json11::Json j) {
 
-	static SVECTOR cmd_buffer;
+	SVECTOR cmd_buffer;
 
-	// now we expect fully-formed command packets (potentially more than one) 
-	// instead of just partial lines.  so we're not buffering strings here.
-	// packets are separated by newlines (internal newlines are escaped).
+	std::string jcommand = j["command"].string_value();
+	if (!jcommand.compare("exec")) {
 
-	SVECTOR cmds;
-	Util::split(line, '\n', 0, cmds);
-
-	if (cmd_buffer.size()) {
-		DebugOut(" ** CBS \n");
-	}
-
-	for (SVECTOR::iterator iter = cmds.begin(); iter != cmds.end(); iter++) {
-
-		if (Util::endsWith(*iter, "}")) {
-
-			std::string err;
-			json11::Json j = json11::Json::parse(*iter, err);
-			std::string jcommand = j["command"].string_value();
-			if (!jcommand.compare("exec")) {
-
-				const std::vector< json11::Json > arr = j["commands"].array_items();
-				for (std::vector< json11::Json > ::const_iterator iter = arr.begin(); iter != arr.end(); iter++) {
-					cmd_buffer.push_back(iter->string_value());
-				}
-
-			}
-			else if (!jcommand.compare("internal")) {
-				const std::vector< json11::Json > arr = j["commands"].array_items();
-
-				// why does this return, instead of just processing and continuing on?
-				// what happens if there are other commands on the (local) queue?
-
-				// I guess put another way, is there a case where internal and external (exec) 
-				// calls are mixed?  if not, then there's no need for the command buffer
-				// to be static.  (in fact I think that's the case).
-
-				return handle_internal(arr);
-			}
-			else {
-				DebugOut("c? %s\n", jcommand.c_str());
-			}
-		} 
-		else {
-			DebugOut(" ** MALFORMED PACKET\n%s\n\n", iter->c_str());
+		const std::vector< json11::Json > arr = j["commands"].array_items();
+		for (std::vector< json11::Json > ::const_iterator iter = arr.begin(); iter != arr.end(); iter++) {
+			cmd_buffer.push_back(iter->string_value());
 		}
 
+	}
+	else if (!jcommand.compare("internal")) {
+		const std::vector< json11::Json > arr = j["commands"].array_items();
+
+		// why does this return, instead of just processing and continuing on?
+		// what happens if there are other commands on the (local) queue?
+
+		// I guess put another way, is there a case where internal and external (exec) 
+		// calls are mixed?  if not, then there's no need for the command buffer
+		// to be static.  (in fact I think that's the case).
+
+		return handle_internal(arr);
+	}
+	else {
+		DebugOut("c? %s\n", jcommand.c_str());
 	}
 
 	if (cmd_buffer.size()) {
@@ -409,9 +399,44 @@ void exec_commands_internal(std::string line) {
 
 void exec_commands(std::string line) {
 
+	// convert to json here; we need to check them anyway
+
+	deque < json11::Json > cmds;
+	SVECTOR packets;
+	Util::split(line, '\n', 0, packets);
+
+	for (SVECTOR::iterator iter = packets.begin(); iter != packets.end(); iter++) {
+		if (Util::endsWith(*iter, "}")) {
+
+			bool consumed = false;
+			std::string err;
+			json11::Json j = json11::Json::parse(*iter, err);
+
+			std::string jcommand = j["command"].string_value();
+			if (!jcommand.compare("internal")) {
+				const std::vector< json11::Json > arr = j["commands"].array_items();
+				if (arr.size() > 0 && !arr[0].string_value().compare("sync-response" )){
+					if (arr.size() > 1) {
+						if (arr[1].is_number()) setSyncResponse(arr[1].number_value());
+					}
+					::SetEvent(hSyncResponseEvent);
+					consumed = true;
+				}
+			}
+
+			if( !consumed ) cmds.push_back(j);
+		}
+		else {
+			DebugOut(" ** MALFORMED PACKET\n%s\n\n", iter->c_str());
+		}
+	}
+
+	// special case: check for sync response
+
 	// ...
 	::WaitForSingleObject(hExecMutex, INFINITE);
-	exec_buffer.locked_push_back(line);
+	for (deque < json11::Json > ::iterator iter = cmds.begin(); iter != cmds.end(); iter++ )
+		json_exec_buffer.locked_push_back(*iter);
 	::SetEvent(hExecEvent);
 	::ReleaseMutex(hExecMutex);
 
@@ -515,19 +540,20 @@ DWORD WINAPI execThreadProc(LPVOID lpvParam) {
 	DebugOut("[EXEC] thread starting\n");
 
 	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
-	deque< string > buffer;
+	deque< json11::Json > buffer;
 
 	while (threadFlag) {
 		DWORD dw = ::WaitForSingleObject(hExecEvent, 500);
 		if (dw == WAIT_OBJECT_0) {
 
 			::WaitForSingleObject(hExecMutex, INFINITE);
-			exec_buffer.locked_consume(buffer);
+			json_exec_buffer.locked_consume(buffer);
 			::ResetEvent(hExecEvent);
 			::ReleaseMutex(hExecMutex);
 
-			for (deque<string>::iterator iter = buffer.begin(); iter != buffer.end(); iter++ )
+			for (deque<json11::Json>::iterator iter = buffer.begin(); iter != buffer.end(); iter++ )
 				exec_commands_internal(*iter);
+
 			buffer.clear();
 
 		}
@@ -672,8 +698,6 @@ DWORD WINAPI threadProc(LPVOID lpvParam) {
 					buffer[dwBytes] = 0;
 					DebugOut("[COMMS] immediate read success (%d): ``%s''\n", dwBytes, buffer);
 					exec_commands(buffer);
-
-
 					pipeState = PIPE_STATE::CONNECTED;
 					continue;
 				}
@@ -698,6 +722,7 @@ DWORD WINAPI threadProc(LPVOID lpvParam) {
 						{
 							buffer[dwBytes] = 0;
 							DebugOut("[COMMS] immediate read success (%d): ``%s''\n", dwBytes, buffer);
+							exec_commands(buffer);
 							pipeState = PIPE_STATE::CONNECTED;
 							continue;
 						}
@@ -778,6 +803,8 @@ void open_remote_shell() {
 	hExecEvent = ::CreateEvent(0, TRUE, FALSE, 0);
 	hExecMutex = ::CreateMutex(0, FALSE, 0);
 
+	hSyncResponseEvent = ::CreateEvent(0, TRUE, FALSE, 0);
+
 	// timer event (signal)
 	hTimerEvent = ::CreateEvent(0, TRUE, FALSE, 0);
 
@@ -838,6 +865,7 @@ void rshell_disconnect() {
 		::CloseHandle(hTimerQueueTimer);
 		::CloseHandle(hTimerQueue);
 		::CloseHandle(hTimerEvent);
+		::CloseHandle(hSyncResponseEvent);
 
 		::CloseHandle(hExecEvent);
 		::CloseHandle(hExecMutex);
@@ -849,12 +877,17 @@ void rshell_disconnect() {
 /**
  * push packet.  for now, the packet may be json text.  FIXME.
  */
-void rshell_push_packet(const char *channel, const char *data) {
+void rshell_push_packet(const char *channel, const char *data, bool wait) {
 	push_json(json11::Json::object{
 		{ "type", "push" },
 		{ "channel", channel },
 		{ "data", data }
 	});
+
+	if (!wait) return;
+	::WaitForSingleObject(hSyncResponseEvent, INFINITE );
+	::ResetEvent(hSyncResponseEvent);
+
 }
 
 /**

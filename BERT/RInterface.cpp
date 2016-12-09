@@ -66,6 +66,8 @@ SEXP ExecR(std::vector< std::string > &vec, int *err = 0, ParseStatus *pStatus =
 
 SEXP XLOPER2SEXP(LPXLOPER12 px, int depth = 0, bool missingArguments = false);
 
+SEXP syncResponse;
+
 std::string dllpath;
 
 bool g_buffering = false;
@@ -96,6 +98,14 @@ extern void RibbonClearUserButtons();
 extern void RibbonAddUserButton(std::string &strLabel, std::string &strFunc, std::string &strImgMso);
 
 ///
+
+void setSyncResponse(int rslt) {
+	syncResponse = Rf_ScalarInteger(rslt);
+}
+
+void setSyncResponse(double rslt) {
+	syncResponse = Rf_ScalarReal(rslt);
+}
 
 ///
 
@@ -2183,10 +2193,22 @@ SEXP BERTWatchFiles(SEXP list) {
 
 }
 
-SEXP ProgressBarCallback(SEXP data) {
+SEXP JSONCallback(int command, SEXP data) {
 
 	std::string str = SEXP2JSONstring(data);
-	rshell_push_packet("progress", str.c_str());
+
+	switch (command) {
+	case CC_PROGRESS_BAR:
+		rshell_push_packet("progress", str.c_str(), false);
+		return R_NilValue;
+		break;
+	case CC_DOWNLOAD:
+		rshell_push_packet("download", str.c_str(), true);
+		return syncResponse;
+		break;
+	default:
+		DebugOut("Invalid json command: %d\n", command);
+	}
 	return R_NilValue;
 
 }
@@ -2456,7 +2478,8 @@ SEXP BERT_Callback(SEXP cmd, SEXP data, SEXP data2)
 	switch (command)
 	{
 	case CC_PROGRESS_BAR:
-		return ProgressBarCallback(data);
+	case CC_DOWNLOAD:
+		return JSONCallback(command, data);
 		break;
 
 	case CC_REMAP_FUNCTIONS:

@@ -19,6 +19,7 @@ with( BERT, {
 .CLOSECONSOLE <- 1023;
 
 .PROGRESSBAR <- 2000;
+.DOWNLOAD <- 2001;
 
 .CALLBACK <- "BERT_Callback";
 .COM_CALLBACK <- "BERT_COM_Callback";
@@ -445,7 +446,7 @@ rc.options( custom.completer= function (.CompletionEnv)
 		}
 
 		close.js.client.progress.bar <- function( pb ){
-			struct <- progress.bars[[toString(pb$key)]];
+			struct <- progress.bar.list[[toString(pb$key)]];
 			struct$closed <- T;
 			# .js.client.callback( "progress.bar", struct );
 			invisible(.Call(.CALLBACK, .PROGRESSBAR, struct, PACKAGE=.MODULE ));
@@ -455,39 +456,59 @@ rc.options( custom.completer= function (.CompletionEnv)
 
 		(function(){
 
-		#-----------------------------------------------------------------------------
-		# replace win progress bar with an inline progress bar.  there's a slight
-		# difference in that these functions might not exist on linux.
-		#-----------------------------------------------------------------------------
+			#-----------------------------------------------------------------------------
+			# replace win progress bar with an inline progress bar.  there's a slight
+			# difference in that these functions might not exist on linux.
+			#-----------------------------------------------------------------------------
 
-		override.binding <- function( name, func, ns, assign.in.namespace=T ){
-			if( exists( name ) ){ 
-				package <- paste0( "package:", ns );
-				unlockBinding( name, as.environment(package)); 
-				assign( name, func, as.environment(package));
-				if( assign.in.namespace ){
-					ns <- asNamespace( ns );
-					if (bindingIsLocked(name, ns)) {
-						unlockBinding(name, ns)
-						assign(name, func, envir = ns, inherits = FALSE)
-						w <- options("warn")
-						on.exit(options(w))
-						options(warn = -1)
-						lockBinding(name, ns)
+			override.binding <- function( name, func, ns, assign.in.namespace=T ){
+				if( exists( name ) ){ 
+					package <- paste0( "package:", ns );
+					unlockBinding( name, as.environment(package)); 
+					assign( name, func, as.environment(package));
+					if( assign.in.namespace ){
+						ns <- asNamespace( ns );
+						if (bindingIsLocked(name, ns)) {
+							unlockBinding(name, ns)
+							assign(name, func, envir = ns, inherits = FALSE)
+							w <- options("warn")
+							on.exit(options(w))
+							options(warn = -1)
+							lockBinding(name, ns)
+						}
+						else assign(name, func, envir = ns, inherits = FALSE);
 					}
-					else assign(name, func, envir = ns, inherits = FALSE);
+					lockBinding( name, as.environment(package)); 
 				}
-				lockBinding( name, as.environment(package)); 
 			}
-		}
 
-		override.binding( "winProgressBar", js.client.progress.bar, "utils");
-		override.binding( "setWinProgressBar", js.client.set.progress.bar, "utils");
-		override.binding( "getWinProgressBar", js.client.get.progress.bar, "utils");
+			override.binding( "winProgressBar", js.client.progress.bar, "utils");
+			override.binding( "setWinProgressBar", js.client.set.progress.bar, "utils");
+			override.binding( "getWinProgressBar", js.client.get.progress.bar, "utils");
 
-		override.binding( "txtProgressBar", js.client.progress.bar, "utils");
-		override.binding( "setTxtProgressBar", js.client.set.progress.bar, "utils");
-		override.binding( "getTxtProgressBar", js.client.get.progress.bar, "utils");
+			override.binding( "txtProgressBar", js.client.progress.bar, "utils");
+			override.binding( "setTxtProgressBar", js.client.set.progress.bar, "utils");
+			override.binding( "getTxtProgressBar", js.client.get.progress.bar, "utils");
+
+			download.file.original <- get( "download.file", envir=as.environment( "package:utils" ));
+			override.binding( "download.file",  
+				function (url, destfile, method, quiet = FALSE, mode = "w", cacheOK = TRUE, 
+    				extra = getOption("download.file.extra")) 
+				{
+					method <- if (missing(method)) 
+						getOption("download.file.method", default = "auto")
+					else match.arg(method, c("auto", "internal", "wininet", "libcurl", 
+						"wget", "curl", "lynx", "js"))
+					if( method == "js" ){
+						# jsClientLib:::.js.client.callback.sync( list( arguments=as.list(environment()), command="download" ));
+						invisible(.Call(.CALLBACK, .DOWNLOAD, as.list(environment()), PACKAGE=.MODULE ));
+					}
+					else {
+						do.call( download.file.original, as.list(environment()), envir=parent.env(environment()));
+					}
+				}, "utils", T );
+
+			options( download.file.method="js" );
 
 		})();
 

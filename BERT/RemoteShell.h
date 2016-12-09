@@ -24,7 +24,7 @@
 
 void rshell_disconnect();
 void rshell_send( const char *message, int flag = 0 );
-void rshell_push_packet(const char *channel, const char *data);
+void rshell_push_packet(const char *channel, const char *data, bool wait = false );
 void rshell_block(bool block);
 
 void open_remote_shell();
