@@ -31,7 +31,7 @@ module.exports = {
     EDITOR: "Editor",
     SHELL: "Shell",
     CHANGE_FOCUS: "$1 has focus",
-    CHANGE_FOCUS_LONG: "$1 has forkus (use Ctrl+E to switch)",
+    CHANGE_FOCUS_LONG: "$1 has focus (use Ctrl+E to switch)",
     SPLITTER_DRAG: "Layout: $1% / $2%",
     
     INVALID_SETTINGS_FILE: "Invalid settings file",
@@ -40,7 +40,7 @@ module.exports = {
 
     ERROR: "ERROR",
     WARNING: "WARNING",
-
+    
     // dialog messages and buttons
 
     READING_FILE: "reading file $1",
@@ -57,6 +57,28 @@ module.exports = {
 
     OK: "OK",
     CANCEL: "Cancel",
+
+    // downloading 
+
+    TRYING_URL: "Trying URL",
+    DOWNLOADING: "Downloading",
+    DOWNLOAD_COMPLETE: "Download Complete",
+    DOWNLOAD_FAILED: "Download Failed",
+
+    // packages 
+
+    INSTALLED: "installed",
+    PACKAGE_SELECTED_SINGLE: "Package selected",
+    PACKAGE_SELECTED_PLURAL: "Packages selected",
+
+    FILTER: "Filter...",
+    LOADING_PACKAGE_LIST: "Loading package list, please wait...",
+    AVAILABLE_PACKAGES: "Available Packages",
+
+    // mirrors
+
+    SELECT_MIRROR: "Select a CRAN Mirror",
+    LOADING_MIRROR_LIST: "Loading mirror list, please wait...",
 
   },
 

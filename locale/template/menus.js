@@ -256,6 +256,19 @@ module.exports = {
       ]
     },
     {
+      label: "Packages",
+      submenu: [
+        {
+          id: "r-packages-choose-mirror",
+          label: "Choose CRAN Mirror"
+        },
+        {
+          id: "r-packages-install-packages",
+          label: "Install Packages"
+        }
+      ]
+    },
+    {
       label: "Help",
       submenu: [
         {

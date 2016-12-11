@@ -436,9 +436,10 @@ rc.options( custom.completer= function (.CompletionEnv)
 			return( struct$value );	
 		}
 
-		js.client.set.progress.bar <- function( pb, value ){
+		js.client.set.progress.bar <- function( pb, value, title=NULL, label=NULL ){
 			struct <- progress.bar.list[[toString(pb$key)]];
 			struct$value <- value;
+			if( !is.null(label)){ struct$label = label }
 			progress.bar.list[[toString(pb$key)]] <<- struct;
 			# .js.client.callback( "progress.bar", struct );
 			invisible(.Call(.CALLBACK, .PROGRESSBAR, struct, PACKAGE=.MODULE ));
