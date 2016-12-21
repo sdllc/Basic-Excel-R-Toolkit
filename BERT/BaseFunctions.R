@@ -143,7 +143,7 @@ ClearUserButtons <- function(){
 .WatchedFiles <- new.env();
 
 .RestartWatch <- function(){
-	path = gsub( "\\\\+$", "", gsub( "/", "\\\\", file.path( BERT$HOME, BERT$FUNCTIONS.DIR )));
+	path = gsub( "\\\\+$", "", gsub( "/", "\\\\", tolower(normalizePath(file.path( BERT$HOME, BERT$FUNCTIONS.DIR )))));
 	if( !exists( path, envir=.WatchedFiles )) .WatchedFiles[[path]] = NULL;
 	rslt <- .Call( BERT$.CALLBACK, BERT$.WATCHFILES, ls(.WatchedFiles), 0, PACKAGE=BERT$.MODULE );
 	if( !rslt ){
@@ -154,11 +154,12 @@ ClearUserButtons <- function(){
 
 .ExecWatchCallback <- function( path ){
 
-	path = gsub( "\\\\+$", "", gsub( "/", "\\\\", normalizePath(path) ))
+	path = gsub( "\\\\+$", "", gsub( "/", "\\\\", tolower(normalizePath(path)) ))
 	FUN = NULL;
 	args = list();
 
 	if( exists( path, envir=.WatchedFiles )){
+
 		FUN = .WatchedFiles[[path]];
 		if( is.null(FUN)){
 			FUN = function(a=path){
@@ -174,10 +175,13 @@ ClearUserButtons <- function(){
 	}
 	else {
 		dir = gsub( "\\\\+$", "", gsub( "/", "\\\\", dirname(path)))
+
 		if( exists( dir, envir=.WatchedFiles )){
+
 			FUN = .WatchedFiles[[dir]];
 			args = list(path);
 			if( is.null(FUN)){
+
 				FUN = function(a){
 					if( grepl( "\\.(?:rscript|r|rsrc)$", a, ignore.case=T )){
 						source(a, chdir=T);
@@ -202,7 +206,7 @@ ClearUserButtons <- function(){
 # watch file, execute code on change
 #--------------------------------------------------------
 WatchFile <- function( path, FUN=NULL, apply.now=F ){
-	path = gsub( "\\\\+$", "", gsub( "/", "\\\\", normalizePath(path) ));
+	path = gsub( "\\\\+$", "", gsub( "/", "\\\\", tolower(normalizePath(path)) ));
 	.WatchedFiles[[path]] = FUN;
 	.RestartWatch();
 } 
@@ -211,7 +215,7 @@ WatchFile <- function( path, FUN=NULL, apply.now=F ){
 # stop watching file (by path)
 #--------------------------------------------------------
 UnwatchFile <- function( path ){
-	path = gsub( "\\\\+$", "", gsub( "/", "\\\\", normalizePath(path) ))
+	path = gsub( "\\\\+$", "", gsub( "/", "\\\\", tolower(normalizePath(path)) ))
 	rm( list=path, envir=.WatchedFiles );
 	.RestartWatch();
 }
