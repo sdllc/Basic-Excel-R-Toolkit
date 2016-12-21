@@ -154,14 +154,22 @@ ClearUserButtons <- function(){
 
 .ExecWatchCallback <- function( path ){
 
-	path = gsub( "\\\\+$", "", gsub( "/", "\\\\", path ))
+	path = gsub( "\\\\+$", "", gsub( "/", "\\\\", normalizePath(path) ))
 	FUN = NULL;
 	args = list();
 
 	if( exists( path, envir=.WatchedFiles )){
 		FUN = .WatchedFiles[[path]];
 		if( is.null(FUN)){
-			FUN = BERT$ReloadStartup;
+			FUN = function(a=path){
+				if( grepl( "\\.(?:rscript|r|rsrc)$", a, ignore.case=T )){
+					source(a, chdir=T);
+					BERT$RemapFunctions();
+				}
+				else {
+					cat("skipping file (invalid extension)\n");
+				}
+			}
 		}
 	}
 	else {
@@ -171,8 +179,13 @@ ClearUserButtons <- function(){
 			args = list(path);
 			if( is.null(FUN)){
 				FUN = function(a){
-					source(a);
-					BERT$RemapFunctions();
+					if( grepl( "\\.(?:rscript|r|rsrc)$", a, ignore.case=T )){
+						source(a, chdir=T);
+						BERT$RemapFunctions();
+					}
+					else {
+						cat("skipping file (invalid extension)\n");
+					}
 				}
 			}
 		}
@@ -188,8 +201,8 @@ ClearUserButtons <- function(){
 #--------------------------------------------------------
 # watch file, execute code on change
 #--------------------------------------------------------
-WatchFile <- function( path, FUN=NULL ){
-	path = gsub( "\\\\+$", "", gsub( "/", "\\\\", path ));
+WatchFile <- function( path, FUN=NULL, apply.now=F ){
+	path = gsub( "\\\\+$", "", gsub( "/", "\\\\", normalizePath(path) ));
 	.WatchedFiles[[path]] = FUN;
 	.RestartWatch();
 } 
@@ -198,7 +211,7 @@ WatchFile <- function( path, FUN=NULL ){
 # stop watching file (by path)
 #--------------------------------------------------------
 UnwatchFile <- function( path ){
-	path = gsub( "\\\\+$", "", gsub( "/", "\\\\", path ))
+	path = gsub( "\\\\+$", "", gsub( "/", "\\\\", normalizePath(path) ))
 	rm( list=path, envir=.WatchedFiles );
 	.RestartWatch();
 }

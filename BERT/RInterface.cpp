@@ -637,9 +637,9 @@ void LoadStartupFile()
 				if (!(data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )) {
 
 					char* extension = PathFindExtensionA((const char*)data.cFileName);
-					if (Util::icasecompare(extension, ".r")
-						|| Util::icasecompare(extension, ".rsrc")
-						|| Util::icasecompare(extension, ".rscript")) {
+					if (!Util::icasecompare(extension, ".r")
+						|| !Util::icasecompare(extension, ".rsrc")
+						|| !Util::icasecompare(extension, ".rscript")) {
 
 						DebugOut("File %s, ext %s\n", data.cFileName, extension);
 
