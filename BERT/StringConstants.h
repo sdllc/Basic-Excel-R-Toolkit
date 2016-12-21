@@ -56,5 +56,10 @@
 #define MSG_UPDATE_CHECK_FAILED "Checking for updates failed. Please try again later."
 #define MSG_YOURS_IS_NEWER "Your software is newer than the current release!"
 
+#define FUNCTIONS_R_DEPRECATED "\n" \
+	" * Please note: using the startup file is deprecated.  We now use\n" \
+	"   a startup folder.  See the documentation on watching files for\n" \
+	"   more information.\n\n"
+
 #endif // #ifndef __STRING_CONSTANTS_H
 

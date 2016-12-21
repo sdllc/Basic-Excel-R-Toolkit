@@ -589,6 +589,9 @@ void LoadStartupFile()
 	char path[MAX_PATH];
 	char buffer[MAX_PATH];
 
+	char functionsdir[MAX_PATH];
+	int errcount = 0;
+
 	loadingStartupFile = true;
 	rshell_block(true);
 
@@ -597,10 +600,87 @@ void LoadStartupFile()
 	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, RUser, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_R_USER))
 		ExpandEnvironmentStringsA( DEFAULT_R_USER, RUser, MAX_PATH );
 
+	// new version -- functions directory
+
+	if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, functionsdir, MAX_PATH, REGISTRY_KEY, REGISTRY_VALUE_FUNCTIONS_DIR))
+		strcpy_s(functionsdir, MAX_PATH, DEFAULT_R_FUNCTIONS_DIR);
+
+	if (strlen(functionsdir) && strlen(RUser))
+	{
+		time_t t;
+		struct tm timeinfo;
+		int errorOccurred;
+
+		WIN32_FIND_DATAA data;
+		HANDLE hFind = INVALID_HANDLE_VALUE;
+		DWORD dwError = 0;
+
+		// using named args so we can set the chdir flag
+
+		SEXP namedargs;
+		const char *names[] = { "file", "chdir", "" };
+
+		std::string root = RUser;
+		if (RUser[strlen(RUser) - 1] != '\\') root += "\\";
+		root += functionsdir;
+		if (functionsdir[strlen(functionsdir) - 1] != '\\') root += "\\";
+		
+		std::string spath = root;
+		spath += "*";
+
+		hFind = FindFirstFileA(spath.c_str(), &data);
+
+		if (hFind && hFind != INVALID_HANDLE_VALUE) {
+
+			do {
+				DebugOut("ListFiles: %s (%X)\n", data.cFileName, data.dwFileAttributes);
+				if (!(data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )) {
+
+					char* extension = PathFindExtensionA((const char*)data.cFileName);
+					if (Util::icasecompare(extension, ".r")
+						|| Util::icasecompare(extension, ".rsrc")
+						|| Util::icasecompare(extension, ".rscript")) {
+
+						DebugOut("File %s, ext %s\n", data.cFileName, extension);
+
+						std::string filepath = root;
+						filepath += data.cFileName;
+
+						PROTECT(namedargs = mkNamed(VECSXP, names));
+						SET_VECTOR_ELT(namedargs, 0, Rf_mkString(filepath.c_str()));
+						SET_VECTOR_ELT(namedargs, 1, Rf_ScalarLogical(1));
+						R_tryEval(Rf_lang3(Rf_install("do.call"), Rf_mkString("source"), namedargs), R_GlobalEnv, &errorOccurred);
+						UNPROTECT(1);
+
+						if (!errorOccurred)
+						{
+							sprintf_s(buffer, "Read startup file OK: %s\n", data.cFileName );
+							logMessage(buffer, 0, 1);
+						}
+						else
+						{
+							sprintf_s(buffer, "Error reading startup file: %s\n", data.cFileName);
+							logMessage(buffer, 0, 1);
+							errcount++;
+						}
+
+					}
+				}
+			} while (FindNextFileA(hFind, &data));
+			
+			FindClose(hFind);
+
+		}
+	}
+	
+	// functions.R (or whatever the user has changed it to) -- this is the old version.
+	// we're doing this second, to make sure what's in here overwrites anything we installed
+	// from the directory.
+
 	if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, buffer, MAX_PATH, REGISTRY_KEY, REGISTRY_VALUE_STARTUP))
 		strcpy_s(buffer, MAX_PATH, DEFAULT_R_STARTUP);
 
-	if (strlen(buffer) && strlen(RUser)) 
+	if (strlen(buffer) && strlen(RUser))
 	{
 		time_t t;
 		struct tm timeinfo;
@@ -612,30 +692,33 @@ void LoadStartupFile()
 		const char *names[] = { "file", "chdir", "" };
 
 		sprintf_s(path, MAX_PATH, "%s\\%s", RUser, buffer);
+		if (PathFileExistsA(path)) {
 
-		PROTECT(namedargs = mkNamed(VECSXP, names));
-		SET_VECTOR_ELT(namedargs, 0, Rf_mkString(path));
-		SET_VECTOR_ELT(namedargs, 1, Rf_ScalarLogical(1));
-		R_tryEval(Rf_lang3(Rf_install("do.call"), Rf_mkString("source"), namedargs), R_GlobalEnv, &errorOccurred);
-		UNPROTECT(1);
+			PROTECT(namedargs = mkNamed(VECSXP, names));
+			SET_VECTOR_ELT(namedargs, 0, Rf_mkString(path));
+			SET_VECTOR_ELT(namedargs, 1, Rf_ScalarLogical(1));
+			R_tryEval(Rf_lang3(Rf_install("do.call"), Rf_mkString("source"), namedargs), R_GlobalEnv, &errorOccurred);
+			UNPROTECT(1);
 
-		time(&t);
-		localtime_s(&timeinfo, &t);
+			time(&t);
+			localtime_s(&timeinfo, &t);
 
-		if( !errorOccurred )
-		{
-			strftime(buffer, MAX_PATH, "Read startup file OK @ %c\n", &timeinfo);
-			logMessage(buffer, 0, 1);
-			ExcelStatus(0);
+			if (!errorOccurred)
+			{
+				strftime(buffer, MAX_PATH, "Read startup file OK @ %c\n", &timeinfo);
+				logMessage(buffer, 0, 1);
+				logMessage(FUNCTIONS_R_DEPRECATED, 0, 1);
+			}
+			else
+			{
+				strftime(buffer, MAX_PATH, "Error reading startup file @ %c\n", &timeinfo);
+				logMessage(buffer, 0, 1);
+				errcount++;
+			}
 		}
-		else
-		{
-			strftime(buffer, MAX_PATH, "Error reading startup file @ %c\n", &timeinfo);
-			logMessage(buffer, 0, 1);
-			ExcelStatus("BERT: Error reading startup file; check console");
-		}
-
 	}
+
+	ExcelStatus( errcount ? "BERT: Error reading startup file; check console" : 0);
 
 	::ReleaseMutex(muxExecR);
 	rshell_block(false);
@@ -684,6 +767,8 @@ int RInit()
 	char RHome[MAX_PATH];
 	char RUser[MAX_PATH];
 
+	char functionsDir[MAX_PATH];
+
 	DWORD dwPreserve = 0;
 
 	sprintf_s(Rversion, 25, "%s.%s", R_MAJOR, R_MINOR);
@@ -713,6 +798,9 @@ int RInit()
 		dwPreserve = DEFAULT_R_PRESERVE_ENV;
 	}
 
+	if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, functionsDir, MAX_PATH, REGISTRY_KEY, REGISTRY_VALUE_FUNCTIONS_DIR))
+		strcpy_s(functionsDir, MAX_PATH, DEFAULT_R_FUNCTIONS_DIR);
+	
 	Rp->rhome = RHome;
 	Rp->home = RUser;
 
@@ -829,6 +917,7 @@ int RInit()
 				while (strlen(RUser) > 0 && RUser[strlen(RUser) - 1] == '\\') RUser[strlen(RUser) - 1] = 0;
 
 				Rf_defineVar(Rf_install("HOME"), Rf_mkString(RUser), e);
+				Rf_defineVar(Rf_install("FUNCTIONS.DIR"), Rf_mkString(functionsDir), e);
 				Rf_defineVar(Rf_install("R_HOME"), Rf_mkString(RHome), e);
 
 			}

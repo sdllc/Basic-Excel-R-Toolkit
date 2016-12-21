@@ -26,6 +26,7 @@
 #define REGISTRY_VALUE_R_USER			"R_USER"
 #define REGISTRY_VALUE_R_HOME			"R_HOME"
 #define REGISTRY_VALUE_STARTUP			"StartupFile"
+#define REGISTRY_VALUE_FUNCTIONS_DIR	"FunctionsDir"
 #define REGISTRY_VALUE_HIDE_MENU		"HideMenu"
 #define REGISTRY_VALUE_INSTALL_DIR		"InstallDir"
 #define REGISTRY_VALUE_PRESERVE_ENV		"PreserveEnvironment"
@@ -49,6 +50,8 @@
 #define DEFAULT_R_HOME					"%APPDATA%\\BERT\\R-3.2.1"
 #define DEFAULT_R_STARTUP				"Functions.R"
 #define DEFAULT_R_PRESERVE_ENV			0
+
+#define DEFAULT_R_FUNCTIONS_DIR			"functions"
 
 #define DEFAULT_CONSOLE_WIDTH			80
 #define DEFAULT_CONSOLE_AUTO_WIDTH		1

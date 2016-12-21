@@ -40,9 +40,15 @@ ClearBuffer <- function(){ invisible(.Call(.CALLBACK, .CLEAR, 0, PACKAGE=.MODULE
 CloseConsole <- function(){ invisible(.Call(.CALLBACK, .CLOSECONSOLE, 0, PACKAGE=.MODULE )); };
 
 #--------------------------------------------------------
-# reload the startup file
+# reload startup files
 #--------------------------------------------------------
 ReloadStartup <- function(){ .Call(.CALLBACK, .RELOAD, 0, PACKAGE=.MODULE ); };
+
+#--------------------------------------------------------
+# reload functions into excel.  this assumes that the 
+# functions have already been sourced() into R.
+#--------------------------------------------------------
+RemapFunctions <- function(){ .Call( .CALLBACK, .REMAP_FUNCTIONS, 0, PACKAGE=.MODULE ); };
 
 #========================================================
 # explicit function registration
@@ -137,21 +143,53 @@ ClearUserButtons <- function(){
 .WatchedFiles <- new.env();
 
 .RestartWatch <- function(){
+	path = gsub( "\\\\+$", "", gsub( "/", "\\\\", file.path( BERT$HOME, BERT$FUNCTIONS.DIR )));
+	if( !exists( path, envir=.WatchedFiles )) .WatchedFiles[[path]] = NULL;
 	rslt <- .Call( BERT$.CALLBACK, BERT$.WATCHFILES, ls(.WatchedFiles), 0, PACKAGE=BERT$.MODULE );
 	if( !rslt ){
 		cat( "File watch failed.  Make sure the files you are watching exist and are readable.\n");
 	}
 }
+.RestartWatch();
 
 .ExecWatchCallback <- function( path ){
-	cat(paste("Executing code on file change:", path, "\n" ));
-	do.call(.WatchedFiles[[path]], list());
+
+	path = gsub( "\\\\+$", "", gsub( "/", "\\\\", path ))
+	FUN = NULL;
+	args = list();
+
+	if( exists( path, envir=.WatchedFiles )){
+		FUN = .WatchedFiles[[path]];
+		if( is.null(FUN)){
+			FUN = BERT$ReloadStartup;
+		}
+	}
+	else {
+		dir = gsub( "\\\\+$", "", gsub( "/", "\\\\", dirname(path)))
+		if( exists( dir, envir=.WatchedFiles )){
+			FUN = .WatchedFiles[[dir]];
+			args = list(path);
+			if( is.null(FUN)){
+				FUN = function(a){
+					source(a);
+					BERT$RemapFunctions();
+				}
+			}
+		}
+	}
+	
+	if( !is.null(FUN)){
+		cat(paste("Executing code on file change:", path, "\n" ));
+		do.call(FUN, args);
+	}
+
 }
 
 #--------------------------------------------------------
 # watch file, execute code on change
 #--------------------------------------------------------
-WatchFile <- function( path, FUN = BERT$ReloadStartup ){
+WatchFile <- function( path, FUN=NULL ){
+	path = gsub( "\\\\+$", "", gsub( "/", "\\\\", path ));
 	.WatchedFiles[[path]] = FUN;
 	.RestartWatch();
 } 
@@ -160,12 +198,13 @@ WatchFile <- function( path, FUN = BERT$ReloadStartup ){
 # stop watching file (by path)
 #--------------------------------------------------------
 UnwatchFile <- function( path ){
+	path = gsub( "\\\\+$", "", gsub( "/", "\\\\", path ))
 	rm( list=path, envir=.WatchedFiles );
 	.RestartWatch();
 }
 
 #--------------------------------------------------------
-# remove all watches
+# remove all watches (except default)
 #--------------------------------------------------------
 ClearWatches <- function(){
 	rm( list=ls(.WatchedFiles), envir=.WatchedFiles );

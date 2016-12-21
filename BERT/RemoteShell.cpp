@@ -862,8 +862,11 @@ void rshell_disconnect() {
 
 		::DeleteTimerQueueEx(hTimerQueue, INVALID_HANDLE_VALUE);
 
+		// ?
+
 		::CloseHandle(hTimerQueueTimer);
 		::CloseHandle(hTimerQueue);
+
 		::CloseHandle(hTimerEvent);
 		::CloseHandle(hSyncResponseEvent);
 

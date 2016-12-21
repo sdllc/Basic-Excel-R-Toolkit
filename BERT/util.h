@@ -68,6 +68,14 @@ class Util
 {
 public:
 
+	static int icasecompare(const std::string& a, const std::string& b)
+	{
+		unsigned int len = a.length();
+		if (b.length() != len) return 1;
+		for (int i = 0; i < len; ++i) if (tolower(a[i]) != tolower(b[i])) return 1;
+		return 0;
+	}
+
 	static std::string trim(const std::string& str, const std::string& whitespace = " \r\n\t")
 	{
 		const auto strBegin = str.find_first_not_of(whitespace);
