@@ -287,9 +287,9 @@ DIALOG_RESULT_TYPE CALLBACK OptionsDlgProc(HWND hwndDlg, UINT message, WPARAM wP
 			CRegistryUtils::GetRegString(HKEY_CURRENT_USER, buffer, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_ENVIRONMENT);
 			SetWindowTextA(hWnd, buffer);
 
-			hWnd = ::GetDlgItem(hwndDlg, IDC_STARTUPFILE);
+			hWnd = ::GetDlgItem(hwndDlg, IDC_STARTUPFOLDER);
 			buffer[0] = 0;
-			CRegistryUtils::GetRegString(HKEY_CURRENT_USER, buffer, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_STARTUP);
+			CRegistryUtils::GetRegString(HKEY_CURRENT_USER, buffer, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_FUNCTIONS_DIR);
 			SetWindowTextA(hWnd, buffer);
 
 			if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_PRESERVE_ENV)) dw = DEFAULT_R_PRESERVE_ENV;
@@ -309,8 +309,8 @@ DIALOG_RESULT_TYPE CALLBACK OptionsDlgProc(HWND hwndDlg, UINT message, WPARAM wP
 			CRegistryUtils::SetRegExpandString(HKEY_CURRENT_USER, buffer, REGISTRY_KEY, REGISTRY_VALUE_R_USER);
 			::GetWindowTextA(::GetDlgItem(hwndDlg, IDC_ENVIRONMENT), buffer, MAX_PATH - 1);
 			CRegistryUtils::SetRegString(HKEY_CURRENT_USER, buffer, REGISTRY_KEY, REGISTRY_VALUE_ENVIRONMENT);
-			::GetWindowTextA(::GetDlgItem(hwndDlg, IDC_STARTUPFILE), buffer, MAX_PATH - 1);
-			CRegistryUtils::SetRegString(HKEY_CURRENT_USER, buffer, REGISTRY_KEY, REGISTRY_VALUE_STARTUP);
+			::GetWindowTextA(::GetDlgItem(hwndDlg, IDC_STARTUPFOLDER), buffer, MAX_PATH - 1);
+			CRegistryUtils::SetRegString(HKEY_CURRENT_USER, buffer, REGISTRY_KEY, REGISTRY_VALUE_FUNCTIONS_DIR);
 
 			dw = ( BST_CHECKED == ::SendMessage(::GetDlgItem(hwndDlg, IDC_SAVE_ENVIRONMENT), BM_GETCHECK, 0, 0)) ? 1 : 0;
 			CRegistryUtils::SetRegDWORD(HKEY_CURRENT_USER, dw, REGISTRY_KEY, REGISTRY_VALUE_PRESERVE_ENV);

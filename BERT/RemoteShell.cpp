@@ -843,6 +843,8 @@ void rshell_block(bool block) {
  */
 void rshell_disconnect() {
 
+	initialized = false;
+
 	if (hThread) {
 
 		push_json(json11::Json::object{
@@ -860,12 +862,10 @@ void rshell_disconnect() {
 		::CloseHandle(hExecThread);
 		DebugOut("[EXEC] Done\n");
 
+		// NOTE: timer queue and timer queue timer handles are 
+		// closed automatically by this function, so don't close them
+
 		::DeleteTimerQueueEx(hTimerQueue, INVALID_HANDLE_VALUE);
-
-		// ?
-
-		::CloseHandle(hTimerQueueTimer);
-		::CloseHandle(hTimerQueue);
 
 		::CloseHandle(hTimerEvent);
 		::CloseHandle(hSyncResponseEvent);

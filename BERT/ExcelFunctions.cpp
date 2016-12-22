@@ -22,8 +22,8 @@
 #include "BERT.h"
 #include "RInterface.h"
 
-extern void SaveHistory();
-extern void LoadHistory();
+//extern void SaveHistory();
+//extern void LoadHistory();
 
 BOOL WINAPI xlAutoOpen(void)
 {
@@ -35,7 +35,7 @@ BOOL WINAPI xlAutoOpen(void)
 		Excel12(xlFree, 0, 1, &xlName);
 	}
 
-	LoadHistory();
+	//LoadHistory();
 
 	SysInit();
 	return true;
@@ -71,7 +71,7 @@ void WINAPI xlAutoFree12(LPXLOPER12 pxFree)
 BOOL WINAPI xlAutoClose(void)
 {
 	SysCleanup();
-	SaveHistory();
+	//SaveHistory();
 	return true;
 }
 

@@ -129,9 +129,10 @@ void R_WriteConsole(const char *buf, int len)
 	ReleaseMutex(muxLog);
 }
 
+/*
 void SaveHistory() {
 
-	DWORD dw;
+	DWORD dw = 0;
 	char buffer[MAX_PATH];
 
 	if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_SAVE_HISTORY) || dw < 0) dw = 0;
@@ -198,10 +199,10 @@ void SaveHistory() {
 
 void LoadHistory() {
 
-	DWORD dw;
+	DWORD dw = 0;
 	char buffer[MAX_PATH];
 
-	if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_SAVE_HISTORY) || dw < 0) dw = 0;
+//	if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_SAVE_HISTORY) || dw < 0) dw = 0;
 	if (!dw) return;
 
 	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, buffer, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_R_USER))
@@ -229,7 +230,7 @@ void LoadHistory() {
 	}
 
 }
-
+*/
 
 void flush_log()
 {

@@ -143,8 +143,13 @@ ClearUserButtons <- function(){
 .WatchedFiles <- new.env();
 
 .RestartWatch <- function(){
+
+	# we watch the functions dir by default.  you can overload behavior by
+	# watching the folder with a specific function.
+
 	path = gsub( "\\\\+$", "", gsub( "/", "\\\\", tolower(normalizePath(file.path( BERT$HOME, BERT$FUNCTIONS.DIR )))));
 	if( !exists( path, envir=.WatchedFiles )) .WatchedFiles[[path]] = NULL;
+
 	rslt <- .Call( BERT$.CALLBACK, BERT$.WATCHFILES, ls(.WatchedFiles), 0, PACKAGE=BERT$.MODULE );
 	if( !rslt ){
 		cat( "File watch failed.  Make sure the files you are watching exist and are readable.\n");
@@ -155,11 +160,32 @@ ClearUserButtons <- function(){
 .ExecWatchCallback <- function( path ){
 
 	path = gsub( "\\\\+$", "", gsub( "/", "\\\\", tolower(normalizePath(path)) ))
-	FUN = NULL;
-	args = list();
+
+	# it's possible that both the directory and the specific file are 
+	# being watched.  we want to support that pattern.  check the directory
+	# first and execute (call with the path to the changed file)
+
+	dir = gsub( "\\\\+$", "", gsub( "/", "\\\\", dirname(path)))
+	if( exists( dir, envir=.WatchedFiles )){
+		FUN = .WatchedFiles[[dir]];
+		if( is.null(FUN)){
+			FUN = function(a){
+				if( grepl( "\\.(?:rscript|r|rsrc)$", a, ignore.case=T )){
+					source(a, chdir=T);
+					BERT$RemapFunctions();
+				}
+				else {
+					cat("skipping file (invalid extension)\n");
+				}
+			}
+		}
+		do.call(FUN, list(path));
+	}
+
+	# now look for the specific file and execute that function.
+	# for backwards-compatibility purposes there are no arguments.
 
 	if( exists( path, envir=.WatchedFiles )){
-
 		FUN = .WatchedFiles[[path]];
 		if( is.null(FUN)){
 			FUN = function(a=path){
@@ -172,32 +198,8 @@ ClearUserButtons <- function(){
 				}
 			}
 		}
-	}
-	else {
-		dir = gsub( "\\\\+$", "", gsub( "/", "\\\\", dirname(path)))
-
-		if( exists( dir, envir=.WatchedFiles )){
-
-			FUN = .WatchedFiles[[dir]];
-			args = list(path);
-			if( is.null(FUN)){
-
-				FUN = function(a){
-					if( grepl( "\\.(?:rscript|r|rsrc)$", a, ignore.case=T )){
-						source(a, chdir=T);
-						BERT$RemapFunctions();
-					}
-					else {
-						cat("skipping file (invalid extension)\n");
-					}
-				}
-			}
-		}
-	}
-	
-	if( !is.null(FUN)){
 		cat(paste("Executing code on file change:", path, "\n" ));
-		do.call(FUN, args);
+		do.call(FUN, list());
 	}
 
 }

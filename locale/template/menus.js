@@ -278,6 +278,10 @@ module.exports = {
         {
           id: "help-feedback",
           label: "Feedback"
+        },
+        {
+          id: "help-issues",
+          label: "Issues"
         }
       ]
     }
