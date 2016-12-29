@@ -57,9 +57,9 @@
 #define MSG_YOURS_IS_NEWER "Your software is newer than the current release!"
 
 #define FUNCTIONS_R_DEPRECATED "\n" \
-	" * Please note: using the startup file is deprecated.  We now use\n" \
-	"   a startup folder.  See the documentation on watching files for\n" \
-	"   more information.\n\n"
+	" * Please note: using the startup file is deprecated (as of v1.20).\n" \
+    "   We now use a startup folder.  See the documentation on watching\n" \
+	"   files for more information.\n\n"
 
 #endif // #ifndef __STRING_CONSTANTS_H
 

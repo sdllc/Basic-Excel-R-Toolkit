@@ -582,6 +582,28 @@ SEXP RemapFunctions() {
 
 }
 
+std::string getFunctionsDir() {
+
+	char functionsdir[MAX_PATH];
+	std::string path = "";
+
+	if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, functionsdir, MAX_PATH, REGISTRY_KEY, REGISTRY_VALUE_FUNCTIONS_DIR))
+		strcpy_s(functionsdir, MAX_PATH, DEFAULT_R_FUNCTIONS_DIR);
+
+	if (PathIsRelativeA(functionsdir)) {
+		char RUser[MAX_PATH];
+		if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, RUser, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_R_USER))
+			ExpandEnvironmentStringsA(DEFAULT_R_USER, RUser, MAX_PATH);
+		path = RUser;
+		if (RUser[strlen(RUser) - 1] != '\\') path += "\\";
+	}
+
+	path += functionsdir;
+	if (functionsdir[strlen(functionsdir) - 1] != '\\') path += "\\";
+	
+	return path;
+}
+
 void LoadStartupFile()
 {
 	// if there is a startup script, load that now
@@ -590,7 +612,6 @@ void LoadStartupFile()
 	char path[MAX_PATH];
 	char buffer[MAX_PATH];
 
-	char functionsdir[MAX_PATH];
 	int errcount = 0;
 
 	loadingStartupFile = true;
@@ -603,10 +624,11 @@ void LoadStartupFile()
 
 	// new version -- functions directory
 
-	if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, functionsdir, MAX_PATH, REGISTRY_KEY, REGISTRY_VALUE_FUNCTIONS_DIR))
-		strcpy_s(functionsdir, MAX_PATH, DEFAULT_R_FUNCTIONS_DIR);
+	std::string absoluteFunctionsPath = getFunctionsDir();
 
-	if (strlen(functionsdir) && strlen(RUser))
+	///
+
+	if (absoluteFunctionsPath.length())
 	{
 		time_t t;
 		struct tm timeinfo;
@@ -620,13 +642,8 @@ void LoadStartupFile()
 
 		SEXP namedargs;
 		const char *names[] = { "file", "chdir", "" };
-
-		std::string root = RUser;
-		if (RUser[strlen(RUser) - 1] != '\\') root += "\\";
-		root += functionsdir;
-		if (functionsdir[strlen(functionsdir) - 1] != '\\') root += "\\";
-		
-		std::string spath = root;
+				
+		std::string spath = absoluteFunctionsPath;
 		spath += "*";
 
 		hFind = FindFirstFileA(spath.c_str(), &data);
@@ -644,7 +661,7 @@ void LoadStartupFile()
 
 						DebugOut("File %s, ext %s\n", data.cFileName, extension);
 
-						std::string filepath = root;
+						std::string filepath = absoluteFunctionsPath;
 						filepath += data.cFileName;
 
 						PROTECT(namedargs = mkNamed(VECSXP, names));
@@ -655,12 +672,12 @@ void LoadStartupFile()
 
 						if (!errorOccurred)
 						{
-							sprintf_s(buffer, "Read startup file OK: %s\n", data.cFileName );
+							sprintf_s(buffer, "Sourced file OK: %s\n", data.cFileName );
 							logMessage(buffer, 0, 1);
 						}
 						else
 						{
-							sprintf_s(buffer, "Error reading startup file: %s\n", data.cFileName);
+							sprintf_s(buffer, "Error sourcing file: %s\n", data.cFileName);
 							logMessage(buffer, 0, 1);
 							errcount++;
 						}
@@ -918,7 +935,7 @@ int RInit()
 				while (strlen(RUser) > 0 && RUser[strlen(RUser) - 1] == '\\') RUser[strlen(RUser) - 1] = 0;
 
 				Rf_defineVar(Rf_install("HOME"), Rf_mkString(RUser), e);
-				Rf_defineVar(Rf_install("FUNCTIONS.DIR"), Rf_mkString(functionsDir), e);
+				Rf_defineVar(Rf_install("FUNCTIONS.DIR"), Rf_mkString(getFunctionsDir().c_str()), e);
 				Rf_defineVar(Rf_install("R_HOME"), Rf_mkString(RHome), e);
 
 			}
