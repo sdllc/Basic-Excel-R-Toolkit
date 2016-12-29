@@ -6,18 +6,20 @@
 #
 # https://bert-toolkit.com/example-functions
 #
-# for more examples.  You can add functions directly to this
-# file, but it's probably better to put them in a separate file
-# and then source() that file.  
+# for more examples.  
+#
+# You can add functions directly to this file, or add your own 
+# files to the startup folder.  The startup folder is 
+# `Documents\BERT\functions`.  Any time you add or change 
+# a file in the startup folder, BERT will reload it into Excel.
 #
 #====================================================================
 
 #--------------------------------------------------------------------
 #
-# 1. The basics: adding functions to Excel.  Any function in this 
-#    file (or in a file you include using source()) will be added to 
-#    Excel.  BERT will add "R." to the name, so the first function 
-#    will be called "R.EigenValues" in Excel.
+# Any function in this file will be added to Excel.  BERT will 
+# add "R." to the name, so the first function will be called 
+# "R.EigenValues" in Excel.
 #
 #--------------------------------------------------------------------
 
@@ -48,11 +50,11 @@ Add <- function( ... ) {
 
 #--------------------------------------------------------------------
 #
-# 2. Documentation: you can add documentation to your functions, 
-#    which will show up in the Excel insert function dialog.  The
-#    attribute "description" is a list.  The first (unnamed) entry
-#    will be the main documentation.  Named list entries match 
-#    named arguments.
+# You can add documentation to your functions, which will show up 
+# in the Excel insert function dialog (this is completely optional).  
+# The attribute "description" is a list.  The first (unnamed) entry 
+# will be the main documentation.  Named list entries match named 
+# arguments.
 #
 #--------------------------------------------------------------------
 
@@ -65,29 +67,6 @@ attr( Example.Function, "description" ) <- list(
   A="A number", 
   B="Another number"
 );
-
-#--------------------------------------------------------------------
-#
-# 3. Including files: use source() to include other code files.
-#    The "ExcelFunctions.R" file includes a number of useful 
-#    functions for calling the Excel API.  See the website for 
-#    documentation and examples.
-#
-#--------------------------------------------------------------------
-
-source( "ExcelFunctions.R" );
-
-#--------------------------------------------------------------------
-#
-# 4. Watching files: with the code below, BERT will reload this 
-#    file whenever you save changes.  To turn that off, remove 
-#    the code.  You can watch other files too, and you can execute
-#    any function when the file changes.
-#
-#--------------------------------------------------------------------
-
-BERT$WatchFile( file.path( BERT$HOME, "functions.R" ))
-
 
 
 
