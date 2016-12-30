@@ -86,6 +86,8 @@ extern HRESULT SafeCall(SAFECALL_CMD cmd, SVECTOR *vec, long arg, int *presult);
 extern void setSyncResponse(int rslt);
 extern void setSyncResponse(double rslt);
 
+extern std::string getFunctionsDir();
+
 PIPE_STATE pipeState = PIPE_STATE::UNDEFINED;
 
 HANDLE hPipe;
@@ -485,6 +487,11 @@ void startProcess() {
 	
 	SetEnvironmentVariableA("BERT_HOME", args);
 	args[0] = 0;
+
+	// startup folder (in documents by default)
+
+	std::string strStartupFolder = getFunctionsDir();
+	SetEnvironmentVariableA("BERT_FUNCTIONS_DIRECTORY", strStartupFolder.c_str());
 
 	// FIXME: default shell path (relative to home?)
 

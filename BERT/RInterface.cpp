@@ -935,7 +935,7 @@ int RInit()
 				while (strlen(RUser) > 0 && RUser[strlen(RUser) - 1] == '\\') RUser[strlen(RUser) - 1] = 0;
 
 				Rf_defineVar(Rf_install("HOME"), Rf_mkString(RUser), e);
-				Rf_defineVar(Rf_install("FUNCTIONS.DIR"), Rf_mkString(getFunctionsDir().c_str()), e);
+				Rf_defineVar(Rf_install("STARTUP_FOLDER"), Rf_mkString(getFunctionsDir().c_str()), e);
 				Rf_defineVar(Rf_install("R_HOME"), Rf_mkString(RHome), e);
 
 			}

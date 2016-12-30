@@ -19,13 +19,13 @@ wb <- EXCEL$Application$get_ActiveWorkbook();
 new.sheet <- wb$get_Sheets()$Add();
 
 # 
-# change the name of the new sheet.  note that this will
+# change the name of the new sheet. note that this will
 # fail if a sheet with this name already exists. 
 #
 new.sheet$put_Name( "R Data Set" );
 
 #
-# add some data.  use matrices.
+# add some data. use matrices.
 #
 range <- new.sheet$get_Range( "B3:F152" );
 range$put_Value( as.matrix( iris ));

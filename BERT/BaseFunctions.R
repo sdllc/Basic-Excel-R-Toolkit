@@ -147,7 +147,7 @@ ClearUserButtons <- function(){
 	# we watch the functions dir by default.  you can overload behavior by
 	# watching the folder with a specific function.
 
-	path = gsub( "\\\\+$", "", gsub( "/", "\\\\", tolower(normalizePath(BERT$FUNCTIONS.DIR ))));
+	path = gsub( "\\\\+$", "", gsub( "/", "\\\\", tolower(normalizePath(BERT$STARTUP_FOLDER))));
 	if( !exists( path, envir=.WatchedFiles )) .WatchedFiles[[path]] = NULL;
 
 	rslt <- .Call( BERT$.CALLBACK, BERT$.WATCHFILES, ls(.WatchedFiles), 0, PACKAGE=BERT$.MODULE );
