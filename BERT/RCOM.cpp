@@ -33,11 +33,7 @@
 #include <stdio.h>
 #include <Rversion.h>
 
-// hash map deprecated?
-#include <hash_map>
 #include <unordered_map>
-
-// #define USE_RINTERNALS
 
 #include <Rinternals.h>
 #include <Rembedded.h>
@@ -53,6 +49,11 @@
 
 #include "RCOM.h"
 
+#define ACCESS_GET "get_"
+#define ACCESS_PUT "put_"
+
+const int ACCESS_GET_LEN = sizeof(ACCESS_GET);
+const int ACCESS_PUT_LEN = sizeof(ACCESS_PUT);
 
 void STRSXP2BSTR(CComBSTR &bstr, SEXP s) {
 
@@ -92,30 +93,15 @@ __inline LPDISPATCH SEXP2Ptr(SEXP p) {
 	if (type == EXTPTRSXP) {
 		up = (ULONG_PTR)(R_ExternalPtrAddr(p));
 	}
-
-#ifdef _DEBUG
 	DebugOut("[*] SEXP to pointer: 0x%I64X\n", up);
-#endif // #ifdef _DEBUG
-
 	return (LPDISPATCH)up;
 }
 
 void releaseMappedPtr(SEXP ptr) {
-	
 	ULONG_PTR p = (ULONG_PTR)R_ExternalPtrAddr(ptr);
-
 	if (p) {
-
 		int refcount = ((LPUNKNOWN)p)->Release();
-
-#ifdef _DEBUG
 		DebugOut("[-] Release pointer (%d): 0x%I64X\n", refcount, p);
-#endif
-
-//		((LPUNKNOWN)p)->Release()
-
-		//((LPDISPATCH)p)->Release();
-		//removeStoredPointer(pp);
 	}
 }
 
@@ -248,7 +234,7 @@ void mapEnum(std::string &name, CComPtr<ITypeInfo> typeinfo, TYPEATTR *pTatt, SE
 	CComBSTR bstrName;
 	std::string elementname;
 
-	std::hash_map< std::string, int > members;
+	std::unordered_map< std::string, int > members;
 
 	for (UINT u = 0; u < pTatt->cVars; u++)
 	{
@@ -286,7 +272,7 @@ void mapEnum(std::string &name, CComPtr<ITypeInfo> typeinfo, TYPEATTR *pTatt, SE
 			Rf_defineVar(Rf_install(name.c_str()), e, targetEnv);
 
 			// add members
-			for (std::hash_map<std::string, int> ::iterator iter = members.begin(); iter != members.end(); iter++) {
+			for (std::unordered_map<std::string, int> ::iterator iter = members.begin(); iter != members.end(); iter++) {
 				Rf_defineVar(Rf_install(iter->first.c_str()), Rf_ScalarInteger(iter->second), e);
 			}
 
@@ -489,11 +475,7 @@ SEXP wrapDispatch(ULONG_PTR pdisp, bool enums) {
 
 			int refcount = ((LPDISPATCH)pdisp)->AddRef();
 			SEXP rptr = R_MakeExternalPtr((void*)pdisp, install("COM dispatch pointer"), R_NilValue);
-
-#ifdef _DEBUG
 			DebugOut("[+] Map pointer (%d): 0x%I64X\n", refcount, pdisp);
-#endif
-
 
 			R_RegisterCFinalizerEx(rptr, (R_CFinalizer_t)releaseMappedPtr, TRUE);
 			Rf_defineVar(Rf_install(".p"), rptr, result);
@@ -509,8 +491,8 @@ SEXP wrapDispatch(ULONG_PTR pdisp, bool enums) {
 				SEXP sargs, lns, ans = 0;
 
 				std::string methodname = "";
-				if (iter->mrflags == MRFLAG_PROPGET) methodname = "get_";
-				else if (iter->mrflags == MRFLAG_PROPPUT) methodname = "put_";
+				if (iter->mrflags == MRFLAG_PROPGET) methodname = ACCESS_GET;
+				else if (iter->mrflags == MRFLAG_PROPPUT) methodname = ACCESS_PUT;
 				methodname += iter->name.c_str();
 
 				SEXP argslist = 0;
@@ -802,7 +784,7 @@ void formatCOMError(std::string &target, HRESULT hr, const char *msg, const char
 SEXP invokePropertyPut(std::string name, LPDISPATCH pdisp, SEXP value)
 {
 	if (!pdisp) {
-		Rf_error("Invalid pointer value" );
+		Rf_error("Invalid pointer value" ); // FIXME: exit?
 	}
 
 	CComBSTR wide;
@@ -1041,13 +1023,8 @@ SEXP invokeFunc(std::string name, LPDISPATCH pdisp, SEXP args)
 									else if (Rf_isInteger(arg)) pcv[k] = INTEGER(arg)[0];
 									else if (Rf_isNumeric(arg)) pcv[k] = REAL(arg)[0];
 									else if (Rf_isString(arg)) {
-
 										int tlen = Rf_length(arg);
 										STRSXP2BSTR(pbstr[k], tlen == 1 ? arg : STRING_ELT(arg, 0));
-
-											//const char *sz = CHAR(STRING_ELT(arg, 0));
-									//pbstr[k] = sz;
-										// STRSXP2BSTR(pbstr[k], STRING_ELT(arg, 0));
 										pcv[k].vt = VT_BSTR | VT_BYREF;
 										pcv[k].pbstrVal = &(pbstr[k]);
 									}
@@ -1127,14 +1104,14 @@ SEXP invokeFunc(std::string name, LPDISPATCH pdisp, SEXP args)
 SEXP COMPropPut(SEXP name, SEXP p, SEXP args) {
 
 	const char *funcname = CHAR(STRING_ELT(name, 0));
-	return invokePropertyPut(funcname + 4, SEXP2Ptr(p), args);
+	return invokePropertyPut(funcname + ACCESS_PUT_LEN, SEXP2Ptr(p), args);
 
 }
 
 SEXP COMPropGet(SEXP name, SEXP p, SEXP args) {
 
 	const char *funcname = CHAR(STRING_ELT(name, 0));
-	return invokeFunc(funcname + 4, SEXP2Ptr(p), args);
+	return invokeFunc(funcname + ACCESS_GET_LEN, SEXP2Ptr(p), args);
 
 }
 
