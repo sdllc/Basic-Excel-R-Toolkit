@@ -52,8 +52,8 @@
 #define ACCESS_GET "get_"
 #define ACCESS_PUT "put_"
 
-const int ACCESS_GET_LEN = sizeof(ACCESS_GET);
-const int ACCESS_PUT_LEN = sizeof(ACCESS_PUT);
+const int ACCESS_GET_LEN = sizeof(ACCESS_GET) - 1;
+const int ACCESS_PUT_LEN = sizeof(ACCESS_PUT) - 1;
 
 void STRSXP2BSTR(CComBSTR &bstr, SEXP s) {
 

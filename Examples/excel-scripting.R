@@ -35,3 +35,15 @@ range$put_Value( as.matrix( iris ));
 #
 header.range <- new.sheet$get_Range( "B2:F2" );
 header.range$put_Value( t( colnames( iris )));
+
+# 
+# resize columns to fit headers
+#
+range$get_EntireColumn()$AutoFit();
+
+#
+# example of using constants: add border (underline) to headers
+#
+borders <- header.range$get_Borders();
+border <- borders$get_Item( EXCEL$XlBordersIndex$xlEdgeBottom );
+border$put_Weight( EXCEL$XlBorderWeight$xlThin );
