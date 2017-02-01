@@ -468,14 +468,19 @@ void flushMessageBuffer() {
  */
 void startProcess() {
 
-	char tmp[256];
-	char args[512];
-	char dir[512];
+	//char args[1024];
+	//char tmp[256];
+	//char dir[512];
+
+	char *args = new char[1024];
+	char *dir = new char[512];
+	char *tmp = new char[256];
+	char *shell_args = new char[256];
 
 	// install dir (for locating files)
 
 	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, args, 511, REGISTRY_KEY, REGISTRY_VALUE_INSTALL_DIR))
-		strcpy_s(args, "");
+		strcpy_s(args, 1024, "");
 
 	SetEnvironmentVariableA("BERT_INSTALL", args);
 	args[0] = 0;
@@ -496,21 +501,21 @@ void startProcess() {
 	// FIXME: default shell path (relative to home?)
 
 	if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, tmp, 255, REGISTRY_KEY, "ShellPath") || !strlen(tmp))
-		strcpy_s(tmp, "BertShell");
+		strcpy_s(tmp, 256, "BertShell");
 
-//	if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, tmp, 255, REGISTRY_KEY, "ShellArgs") || !strlen(tmp))
-//		strcpy_s(tmp, "");
-//	strcat_s(args, tmp);
+	if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, shell_args, 255, REGISTRY_KEY, "ShellArgs") || !strlen(shell_args))
+		strcpy_s(shell_args, 256, "");
 
 	// FIXME: default to home dir?
 
 	if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, dir, 511, REGISTRY_KEY, "ShellDir") || !strlen(dir))
-		strcpy_s(dir, "");
+		strcpy_s(dir, 256, "");
 
-	sprintf_s(args, "\"%s\\%s\" ", dir, tmp);
+	sprintf_s(args, 1024, "\"%s\\%s\" %s", dir, tmp, shell_args);
+
+	// set env vars for child process
 
 	SetEnvironmentVariableW(L"BERT_VERSION", BERT_VERSION);
-
 	SetEnvironmentVariableA("BERT_SHELL_HOME", dir);
 	SetEnvironmentVariableA("BERT_PIPE_NAME", pipename);
 
@@ -535,10 +540,15 @@ void startProcess() {
 		)
 	{
 		DebugOut("CreateProcess failed (%d).\n", GetLastError());
-		return;
+	}
+	else {
+		childProcessId = pi.dwProcessId;
 	}
 
-	childProcessId = pi.dwProcessId;
+	delete[] args;
+	delete[] dir;
+	delete[] tmp;
+	delete[] shell_args;
 
 }
 
