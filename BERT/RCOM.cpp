@@ -55,6 +55,9 @@
 const int ACCESS_GET_LEN = sizeof(ACCESS_GET) - 1;
 const int ACCESS_PUT_LEN = sizeof(ACCESS_PUT) - 1;
 
+// for caching object structures
+typedef std::unordered_map< std::basic_string<WCHAR>, std::vector< MemberRep >> WSTR2VECTOR;
+
 void STRSXP2BSTR(CComBSTR &bstr, SEXP s) {
 
 	const char *sz;
@@ -331,11 +334,20 @@ void mapEnums(ULONG_PTR p, SEXP targetEnv) {
 
 }
 
+/**
+ * map object to list of functions.  this may be done repeatedly for some 
+ * objects so we'll construct a cache.  these (should?) be uniquely identified
+ * by a combination of type lib and object name.
+ */
 void mapObject(IDispatch *Dispatch, std::vector< MemberRep > &mrlist, CComBSTR &bstrMatch)
 {
+	static WSTR2VECTOR function_cache;
+
 	CComPtr<ITypeInfo> spTypeInfo;
 	CComPtr<ITypeLib> spTypeLib;
 
+	CComBSTR bstrTypeLib;
+	std::basic_string<WCHAR> key;
 	HRESULT hr = Dispatch->GetTypeInfo(0, 0, &spTypeInfo);
 
 	// get type lib
@@ -344,6 +356,26 @@ void mapObject(IDispatch *Dispatch, std::vector< MemberRep > &mrlist, CComBSTR &
 	{
 		UINT tlidx;
 		hr = spTypeInfo->GetContainingTypeLib(&spTypeLib, &tlidx);
+	}
+
+	if (SUCCEEDED(hr)) {
+		hr = spTypeLib->GetDocumentation(-1, &bstrTypeLib, 0, 0, 0);
+	}
+
+	if (SUCCEEDED(hr)) {
+
+		bstrTypeLib += "::";
+		bstrTypeLib += bstrMatch;
+		key = (LPWSTR)bstrTypeLib;
+
+		std::string a;
+		BSTR2String(bstrTypeLib, a);
+
+		WSTR2VECTOR::iterator iter = function_cache.find(key);
+		if (iter != function_cache.end()) {
+			mrlist = iter->second;
+			return;
+		}
 	}
 
 	if (SUCCEEDED(hr))
@@ -391,6 +423,8 @@ void mapObject(IDispatch *Dispatch, std::vector< MemberRep > &mrlist, CComBSTR &
 						spTypeInfo2->ReleaseTypeAttr(pTatt);
 
 					}
+					
+					function_cache.insert(std::pair<std::basic_string<WCHAR>, std::vector< MemberRep >>(key, mrlist));
 				}
 			}
 		}
@@ -433,6 +467,8 @@ SEXP wrapDispatch(ULONG_PTR pdisp, bool enums) {
 	if (getObjectInterface(bstrIface, (LPDISPATCH)pdisp)) {
 
 		mapObject((LPDISPATCH)pdisp, mrlist, bstrIface);
+
+		// is this used for anything? or just debug?
 
 		ITypeInfo *pCoClass = 0;
 		if (getCoClassForDispatch(&pCoClass, (LPDISPATCH)pdisp)) {
