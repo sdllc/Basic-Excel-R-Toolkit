@@ -40,9 +40,6 @@
 
 #include <comdef.h>
 
-// temp dev
-#include <iostream>
-
 #if defined(length)
 #undef length
 #endif
@@ -362,39 +359,42 @@ void mapObject(IDispatch *Dispatch, std::vector< MemberRep > &mrlist, CComBSTR &
 				TYPEATTR *pTatt = nullptr;
 				CComPtr<ITypeInfo> spTypeInfo2;
 				hr = spTypeLib->GetTypeInfo(u, &spTypeInfo2);
-				if (SUCCEEDED(hr)) hr = spTypeInfo2->GetTypeAttr(&pTatt);
 				if (SUCCEEDED(hr)) hr = spTypeInfo2->GetDocumentation(-1, &bstrName, 0, 0, 0);
-
 				if (SUCCEEDED(hr) && (bstrName == bstrMatch)) // CComBSTRs are magic
 				{
-					std::string tname;
-					BSTR2String(bstrName, tname);
+					u = tlcount; // exit loop
 
+					hr = spTypeInfo2->GetTypeAttr(&pTatt);
+					if (SUCCEEDED(hr)) {
 
-					std::string tmpstr;
+						std::string tname;
+						BSTR2String(bstrName, tname);
 
-					switch (tk)
-					{
-					case TKIND_ENUM:
-					case TKIND_COCLASS:
-						break;
+						switch (tk)
+						{
+						case TKIND_ENUM:
+						case TKIND_COCLASS:
+							break;
 
-					case TKIND_INTERFACE:
-					case TKIND_DISPATCH:
-						mapInterface(tname, mrlist, spTypeInfo2, spTypeLib, pTatt, tk);
-						break;
+						case TKIND_INTERFACE:
+						case TKIND_DISPATCH:
+							mapInterface(tname, mrlist, spTypeInfo2, spTypeLib, pTatt, tk);
+							break;
 
-						//break;
+							//break;
 
-					default:
-						DebugOut("Unexpected tkind: %d\n", tk);
-						break;
+						default:
+							DebugOut("Unexpected tkind: %d\n", tk);
+							break;
+						}
+
+						spTypeInfo2->ReleaseTypeAttr(pTatt);
+
 					}
-
 				}
-				if (pTatt) spTypeInfo2->ReleaseTypeAttr(pTatt);
 			}
 		}
+
 	}
 
 }
@@ -431,6 +431,7 @@ SEXP wrapDispatch(ULONG_PTR pdisp, bool enums) {
 	CComBSTR bstrDescription, bstrIface;
 
 	if (getObjectInterface(bstrIface, (LPDISPATCH)pdisp)) {
+
 		mapObject((LPDISPATCH)pdisp, mrlist, bstrIface);
 
 		ITypeInfo *pCoClass = 0;

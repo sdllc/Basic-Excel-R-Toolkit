@@ -282,6 +282,14 @@ module.exports = {
         {
           id: "help-issues",
           label: "Issues"
+        },
+        {
+          type: "separator"
+        },
+        {
+          enabled: false,
+          id: "bert-shell-version",
+          label: "BERT Shell Version"
         }
       ]
     }
