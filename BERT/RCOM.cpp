@@ -334,8 +334,6 @@ void mapEnums(ULONG_PTR p, SEXP targetEnv) {
 
 }
 
-#include <iostream>
-
 /**
  * map object to list of functions.  this may be done repeatedly for some 
  * objects so we'll construct a cache.  these (should?) be uniquely identified
