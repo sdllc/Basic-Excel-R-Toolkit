@@ -334,10 +334,19 @@ void mapEnums(ULONG_PTR p, SEXP targetEnv) {
 
 }
 
+#include <iostream>
+
 /**
  * map object to list of functions.  this may be done repeatedly for some 
  * objects so we'll construct a cache.  these (should?) be uniquely identified
  * by a combination of type lib and object name.
+ *
+ * actually that might not always be the case.  but we may be able to assume 
+ * that (assuming we're using excel), the actual containing type lib will always
+ * be the same actual pointer, so we can use the address.
+ *
+ * although that won't hold for the API, where we may have multiple excel instances.
+ *
  */
 void mapObject(IDispatch *Dispatch, std::vector< MemberRep > &mrlist, CComBSTR &bstrMatch)
 {
@@ -349,12 +358,11 @@ void mapObject(IDispatch *Dispatch, std::vector< MemberRep > &mrlist, CComBSTR &
 	CComBSTR bstrTypeLib;
 	std::basic_string<WCHAR> key;
 	HRESULT hr = Dispatch->GetTypeInfo(0, 0, &spTypeInfo);
+	UINT tlidx;
 
-	// get type lib
+	// get type lib and index
 
-	if (SUCCEEDED(hr) && spTypeInfo)
-	{
-		UINT tlidx;
+	if (SUCCEEDED(hr)) {
 		hr = spTypeInfo->GetContainingTypeLib(&spTypeLib, &tlidx);
 	}
 
@@ -380,55 +388,50 @@ void mapObject(IDispatch *Dispatch, std::vector< MemberRep > &mrlist, CComBSTR &
 
 	if (SUCCEEDED(hr))
 	{
-		UINT tlcount = spTypeLib->GetTypeInfoCount();
 		TYPEKIND tk;
+		
+		// so that's what that index is for.  duh.
 
-		for (UINT u = 0; u < tlcount; u++)
-		{
-			if (SUCCEEDED(spTypeLib->GetTypeInfoType(u, &tk)))
+		if (SUCCEEDED(spTypeLib->GetTypeInfoType(tlidx, &tk))) {
+
+			CComBSTR bstrName;
+			TYPEATTR *pTatt = nullptr;
+			CComPtr<ITypeInfo> spTypeInfo2;
+			hr = spTypeLib->GetTypeInfo(tlidx, &spTypeInfo2);
+			if (SUCCEEDED(hr)) hr = spTypeInfo2->GetDocumentation(-1, &bstrName, 0, 0, 0);
+			if (SUCCEEDED(hr) && (bstrName == bstrMatch)) // CComBSTRs are magic
 			{
-				CComBSTR bstrName;
-				TYPEATTR *pTatt = nullptr;
-				CComPtr<ITypeInfo> spTypeInfo2;
-				hr = spTypeLib->GetTypeInfo(u, &spTypeInfo2);
-				if (SUCCEEDED(hr)) hr = spTypeInfo2->GetDocumentation(-1, &bstrName, 0, 0, 0);
-				if (SUCCEEDED(hr) && (bstrName == bstrMatch)) // CComBSTRs are magic
-				{
-					u = tlcount; // exit loop
+				hr = spTypeInfo2->GetTypeAttr(&pTatt);
+				if (SUCCEEDED(hr)) {
 
-					hr = spTypeInfo2->GetTypeAttr(&pTatt);
-					if (SUCCEEDED(hr)) {
+					std::string tname;
+					BSTR2String(bstrName, tname);
 
-						std::string tname;
-						BSTR2String(bstrName, tname);
+					switch (tk)
+					{
+					case TKIND_ENUM:
+					case TKIND_COCLASS:
+						break;
 
-						switch (tk)
-						{
-						case TKIND_ENUM:
-						case TKIND_COCLASS:
-							break;
+					case TKIND_INTERFACE:
+					case TKIND_DISPATCH:
+						mapInterface(tname, mrlist, spTypeInfo2, spTypeLib, pTatt, tk);
+						break;
 
-						case TKIND_INTERFACE:
-						case TKIND_DISPATCH:
-							mapInterface(tname, mrlist, spTypeInfo2, spTypeLib, pTatt, tk);
-							break;
+						//break;
 
-							//break;
-
-						default:
-							DebugOut("Unexpected tkind: %d\n", tk);
-							break;
-						}
-
-						spTypeInfo2->ReleaseTypeAttr(pTatt);
-
+					default:
+						DebugOut("Unexpected tkind: %d\n", tk);
+						break;
 					}
-					
-					function_cache.insert(std::pair<std::basic_string<WCHAR>, std::vector< MemberRep >>(key, mrlist));
+
+					spTypeInfo2->ReleaseTypeAttr(pTatt);
+
 				}
+					
+				function_cache.insert(std::pair<std::basic_string<WCHAR>, std::vector< MemberRep >>(key, mrlist));
 			}
 		}
-
 	}
 
 }
@@ -446,7 +449,7 @@ bool getObjectInterface(CComBSTR &bstr, IDispatch *pdisp )
 	}
 	if (SUCCEEDED(hr))
 	{
-		hr = typeinfo->GetDocumentation(-1, &bstr, 0, 0, 0);
+		hr = typeinfo->GetDocumentation(-1, &bstr, 0, 0, 0); // doing this to validate? ...
 	}
 	if (SUCCEEDED(hr))
 	{
@@ -468,6 +471,7 @@ SEXP wrapDispatch(ULONG_PTR pdisp, bool enums) {
 
 		mapObject((LPDISPATCH)pdisp, mrlist, bstrIface);
 
+#ifdef _DEBUG
 		// is this used for anything? or just debug?
 
 		ITypeInfo *pCoClass = 0;
@@ -494,6 +498,8 @@ SEXP wrapDispatch(ULONG_PTR pdisp, bool enums) {
 		else {
 			DebugOut(" * Coclass failed (1)\n");
 		}
+
+#endif // #ifdef _DEBUG
 
 	}
 
