@@ -40,6 +40,9 @@
 
 #include <comdef.h>
 
+// temp dev
+#include <iostream>
+
 #if defined(length)
 #undef length
 #endif
@@ -458,6 +461,17 @@ SEXP wrapDispatch(ULONG_PTR pdisp, bool enums) {
 	}
 
 	SEXP env = R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString(ENV_NAME)), R_GlobalEnv, &err);
+
+	if (!env) {
+
+		// API support.  this is sloppy, though.  it would be better if we 
+		// could know ahead of time, which we can, generally, except for one 
+		// case (FIXME).  also this will cause problems if you ever loaded the 
+		// BERTAPI from within BERT, so don't do that.
+
+		env = R_tryEvalSilent(Rf_lang2(Rf_install("asNamespace"), Rf_mkString("BERTAPI")), R_GlobalEnv, &err);
+
+	}
 	if (env)
 	{
 		SEXP wdargs;
@@ -520,12 +534,10 @@ SEXP wrapDispatch(ULONG_PTR pdisp, bool enums) {
 
 			}
 			UNPROTECT(1);
-
 		}
 		UNPROTECT(1);
-
 	}
-	
+
 	if (!result) result = Rf_ScalarLogical(0);
 	return result;
 

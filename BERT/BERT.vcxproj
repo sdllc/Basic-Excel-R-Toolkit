@@ -271,6 +271,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BERT.cpp" />
+    <ClCompile Include="BERTAPI.cpp" />
     <ClCompile Include="BERTCOM.cpp" />
     <ClCompile Include="BERTJSON.cpp" />
     <ClCompile Include="RemoteShell.cpp" />

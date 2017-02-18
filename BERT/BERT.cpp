@@ -255,6 +255,17 @@ short BERT_HomeDirectory()
 }
 
 /**
+* open the startup folder
+*/
+short BERT_StartupFolder()
+{
+	char buffer[MAX_PATH];
+	if (CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, buffer, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_FUNCTIONS_DIR))
+		::ShellExecuteA(NULL, "open", buffer, NULL, NULL, SW_SHOWDEFAULT);
+	return 1;
+}
+
+/**
  * set the excel callback pointer.
  */
 int BERT_SetPtr( LPVOID pdisp, LPVOID pribbon )
@@ -281,32 +292,6 @@ short BERT_Configure()
 
 	return 1;
 }
-
-/*
-void ClearConsole()
-{
-	if (hWndConsole)
-	{
-		::PostMessageA(hWndConsole, WM_COMMAND, MAKEWPARAM(WM_CLEAR_BUFFER, 0), 0);
-	}
-}
-
-void CloseConsole()
-{
-	if (hWndConsole)
-	{
-		::PostMessageA(hWndConsole, WM_COMMAND, MAKEWPARAM(WM_CLOSE_CONSOLE,0), 0);
-	}
-}
-
-void CloseConsoleAsync()
-{
-	if (hWndConsole)
-	{
-		::PostMessageA(hWndConsole, WM_COMMAND, MAKEWPARAM(WM_CLOSE_CONSOLE_ASYNC, 0), 0);
-	}
-}
-*/
 
 short BERT_About()
 {

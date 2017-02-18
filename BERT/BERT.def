@@ -48,6 +48,7 @@ BERT_Console
 BERT_Reload
 BERT_InstallPackages
 BERT_HomeDirectory
+BERT_StartupFolder
 BERT_About
 BERT_Callback
 BERT_COM_Callback
@@ -55,6 +56,16 @@ BERT_Volatile
 
 GetUBCount
 GetUB
+
+;-------------------------------------------------------
+;
+; BERT API exports
+;
+
+BERTAPI_Startup
+BERTAPI_Shutdown
+BERTAPI_CreateDispatch
+BERTAPI_CreateExcelInstance
 
 ;-------------------------------------------------------
 ;

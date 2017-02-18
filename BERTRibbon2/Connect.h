@@ -130,6 +130,7 @@ public:
 			else if (!wcscmp(rgszNames[0], L"BERTRIBBON_BERT_InstallPackages")) dispID = 1004;
 			else if (!wcscmp(rgszNames[0], L"BERTRIBBON_BERT_Configure"))		dispID = 1005;
 			else if (!wcscmp(rgszNames[0], L"BERTRIBBON_BERT_About"))			dispID = 1006;
+			else if (!wcscmp(rgszNames[0], L"BERTRIBBON_BERT_StartupFolder"))	dispID = 1007;
 			else if (!wcscmp(rgszNames[0], L"BERTRIBBON_Ribbon_Loaded"))		dispID = 2000;
 
 			else if (!wcscmp(rgszNames[0], L"getUserButtonsVisible"))			dispID = DISPID_USER_BUTTONS_VISIBLE;
@@ -180,6 +181,9 @@ public:
 			return S_OK;
 		case 1006:
 			HandleControlInvocation("BERT.About()");
+			return S_OK;
+		case 1007:
+			HandleControlInvocation("BERT.StartupFolder()");
 			return S_OK;
 		case 2000:
 			return HandleCacheRibbon(pdispparams);

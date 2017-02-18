@@ -308,7 +308,9 @@
     <Midl Include="BERTRibbon2.idl" />
   </ItemGroup>
   <ItemGroup>
-    <Xml Include="RibbonUI.xml" />
+    <Xml Include="RibbonUI.xml">
+      <SubType>Designer</SubType>
+    </Xml>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
