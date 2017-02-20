@@ -84,7 +84,7 @@ SEXP __stdcall BERTAPI_CreateDispatch(const char *progid) {
 
 	}	
 	else {
-		std::cout << "cocreateinstance failed" << std::endl;
+		// std::cout << "cocreateinstance failed" << std::endl;
 		// FIXME: error
 	}
 
@@ -104,7 +104,8 @@ SEXP __stdcall BERTAPI_CreateExcelInstance() {
 
 		pdisp->AddRef();
 		int rc = pdisp->Release();
-		std::cout << "cocreateinstance succeeded (rc " << rc << ")" << std::endl;
+		
+		//std::cout << "cocreateinstance succeeded (rc " << rc << ")" << std::endl;
 
 		// create an outside env to hold the application and enums
 		SEXP e = PROTECT(R_tryEval(Rf_lang1(Rf_install("new.env")), R_GlobalEnv, &err));
