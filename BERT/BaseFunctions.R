@@ -650,6 +650,27 @@ print.history.list <- function(h){
 quit <- function(){ BERT$CloseConsole() }
 q <- quit;
 
+#--------------------------------------------------------
+# convert an Excel range to a data frame, optionally 
+# with headers.
+#--------------------------------------------------------
+
+range.to.data.frame <- function( rng, headers=F ){
+
+	# remove headers from data if necessary
+	data <- if(headers) rng[-1,] else rng;
+
+	# format data
+	df <- as.data.frame( lapply( split( data, col(data)), unlist ));
+
+	# add headers if available
+	if( headers ){ colnames(df) <- rng[1,]; }
+
+	# done
+	df;  
+
+}
+
 }); # end with(BERT$Util)
 
 suppressMessages(attach( BERT$Util ));
