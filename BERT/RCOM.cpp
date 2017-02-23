@@ -770,9 +770,7 @@ SEXP Variant2SEXP(CComVariant &cv) {
 
 	switch (vt) {
 	case VT_EMPTY:
-		//return R_NilValue;
 		return ScalarInteger(R_NaInt);
-		//return R_NaString;
 	case VT_NULL:
 		return R_NilValue;
 	case VT_R4:
