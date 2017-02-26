@@ -274,6 +274,17 @@ int BERT_SetPtr( LPVOID pdisp, LPVOID pribbon )
 	return 2;
 }
 
+HWND getExcelHWND() {
+
+	HWND hwnd;
+	XLOPER12 xWnd;
+	Excel12(xlGetHwnd, &xWnd, 0);
+	hwnd = (HWND)xWnd.val.w;
+	Excel12(xlFree, 0, 1, (LPXLOPER12)&xWnd);
+	return hwnd;
+
+}
+
 short BERT_Configure()
 {
 	// ::MessageBox(0, L"No", L"Options", MB_OKCANCEL | MB_ICONINFORMATION);

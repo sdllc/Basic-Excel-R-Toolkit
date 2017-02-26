@@ -47,8 +47,12 @@
 
 #include "RCOM.h"
 #include "RemoteShell.h"
-
 #include "BERTJSON.h"
+
+#include "BERTGDI.h"
+
+
+extern int jsclient_device_(std::string name, std::string background, double width, double height, int pointsize);
 
 #ifndef MIN
 #define MIN(a,b) ( a < b ? a : b )
@@ -1028,6 +1032,8 @@ void RShutdown()
 	Rf_endEmbeddedR(0);
 	CloseHandle(muxLog);
 	CloseHandle(muxExecR);
+
+	initGDIplus(false); // shutdown
 
 }
 
@@ -2614,7 +2620,27 @@ SEXP BERT_Callback(SEXP cmd, SEXP data, SEXP data2)
 	case CC_RELOAD:
 		BERT_Reload();
 		break;
+
+	case CC_DEVICE:
+		{
+			/*
+			int jsclient_device_(std::string name, std::string background, int width, int height, int pointsize);
+			SEXP jsClientLib_jsclient_device_(SEXP nameSEXP, SEXP backgroundSEXP, SEXP widthSEXP, SEXP heightSEXP, SEXP pointsizeSEXP) {
+				const char *name = CHAR(STRING_ELT(nameSEXP, 0));
+				const char *background = CHAR(STRING_ELT(backgroundSEXP, 0));
+				int rslt = jsclient_device_(name, background, Rf_asInteger(widthSEXP), Rf_asInteger(heightSEXP), Rf_asInteger(pointsizeSEXP));
+				return Rf_ScalarReal(rslt);
+				break;
+			*/
+			initGDIplus(true); // startup if neccessary
+			int rslt = jsclient_device_("jim", "white", 400, 400, 5);
+			// createDeviceTarget();
+			return Rf_ScalarReal(rslt);
+
+		}
+
 	}
 
 	return R_NilValue;
 }
+
