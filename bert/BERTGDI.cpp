@@ -9,11 +9,20 @@
 
 #include <vector>
 
+// mapped from R graphics device
+
+#define GE_ROUND_CAP	1
+#define GE_BUTT_CAP		2
+#define GE_SQUARE_CAP	3
+
+#define GE_ROUND_JOIN	1
+#define GE_MITRE_JOIN	2
+#define GE_BEVEL_JOIN	3
+
 extern HWND getExcelHWND();
 extern LPDISPATCH pdispApp;
 
-extern void jsclient_device_resize_(int dev, double width, double height);
-
+extern void jsclient_device_resize_(int dev, double width, double height, bool replay);
 
 std::vector < BERTGraphicsDevice * > dlist;
 
@@ -30,8 +39,8 @@ HWND hwndExcel = 0;
 // should be able to use cached versions of these files, though, they're 
 // not going to change.
 
-#include "callbacks\mso.tlh"
-#include "callbacks\excel.tlh"
+#include "mso-14.tlh"
+#include "excel-14.tlh"
 
 //-------------------------------------------------------------------------
 // 
@@ -102,7 +111,12 @@ int GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
 	return -1;  // Failure
 }
 
-void createDeviceTarget( const WCHAR *name, CComPtr< Excel::Shape > &target, double w, double h, int device ) {
+void createDeviceTarget( const WCHAR *name, CComPtr< Excel::Shape > &target, double w, double h ) {
+
+	HRESULT hr;
+
+	std::basic_string<WCHAR> compound_name = L"BGD_";
+	compound_name += name;
 
 	::DebugOut("creating device target\n");
 
@@ -110,29 +124,38 @@ void createDeviceTarget( const WCHAR *name, CComPtr< Excel::Shape > &target, dou
 	int logpixels = ::GetDeviceCaps(hdcScreen, LOGPIXELSX);
 	::ReleaseDC(NULL, hdcScreen);
 
-	WCHAR wsz[32];
-	wsprintf(wsz, L" (%d)", device);
-
 	std::basic_string< WCHAR > alttext = L"BERT/R Graphics Device Target: ";
 	alttext += name;
-	alttext += wsz;
 
 	if (pdispApp) {
 		CComQIPtr< Excel::_Application > app(pdispApp);
 		if (app) {
-			IDispatchPtr pdispsheet = app->GetActiveSheet();
-			CComQIPtr< Excel::_Worksheet > sheet(pdispsheet.GetInterfacePtr());
-			if (sheet) {
-				CComPtr< Excel::Shapes > shapes;
-				sheet->get_Shapes(&shapes);
-				if (shapes) {
-					Excel::ShapePtr pshape = shapes->AddShape(Office::msoShapeRectangle, 100, 100, (float)(w * 72 / logpixels), (float)(h * 72 / logpixels ));
-					pshape->PutName(name);
-					pshape->PutAlternativeText(alttext.c_str());
-					pshape->Line->PutVisible(Office::MsoTriState::msoFalse);
-
-					CComQIPtr< Excel::Shape > shape(pshape.GetInterfacePtr());
-					target = shape;
+			CComPtr<IDispatch> pdispsheet;
+			if( SUCCEEDED( app->get_ActiveSheet(&pdispsheet))){
+				CComQIPtr< Excel::_Worksheet > sheet(pdispsheet);
+				if (sheet) {
+					CComPtr< Excel::Shapes > shapes;
+					sheet->get_Shapes(&shapes);
+					if (shapes) {
+						Excel::IShapes *ishapes = (Excel::IShapes*)(shapes.p);
+						if (ishapes) {
+							CComPtr< Excel::Shape > shape;
+							ishapes->AddShape(Office::msoShapeRectangle, 100, 100, (float)(w * 72 / logpixels), (float)(h * 72 / logpixels), &shape);
+							if (shape) {
+								target = shape;
+								Excel::IShape *ishape = (Excel::IShape*)(shape.p);
+								if (ishape) {
+									CComBSTR bstr = compound_name.c_str();
+									ishape->put_Name(bstr);
+									bstr = alttext.c_str();
+									ishape->put_AlternativeText(bstr);
+									CComPtr< Excel::LineFormat > line;
+									ishape->get_Line(&line);
+									if (line) line->put_Visible(Office::MsoTriState::msoFalse);
+								}
+							}
+						}
+					}
 				}
 			}
 		}
@@ -140,55 +163,43 @@ void createDeviceTarget( const WCHAR *name, CComPtr< Excel::Shape > &target, dou
 
 }
 
-void findDeviceTarget(const WCHAR *name, CComPtr<Excel::Shape> &target, double w, double h, int device) {
+void findDeviceTarget(const WCHAR *name, CComPtr<Excel::Shape> &target ) {
 
 	HRESULT hr = S_OK;
 
+	std::basic_string<WCHAR> compound_name = L"BGD_";
+	compound_name += name;
+	
 	if (pdispApp) {
 
 		CComPtr<Excel::Sheets> sheets;
 		CComQIPtr<Excel::_Application> app(pdispApp);
 		if (app) app->get_Worksheets(&sheets);
 		if (sheets) {
-			long count = sheets->GetCount();
+			long count = 0;
+			sheets->get_Count(&count);
 			for (long l = 1; l <= count; l++) {
 				CComVariant var = l;
-				LPDISPATCH pdispsheet;
+				CComPtr<IDispatch> pdispsheet;
 				if (SUCCEEDED(sheets->get_Item(var, &pdispsheet))) {
 					CComPtr<Excel::Shapes> shapes;
 					CComQIPtr< Excel::_Worksheet > sheet(pdispsheet);
 					if (sheet) sheet->get_Shapes(&shapes);
 					if (shapes) {
-						CComQIPtr< IEnumVARIANT > iterator(shapes->Get_NewEnum());
-						if (iterator) {
-							iterator->Reset();
-							CComVariant item;
-							ULONG fetched;
-							for (; hr != S_FALSE;) {
-								hr = iterator->Next(1, &item, &fetched);
-								if (fetched != 1) break;
-								if (item.vt != VT_DISPATCH) break;
-								CComQIPtr< Excel::Shape > shape(item.pdispVal);
-								if (shape) {
-									_bstr_t _name = shape->GetName();
-									CComBSTR bstrName(_name.GetBSTR());
-									if (bstrName == name) {
-										target = shape;
-										break;
-									}
-								}
+						Excel::IShapes* ishapes = (Excel::IShapes*)(shapes.p);
+						if( ishapes ){
+							CComVariant cvItem = compound_name.c_str();
+							CComPtr<Excel::Shape> shape;
+							if (SUCCEEDED(ishapes->Item(cvItem, &shape))) {
+								target = shape;
+								return;
 							}
-							iterator->Reset();
 						}
 					}
 				}
 			}
 		}
-
-		if (!target) createDeviceTarget(name, target, w, h, device);
-
 	}
-
 }
 
 void timer_callback(HWND hwnd, UINT msg, UINT_PTR id, DWORD dwtime) {
@@ -226,19 +237,22 @@ void BERTGraphicsDevice::repaint() {
 	dirty = false;
 	::DebugOut(" ** graphics update\n");
 
+//	std::basic_string<WCHAR> compound_name = L"BGD_";
+//	compound_name += name;
+
 	CLSID pngClsid;
 	GetEncoderClsid(L"image/png", &pngClsid);
 	((Gdiplus::Bitmap*)pbitmap)->Save(tempFile, &pngClsid, NULL);
 	
 	CComPtr< Excel::Shape > shape;
-	findDeviceTarget(name, shape, width, height, device);
+	findDeviceTarget(name, shape);
+	if (!shape) createDeviceTarget(name, shape, width, height);
 
 	if (shape) {
-		Excel::FillFormatPtr fill = shape->GetFill();
-		if (fill) {
-			fill->UserPicture(tempFile);
-			// fill->Release();
-		}
+		CComPtr< Excel::FillFormat > fill;
+		Excel::IShape *ishape = (Excel::IShape*)(shape.p);
+		if (ishape) ishape->get_Fill(&fill);
+		if (fill) fill->UserPicture(tempFile);
 	}
 
 }
@@ -249,29 +263,172 @@ void BERTGraphicsDevice::getDeviceSize(double &w, double &h) {
 	h = height;
 
 	CComPtr< Excel::Shape > shape;
-	findDeviceTarget(name, shape, width, height, device); // passing the old ones, I guess, in case it needs to be created
+	findDeviceTarget(name, shape);
+	if( !shape ) createDeviceTarget(name, shape, width, height); // passing the old ones, I guess, in case it needs to be created
 
 	if (shape) {
-		w = shape->GetWidth();
-		h = shape->GetHeight();
+		Excel::IShape *ishape = (Excel::IShape*)(shape.p);
+		if (ishape) {
+			float fw, fh;
+			ishape->get_Width(&fw);
+			ishape->get_Height(&fh);
+			w = fw;
+			h = fh;
+		}
 	}
 
 }
 
-void BERTGraphicsDevice::drawLine(double x1, double y1, double x2, double y2, GraphicsStyle *gs) {
+inline Gdiplus::ARGB RColor2ARGB(int color) {
+//	return Gdiplus::Color::MakeARGB( R_ALPHA(color), R_RED(color), R_GREEN(color), R_BLUE(color));
+	return (color & 0xff00ff00) | ((color >> 16) & 0x000000ff) | ((color << 16) & 0x00ff0000);
+}
 
-	Gdiplus::Graphics graphics((Gdiplus::Bitmap*)pbitmap);
-	Gdiplus::Pen black(Gdiplus::Color(255, 0, 0, 0), gs->lwd);
-	graphics.DrawLine(&black, (Gdiplus::REAL)x1, (Gdiplus::REAL)y1, (Gdiplus::REAL)x2, (Gdiplus::REAL)y2);
+void setPenOptions(Gdiplus::Pen &pen, GraphicsStyle *gs) {
 
-	update();
+	if ( gs->ljoin == GE_ROUND_JOIN ) pen.SetLineJoin(Gdiplus::LineJoin::LineJoinRound);
+	else if ( gs->ljoin == GE_MITRE_JOIN ) pen.SetLineJoin(Gdiplus::LineJoin::LineJoinMiter);
+	else if ( gs->ljoin == GE_BEVEL_JOIN ) pen.SetLineJoin(Gdiplus::LineJoin::LineJoinBevel);
+
+	if (gs->lend == GE_ROUND_CAP) pen.SetLineCap(Gdiplus::LineCap::LineCapRound, Gdiplus::LineCap::LineCapRound, Gdiplus::DashCap::DashCapRound);
+	else if (gs->lend == GE_BUTT_CAP ) pen.SetLineCap(Gdiplus::LineCap::LineCapFlat, Gdiplus::LineCap::LineCapFlat, Gdiplus::DashCap::DashCapFlat);
+	else if (gs->lend == GE_SQUARE_CAP ) pen.SetLineCap(Gdiplus::LineCap::LineCapSquare, Gdiplus::LineCap::LineCapSquare, Gdiplus::DashCap::DashCapFlat);
 
 }
+
+std::basic_string < WCHAR > BERTGraphicsDevice::mapFontName(std::string name) {
+
+	if (name == "sans" || name == "sans-serif" || name == "") return font_sans;
+	else if (name == "serif") return font_serif;
+	else if (name == "mono" || name == "monospace") return font_mono;
+
+	// otherwise map directly
+
+	int len = MultiByteToWideChar(CP_UTF8, 0, name.c_str(), name.length(), 0, 0);
+	if (len <= 0) return font_sans;
+
+	WCHAR *wsz = new WCHAR[len + 1];
+	int err = MultiByteToWideChar(CP_UTF8, 0, name.c_str(), name.length(), wsz, len);
+	wsz[len] = 0;
+
+	std::basic_string<WCHAR> result = wsz;
+
+	delete[] wsz;
+
+	return result;
+}
+
+void BERTGraphicsDevice::drawText(const char *str, double x, double y, double rot, GraphicsStyle *gs) {
+
+	Gdiplus::Graphics graphics((Gdiplus::Bitmap*)pbitmap);
+	graphics.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
+
+	int len = MultiByteToWideChar(CP_UTF8, 0, str, strlen(str), 0, 0);
+	if (len <= 0) return;
+
+	WCHAR *wsz = new WCHAR[len + 1];
+	int err = MultiByteToWideChar(CP_UTF8, 0, str, strlen(str), wsz, len);
+	wsz[len] = 0;
+
+	if (!err) {
+		DWORD dwerr = GetLastError();
+		::DebugOut("MB ERR %d\n", dwerr);
+	}
+
+	std::basic_string<WCHAR> fontname = mapFontName(gs->fontname);
+	int style = 0; // Gdiplus::FontStyle::FontStyleRegular;
+	if (gs->bold) style |= Gdiplus::FontStyle::FontStyleBold;
+	if (gs->italic) style |= Gdiplus::FontStyle::FontStyleItalic;
+
+	Gdiplus::Font font(fontname.c_str(), gs->fontsize, style, Gdiplus::Unit::UnitPixel);
+
+	Gdiplus::PointF origin(x, y);
+	Gdiplus::SolidBrush fill(RColor2ARGB(gs->col)); // R says stroke, GDI+ says fill
+
+	Gdiplus::RectF boundRect;
+	graphics.MeasureString(wsz, len, &font, origin, &boundRect);
+
+	// rot is in degrees, same as gdi+
+
+	if (rot) {
+		graphics.TranslateTransform(origin.X, origin.Y);
+		graphics.RotateTransform(-rot);
+		origin.X = 0;
+		origin.Y = 0;
+	}
+	origin.Y -= boundRect.Height;
+
+	graphics.DrawString(wsz, len, &font, origin, &fill);
+
+	if (rot) graphics.ResetTransform();
+
+	delete[] wsz;
+
+}
+
+void BERTGraphicsDevice::measureText(const char *str, GraphicsStyle *gs, double *width, double *height) {
+
+	*width = *height = 0;
+	Gdiplus::Graphics graphics((Gdiplus::Bitmap*)pbitmap);
+	graphics.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
+
+	int len = MultiByteToWideChar(CP_UTF8, 0, str, strlen(str), 0, 0);
+	if (len <= 0) return;
+
+	WCHAR *wsz = new WCHAR[len + 1];
+	int err = MultiByteToWideChar(CP_UTF8, 0, str, strlen(str), wsz, len);
+	wsz[len] = 0;
+
+	if (!err) {
+		DWORD dwerr = GetLastError();
+		::DebugOut("MB ERR %d\n", dwerr);
+	}
+
+	Gdiplus::PointF origin(0, 0);
+	Gdiplus::RectF boundRect;
+
+	std::basic_string<WCHAR> fontname = mapFontName(gs->fontname);
+
+	int style = 0; // Gdiplus::FontStyle::FontStyleRegular;
+	if (gs->bold) style |= Gdiplus::FontStyle::FontStyleBold;
+	if (gs->italic) style |= Gdiplus::FontStyle::FontStyleItalic;
+
+	Gdiplus::Font font(fontname.c_str(), gs->fontsize, style, Gdiplus::Unit::UnitPixel);
+	graphics.MeasureString(wsz, len, &font, origin, &boundRect);
+
+	*width = boundRect.Width;
+	*height = boundRect.Height;
+
+	delete[] wsz;
+
+}
+
+void BERTGraphicsDevice::drawCircle(double x, double y, double r, GraphicsStyle *gs) {
+
+	Gdiplus::Graphics graphics((Gdiplus::Bitmap*)pbitmap);
+	graphics.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
+
+	Gdiplus::Pen stroke(RColor2ARGB(gs->col), gs->lwd);
+	Gdiplus::SolidBrush fill(RColor2ARGB(gs->fill));
+
+	Gdiplus::RectF rect(x - r, y - r, r * 2, r * 2);
+
+	if( gs->filled ) graphics.FillEllipse(&fill, rect);
+	graphics.DrawEllipse(&stroke, rect);
+
+
+}
+
 
 void BERTGraphicsDevice::drawRect(double x1, double y1, double x2, double y2, GraphicsStyle *gs) {
 
 	Gdiplus::Graphics graphics((Gdiplus::Bitmap*)pbitmap);
-	Gdiplus::Pen black(Gdiplus::Color(255, 0, 0, 0), gs->lwd);
+	graphics.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
+
+	Gdiplus::Pen stroke(RColor2ARGB(gs->col), gs->lwd);
+	Gdiplus::SolidBrush fill(RColor2ARGB(gs->fill));
+
+	setPenOptions(stroke, gs);
 
 	Gdiplus::REAL x = x1;
 	Gdiplus::REAL y = y1;
@@ -282,14 +439,92 @@ void BERTGraphicsDevice::drawRect(double x1, double y1, double x2, double y2, Gr
 	if (w < 0) { x = x2; w = -w; }
 	if (h < 0) { y = y2; h = -h; }
 
-	graphics.DrawRectangle(&black, x, y, w, h);
+	if (gs->filled) graphics.FillRectangle(&fill, x, y, w, h);
+	graphics.DrawRectangle(&stroke, x, y, w, h);
 
 	update();
 
 }
 
+void BERTGraphicsDevice::drawPoly(int n, double *x, double *y, int filled, GraphicsStyle *gs) {
 
-void BERTGraphicsDevice::newPage() {
+	Gdiplus::Graphics graphics((Gdiplus::Bitmap*)pbitmap);
+	graphics.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
+	Gdiplus::Pen stroke(RColor2ARGB(gs->col), gs->lwd);
+
+	setPenOptions(stroke, gs);
+
+	if (n < 1) return;
+
+	Gdiplus::PointF *pt = new Gdiplus::PointF[n];
+
+	for (int i = 0; i < n; i++) {
+		pt[i].X = x[i];
+		pt[i].Y = y[i];
+	}
+
+	graphics.DrawLines(&stroke, pt, n);
+
+	if (filled) {
+		Gdiplus::SolidBrush fill(RColor2ARGB(gs->fill));
+		graphics.FillPolygon(&fill, pt, n);
+	}
+
+	delete [] pt;
+}
+
+void BERTGraphicsDevice::drawLine(double x1, double y1, double x2, double y2, GraphicsStyle *gs) {
+
+	Gdiplus::Graphics graphics((Gdiplus::Bitmap*)pbitmap);
+	graphics.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
+
+	Gdiplus::Pen stroke(RColor2ARGB(gs->col), gs->lwd);
+	setPenOptions(stroke, gs);
+
+	graphics.DrawLine(&stroke, (Gdiplus::REAL)x1, (Gdiplus::REAL)y1, (Gdiplus::REAL)x2, (Gdiplus::REAL)y2);
+	update();
+
+}
+
+void BERTGraphicsDevice::drawBitmap(unsigned int* data, int pixel_width, int pixel_height, double x, double y, double target_width, double target_height, double rot) {
+
+	Gdiplus::Graphics graphics((Gdiplus::Bitmap*)pbitmap);
+	graphics.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
+
+	// R data comes in 32-bit RGBA (lsb first byte-order).  There's no matching GDI+ format, 
+	// so we have to munge the data.  when GDI+ says "ARGB" that means word order, or BGRA 
+	// in lsb-first byte-order. we have to swap R and B.
+
+	int len = pixel_width * pixel_height;
+	unsigned int *pixels = new unsigned int[len];
+
+	for (int i = 0; i < len; i++) {
+		pixels[i] = (data[i] & 0xff00ff00) | ((data[i] >> 16) & 0x000000ff) | ((data[i] << 16) & 0x00ff0000);
+	}
+
+	// kind of ugly scaling, unfortunately.  may have to do this some other way.
+
+	Gdiplus::Bitmap bmp(pixel_width, pixel_height, 4 * pixel_width, PixelFormat32bppARGB, (unsigned char*)pixels);
+
+	if (target_height < 0) {
+		y += target_height;
+		target_height = -target_height;
+	}
+
+	if (target_width < 0) {
+		x += target_width;
+		target_width = -target_width;
+	}
+
+	Gdiplus::RectF rect(x, y, target_width, target_height);
+	graphics.DrawImage(&bmp, rect);
+
+	delete[] pixels;
+	update();
+}
+
+
+void BERTGraphicsDevice::newPage(int color) {
 
 	page++;
 
@@ -305,15 +540,16 @@ void BERTGraphicsDevice::newPage() {
 	w = w * logpixels / 72;
 	h = h * logpixels / 72;
 
-	::DebugOut("New page; device size reports %01.02f, %01.02f (we think it's %01.02f, %01.02f)", w, h, width, height);
+//	::DebugOut("New page; device size reports %01.02f, %01.02f (we think it's %01.02f, %01.02f)", w, h, width, height);
 
 	if (fabsf(w - width) >= 1 || fabsf(h - height) >= 1) {
 		setSize(w, h);
 	}
 
 	Gdiplus::Graphics graphics((Gdiplus::Bitmap*)pbitmap);
-	Gdiplus::SolidBrush white(Gdiplus::Color(255, 255, 255, 255));
-	graphics.FillRectangle(&white, 0, 0, width, height);
+	graphics.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
+	Gdiplus::SolidBrush bg(Gdiplus::Color( RColor2ARGB(color)));
+	graphics.FillRectangle(&bg, 0, 0, width, height);
 
 	update();
 
@@ -330,7 +566,7 @@ void BERTGraphicsDevice::setSize(double width, double height) {
 	this->width = width;
 	this->height = height;
 
-	jsclient_device_resize_(device, this->width, this->height);
+	jsclient_device_resize_(device, this->width, this->height, false);
 
 	Gdiplus::Bitmap *bitmap = new Gdiplus::Bitmap(width, height, PixelFormat32bppARGB);
 	pbitmap = (void*)bitmap;
@@ -341,6 +577,12 @@ void BERTGraphicsDevice::setSize(double width, double height) {
 
 BERTGraphicsDevice::BERTGraphicsDevice( std::string &name, double w, double h ) :
 	width(w), height(h), page(0), device(0), pbitmap(0) {
+
+	// defaults
+
+	font_sans = FONT_SANS_DEFAULT;
+	font_mono = FONT_MONO_DEFAULT;
+	font_serif = FONT_SERIF_DEFAULT;
 
 	int err = MultiByteToWideChar(CP_UTF8, 0, name.c_str(), name.length(), this->name, MAX_PATH);
 	if (!err) {
@@ -367,8 +609,12 @@ BERTGraphicsDevice::~BERTGraphicsDevice() {
 			break;
 		}
 	}
+	
+	if (pbitmap) {
+		Gdiplus::Bitmap* bitmap = (Gdiplus::Bitmap*)pbitmap;
+		delete bitmap;
+		pbitmap = 0;
+	}
 
-
-	if (pbitmap) delete pbitmap;
 	DeleteFile(tempFile);
 }

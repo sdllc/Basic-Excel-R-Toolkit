@@ -51,6 +51,7 @@ BERT_HomeDirectory
 BERT_StartupFolder
 BERT_About
 BERT_Callback
+BERT_GraphicsDevice
 BERT_COM_Callback
 BERT_Volatile
 

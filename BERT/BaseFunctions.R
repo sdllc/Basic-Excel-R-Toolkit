@@ -651,6 +651,44 @@ quit <- function(){ BERT$CloseConsole() }
 q <- quit;
 
 #--------------------------------------------------------
+# specifically for using graphics devices, get a 
+# (somewhat) unique name for the cell.  
+#
+# the intent is to have this name survive saving and 
+# re-opening the file (so we can't use the sheet ID),
+# but that limits us to the sheet name, which will not 
+# survive renaming.
+#
+# this will only work when called from an Excel 
+# spreadsheet function.  it WILL NOT WORK in any other
+# context.
+#--------------------------------------------------------
+
+calling.cell.unique.id <- function(){
+	ref <- BERT$.Excel(89); # xlfCaller
+	sheetnm <- BERT$.Excel(0x4005, list(ref)); # xlSheetNm
+	paste0( gsub( "\\[.*?\\]", "", sheetnm ), " R", ref@R1, " C", ref@C1 );
+}
+
+#--------------------------------------------------------
+# activate or create a BERT graphics device with the 
+# given name.  if we are creating, the parameters set 
+# options.  if a device with this name already exists,
+# it will be selected and the options will be ignored.
+#--------------------------------------------------------
+
+BERT.graphics.device <- function( name="BERT-default", bgcolor="white", width=400, height=400, pointsize=14 ){
+
+	x <- dev.list();
+	if((length(x) > 0) & (name %in% names(x))){ dev.set( x[[name]]) }
+	else {
+		cat( paste( "Creating new device", name, "\n" ));
+		# this activates by default, so no need to call dev.set
+		.Call( "BERT_GraphicsDevice", name, bgcolor, width, height, pointsize, PACKAGE=BERT$.MODULE )
+	}
+}
+
+#--------------------------------------------------------
 # convert an Excel range to a data frame, optionally 
 # with headers.
 #--------------------------------------------------------

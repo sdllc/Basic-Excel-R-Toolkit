@@ -2577,6 +2577,67 @@ void AddUserButton(SEXP args) {
 
 }
 
+SEXP BERT_GraphicsDevice(SEXP _name, SEXP _bgcolor, SEXP _width, SEXP _height, SEXP _pointsize ) {
+
+	// defaults
+
+	std::string name = "BERT-Default"; 
+	std::string bgcolor = "white";
+
+	double width = 400;
+	double height = 400;
+	double pointsize = 14;
+
+	int type = TYPEOF(_name);
+	if (type == STRSXP) {
+		const char *sz = CHAR(STRING_ELT(_name, 0));
+		if (strlen(sz)) name = sz;
+	}
+	else if (!isNull(_name)) {
+		Rf_error("Invalid name value");
+		return R_NilValue;
+	}
+
+	type = TYPEOF(_width);
+	if (type == REALSXP) width = (REAL(_width))[0];
+	else if (type == INTSXP) width = (INTEGER(_width))[0];
+	else if (!isNull(_width)) {
+		Rf_error("Invalid width value");
+		return R_NilValue;
+	}
+	
+	type = TYPEOF(_height);
+	if (type == REALSXP) height = (REAL(_height))[0];
+	else if (type == INTSXP) height = (INTEGER(_height))[0];
+	else if (!isNull(_height)) {
+		Rf_error("Invalid height value");
+		return R_NilValue;
+	}
+
+	type = TYPEOF(_bgcolor);
+	if (type == STRSXP) {
+		const char *sz = CHAR(STRING_ELT(_bgcolor, 0));
+		if (strlen(sz)) bgcolor = sz;
+	}
+	else if (!isNull(_bgcolor)) {
+		Rf_error("Invalid background color value");
+		return R_NilValue;
+	}
+	
+	type = TYPEOF(_pointsize);
+	if (type == REALSXP) pointsize = (REAL(_pointsize))[0];
+	else if (type == INTSXP) pointsize = (INTEGER(_pointsize))[0];
+	else if (!isNull(_pointsize)) {
+		Rf_error("Invalid pointsize value");
+		return R_NilValue;
+	}
+
+	initGDIplus(true); // startup if neccessary
+	int rslt = jsclient_device_(name.c_str(), bgcolor.c_str(), width, height, pointsize);
+	return Rf_ScalarReal(rslt);
+
+}
+
 /**
  * callback dispatch function (calling from R)
  */
@@ -2620,24 +2681,6 @@ SEXP BERT_Callback(SEXP cmd, SEXP data, SEXP data2)
 	case CC_RELOAD:
 		BERT_Reload();
 		break;
-
-	case CC_DEVICE:
-		{
-			/*
-			int jsclient_device_(std::string name, std::string background, int width, int height, int pointsize);
-			SEXP jsClientLib_jsclient_device_(SEXP nameSEXP, SEXP backgroundSEXP, SEXP widthSEXP, SEXP heightSEXP, SEXP pointsizeSEXP) {
-				const char *name = CHAR(STRING_ELT(nameSEXP, 0));
-				const char *background = CHAR(STRING_ELT(backgroundSEXP, 0));
-				int rslt = jsclient_device_(name, background, Rf_asInteger(widthSEXP), Rf_asInteger(heightSEXP), Rf_asInteger(pointsizeSEXP));
-				return Rf_ScalarReal(rslt);
-				break;
-			*/
-			initGDIplus(true); // startup if neccessary
-			int rslt = jsclient_device_("jim", "white", 400, 400, 5);
-			// createDeviceTarget();
-			return Rf_ScalarReal(rslt);
-
-		}
 
 	}
 

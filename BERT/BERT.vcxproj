@@ -279,9 +279,7 @@
     <ClCompile Include="BERTCOM.cpp" />
     <ClCompile Include="BERTGDI.cpp" />
     <ClCompile Include="BERTJSON.cpp" />
-    <ClCompile Include="callbacks\base64.cpp" />
-    <ClCompile Include="callbacks\jsclientlib.cpp" />
-    <ClCompile Include="callbacks\lodepng.cpp" />
+    <ClCompile Include="GraphicsDevice.cpp" />
     <ClCompile Include="RemoteShell.cpp" />
     <ClCompile Include="Dialogs.cpp" />
     <ClCompile Include="dllmain.cpp">

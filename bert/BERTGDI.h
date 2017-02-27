@@ -5,8 +5,13 @@
 bool initGDIplus(bool startup);
 void createDeviceTarget();
 
+#define FONT_SANS_DEFAULT	L"Segoe UI"
+#define FONT_MONO_DEFAULT	L"Consolas"
+#define FONT_SERIF_DEFAULT	L"Palatino Linotype"
+
 // the classes are largely to separate R and GDI+, which don't mix well.
-// graphics style is a proxy for R_GE_gcontext. 
+// graphics style is a proxy for R_GE_gcontext.  actually as long as we're 
+// doing that, we can add some useful information.
 
 typedef struct {
 
@@ -24,6 +29,16 @@ typedef struct {
 	int fontface;
 	char fontfamily[201];
 
+	// +
+
+	bool filled;
+
+	bool bold;
+	bool italic;
+	double fontsize;
+
+	std::string fontname;
+
 } GraphicsStyle;
 
 class BERTGraphicsDevice {
@@ -34,6 +49,10 @@ public:
 	double width;
 	double height;
 	bool dirty;
+
+	std::basic_string<WCHAR> font_sans;
+	std::basic_string<WCHAR> font_mono;
+	std::basic_string<WCHAR> font_serif;
 
 	void *pbitmap;
 
@@ -55,10 +74,19 @@ public:
 		device = id;
 	}
 
-	void newPage();
+	void newPage( int color = 0xffffffff );
 	void setSize(double width, double height);
 	void drawLine(double x1, double y1, double x2, double y2, GraphicsStyle *gs);
 	void drawRect(double x1, double y1, double x2, double y2, GraphicsStyle *gs);
+	void drawPoly(int n, double *x, double *y, int filled, GraphicsStyle *gs);
+	void drawCircle(double x, double y, double r, GraphicsStyle *gs);
+
+	std::basic_string < WCHAR > mapFontName(std::string name);
+
+	void measureText(const char *str, GraphicsStyle *gs, double *width, double *height);
+	void drawText(const char *str, double x, double y, double rot, GraphicsStyle *gs);
+
+	void drawBitmap(unsigned int* data, int pixel_width, int pixel_height, double x, double y, double target_width, double target_height, double rot);
 
 	void getDeviceSize(double &w, double &h);
 
