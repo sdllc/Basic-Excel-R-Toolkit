@@ -1,3 +1,22 @@
+/*
+* Basic Excel R Toolkit (BERT)
+* Copyright (C) 2014-2017 Structured Data, LLC
+*
+* This program is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation; either version 2 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License along
+* with this program; if not, write to the Free Software Foundation, Inc.,
+* 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+*
+*/
 
 #include "stdafx.h"
 #include <windows.h>
@@ -41,8 +60,8 @@ HWND hwndExcel = 0;
 // should be able to use cached versions of these files, though, they're 
 // not going to change.
 
-#include "mso-14.tlh"
-#include "excel-14.tlh"
+#include "mso-15.tlh"
+#include "excel-15.tlh"
 
 //-------------------------------------------------------------------------
 // 
@@ -120,12 +139,6 @@ void createDeviceTarget( const WCHAR *name, CComPtr< Excel::Shape > &target, dou
 	std::basic_string<WCHAR> compound_name = L"BGD_";
 	compound_name += name;
 
-	{
-		char sz[128];
-		sprintf_s(sz, "Create dt");
-		::MessageBoxA(0, sz, "DBG", MB_OK);
-	}
-
 	DebugOut("creating device target\n");
 
 	HDC hdcScreen = ::GetDC(NULL);
@@ -139,7 +152,7 @@ void createDeviceTarget( const WCHAR *name, CComPtr< Excel::Shape > &target, dou
 		CComQIPtr< Excel::_Application > app(pdispApp);
 		if (app) {
 			CComPtr<IDispatch> pdispsheet;
-			if( SUCCEEDED( app->get_ActiveSheet(&pdispsheet))){
+			if (SUCCEEDED(app->get_ActiveSheet(&pdispsheet))) {
 				CComQIPtr< Excel::_Worksheet > sheet(pdispsheet);
 				if (sheet) {
 					CComPtr< Excel::Shapes > shapes;
@@ -149,30 +162,24 @@ void createDeviceTarget( const WCHAR *name, CComPtr< Excel::Shape > &target, dou
 						if (ishapes) {
 							CComPtr< Excel::Shape > shape;
 							ishapes->AddShape(Office::msoShapeRectangle, 100, 100, (float)(w * 72 / logpixels), (float)(h * 72 / logpixels), &shape);
-							if (shape) {
-								target = shape;
-								Excel::IShape *ishape = (Excel::IShape*)(shape.p);
-								if (ishape) {
-									CComBSTR bstr = compound_name.c_str();
-									ishape->put_Name(bstr);
-									bstr = alttext.c_str();
-									ishape->put_AlternativeText(bstr);
-									CComPtr< Excel::LineFormat > line;
-									ishape->get_Line(&line);
-									if (line) line->put_Visible(Office::MsoTriState::msoFalse);
-								}
+							Excel::IShape *ishape = (Excel::IShape*)(shape.p);
+							if (ishape) {
+								int rc = ishape->AddRef();
+								CComBSTR bstr = compound_name.c_str();
+								ishape->put_Name(bstr);
+								bstr = alttext.c_str();
+								ishape->put_AlternativeText(bstr);
+								CComPtr< Excel::LineFormat > line;
+								ishape->get_Line(&line);
+								if (line) line->put_Visible(Office::MsoTriState::msoFalse);
+								ishape->Release();
 							}
+							target = shape.p;
 						}
 					}
 				}
 			}
 		}
-	}
-
-	{
-		char sz[128];
-		sprintf_s(sz, "~Create dt: 0x%x", target.p);
-		::MessageBoxA(0, sz, "DBG", MB_OK);
 	}
 
 }
@@ -190,30 +197,39 @@ void findDeviceTarget(const WCHAR *name, CComPtr<Excel::Shape> &target ) {
 		CComQIPtr<Excel::_Application> app(pdispApp);
 		if (app) app->get_Worksheets(&sheets);
 		if (sheets) {
+
 			long count = 0;
 			sheets->get_Count(&count);
+
 			for (long l = 1; l <= count; l++) {
 				CComVariant var = l;
 				CComPtr<IDispatch> pdispsheet;
+
 				if (SUCCEEDED(sheets->get_Item(var, &pdispsheet))) {
-					CComPtr<Excel::Shapes> shapes;
 					CComQIPtr< Excel::_Worksheet > sheet(pdispsheet);
-					if (sheet) sheet->get_Shapes(&shapes);
-					if (shapes) {
-						Excel::IShapes* ishapes = (Excel::IShapes*)(shapes.p);
-						if( ishapes ){
+					if (sheet) {
+						CComPtr<Excel::Shapes> shapes;
+						sheet->get_Shapes(&shapes);
+						if (shapes) {
+							Excel::IShapes* ishapes = (Excel::IShapes*)(shapes.p);
+							ishapes->AddRef();
 							CComVariant cvItem = compound_name.c_str();
-							CComPtr<Excel::Shape> shape;
-							if (SUCCEEDED(ishapes->Item(cvItem, &shape))) {
-								target = shape;
+							Excel::Shape *pshape = 0;
+							if (SUCCEEDED(ishapes->Item(cvItem, &pshape))) {
+								pshape->AddRef();
+								target = pshape;
+								pshape->Release();
 								return;
 							}
+							ishapes->Release();
 						}
 					}
 				}
 			}
+			
 		}
 	}
+
 }
 
 int ctr = 0;
@@ -345,6 +361,11 @@ std::basic_string < WCHAR > BERTGraphicsDevice::mapFontName(std::string name) {
 
 void BERTGraphicsDevice::drawText(const char *str, double x, double y, double rot, GraphicsStyle *gs) {
 
+	DebugOut("DT: %s\n", str);
+	if (!strncmp("1:10", str, 4)) {
+		DebugOut("DT: %s\n", str);
+	}
+
 	Gdiplus::Graphics graphics((Gdiplus::Bitmap*)pbitmap);
 	graphics.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
 
@@ -392,6 +413,12 @@ void BERTGraphicsDevice::drawText(const char *str, double x, double y, double ro
 }
 
 void BERTGraphicsDevice::measureText(const char *str, GraphicsStyle *gs, double *width, double *height) {
+
+	DebugOut("MT: %s\n", str);
+	if (!strncmp("1:10", str, 4)) {
+		DebugOut("MT: %s\n", str);
+	}
+
 
 	*width = *height = 0;
 	Gdiplus::Graphics graphics((Gdiplus::Bitmap*)pbitmap);

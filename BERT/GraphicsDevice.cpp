@@ -222,6 +222,20 @@ extern void bert_device_init(void *name, void *p) {
 	dd->textUTF8 = draw_text;
 	dd->strWidthUTF8 = get_strWidth;
 
+	// testing
+
+	dd->cra[1] = 1.1 * dd->startps; // pointsize
+
+	/*
+	dd->cra[0] = 0.9 * pointsize;
+	dd->cra[1] = 1.2 * pointsize;
+	dd->xCharOffset = 0.4900;
+	dd->yCharOffset = 0.3333;
+	dd->yLineBias = 0.2;
+	*/
+
+	// ok
+
 	double width = dd->right;
 	double height = dd->bottom;
 
