@@ -62,7 +62,7 @@ bool initGDIplus(bool startup) {
 
 	static ULONG_PTR gdiplusToken = 0;
 
-	if (startup) {
+	if (!startup) {
 		if (gdiplusToken) {
 			Gdiplus::GdiplusShutdown(gdiplusToken);
 			gdiplusToken = 0;
@@ -120,6 +120,12 @@ void createDeviceTarget( const WCHAR *name, CComPtr< Excel::Shape > &target, dou
 	std::basic_string<WCHAR> compound_name = L"BGD_";
 	compound_name += name;
 
+	{
+		char sz[128];
+		sprintf_s(sz, "Create dt");
+		::MessageBoxA(0, sz, "DBG", MB_OK);
+	}
+
 	DebugOut("creating device target\n");
 
 	HDC hdcScreen = ::GetDC(NULL);
@@ -161,6 +167,12 @@ void createDeviceTarget( const WCHAR *name, CComPtr< Excel::Shape > &target, dou
 				}
 			}
 		}
+	}
+
+	{
+		char sz[128];
+		sprintf_s(sz, "~Create dt: 0x%x", target.p);
+		::MessageBoxA(0, sz, "DBG", MB_OK);
 	}
 
 }
