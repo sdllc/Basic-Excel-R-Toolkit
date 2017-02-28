@@ -32,8 +32,9 @@
 
 #include <Rconfig.h>
 #include <Rinternals.h>
-#include <R_ext/Rdynload.h>
 #include <R_ext/GraphicsEngine.h>
+#include <R_ext/RS.h>
+
 
 #ifdef length
 #undef length
@@ -69,8 +70,6 @@ GraphicsStyle *gsFromContext(pGEcontext gc) {
 	memcpy(gs.fontfamily, gc->fontfamily, 201);
 
 	// new stuff
-
-	gs.filled = true; //  is_filled(gc->col);
 
 	gs.italic = (gc->fontface == 3) || (gc->fontface == 4);
 	gs.bold = (gc->fontface == 2) || (gc->fontface == 4);
@@ -120,13 +119,17 @@ void set_clip(double x0, double x1, double y0, double y1, pDevDesc dd) {
  
 void new_page(const pGEcontext gc, pDevDesc dd) {
     BERTGraphicsDevice *pd = (BERTGraphicsDevice*)dd->deviceSpecific;						 
+	pd->getCurrentSize(dd->right, dd->bottom);
 	pd->newPage(dd->startfill);
 }
 
 void close_device(pDevDesc dd) {
-    BERTGraphicsDevice *pd = (BERTGraphicsDevice*) dd->deviceSpecific;
-    delete pd;
-	dd->deviceSpecific = 0;
+	BERTGraphicsDevice *pd = (BERTGraphicsDevice*) dd->deviceSpecific;
+	if (pd) {
+		pd->repaint(); // flush any pending changes
+		delete pd;
+		dd->deviceSpecific = 0;
+	}
 }
 
 void draw_line(double x1, double y1, double x2, double y2, const pGEcontext gc, pDevDesc dd) {
@@ -134,26 +137,21 @@ void draw_line(double x1, double y1, double x2, double y2, const pGEcontext gc, 
 	pd->drawLine(x1, y1, x2, y2, gsFromContext(gc));
 }
 
-void func_poly(int n, double *x, double *y, int filled, const pGEcontext gc, pDevDesc dd) {
-    BERTGraphicsDevice *pd = (BERTGraphicsDevice*) dd->deviceSpecific;
-	pd->drawPoly(n, x, y, filled, gsFromContext(gc));
-}
-
 void draw_polyline(int n, double *x, double *y, const pGEcontext gc, pDevDesc dd) {
-    func_poly(n, x, y, 0, gc, dd);
+	BERTGraphicsDevice *pd = (BERTGraphicsDevice*)dd->deviceSpecific;
+	pd->drawPoly(n, x, y, 0, gsFromContext(gc));
 }
 
 void draw_polygon(int n, double *x, double *y, const pGEcontext gc, pDevDesc dd) {
-    func_poly(n, x, y, 1, gc, dd);
+	BERTGraphicsDevice *pd = (BERTGraphicsDevice*)dd->deviceSpecific;
+	pd->drawPoly(n, x, y, 1, gsFromContext(gc));
 }
 
 void draw_path(double *x, double *y,
               int npoly, int *nper,
               Rboolean winding,
               const pGEcontext gc, pDevDesc dd) {
-    
-	cerr << "ENOTIMPL: draw_path (FIXME)" << endl;
-
+	cerr << "ENOTIMPL: draw_path" << endl; // FIXME
 }
 
 double get_strWidth(const char *str, const pGEcontext gc, pDevDesc dd) {
@@ -202,115 +200,46 @@ void draw_raster(unsigned int *raster,
 
 }
 
-/**
- * constructor, sets default options.  see [1]
- */
-pDevDesc js_device_new( std::string &name, rcolor bg, double width, double height, int pointsize) {
+extern void bert_device_init(void *name, void *p) {
+	pDevDesc dd = (pDevDesc)p;
 
-    pDevDesc dd = (DevDesc*) calloc(1, sizeof(DevDesc));
-    if (dd == NULL) return dd;
-	
-    dd->startfill = bg;
-    dd->startcol = R_RGB(0, 0, 0);
-    dd->startps = pointsize;
-    dd->startlty = 0;
-    dd->startfont = 1;
-    dd->startgamma = 1;
+	dd->newPage = new_page;
+	dd->close = close_device;
+	dd->clip = set_clip;
+	dd->size = get_size;
+	dd->metricInfo = get_metric_info;
+	dd->strWidth = get_strWidth;
 
-    dd->activate = NULL;
-    dd->deactivate = NULL;
-  
-    dd->newPage = new_page;
-    dd->close = close_device;
-    dd->clip = set_clip;
-    dd->size = get_size;
-    dd->metricInfo = get_metric_info;
-    dd->strWidth = get_strWidth;
+	dd->line = draw_line;
+	dd->text = draw_text;
+	dd->rect = draw_rect;
+	dd->circle = draw_circle;
+	dd->polygon = draw_polygon;
+	dd->polyline = draw_polyline;
+	dd->path = draw_path;
+	dd->raster = draw_raster;
 
-    dd->line = draw_line;
-    dd->text = draw_text;
-    dd->rect = draw_rect;
-    dd->circle = draw_circle;
-    dd->polygon = draw_polygon;
-    dd->polyline = draw_polyline;
-    dd->path = draw_path;
-    dd->raster = draw_raster;
-    dd->mode = NULL;
-    dd->cap = NULL;
+	dd->textUTF8 = draw_text;
+	dd->strWidthUTF8 = get_strWidth;
 
-    dd->wantSymbolUTF8 = (Rboolean) 1;
-    dd->hasTextUTF8 = (Rboolean) 1;
-    dd->textUTF8 = draw_text;
-    dd->strWidthUTF8 = get_strWidth;
+	double width = dd->right;
+	double height = dd->bottom;
 
-    dd->left = 0;
-    dd->top = 0;
-    dd->right = width;
-    dd->bottom = height;
+	if (!width) width = 400;
+	if (!height) height = 400;
 
-    // straight up from [1]
-    
-    dd->cra[0] = 0.9 * pointsize;
-    dd->cra[1] = 1.2 * pointsize;
-    dd->xCharOffset = 0.4900;
-    dd->yCharOffset = 0.3333;
-    dd->yLineBias = 0.2;
-    dd->ipr[0] = 1.0 / 72.0;
-    dd->ipr[1] = 1.0 / 72.0;
+	std::string sname;
+	if (name) sname = (const char*)name;
 
-    dd->canClip = FALSE;
-    dd->canHAdj = 0;
-    dd->canChangeGamma = FALSE;
-	dd->displayListOn = FALSE; // FIXME: if you implement resize, we'll need this // TRUE;
-    dd->haveTransparency = 2;
-    dd->haveTransparentBg = 2;
-    
-    dd->haveRaster = 3; // yes, except for missing values
-
-    dd->deviceSpecific = new BERTGraphicsDevice( name, width, height );
-    return dd;
+	dd->deviceSpecific = new BERTGraphicsDevice(sname, width, height);
 }
 
-//=============================================================================
-//
-// exported functions 
-//
-//=============================================================================
-
-void jsclient_device_resize_(int device, double width, double height, bool replay )
-{
-	// FIXME: should check it's indeed our device
-	pGEDevDesc gd = GEgetDevice(device - 1);
-	if (gd) {
-		gd->dev->right = width;
-		gd->dev->bottom = height;
-		if (replay) GEplayDisplayList(gd);
+extern void bert_device_shutdown(void *p) {
+	pDevDesc dd = (pDevDesc)p;
+	BERTGraphicsDevice *pd = (BERTGraphicsDevice*)dd->deviceSpecific;
+	if (pd) {
+		delete pd;
+		dd->deviceSpecific = 0;
 	}
-	else cerr << "Can't find device " << device << endl;
-
-}
-
-/**
- * create graphics device, add to display list 
- */ 
-int jsclient_device_( std::string name, std::string background, double width, double height, int pointsize) 
-{
-    rcolor bg = R_GE_str2col(background.c_str());
-    int device = 0;
-  
-    R_GE_checkVersionOrDie(R_GE_version);
-    R_CheckDeviceAvailable();
-
-    pDevDesc dev = js_device_new(name, bg, width, height, pointsize);
-    pGEDevDesc gd = GEcreateDevDesc(dev);
-    GEaddDevice2(gd, name.c_str());
-    GEinitDisplayList(gd);
-    device = GEdeviceNumber(gd) + 1; // to match what R says
-    ((BERTGraphicsDevice*)(dev->deviceSpecific))->setDevice(device);
-
-    // cout << "device number: " << device << endl;
-
-    return device;
-  
 }
 

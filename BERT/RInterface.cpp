@@ -51,8 +51,7 @@
 
 #include "BERTGDI.h"
 
-
-extern int jsclient_device_(std::string name, std::string background, double width, double height, int pointsize);
+extern void bert_device_init(void *name, void *p);
 
 #ifndef MIN
 #define MIN(a,b) ( a < b ? a : b )
@@ -69,7 +68,6 @@ SEXP ExecR(std::string &str, int *err = 0, ParseStatus *pStatus = 0);
 SEXP ExecR(std::vector< std::string > &vec, int *err = 0, ParseStatus *pStatus = 0, bool withVisible = false);
 
 SEXP XLOPER2SEXP(LPXLOPER12 px, int depth = 0, bool missingArguments = false);
-
 SEXP syncResponse;
 
 std::string dllpath;
@@ -86,6 +84,9 @@ bool loadingStartupFile = false;
 
 XCHAR emptyStr[] = L"\0\0";
 
+SEXP BERTExternalCallback(int cmd, void* data = 0, void* data2 = 0);
+SEXP BERTExternalCOMCallback(SEXP name, SEXP calltype, SEXP p, SEXP args);
+SEXP ConsoleHistory(SEXP args);
 
 
 //
@@ -101,7 +102,6 @@ extern void R_SaveGlobalEnvToFile(const char *);
 extern void RibbonClearUserButtons();
 extern void RibbonAddUserButton(std::string &strLabel, std::string &strFunc, std::string &strImgMso);
 
-///
 
 void setSyncResponse(int rslt) {
 	syncResponse = Rf_ScalarInteger(rslt);
@@ -132,109 +132,6 @@ void R_WriteConsole(const char *buf, int len)
 	else logMessage(buf, len);
 	ReleaseMutex(muxLog);
 }
-
-/*
-void SaveHistory() {
-
-	DWORD dw = 0;
-	char buffer[MAX_PATH];
-
-	if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_SAVE_HISTORY) || dw < 0) dw = 0;
-	if (!dw) return;
-
-	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, buffer, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_R_USER))
-		ExpandEnvironmentStringsA(DEFAULT_R_USER, buffer, MAX_PATH);
-
-	strncat_s(buffer, CONSOLE_HISTORY_FILE, sizeof(CONSOLE_HISTORY_FILE));
-
-	HANDLE hFile = ::CreateFileA(buffer, GENERIC_WRITE, FILE_SHARE_READ, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
-	if (hFile != INVALID_HANDLE_VALUE) {
-
-		DWORD dw = 0, written;
-		std::string str;
-
-		for (std::vector< std::string > ::iterator iter = cmdBuffer.begin(); iter != cmdBuffer.end(); iter++) {
-			str += iter->c_str();
-			str += "\n";
-		}
-
-		do {
-			if ( !::WriteFile(hFile, str.c_str(), str.length(), &written, 0)) break;
-			dw += written;
-		} 
-		while (dw < str.length());
-
-		::CloseHandle(hFile);
-
-	}
-	else {
-
-#ifdef _DEBUG
-
-		LPVOID lpMsgBuf;
-		LPVOID lpDisplayBuf;
-		DWORD dw = GetLastError();
-
-		FormatMessageA(
-			FORMAT_MESSAGE_ALLOCATE_BUFFER |
-			FORMAT_MESSAGE_FROM_SYSTEM |
-			FORMAT_MESSAGE_IGNORE_INSERTS,
-			NULL,
-			dw,
-			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-			(LPSTR)&lpMsgBuf,
-			0, NULL);
-
-		DebugOut((char*)lpMsgBuf);
-		DebugOut("\n");
-		
-		LocalFree(lpMsgBuf);
-
-#endif
-
-	}
-
-	//while (cmdBuffer.size() >= MAX_CMD_HISTORY) cmdBuffer.erase(cmdBuffer.begin());
-	//for (std::vector< std::string > ::iterator iter = vec.begin(); iter != vec.end(); iter++)
-	//	cmdBuffer.push_back(iter->c_str());
-
-
-}
-
-void LoadHistory() {
-
-	DWORD dw = 0;
-	char buffer[MAX_PATH];
-
-//	if (!CRegistryUtils::GetRegDWORD(HKEY_CURRENT_USER, &dw, REGISTRY_KEY, REGISTRY_VALUE_CONSOLE_SAVE_HISTORY) || dw < 0) dw = 0;
-	if (!dw) return;
-
-	if (!CRegistryUtils::GetRegExpandString(HKEY_CURRENT_USER, buffer, MAX_PATH - 1, REGISTRY_KEY, REGISTRY_VALUE_R_USER))
-		ExpandEnvironmentStringsA(DEFAULT_R_USER, buffer, MAX_PATH);
-
-	strncat_s(buffer, CONSOLE_HISTORY_FILE, sizeof(CONSOLE_HISTORY_FILE));
-	HANDLE hFile = ::CreateFileA(buffer, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
-	if (hFile != INVALID_HANDLE_VALUE) {
-
-		char buffer[1024];
-		DWORD dwread;
-		std::string str;
-
-		do {
-			::ReadFile(hFile, buffer, 1023, &dwread, 0);
-			if (dwread > 0) {
-				buffer[dwread] = 0;
-				str += buffer;
-			}
-		} while (dwread > 0 );
-
-		Util::split( str, '\n', 1, cmdBuffer, true );
-
-		::CloseHandle(hFile);
-	}
-
-}
-*/
 
 void flush_log()
 {
@@ -825,53 +722,7 @@ int RInit()
 	
 	Rp->rhome = RHome;
 	Rp->home = RUser;
-
-	/*
-	{
-		char szConsole[MAX_PATH];
-		PathCombineA(szConsole, RHome, "etc\\RConsole");
-		HANDLE hFile = ::CreateFileA(szConsole, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-		if (hFile) {
-
-			std::string contents;
-			std::regex rex("^language\\s*=\\s*$");
-			char buffer[1024];
-			DWORD dwRead;
-			DWORD dwOffset = 0;
-
-			while (true) {
-				::ReadFile(hFile, buffer, 1023, &dwRead, 0);
-				if (dwRead <= 0 ) break;
-				buffer[dwRead] = 0;
-				contents += buffer;
-			}
-
-			if (std::regex_search(contents, rex)) {
-
-				LANGID lcid = GetUserDefaultLangID();
-				char lang[32];
-				GetLocaleInfoA(lcid, LOCALE_SISO639LANGNAME, lang, 32);
-				sprintf_s(buffer, "language = %s\n", lang);
-				std::string updated = regex_replace(contents, rex, buffer);
-
-				const char *c = updated.c_str();
-				DWORD dwLen = updated.length();
-				DWORD dwWritten;
-
-				::SetFilePointer(hFile, 0, 0, FILE_BEGIN);
-				
-				while (dwLen) {
-					if (::WriteFile(hFile, c + dwOffset, dwLen, &dwWritten, 0)) break;
-					dwLen -= dwWritten;
-				}
-
-			}
-			
-			::CloseHandle(hFile);
-		}
-	}
-	*/
-
+	
 	Rp->CharacterMode = LinkDLL;
 	Rp->ReadConsole = R_ReadConsole;
 	Rp->WriteConsole = R_WriteConsole;
@@ -950,6 +801,34 @@ int RInit()
 
 	}
 
+	R_RegisterCCallable("BERT", "BERTExternalCallback", (DL_FUNC)BERTExternalCallback);
+	R_RegisterCCallable("BERT", "BERTExternalCOMCallback", (DL_FUNC)BERTExternalCOMCallback);
+	
+	// (try) to load BERT module.  flag warning for a little later.
+	int module_err = 0;
+	{
+		std::string libloc = RUser;
+		if (strlen(RUser) && RUser[strlen(RUser) - 1] != '\\' && RUser[strlen(RUser) - 1] != '/') libloc += "\\";
+		libloc += "lib";
+		int err;
+
+		SEXP namedargs;
+		const char *names[] = { "package", "lib.loc", "" };
+
+		PROTECT(namedargs = mkNamed(VECSXP, names));
+		SET_VECTOR_ELT(namedargs, 0, Rf_mkString("BERTModule"));
+		SET_VECTOR_ELT(namedargs, 1, Rf_mkString(libloc.c_str()));
+
+#ifdef _DEBUG
+		R_tryEval
+#else 
+		R_tryEvalSilent
+#endif
+			(Rf_lang3(Rf_install("do.call"), Rf_mkString("library"), namedargs), R_GlobalEnv, &module_err);
+
+		UNPROTECT(1);
+	}
+
 	::ReleaseMutex(muxExecR);
 
 	// run embedded code (if any)
@@ -991,11 +870,19 @@ int RInit()
 		logMessage(strBanner.c_str(), 0, 1);
 	}
 
+
+	if (module_err) {
+		char message[256];
+		sprintf_s(message, 
+			" * Warning: The BERT functions module could not be loaded.\n" 
+			" * Some functions may not be available.  Please check your\n" 
+			" * configuration.\n\n");
+		logMessage(message, 0, 1);
+	}
+
 	ClearFunctions();
 	LoadStartupFile();
 	MapFunctions();
-
-	//open_console();
 
 	return 0;
 
@@ -1355,14 +1242,10 @@ int getAutocomplete(AutocompleteData &ac, std::string &line, int caret)
 	SET_VECTOR_ELT(arglist, 0, Rf_mkString(line.c_str()));
 	SET_VECTOR_ELT(arglist, 1, Rf_ScalarInteger(caret));
 
-
 	SEXP result = PROTECT(R_tryEval(
-		Rf_lang5( Rf_install("do.call"),
-			Rf_mkString( ".Autocomplete" ),
-			arglist,
-			Rf_ScalarLogical(0),
-			Rf_lang2( Rf_install("get"), Rf_mkString( "BERT" ))
-			),
+		Rf_lang3(Rf_install("do.call"),
+			Rf_lang3(Rf_install("get"), Rf_mkString(".Autocomplete"), Rf_lang2(Rf_install("asNamespace"), Rf_mkString("BERTModule"))),
+			arglist),
 		R_GlobalEnv, &err));
 
 	if (!err) {
@@ -2326,6 +2209,34 @@ SEXP JSONCallback(int command, SEXP data) {
 
 }
 
+SEXP BERTExternalCallback(int cmd, void* data, void* data2) {
+
+	switch (cmd) {
+	case 1:
+		initGDIplus(true);
+		bert_device_init(data, data2);
+		return Rf_ScalarInteger(0);
+
+	case 2:
+		return Rf_mkString("BERT-Default");
+
+	case 100:
+		return JSONCallback(CC_DOWNLOAD, (SEXP)data);
+
+	case 200:
+		return JSONCallback(CC_PROGRESS_BAR, (SEXP)data);
+
+	case 300:
+		break;
+
+	case 400:
+		return ConsoleHistory((SEXP)data);
+
+	}
+
+	return R_NilValue;
+}
+
 SEXP ExcelCall(SEXP cmd, SEXP data)
 {
 	int dlen = Rf_length(data);
@@ -2476,6 +2387,29 @@ SEXP ExcelCall(SEXP cmd, SEXP data)
 
 }
 
+SEXP BERTExternalCOMCallback(SEXP name, SEXP calltype, SEXP p, SEXP args) {
+
+	int ctype = 0;
+	if (Rf_length(calltype) > 0)
+	{
+		if (isReal(calltype)) ctype = (REAL(calltype))[0];
+		else if (isInteger(calltype)) ctype = (INTEGER(calltype))[0];
+	}
+
+	switch (ctype) {
+	case MRFLAG_METHOD:
+		return COMFunc(name, p, args);
+	case MRFLAG_PROPGET:
+		return COMPropGet(name, p, args);
+	case MRFLAG_PROPPUT:
+		return COMPropPut(name, p, args);
+	}
+
+	return R_NilValue;
+
+}
+
+/*
 SEXP BERT_COM_Callback(SEXP name, SEXP calltype, SEXP p, SEXP args) {
 
 	int ctype = 0;
@@ -2496,6 +2430,7 @@ SEXP BERT_COM_Callback(SEXP name, SEXP calltype, SEXP p, SEXP args) {
 
 	return R_NilValue;
 }
+*/
 
 SEXP ConsoleHistory(SEXP args) {
 
@@ -2574,67 +2509,6 @@ void AddUserButton(SEXP args) {
 		if (len > 2) strImg = CHAR(STRING_ELT(args, 2));
 		if( strLabel.length() && strFunc.length()) RibbonAddUserButton(strLabel, strFunc, strImg);
 	}
-
-}
-
-SEXP BERT_GraphicsDevice(SEXP _name, SEXP _bgcolor, SEXP _width, SEXP _height, SEXP _pointsize ) {
-
-	// defaults
-
-	std::string name = "BERT-Default"; 
-	std::string bgcolor = "white";
-
-	double width = 400;
-	double height = 400;
-	double pointsize = 14;
-
-	int type = TYPEOF(_name);
-	if (type == STRSXP) {
-		const char *sz = CHAR(STRING_ELT(_name, 0));
-		if (strlen(sz)) name = sz;
-	}
-	else if (!isNull(_name)) {
-		Rf_error("Invalid name value");
-		return R_NilValue;
-	}
-
-	type = TYPEOF(_width);
-	if (type == REALSXP) width = (REAL(_width))[0];
-	else if (type == INTSXP) width = (INTEGER(_width))[0];
-	else if (!isNull(_width)) {
-		Rf_error("Invalid width value");
-		return R_NilValue;
-	}
-	
-	type = TYPEOF(_height);
-	if (type == REALSXP) height = (REAL(_height))[0];
-	else if (type == INTSXP) height = (INTEGER(_height))[0];
-	else if (!isNull(_height)) {
-		Rf_error("Invalid height value");
-		return R_NilValue;
-	}
-
-	type = TYPEOF(_bgcolor);
-	if (type == STRSXP) {
-		const char *sz = CHAR(STRING_ELT(_bgcolor, 0));
-		if (strlen(sz)) bgcolor = sz;
-	}
-	else if (!isNull(_bgcolor)) {
-		Rf_error("Invalid background color value");
-		return R_NilValue;
-	}
-	
-	type = TYPEOF(_pointsize);
-	if (type == REALSXP) pointsize = (REAL(_pointsize))[0];
-	else if (type == INTSXP) pointsize = (INTEGER(_pointsize))[0];
-	else if (!isNull(_pointsize)) {
-		Rf_error("Invalid pointsize value");
-		return R_NilValue;
-	}
-
-	initGDIplus(true); // startup if neccessary
-	int rslt = jsclient_device_(name.c_str(), bgcolor.c_str(), width, height, pointsize);
-	return Rf_ScalarReal(rslt);
 
 }
 

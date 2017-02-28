@@ -521,62 +521,74 @@ SEXP wrapDispatch(ULONG_PTR pdisp, bool enums) {
 		BSTR2String(bstrIface, strName);
 		if (!strName.length()) strName = "IDispatch";
 
-		PROTECT(wdargs = Rf_allocVector(VECSXP, 1));
-		SET_VECTOR_ELT(wdargs, 0, Rf_mkString(strName.c_str()));
-		PROTECT(result = R_tryEval(Rf_lang5(Rf_install("do.call"), Rf_mkString(".WrapDispatch"), wdargs, R_MissingArg, env), env, &err));
-		if (result) {
+		SEXP pkgEnv = 0, wdFunc = 0, dcFunc = 0;
 
-			// install pointer.  refcount should be dropped for !debug builds
+		pkgEnv = R_tryEval(Rf_lang2(Rf_install("asNamespace"), Rf_mkString("BERTModule")), R_GlobalEnv, &err);
 
-			int refcount = ((LPDISPATCH)pdisp)->AddRef();
-			SEXP rptr = R_MakeExternalPtr((void*)pdisp, install("COM dispatch pointer"), R_NilValue);
-			DebugOut("[+] Map pointer (%d): 0x%I64X\n", refcount, pdisp);
+		if (pkgEnv) {
+			wdFunc = R_tryEval(Rf_lang3(Rf_install("get"), Rf_mkString(".WrapDispatch"), pkgEnv), R_GlobalEnv, &err);
+			dcFunc = R_tryEval(Rf_lang3(Rf_install("get"), Rf_mkString(".DefineCOMFunc"), pkgEnv), R_GlobalEnv, &err);
+		}
 
-			R_RegisterCFinalizerEx(rptr, (R_CFinalizer_t)releaseMappedPtr, TRUE);
-			Rf_defineVar(Rf_install(".p"), rptr, result);
+		if (wdFunc && dcFunc) {
 
-			// enums?
-			if (enums) {
-				mapEnums(pdisp, result);
-			}
+			PROTECT(wdargs = Rf_allocVector(VECSXP, 1));
+			SET_VECTOR_ELT(wdargs, 0, Rf_mkString(strName.c_str()));
+			PROTECT(result = R_tryEval(Rf_lang5(Rf_install("do.call"), wdFunc, wdargs, R_MissingArg, env), env, &err));
+			if (result) {
 
-			// install function calls
-			for (std::vector< MemberRep > ::iterator iter = mrlist.begin(); iter != mrlist.end(); iter++)
-			{
-				SEXP sargs, lns, ans = 0;
+				// install pointer.  refcount should be dropped for !debug builds
 
-				std::string methodname = "";
-				if (iter->mrflags == MRFLAG_PROPGET) methodname = ACCESS_GET;
-				else if (iter->mrflags == MRFLAG_PROPPUT) methodname = ACCESS_PUT;
-				methodname += iter->name.c_str();
+				int refcount = ((LPDISPATCH)pdisp)->AddRef();
+				SEXP rptr = R_MakeExternalPtr((void*)pdisp, install("COM dispatch pointer"), R_NilValue);
+				DebugOut("[+] Map pointer (%d): 0x%I64X\n", refcount, pdisp);
 
-				SEXP argslist = 0;
-				if (iter->args.size() > 0 ) {
-					int alen = iter->args.size();
-					PROTECT(argslist = Rf_allocVector(VECSXP, alen));
-					for (int i = 0; i < alen; i++) {
-						SET_VECTOR_ELT(argslist, i, Rf_mkString(iter->args[i].c_str()));
-					}
+				R_RegisterCFinalizerEx(rptr, (R_CFinalizer_t)releaseMappedPtr, TRUE);
+				Rf_defineVar(Rf_install(".p"), rptr, result);
+
+				// enums?
+				if (enums) {
+					mapEnums(pdisp, result);
 				}
 
-				// func.name, func.type, target.env
+				// install function calls
+				for (std::vector< MemberRep > ::iterator iter = mrlist.begin(); iter != mrlist.end(); iter++)
+				{
+					SEXP sargs, lns, ans = 0;
 
-				PROTECT(sargs = Rf_allocVector(VECSXP, 4));
-				SET_VECTOR_ELT(sargs, 0, Rf_mkString(methodname.c_str()));
-				SET_VECTOR_ELT(sargs, 1, Rf_ScalarInteger(iter->mrflags));
-				SET_VECTOR_ELT(sargs, 2, argslist ? argslist : R_MissingArg);
-				SET_VECTOR_ELT(sargs, 3, result);
-				lns = PROTECT(Rf_lang5(Rf_install("do.call"), Rf_mkString(".DefineCOMFunc"), sargs, R_MissingArg, env));
-				PROTECT(ans = R_tryEval(lns, R_GlobalEnv, &err));
-				UNPROTECT(3);
+					std::string methodname = "";
+					if (iter->mrflags == MRFLAG_PROPGET) methodname = ACCESS_GET;
+					else if (iter->mrflags == MRFLAG_PROPPUT) methodname = ACCESS_PUT;
+					methodname += iter->name.c_str();
 
-				if (argslist) { UNPROTECT(1); }
+					SEXP argslist = 0;
+					if (iter->args.size() > 0) {
+						int alen = iter->args.size();
+						PROTECT(argslist = Rf_allocVector(VECSXP, alen));
+						for (int i = 0; i < alen; i++) {
+							SET_VECTOR_ELT(argslist, i, Rf_mkString(iter->args[i].c_str()));
+						}
+					}
+
+					// func.name, func.type, target.env
+
+					PROTECT(sargs = Rf_allocVector(VECSXP, 4));
+					SET_VECTOR_ELT(sargs, 0, Rf_mkString(methodname.c_str()));
+					SET_VECTOR_ELT(sargs, 1, Rf_ScalarInteger(iter->mrflags));
+					SET_VECTOR_ELT(sargs, 2, argslist ? argslist : R_MissingArg);
+					SET_VECTOR_ELT(sargs, 3, result);
+					lns = PROTECT(Rf_lang5(Rf_install("do.call"), dcFunc, sargs, R_MissingArg, env));
+					PROTECT(ans = R_tryEval(lns, R_GlobalEnv, &err));
+					UNPROTECT(3);
+
+					if (argslist) { UNPROTECT(1); }
 
 
+				}
+				UNPROTECT(1);
 			}
 			UNPROTECT(1);
 		}
-		UNPROTECT(1);
 	}
 
 	if (!result) result = Rf_ScalarLogical(0);

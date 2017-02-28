@@ -31,8 +31,6 @@ typedef struct {
 
 	// +
 
-	bool filled;
-
 	bool bold;
 	bool italic;
 	double fontsize;
@@ -55,6 +53,7 @@ public:
 	std::basic_string<WCHAR> font_serif;
 
 	void *pbitmap;
+	void *ref;
 
 	WCHAR name[MAX_PATH]; // can this change? 
 
@@ -89,7 +88,9 @@ public:
 	void drawBitmap(unsigned int* data, int pixel_width, int pixel_height, double x, double y, double target_width, double target_height, double rot);
 
 	void getDeviceSize(double &w, double &h);
+	void getCurrentSize(double &width, double &height);
 
+	void flush();
 	void repaint();
 	void update();
 

@@ -22,7 +22,9 @@
 extern HWND getExcelHWND();
 extern LPDISPATCH pdispApp;
 
-extern void jsclient_device_resize_(int dev, double width, double height, bool replay);
+extern void bert_device_resize_(int dev, double width, double height, bool replay);
+extern void bert_device_init(void *name, void *p);
+extern void bert_device_shutdown(void *p);
 
 std::vector < BERTGraphicsDevice * > dlist;
 
@@ -202,10 +204,13 @@ void findDeviceTarget(const WCHAR *name, CComPtr<Excel::Shape> &target ) {
 	}
 }
 
+int ctr = 0;
+
 void timer_callback(HWND hwnd, UINT msg, UINT_PTR id, DWORD dwtime) {
 
-	::DebugOut("TPROC\n");
+	::DebugOut("TPROC 0x%X, %d, %d\n", hwnd, id, ctr);
 	::KillTimer(hwndExcel, id);
+	ctr = 0;
 
 	for (std::vector< BERTGraphicsDevice*>::iterator iter = dlist.begin(); iter != dlist.end(); iter++) {
 		BERTGraphicsDevice *device = *iter;
@@ -223,8 +228,12 @@ void timer_callback(HWND hwnd, UINT msg, UINT_PTR id, DWORD dwtime) {
  */
 void BERTGraphicsDevice::update() {
 
+	ctr++;
 	dirty = true;
-	UINT_PTR id = WM_USER + 123491;
+	UINT_PTR id = WM_USER + 100;
+
+	// ::DebugOut("update 0x%X, %d, %d\n", hwndExcel, id, ctr);
+
 	::SetTimer(hwndExcel, id, 100, (TIMERPROC)timer_callback);
 
 }
@@ -233,6 +242,8 @@ void BERTGraphicsDevice::update() {
  * this is the actual paint op, which happens on timer events.
  */
 void BERTGraphicsDevice::repaint() {
+
+	if (!dirty) return;
 
 	dirty = false;
 	::DebugOut(" ** graphics update\n");
@@ -257,6 +268,7 @@ void BERTGraphicsDevice::repaint() {
 
 }
 
+/*
 void BERTGraphicsDevice::getDeviceSize(double &w, double &h) {
 
 	w = width;
@@ -278,6 +290,7 @@ void BERTGraphicsDevice::getDeviceSize(double &w, double &h) {
 	}
 
 }
+*/
 
 inline Gdiplus::ARGB RColor2ARGB(int color) {
 //	return Gdiplus::Color::MakeARGB( R_ALPHA(color), R_RED(color), R_GREEN(color), R_BLUE(color));
@@ -413,9 +426,10 @@ void BERTGraphicsDevice::drawCircle(double x, double y, double r, GraphicsStyle 
 
 	Gdiplus::RectF rect(x - r, y - r, r * 2, r * 2);
 
-	if( gs->filled ) graphics.FillEllipse(&fill, rect);
+	graphics.FillEllipse(&fill, rect);
 	graphics.DrawEllipse(&stroke, rect);
 
+	update();
 
 }
 
@@ -439,7 +453,7 @@ void BERTGraphicsDevice::drawRect(double x1, double y1, double x2, double y2, Gr
 	if (w < 0) { x = x2; w = -w; }
 	if (h < 0) { y = y2; h = -h; }
 
-	if (gs->filled) graphics.FillRectangle(&fill, x, y, w, h);
+	graphics.FillRectangle(&fill, x, y, w, h);
 	graphics.DrawRectangle(&stroke, x, y, w, h);
 
 	update();
@@ -471,6 +485,8 @@ void BERTGraphicsDevice::drawPoly(int n, double *x, double *y, int filled, Graph
 	}
 
 	delete [] pt;
+	update();
+
 }
 
 void BERTGraphicsDevice::drawLine(double x1, double y1, double x2, double y2, GraphicsStyle *gs) {
@@ -523,60 +539,59 @@ void BERTGraphicsDevice::drawBitmap(unsigned int* data, int pixel_width, int pix
 	update();
 }
 
-
-void BERTGraphicsDevice::newPage(int color) {
-
-	page++;
-
-	// check size
-	double w, h;
-	getDeviceSize(w, h);
+void BERTGraphicsDevice::getCurrentSize(double &w, double &h) {
 
 	// scale (FIXME: cache)
 	HDC hdcScreen = ::GetDC(NULL);
 	int logpixels = ::GetDeviceCaps(hdcScreen, LOGPIXELSX);
 	::ReleaseDC(NULL, hdcScreen);
 
-	w = w * logpixels / 72;
-	h = h * logpixels / 72;
-
-//	::DebugOut("New page; device size reports %01.02f, %01.02f (we think it's %01.02f, %01.02f)", w, h, width, height);
-
+	CComPtr< Excel::Shape > shape;
+	findDeviceTarget(name, shape);
+	// if (!shape) createDeviceTarget(name, shape, width, height); // passing the old ones, I guess, in case it needs to be created
+	
+	if (shape) {
+		Excel::IShape *ishape = (Excel::IShape*)(shape.p);
+		if (ishape) {
+			float fw, fh;
+			ishape->get_Width(&fw);
+			ishape->get_Height(&fh);
+			w = fw * logpixels / 72;
+			h = fh * logpixels / 72;
+		}
+	}
+	
 	if (fabsf(w - width) >= 1 || fabsf(h - height) >= 1) {
-		setSize(w, h);
+		
+		width = w;
+		height = h;
+
+		::DebugOut("Resize graphics device -> %01.02f x %01.02f\n", width, height);
+
+		if (pbitmap) {
+			Gdiplus::Bitmap* bitmap = (Gdiplus::Bitmap*)pbitmap;
+			delete bitmap;
+		}
+
+		Gdiplus::Bitmap *bitmap = new Gdiplus::Bitmap(width, height, PixelFormat32bppARGB);
+		pbitmap = (void*)bitmap;
 	}
 
+}
+
+void BERTGraphicsDevice::newPage(int color) {
+
+	page++;
+
 	Gdiplus::Graphics graphics((Gdiplus::Bitmap*)pbitmap);
-	graphics.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
 	Gdiplus::SolidBrush bg(Gdiplus::Color( RColor2ARGB(color)));
 	graphics.FillRectangle(&bg, 0, 0, width, height);
-
 	update();
 
 }
 
-void BERTGraphicsDevice::setSize(double width, double height) {
-
-	if (this->width == width && this->height == height) return;
-	if (pbitmap) {
-		Gdiplus::Bitmap* bitmap = (Gdiplus::Bitmap*)pbitmap;
-		delete bitmap;
-	}
-
-	this->width = width;
-	this->height = height;
-
-	jsclient_device_resize_(device, this->width, this->height, false);
-
-	Gdiplus::Bitmap *bitmap = new Gdiplus::Bitmap(width, height, PixelFormat32bppARGB);
-	pbitmap = (void*)bitmap;
-
-	// replay?
-
-}
-
 BERTGraphicsDevice::BERTGraphicsDevice( std::string &name, double w, double h ) :
-	width(w), height(h), page(0), device(0), pbitmap(0) {
+	width(w), height(h), page(0), device(0), pbitmap(0), ref(0) {
 
 	// defaults
 
