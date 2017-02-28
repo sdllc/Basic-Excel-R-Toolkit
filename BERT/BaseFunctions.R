@@ -18,11 +18,7 @@ with( BERT, {
 .RELOAD <- 1022;
 .CLOSECONSOLE <- 1023;
 
-.PROGRESSBAR <- 2000;
-.DOWNLOAD <- 2001;
-
 .CALLBACK <- "BERT_Callback";
-# .COM_CALLBACK <- "BERT_COM_Callback";
 
 #========================================================
 # functions - for general use
@@ -245,18 +241,4 @@ ListWatches <- function(){
 .Excel<- function( command, arguments = list() ){ .Call(.CALLBACK, .EXCEL, command, arguments, PACKAGE=.MODULE ); };
 
 }); # end with(BERT)
-
-#========================================================
-# utility methods and types
-#========================================================
-
-BERT$Util <- new.env();
-with( BERT$Util, {
-
-
-}); # end with(BERT$Util)
-
-suppressMessages(attach( BERT$Util ));
-
-
 

@@ -120,7 +120,7 @@ void createDeviceTarget( const WCHAR *name, CComPtr< Excel::Shape > &target, dou
 	std::basic_string<WCHAR> compound_name = L"BGD_";
 	compound_name += name;
 
-	::DebugOut("creating device target\n");
+	DebugOut("creating device target\n");
 
 	HDC hdcScreen = ::GetDC(NULL);
 	int logpixels = ::GetDeviceCaps(hdcScreen, LOGPIXELSX);
@@ -208,7 +208,7 @@ int ctr = 0;
 
 void timer_callback(HWND hwnd, UINT msg, UINT_PTR id, DWORD dwtime) {
 
-	::DebugOut("TPROC 0x%X, %d, %d\n", hwnd, id, ctr);
+	DebugOut("TPROC 0x%X, %d, %d\n", hwnd, id, ctr);
 	::KillTimer(hwndExcel, id);
 	ctr = 0;
 
@@ -232,7 +232,7 @@ void BERTGraphicsDevice::update() {
 	dirty = true;
 	UINT_PTR id = WM_USER + 100;
 
-	// ::DebugOut("update 0x%X, %d, %d\n", hwndExcel, id, ctr);
+	// DebugOut("update 0x%X, %d, %d\n", hwndExcel, id, ctr);
 
 	::SetTimer(hwndExcel, id, 100, (TIMERPROC)timer_callback);
 
@@ -246,7 +246,7 @@ void BERTGraphicsDevice::repaint() {
 	if (!dirty) return;
 
 	dirty = false;
-	::DebugOut(" ** graphics update\n");
+	DebugOut(" ** graphics update\n");
 
 //	std::basic_string<WCHAR> compound_name = L"BGD_";
 //	compound_name += name;
@@ -345,7 +345,7 @@ void BERTGraphicsDevice::drawText(const char *str, double x, double y, double ro
 
 	if (!err) {
 		DWORD dwerr = GetLastError();
-		::DebugOut("MB ERR %d\n", dwerr);
+		DebugOut("MB ERR %d\n", dwerr);
 	}
 
 	std::basic_string<WCHAR> fontname = mapFontName(gs->fontname);
@@ -394,7 +394,7 @@ void BERTGraphicsDevice::measureText(const char *str, GraphicsStyle *gs, double 
 
 	if (!err) {
 		DWORD dwerr = GetLastError();
-		::DebugOut("MB ERR %d\n", dwerr);
+		DebugOut("MB ERR %d\n", dwerr);
 	}
 
 	Gdiplus::PointF origin(0, 0);
@@ -566,7 +566,7 @@ void BERTGraphicsDevice::getCurrentSize(double &w, double &h) {
 		width = w;
 		height = h;
 
-		::DebugOut("Resize graphics device -> %01.02f x %01.02f\n", width, height);
+		DebugOut("Resize graphics device -> %01.02f x %01.02f\n", width, height);
 
 		if (pbitmap) {
 			Gdiplus::Bitmap* bitmap = (Gdiplus::Bitmap*)pbitmap;
@@ -602,7 +602,7 @@ BERTGraphicsDevice::BERTGraphicsDevice( std::string &name, double w, double h ) 
 	int err = MultiByteToWideChar(CP_UTF8, 0, name.c_str(), name.length(), this->name, MAX_PATH);
 	if (!err) {
 		DWORD dwerr = GetLastError();
-		::DebugOut("MB ERR %d\n", dwerr);
+		DebugOut("MB ERR %d\n", dwerr);
 	}
 
 	WCHAR tempPath[MAX_PATH];
