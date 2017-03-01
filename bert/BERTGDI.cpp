@@ -367,7 +367,6 @@ void BERTGraphicsDevice::drawText(const char *str, double x, double y, double ro
 	}
 
 	Gdiplus::Graphics graphics((Gdiplus::Bitmap*)pbitmap);
-	graphics.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
 
 	int len = MultiByteToWideChar(CP_UTF8, 0, str, strlen(str), 0, 0);
 	if (len <= 0) return;
@@ -394,15 +393,29 @@ void BERTGraphicsDevice::drawText(const char *str, double x, double y, double ro
 	Gdiplus::RectF boundRect;
 	graphics.MeasureString(wsz, len, &font, origin, &boundRect);
 
+	// UPDATE: rounding to pixel.  that might only be necessary in the 
+	// vertical plane (not sure).  however assuming the same font, while this
+	// might offset it will offset consistently.
+
 	// rot is in degrees, same as gdi+
 
 	if (rot) {
+
+		origin.X = roundf(origin.X - boundRect.Height);
+		origin.Y = roundf(origin.Y);
+
 		graphics.TranslateTransform(origin.X, origin.Y);
 		graphics.RotateTransform(-rot);
 		origin.X = 0;
 		origin.Y = 0;
+
+		// "TextRenderingHintAntiAlias provides the best quality for rotated text."
+		graphics.SetTextRenderingHint(Gdiplus::TextRenderingHintAntiAlias);
 	}
-	origin.Y -= boundRect.Height;
+	else {
+		origin.X = roundf(origin.X);
+		origin.Y = roundf(origin.Y - boundRect.Height);
+	}
 
 	graphics.DrawString(wsz, len, &font, origin, &fill);
 
