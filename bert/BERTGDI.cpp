@@ -401,13 +401,13 @@ void BERTGraphicsDevice::drawText(const char *str, double x, double y, double ro
 
 	if (rot) {
 
-		origin.X = roundf(origin.X - boundRect.Height);
+		origin.X = roundf(origin.X);
 		origin.Y = roundf(origin.Y);
 
 		graphics.TranslateTransform(origin.X, origin.Y);
 		graphics.RotateTransform(-rot);
 		origin.X = 0;
-		origin.Y = 0;
+		origin.Y = round( -boundRect.Height );
 
 		// "TextRenderingHintAntiAlias provides the best quality for rotated text."
 		graphics.SetTextRenderingHint(Gdiplus::TextRenderingHintAntiAlias);
