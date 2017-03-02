@@ -139,7 +139,7 @@ BOOL CALLBACK EnumWindowsProcHide(HWND hwnd, LPARAM lParam)
 
 			if (show) {
 				style |= WS_VISIBLE;    
-				exstyle |= WS_EX_APPWINDOW;   
+				exstyle |= WS_EX_APPWINDOW;
 				exstyle &= ~(WS_EX_TOOLWINDOW);
 			}
 			else {
@@ -154,6 +154,7 @@ BOOL CALLBACK EnumWindowsProcHide(HWND hwnd, LPARAM lParam)
 			SetWindowLong(hwnd, GWL_EXSTYLE, exstyle);
 
 			if (show) {
+				if (IsIconic(hwnd)) ShowWindow(hwnd, SW_RESTORE);
 				ShowWindow(hwnd, SW_SHOW);
 				::SetForegroundWindow(hwnd);
 			}

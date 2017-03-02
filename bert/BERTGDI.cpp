@@ -232,19 +232,12 @@ void findDeviceTarget(const WCHAR *name, CComPtr<Excel::Shape> &target ) {
 
 }
 
-int ctr = 0;
-
 void timer_callback(HWND hwnd, UINT msg, UINT_PTR id, DWORD dwtime) {
-
-	DebugOut("TPROC 0x%X, %d, %d\n", hwnd, id, ctr);
 	::KillTimer(hwndExcel, id);
-	ctr = 0;
-
 	for (std::vector< BERTGraphicsDevice*>::iterator iter = dlist.begin(); iter != dlist.end(); iter++) {
 		BERTGraphicsDevice *device = *iter;
 		if (device->dirty) device->repaint();
 	}
-
 }
 
 /**
@@ -255,15 +248,9 @@ void timer_callback(HWND hwnd, UINT msg, UINT_PTR id, DWORD dwtime) {
  * FIXME/TODO: maybe have absolute paints every (Y) ms to show progress on very complex graphics?
  */
 void BERTGraphicsDevice::update() {
-
-	ctr++;
 	dirty = true;
 	UINT_PTR id = WM_USER + 100;
-
-	// DebugOut("update 0x%X, %d, %d\n", hwndExcel, id, ctr);
-
 	::SetTimer(hwndExcel, id, 100, (TIMERPROC)timer_callback);
-
 }
 
 /**
@@ -296,32 +283,7 @@ void BERTGraphicsDevice::repaint() {
 
 }
 
-/*
-void BERTGraphicsDevice::getDeviceSize(double &w, double &h) {
-
-	w = width;
-	h = height;
-
-	CComPtr< Excel::Shape > shape;
-	findDeviceTarget(name, shape);
-	if( !shape ) createDeviceTarget(name, shape, width, height); // passing the old ones, I guess, in case it needs to be created
-
-	if (shape) {
-		Excel::IShape *ishape = (Excel::IShape*)(shape.p);
-		if (ishape) {
-			float fw, fh;
-			ishape->get_Width(&fw);
-			ishape->get_Height(&fh);
-			w = fw;
-			h = fh;
-		}
-	}
-
-}
-*/
-
 inline Gdiplus::ARGB RColor2ARGB(int color) {
-//	return Gdiplus::Color::MakeARGB( R_ALPHA(color), R_RED(color), R_GREEN(color), R_BLUE(color));
 	return (color & 0xff00ff00) | ((color >> 16) & 0x000000ff) | ((color << 16) & 0x00ff0000);
 }
 
@@ -360,12 +322,7 @@ std::basic_string < WCHAR > BERTGraphicsDevice::mapFontName(std::string name) {
 }
 
 void BERTGraphicsDevice::drawText(const char *str, double x, double y, double rot, GraphicsStyle *gs) {
-
-	DebugOut("DT: %s\n", str);
-	if (!strncmp("1:10", str, 4)) {
-		DebugOut("DT: %s\n", str);
-	}
-
+	
 	Gdiplus::Graphics graphics((Gdiplus::Bitmap*)pbitmap);
 
 	int len = MultiByteToWideChar(CP_UTF8, 0, str, strlen(str), 0, 0);
@@ -426,12 +383,6 @@ void BERTGraphicsDevice::drawText(const char *str, double x, double y, double ro
 }
 
 void BERTGraphicsDevice::measureText(const char *str, GraphicsStyle *gs, double *width, double *height) {
-
-	DebugOut("MT: %s\n", str);
-	if (!strncmp("1:10", str, 4)) {
-		DebugOut("MT: %s\n", str);
-	}
-
 
 	*width = *height = 0;
 	Gdiplus::Graphics graphics((Gdiplus::Bitmap*)pbitmap);
