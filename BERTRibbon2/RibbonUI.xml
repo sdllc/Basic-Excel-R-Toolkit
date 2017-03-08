@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<customUI xmlns="http://schemas.microsoft.com/office/2006/01/customui" onLoad="BERTRIBBON_Ribbon_Loaded">
+<customUI xmlns="http://schemas.microsoft.com/office/2006/01/customui" onLoad="RibbonLoaded">
 
   <!-- add to, don't replace, the whole ribbon -->
   <ribbon startFromScratch="false">
@@ -7,16 +7,13 @@
 
       <tab idMso="TabAddIns">
         <group id="g1" label="Basic Excel R Toolkit">
-          <button id="b1" label="BERT Console" size="large" onAction="BERTRIBBON_BERT_Console" imageMso="CreateStoredProcedure" supertip="Open the BERT console"/>
+          <button id="b1" label="BERT Console" size="large" onAction="ShowConsole" imageMso="CreateStoredProcedure" supertip="Open the BERT console"/>
           <separator id="separator1" />
-          <button id="b2" label="BERT Home" onAction="BERTRIBBON_BERT_Home" imageMso="FileOpen" supertip="Open the BERT home directory"/>
-          <button id="b7" label="Startup Folder" onAction="BERTRIBBON_BERT_StartupFolder" imageMso="FileOpen" supertip="Open the startup folder"/>
-          <button id="b5" label="Configure" onAction="BERTRIBBON_BERT_Configure" imageMso="ComAddInsDialog" supertip="Change configuration settings"/>
+          <button id="b2" label="BERT Home" onAction="HomeDirectory" imageMso="FileOpen" supertip="Open the BERT home directory"/>
+          <button id="b7" label="Startup Folder" onAction="StartupFolder" imageMso="FileOpen" supertip="Open the startup folder"/>
+          <button id="b5" label="Configure" onAction="Configuration" imageMso="ComAddInsDialog" supertip="Change configuration settings"/>
           <separator id="separator2" />
-          <!--
-          <button id="b3" label="Reload" onAction="BERTRIBBON_BERT_Reload" imageMso="FileStartWorkflow" supertip="Reload R startup files to update code changes"/>
-          -->
-          <button id="b6" label="About-GOAT" onAction="BERTRIBBON_BERT_About" imageMso="Info" supertip="About BERT and credits"/>
+          <button id="b6" label="About" onAction="AboutBERT" imageMso="Info" supertip="About BERT and credits"/>
         </group>
         <group id="g2" label="BERT User Functions" getVisible="getUserButtonsVisible">
           <button id="user1" getImage="getUserButtonImage" getLabel="getUserButtonLabel" getVisible="getUserButtonVisible" onAction="userButtonAction" tag="1"/>

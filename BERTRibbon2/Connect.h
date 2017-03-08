@@ -49,15 +49,15 @@ public:
 
 typedef std::vector < UserButtonInfo > UBVECTOR;
 
-#define DISPID_BERTRIBBON_BERT_Console			1001
-#define DISPID_BERTRIBBON_BERT_Home				1002
-#define DISPID_BERTRIBBON_BERT_Reload			1003
-#define DISPID_BERTRIBBON_BERT_InstallPackages	1004
-#define DISPID_BERTRIBBON_BERT_Configure		1005
-#define DISPID_BERTRIBBON_BERT_About			1006
+#define DISPID_ShowConsole				1001
+#define DISPID_BERTRIBBON_BERT_Home		1002
+#define DISPID_BERTRIBBON_BERT_Reload	1003
+#define DISPID_InstallPackages			1004
+#define DISPID_Configuration			1005
+#define DISPID_AboutBERT				1006
 #define DISPID_BERTRIBBON_BERT_StartupFolder	1007
 
-#define DISPID_BERTRIBBON_Ribbon_Loaded			2000
+#define DISPID_RibbonLoaded			2000
 
 #define DISPID_USER_BUTTONS_VISIBLE		3000
 #define DISPID_USER_BUTTON_VISIBLE		3001
@@ -138,15 +138,15 @@ public:
 			// operation more expensive.  we don't need 
 			// to name things like this.
 
-			if (!wcscmp(rgszNames[0], L"BERTRIBBON_BERT_Console"))				dispID = DISPID_BERTRIBBON_BERT_Console;
-			else if (!wcscmp(rgszNames[0], L"BERTRIBBON_BERT_Home"))			dispID = DISPID_BERTRIBBON_BERT_Home;
+			if (!wcscmp(rgszNames[0], L"ShowConsole"))							dispID = DISPID_ShowConsole;
+			else if (!wcscmp(rgszNames[0], L"HomeDirectory"))					dispID = DISPID_BERTRIBBON_BERT_Home;
 			else if (!wcscmp(rgszNames[0], L"BERTRIBBON_BERT_Reload"))			dispID = DISPID_BERTRIBBON_BERT_Reload;
-			else if (!wcscmp(rgszNames[0], L"BERTRIBBON_BERT_InstallPackages")) dispID = DISPID_BERTRIBBON_BERT_InstallPackages;
-			else if (!wcscmp(rgszNames[0], L"BERTRIBBON_BERT_Configure"))		dispID = DISPID_BERTRIBBON_BERT_Configure;
-			else if (!wcscmp(rgszNames[0], L"BERTRIBBON_BERT_About"))			dispID = DISPID_BERTRIBBON_BERT_About;
-			else if (!wcscmp(rgszNames[0], L"BERTRIBBON_BERT_StartupFolder"))	dispID = DISPID_BERTRIBBON_BERT_StartupFolder;
+			else if (!wcscmp(rgszNames[0], L"BERTRIBBON_BERT_InstallPackages")) dispID = DISPID_InstallPackages;
+			else if (!wcscmp(rgszNames[0], L"Configuration"))					dispID = DISPID_Configuration;
+			else if (!wcscmp(rgszNames[0], L"AboutBERT"))						dispID = DISPID_AboutBERT;
+			else if (!wcscmp(rgszNames[0], L"StartupFolder"))					dispID = DISPID_BERTRIBBON_BERT_StartupFolder;
 
-			else if (!wcscmp(rgszNames[0], L"BERTRIBBON_Ribbon_Loaded"))		dispID = DISPID_BERTRIBBON_Ribbon_Loaded;
+			else if (!wcscmp(rgszNames[0], L"RibbonLoaded"))					dispID = DISPID_RibbonLoaded;
 
 			else if (!wcscmp(rgszNames[0], L"getUserButtonsVisible"))			dispID = DISPID_USER_BUTTONS_VISIBLE;
 			else if (!wcscmp(rgszNames[0], L"getUserButtonVisible"))			dispID = DISPID_USER_BUTTON_VISIBLE;
@@ -179,7 +179,7 @@ public:
 
 		switch (dispidMember)
 		{
-		case DISPID_BERTRIBBON_BERT_Console:
+		case DISPID_ShowConsole:
 			HandleControlInvocation("BERT.Console()");
 			return S_OK;
 
@@ -191,15 +191,15 @@ public:
 			HandleControlInvocation("BERT.Reload()");
 			return S_OK;
 
-		case DISPID_BERTRIBBON_BERT_InstallPackages:
+		case DISPID_InstallPackages:
 			HandleControlInvocation("BERT.InstallPackages()");
 			return S_OK;
 
-		case DISPID_BERTRIBBON_BERT_Configure:
+		case DISPID_Configuration:
 			HandleControlInvocation("BERT.Configure()");
 			return S_OK;
 
-		case DISPID_BERTRIBBON_BERT_About:
+		case DISPID_AboutBERT:
 			HandleControlInvocation("BERT.About()");
 			return S_OK;
 
@@ -207,7 +207,7 @@ public:
 			HandleControlInvocation("BERT.StartupFolder()");
 			return S_OK;
 
-		case DISPID_BERTRIBBON_Ribbon_Loaded:
+		case DISPID_RibbonLoaded:
 			return HandleCacheRibbon(pdispparams);
 
 		case DISPID_ADD_USER_BUTTON:
