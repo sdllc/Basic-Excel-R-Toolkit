@@ -49,6 +49,16 @@ public:
 
 typedef std::vector < UserButtonInfo > UBVECTOR;
 
+#define DISPID_BERTRIBBON_BERT_Console			1001
+#define DISPID_BERTRIBBON_BERT_Home				1002
+#define DISPID_BERTRIBBON_BERT_Reload			1003
+#define DISPID_BERTRIBBON_BERT_InstallPackages	1004
+#define DISPID_BERTRIBBON_BERT_Configure		1005
+#define DISPID_BERTRIBBON_BERT_About			1006
+#define DISPID_BERTRIBBON_BERT_StartupFolder	1007
+
+#define DISPID_BERTRIBBON_Ribbon_Loaded			2000
+
 #define DISPID_USER_BUTTONS_VISIBLE		3000
 #define DISPID_USER_BUTTON_VISIBLE		3001
 #define DISPID_USER_BUTTON_LABEL		3002
@@ -124,14 +134,19 @@ public:
 		int dispID = -1;
 		if (cNames > 0)
 		{
-			if (!wcscmp(rgszNames[0], L"BERTRIBBON_BERT_Console"))				dispID = 1001;
-			else if (!wcscmp(rgszNames[0], L"BERTRIBBON_BERT_Home"))			dispID = 1002;
-			else if (!wcscmp(rgszNames[0], L"BERTRIBBON_BERT_Reload"))			dispID = 1003;
-			else if (!wcscmp(rgszNames[0], L"BERTRIBBON_BERT_InstallPackages")) dispID = 1004;
-			else if (!wcscmp(rgszNames[0], L"BERTRIBBON_BERT_Configure"))		dispID = 1005;
-			else if (!wcscmp(rgszNames[0], L"BERTRIBBON_BERT_About"))			dispID = 1006;
-			else if (!wcscmp(rgszNames[0], L"BERTRIBBON_BERT_StartupFolder"))	dispID = 1007;
-			else if (!wcscmp(rgszNames[0], L"BERTRIBBON_Ribbon_Loaded"))		dispID = 2000;
+			// using the prefix just makes this compare 
+			// operation more expensive.  we don't need 
+			// to name things like this.
+
+			if (!wcscmp(rgszNames[0], L"BERTRIBBON_BERT_Console"))				dispID = DISPID_BERTRIBBON_BERT_Console;
+			else if (!wcscmp(rgszNames[0], L"BERTRIBBON_BERT_Home"))			dispID = DISPID_BERTRIBBON_BERT_Home;
+			else if (!wcscmp(rgszNames[0], L"BERTRIBBON_BERT_Reload"))			dispID = DISPID_BERTRIBBON_BERT_Reload;
+			else if (!wcscmp(rgszNames[0], L"BERTRIBBON_BERT_InstallPackages")) dispID = DISPID_BERTRIBBON_BERT_InstallPackages;
+			else if (!wcscmp(rgszNames[0], L"BERTRIBBON_BERT_Configure"))		dispID = DISPID_BERTRIBBON_BERT_Configure;
+			else if (!wcscmp(rgszNames[0], L"BERTRIBBON_BERT_About"))			dispID = DISPID_BERTRIBBON_BERT_About;
+			else if (!wcscmp(rgszNames[0], L"BERTRIBBON_BERT_StartupFolder"))	dispID = DISPID_BERTRIBBON_BERT_StartupFolder;
+
+			else if (!wcscmp(rgszNames[0], L"BERTRIBBON_Ribbon_Loaded"))		dispID = DISPID_BERTRIBBON_Ribbon_Loaded;
 
 			else if (!wcscmp(rgszNames[0], L"getUserButtonsVisible"))			dispID = DISPID_USER_BUTTONS_VISIBLE;
 			else if (!wcscmp(rgszNames[0], L"getUserButtonVisible"))			dispID = DISPID_USER_BUTTON_VISIBLE;
@@ -164,28 +179,35 @@ public:
 
 		switch (dispidMember)
 		{
-		case 1001:
+		case DISPID_BERTRIBBON_BERT_Console:
 			HandleControlInvocation("BERT.Console()");
 			return S_OK;
-		case 1002:
+
+		case DISPID_BERTRIBBON_BERT_Home:
 			HandleControlInvocation("BERT.Home()");
 			return S_OK;
-		case 1003:
+
+		case DISPID_BERTRIBBON_BERT_Reload:
 			HandleControlInvocation("BERT.Reload()");
 			return S_OK;
-		case 1004:
+
+		case DISPID_BERTRIBBON_BERT_InstallPackages:
 			HandleControlInvocation("BERT.InstallPackages()");
 			return S_OK;
-		case 1005:
+
+		case DISPID_BERTRIBBON_BERT_Configure:
 			HandleControlInvocation("BERT.Configure()");
 			return S_OK;
-		case 1006:
+
+		case DISPID_BERTRIBBON_BERT_About:
 			HandleControlInvocation("BERT.About()");
 			return S_OK;
-		case 1007:
+
+		case DISPID_BERTRIBBON_BERT_StartupFolder:
 			HandleControlInvocation("BERT.StartupFolder()");
 			return S_OK;
-		case 2000:
+
+		case DISPID_BERTRIBBON_Ribbon_Loaded:
 			return HandleCacheRibbon(pdispparams);
 
 		case DISPID_ADD_USER_BUTTON:
@@ -337,7 +359,6 @@ public:
 
 
 	int SetCOMPtrs(void *pexcel, void *pribbon)
-//	int SetCOMPtrs(Excel::_Application *pexcel, void *pribbon)
 	{
 		// this is just -1 for the current process
 		HANDLE h = GetCurrentProcess();

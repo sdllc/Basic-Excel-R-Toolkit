@@ -3,7 +3,7 @@
 #include "stdafx.h"
 #include "resource.h"
 #include "BERTRibbon2_i.h"
-#include "xdlldata.h"
+//#include "xdlldata.h"
 
 CBERTRibbon2Module _AtlModule;
 

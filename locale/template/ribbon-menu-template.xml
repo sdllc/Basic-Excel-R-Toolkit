@@ -16,7 +16,7 @@
           <!--
           <button id="b3" label="Reload" onAction="BERTRIBBON_BERT_Reload" imageMso="FileStartWorkflow" supertip="Reload R startup files to update code changes"/>
           -->
-          <button id="b6" label="About" onAction="BERTRIBBON_BERT_About" imageMso="Info" supertip="About BERT and credits"/>
+          <button id="b6" label="About-GOAT" onAction="BERTRIBBON_BERT_About" imageMso="Info" supertip="About BERT and credits"/>
         </group>
         <group id="g2" label="BERT User Functions" getVisible="getUserButtonsVisible">
           <button id="user1" getImage="getUserButtonImage" getLabel="getUserButtonLabel" getVisible="getUserButtonVisible" onAction="userButtonAction" tag="1"/>

@@ -93,7 +93,7 @@ public:
 	}
 
 	void newPage( int color = 0xffffffff );
-	void setSize(double width, double height);
+//	void setSize(double width, double height);
 	void drawLine(double x1, double y1, double x2, double y2, GraphicsStyle *gs);
 	void drawRect(double x1, double y1, double x2, double y2, GraphicsStyle *gs);
 	void drawPoly(int n, double *x, double *y, int filled, GraphicsStyle *gs);
@@ -106,10 +106,10 @@ public:
 
 	void drawBitmap(unsigned int* data, int pixel_width, int pixel_height, double x, double y, double target_width, double target_height, double rot);
 
-	void getDeviceSize(double &w, double &h);
+//	void getDeviceSize(double &w, double &h);
 	void getCurrentSize(double &width, double &height);
 
-	void flush();
+//	void flush();
 	void repaint();
 	void update();
 
