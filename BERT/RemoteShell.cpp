@@ -642,6 +642,7 @@ DWORD WINAPI threadProc(LPVOID lpvParam) {
 	DebugOut("[COMMS] Create pipe OK\n");
 	DebugOut("[COMMS] calling startProcess\n");
 
+
 	startProcess();
 
 	DebugOut("[COMMS] calling connect (overlapped)\n");

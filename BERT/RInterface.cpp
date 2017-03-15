@@ -1838,7 +1838,8 @@ SEXP Multi2Matrix(LPXLOPER12 px, int rowOffset, int colOffset)
 	}
 	else
 	{
-		SEXP s = Rf_allocMatrix(VECSXP, rows, cols);
+		SEXP s;
+		PROTECT(s = Rf_allocMatrix(VECSXP, rows, cols));
 		for (int i = 0; i < cols; i++)
 		{
 			for (int j = 0; j < rows; j++)
@@ -1848,6 +1849,7 @@ SEXP Multi2Matrix(LPXLOPER12 px, int rowOffset, int colOffset)
 				idx++; // not macro friendly with opt
 			}
 		}
+		UNPROTECT(1);
 		return s;
 	}
 
@@ -1863,8 +1865,9 @@ SEXP Multi2SEXP(LPXLOPER12 px)
 	int rows = px->val.array.rows;
 	int cols = px->val.array.columns;
 
-	// fixme: want to protect this?
+	// fixme: want to protect this? A: yes.
 	SEXP s = Rf_allocMatrix(VECSXP, rows, cols);
+	PROTECT(s);
 
 	// so it looks like a matrix is just a list (same as 
 	// Excel, as it happens); but the order is inverse of Excel.
@@ -1881,6 +1884,7 @@ SEXP Multi2SEXP(LPXLOPER12 px)
 			idx++; // not macro friendly with opt
 		}
 	}
+	UNPROTECT(1);
 
 	return s;
 }

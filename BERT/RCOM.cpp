@@ -700,6 +700,7 @@ SEXP Variant2SEXP(CComVariant &cv) {
 		}
 
 		SEXP s = Rf_allocMatrix(VECSXP, rows, cols);
+		PROTECT(s);
 		int index = 0;
 		
 		switch (vt) {
@@ -776,7 +777,7 @@ SEXP Variant2SEXP(CComVariant &cv) {
 		}
 		break;
 		}
-
+		UNPROTECT(1);
 		return s;
 	}
 
