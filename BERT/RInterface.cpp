@@ -720,6 +720,16 @@ int RInit()
 	if (!CRegistryUtils::GetRegString(HKEY_CURRENT_USER, functionsDir, MAX_PATH, REGISTRY_KEY, REGISTRY_VALUE_FUNCTIONS_DIR))
 		strcpy_s(functionsDir, MAX_PATH, DEFAULT_R_FUNCTIONS_DIR);
 	
+	// pass this to R via the environment, it might be useful.
+	{
+		char buffer[64];
+		HDC screen = GetDC(NULL);
+		double scale = GetDeviceCaps(screen, LOGPIXELSX) / 96.0;
+		sprintf_s(buffer, "%f", scale );
+		SetEnvironmentVariableA("BERTGraphicsScale", buffer);
+		ReleaseDC(NULL, screen);
+	}
+
 	Rp->rhome = RHome;
 	Rp->home = RUser;
 	
