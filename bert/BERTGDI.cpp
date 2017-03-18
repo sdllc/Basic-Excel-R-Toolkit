@@ -559,8 +559,25 @@ void BERTGraphicsDevice::getCurrentSize(double &w, double &h) {
 			float fw, fh;
 			ishape->get_Width(&fw);
 			ishape->get_Height(&fh);
-			w = fw * logpixels / 72;
-			h = fh * logpixels / 72;
+
+			/*
+			// if there's a border, we need to subtract
+			float lineWeight = 0;
+			Excel::LineFormat *lf = 0;
+			ishape->get_Line(&lf);
+			if (lf) {
+				lf->AddRef();
+				lf->get_Weight(&lineWeight);
+				lf->Release();
+			}
+			if (lineWeight) {
+				fw -= (2 * lineWeight);
+				fh -= (2 * lineWeight);
+			}
+			*/
+
+			w = roundf(fw * logpixels / 72);
+			h = roundf(fh * logpixels / 72);
 		}
 	}
 	

@@ -23,15 +23,37 @@
 #include "RegistryConstants.h"
 #include "RegistryUtils.h"
 #include "DebugOut.h"
+#include "util.h"
 
 #include <winhttp.h>
 
-
+/**
+ * heading towards support for semver (major.minor.patch)
+ */
 double parseVersion(const char *v) {
-	double version = -1;
-	if (v[0] == 'v') version = atof(v + 1);
-	else version = atof(v);
+	
+	double version = 0;
+
+	std::string vstr;
+	if (v[0] == 'v') vstr = (v+1);
+	else vstr = v;
+
+	std::vector< std::string > elements;
+	Util::split(vstr, '.', 1, elements);
+
+	if (elements.size() > 0) version += atof(elements[0].c_str()) * 1000 * 1000;
+	if (elements.size() > 1) version += atof(elements[1].c_str()) * 1000;
+	if (elements.size() > 2) version += atof(elements[2].c_str());
+
 	return version;
+}
+
+double parseVersionW(const WCHAR *v) {
+	char buffer[256];
+	int len = wcslen(v);
+	if (len > 255) len = 255;
+	for (int i = 0; i < len; i++) buffer[i] = v[i] & 0xff;
+	return parseVersion(buffer);
 }
 
 /**
@@ -167,13 +189,13 @@ int checkForUpdates( std::string &tag )
 
 	if( tag.length() > 0 )
 	{
-		double v = parseVersion(tag.c_str());
-		double bv = _wtof(BERT_VERSION);
+		double remoteVersion = parseVersion(tag.c_str());
+		double localVersion = parseVersionW(BERT_VERSION);
 
-		DebugOut("Version string: %s, reads as %f, bert is %f\n", tag.c_str(), v, bv);
+		DebugOut("Version string: %s, reads as %f, bert is %f\n", tag.c_str(), remoteVersion, localVersion);
 
-		if (v > bv) result = UC_NEW_VERSION_AVAILABLE;
-		else if (v < bv) result = UC_YOURS_IS_NEWER;
+		if (remoteVersion > localVersion) result = UC_NEW_VERSION_AVAILABLE;
+		else if (remoteVersion < localVersion) result = UC_YOURS_IS_NEWER;
 		else result = UC_UP_TO_DATE;
 
 		// save last-modified, tag.  see above (top) re: narrow registry strings.
