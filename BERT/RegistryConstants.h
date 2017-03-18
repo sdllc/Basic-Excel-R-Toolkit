@@ -33,20 +33,6 @@
 
 #define REGISTRY_VALUE_PIPE_OVERRIDE	"OverridePipeName"
 
-/*
-#define REGISTRY_VALUE_CONSOLE_FONT		"ConsoleFont"
-#define REGISTRY_VALUE_CONSOLE_SIZE		"ConsoleFontSize"
-#define REGISTRY_VALUE_CONSOLE_USER		"ConsoleUserTextColor"
-#define REGISTRY_VALUE_CONSOLE_MESSAGE	"ConsoleMessageTextColor"
-#define REGISTRY_VALUE_CONSOLE_BACK		"ConsoleBackgroundColor"
-
-#define REGISTRY_VALUE_CONSOLE_SAVE_HISTORY	"ConsoleSaveHistory"
-#define REGISTRY_VALUE_CONSOLE_WIDTH		"ConsoleWidth"
-#define REGISTRY_VALUE_CONSOLE_AUTO_WIDTH	"ConsoleAutoWidth"
-
-#define REGISTRY_VALUE_CONSOLE_ON_TOP	"ConsoleOnTop"
-*/
-
 #define DEFAULT_ENVIRONMENT				""
 #define DEFAULT_R_USER					"%APPDATA%\\BERT"
 #define DEFAULT_R_HOME					"%APPDATA%\\BERT\\R-3.2.1"

@@ -814,13 +814,22 @@ int RInit()
 	R_RegisterCCallable("BERT", "BERTExternalCallback", (DL_FUNC)BERTExternalCallback);
 	R_RegisterCCallable("BERT", "BERTExternalCOMCallback", (DL_FUNC)BERTExternalCOMCallback);
 	
-	// (try) to load BERT module.  flag warning for a little later.
+	// (try) to load BERT module.  flag warning for a little later. originally we used the 
+	// library path only for this library.  we're now going to set that, using .libPaths, so it 
+	// becomes the default. that's an attempt to let libraries survive R version upgrades.
+
 	int module_err = 0;
 	{
 		std::string libloc = RUser;
 		if (strlen(RUser) && RUser[strlen(RUser) - 1] != '\\' && RUser[strlen(RUser) - 1] != '/') libloc += "\\";
 		libloc += "lib";
 		int err;
+
+		// set path
+
+		R_tryEvalSilent(Rf_lang2(Rf_install(".libPaths"), Rf_mkString(libloc.c_str())), R_GlobalEnv, &err);
+
+		// OK, load library
 
 		SEXP namedargs;
 		const char *names[] = { "package", "lib.loc", "" };

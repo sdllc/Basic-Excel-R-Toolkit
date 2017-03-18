@@ -37,7 +37,7 @@ header.range <- new.sheet$get_Range( "B2:F2" );
 header.range$put_Value( t( colnames( iris )));
 
 # 
-# resize columns to fit headers
+# resize columns to fit
 #
 range$get_EntireColumn()$AutoFit();
 
