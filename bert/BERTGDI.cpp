@@ -194,39 +194,61 @@ void findDeviceTarget(const WCHAR *name, CComPtr<Excel::Shape> &target ) {
 	if (pdispApp) {
 
 		CComPtr<Excel::Sheets> sheets;
+		CComPtr<Excel::Workbooks> workbooks;
+
 		CComQIPtr<Excel::_Application> app(pdispApp);
-		if (app) app->get_Worksheets(&sheets);
-		if (sheets) {
 
-			long count = 0;
-			sheets->get_Count(&count);
+		if (app) app->get_Workbooks(&workbooks);
+		if (workbooks) {
 
-			for (long l = 1; l <= count; l++) {
-				CComVariant var = l;
-				CComPtr<IDispatch> pdispsheet;
+			long wbcount = 0;
+			workbooks->get_Count(&wbcount);
+			for (long lwb = 0; lwb < wbcount; lwb++) {
 
-				if (SUCCEEDED(sheets->get_Item(var, &pdispsheet))) {
-					CComQIPtr< Excel::_Worksheet > sheet(pdispsheet);
-					if (sheet) {
-						CComPtr<Excel::Shapes> shapes;
-						sheet->get_Shapes(&shapes);
-						if (shapes) {
-							Excel::IShapes* ishapes = (Excel::IShapes*)(shapes.p);
-							ishapes->AddRef();
-							CComVariant cvItem = compound_name.c_str();
-							Excel::Shape *pshape = 0;
-							if (SUCCEEDED(ishapes->Item(cvItem, &pshape))) {
-								pshape->AddRef();
-								target = pshape;
-								pshape->Release();
-								return;
+				CComVariant vwb = lwb + 1;
+				CComPtr<Excel::_Workbook> book;
+				HRESULT hr = workbooks->get_Item(vwb, &book);
+				if (FAILED(hr)) {
+					DebugOut("ERR 0x%X\n", hr);
+				}
+				if (SUCCEEDED(hr)) {
+
+					//if (app) app->get_Worksheets(&sheets);
+					book->get_Worksheets(&sheets);
+					if (sheets) {
+
+						long count = 0;
+						sheets->get_Count(&count);
+
+						for (long l = 1; l <= count; l++) {
+							CComVariant var = l;
+							CComPtr<IDispatch> pdispsheet;
+
+							if (SUCCEEDED(sheets->get_Item(var, &pdispsheet))) {
+								CComQIPtr< Excel::_Worksheet > sheet(pdispsheet);
+								if (sheet) {
+									CComPtr<Excel::Shapes> shapes;
+									sheet->get_Shapes(&shapes);
+									if (shapes) {
+										Excel::IShapes* ishapes = (Excel::IShapes*)(shapes.p);
+										ishapes->AddRef();
+										CComVariant cvItem = compound_name.c_str();
+										Excel::Shape *pshape = 0;
+										if (SUCCEEDED(ishapes->Item(cvItem, &pshape))) {
+											pshape->AddRef();
+											target = pshape;
+											pshape->Release();
+											return;
+										}
+										ishapes->Release();
+									}
+								}
 							}
-							ishapes->Release();
 						}
+
 					}
 				}
 			}
-			
 		}
 	}
 
