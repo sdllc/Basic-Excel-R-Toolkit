@@ -847,6 +847,72 @@ void formatCOMError(std::string &target, HRESULT hr, const char *msg, const char
 
 }
 
+/**
+ * tail method for converting sexp -> variant as safearray, 
+ * to support intrinsic types, lists and frames.  
+ */
+void SEXPIntoArray( SEXP arg, VARIANT *arr, int &index, std::vector<CComBSTR*> &stringcache ) {
+
+	int len = Rf_length(arg);
+
+	if (Rf_isLogical(arg)) {
+		for (int row = 0; row < len; row++, index++) {
+			arr[index].vt = VT_BOOL;
+			arr[index].boolVal = (bool)(INTEGER(arg)[row] != 0);
+		}
+	}
+	else if (Rf_isInteger(arg)) {
+		for (int row = 0; row < len; row++, index++) {
+			arr[index].vt = VT_INT;
+			arr[index].intVal = INTEGER(arg)[row];
+		}
+	}
+	else if (Rf_isFactor(arg)) {
+
+		// map factor
+		SEXP levels = Rf_getAttrib(arg, R_LevelsSymbol);
+		int lcount = Rf_length(levels);
+		std::vector< CComBSTR* > factor;
+		for (int i = 0; i < lcount; i++) {
+			CComBSTR *bstr = new CComBSTR();
+			STRSXP2BSTR(*bstr, STRING_ELT(levels, i));
+			factor.push_back(bstr);
+			stringcache.push_back(bstr);
+		}
+
+		for (int row = 0; row < len; row++, index++) {
+			int level = INTEGER(arg)[row];
+			arr[index].vt = VT_BSTR | VT_BYREF;
+			arr[index].pbstrVal = &(factor[level - 1]->m_str);
+		}
+	}
+	else if (Rf_isNumeric(arg)) {
+		for (int row = 0; row < len; row++, index++) {
+			arr[index].vt = VT_R8;
+			arr[index].dblVal = REAL(arg)[row];
+		}
+	}
+	else if (Rf_isString(arg)) {
+		for (int row = 0; row < len; row++, index++) {
+			CComBSTR *bstr = new CComBSTR();
+			STRSXP2BSTR(*bstr, STRING_ELT(arg, row));
+			arr[index].vt = VT_BSTR | VT_BYREF;
+			arr[index].pbstrVal = &(bstr->m_str);
+			stringcache.push_back(bstr);
+		}
+	}
+	else if (Rf_isVector(arg) || Rf_isFrame(arg)) {
+		for (int col = 0; col < len; col++) {
+			SEXP x = VECTOR_ELT(arg, col);
+			SEXPIntoArray(x, arr, index, stringcache);
+		}
+	}
+	else {
+		DebugOut("Unhandled type: %d\n", TYPEOF(arg));
+	}
+
+}
+
 SEXP invokePropertyPut(std::string name, LPDISPATCH pdisp, SEXP value)
 {
 	if (!pdisp) {
@@ -873,55 +939,39 @@ SEXP invokePropertyPut(std::string name, LPDISPATCH pdisp, SEXP value)
 	dispparams.cNamedArgs = 1;
 	dispparams.rgdispidNamedArgs = &dispidNamed;
 
-	CComVariant cv;
-	CComBSTR bstr;
+	// strings are passed byref, and we clean them up
+	std::vector<CComBSTR*> stringcache;
 
-	SEXP arg = value;
-	int t;
-	
+	// either a single value or an array
+	CComVariant cv;
+
 	// wrapped in an outside list to pass it in
-	if ((Rf_length(arg) == 1) && (TYPEOF(arg) == VECSXP)) {
-		arg = VECTOR_ELT(value, 0);
+	if ((Rf_length(value) == 1) && (TYPEOF(value) == VECSXP)) {
+		value = VECTOR_ELT(value, 0);
 	}
 
 	// now check this element -- could be a list
-	if (Rf_length(arg) <= 1) {
-
-		t = TYPEOF(value);
-		if (t == VECSXP) {
-			arg = VECTOR_ELT(value, 0);
-			t = TYPEOF(arg);
-
-		}
-
-		if (Rf_isLogical(arg)) cv = (bool)(INTEGER(arg)[0] != 0);
-		else if (Rf_isInteger(arg)) cv = INTEGER(arg)[0];
-		else if (Rf_isNumeric(arg)) cv = REAL(arg)[0];
-		else if (Rf_isString(arg)) {
-
-			STRSXP2BSTR(bstr, arg);
-			cv.vt = VT_BSTR;
-			cv.bstrVal = bstr;
-
-		}
-
+	if (Rf_length(value) <= 1) {
+		int index = 0;
+		SEXPIntoArray(value, &cv, index, stringcache);
 		dispparams.rgvarg = &cv;
 		hr = pdisp->Invoke(dispid, IID_NULL, 1033, DISPATCH_PROPERTYPUT, &dispparams, NULL, NULL, NULL);
-
 	}
 	else {
 
-		int nr = Rf_nrows(arg);
-		int nc = Rf_ncols(arg);
+		// for matrices or vectors (not lists), we can get dimensions
 
-		// if it's a frame, it's going to be represented as a VECSXP.
-		// in this case len is the number of columns, and we need to look
+		int nr = Rf_nrows(value);
+		int nc = Rf_ncols(value);
+
+		// if it's a frame, it's going to be represented as a VECSXP and
+		// in this case len is the number of columns. we need to look
 		// at the first column (or any column) to get the row count.
 
-		bool frame = Rf_isFrame(arg);
-		if (frame && Rf_length(arg) > 0) {
-			nc = Rf_length(arg);
-			SEXP x = VECTOR_ELT(arg, 0);
+		bool frame = Rf_isFrame(value);
+		if (frame && Rf_length(value) > 0) {
+			nc = Rf_length(value);
+			SEXP x = VECTOR_ELT(value, 0);
 			nr = x ? Rf_length(x) : 0;
 		}
 
@@ -933,131 +983,26 @@ SEXP invokePropertyPut(std::string name, LPDISPATCH pdisp, SEXP value)
 
 		CComSafeArray<VARIANT> cc;
 		cc.Create(sab, 2);
-		std::vector<CComBSTR*> bv;
 
-		VARIANT *pv;
-		SafeArrayAccessData(cc, (void**)&pv);
+		VARIANT *arrayptr;
+		SafeArrayAccessData(cc, (void**)&arrayptr);
 
 		int index = 0;
-		int len = nr * nc;
-
-		t = TYPEOF(arg);
-
-		if( Rf_isInteger(arg)) {
-			int *src = INTEGER(arg);
-			for (int i = 0; i < len; i++) { pv[i].vt = VT_INT; pv[i].intVal = src[i]; }
-		}
-		else if (Rf_isReal(arg)) {
-			double *src = REAL(arg);
-			for (int i = 0; i < len; i++) { 
-				pv[i].vt = VT_R8; 
-				pv[i].dblVal = src[i]; 
-			}
-		}
-		else if (Rf_isLogical(arg)) {
-			int *src = INTEGER(arg);
-			for (int i = 0; i < len; i++) { pv[i].vt = VT_BOOL; pv[i].boolVal = (bool)(src[i] != 0); }
-		}
-		else if (Rf_isString(arg)) {
-			for (int i = 0; i < len; i++) {
-				CComBSTR *bstr = new CComBSTR();
-				STRSXP2BSTR(*bstr, STRING_ELT(arg, i));
-				pv[i].vt = VT_BSTR | VT_BYREF;
-				pv[i].pbstrVal = &(bstr->m_str);
-				bv.push_back(bstr);
-			}
-		}
-		else if (frame) {
-			int index = 0;
-			for (int col = 0; col < nc; col++) {
-
-				SEXP x = VECTOR_ELT(arg, col);
-				if (Rf_isLogical(x)) { 
-					for (int row = 0; row < nr; row++, index++) {
-						pv[index].vt = VT_BOOL; 
-						pv[index].boolVal = (bool)(INTEGER(x)[row] != 0);
-					}
-				}
-				else if (Rf_isInteger(x)) {
-					for (int row = 0; row < nr; row++, index++) {
-						pv[index].vt = VT_INT;
-						pv[index].intVal = INTEGER(x)[row];
-					}
-				}
-				else if (Rf_isFactor(x)) {
-
-					// map factor
-					SEXP levels = Rf_getAttrib(x, R_LevelsSymbol);
-					int lcount = Rf_length(levels);
-					std::vector< CComBSTR* > factor;
-					for (int i = 0; i < lcount; i++) {
-						CComBSTR *bstr = new CComBSTR();
-						STRSXP2BSTR(*bstr, STRING_ELT(levels, i));
-						factor.push_back(bstr);
-						bv.push_back(bstr);
-					}
-
-					for (int row = 0; row < nr; row++, index++) {
-						int level = INTEGER(x)[row];
-						pv[index].vt = VT_BSTR | VT_BYREF;
-						pv[index].pbstrVal = &(factor[level - 1]->m_str);
-					}
-				}
-				else if (Rf_isNumeric(x)) {
-
-					for (int row = 0; row < nr; row++, index++) {
-						pv[index].vt = VT_R8;
-						pv[index].dblVal = REAL(x)[row];
-					}
-				}
-				else if (Rf_isString(x)) {
-					for (int row = 0; row < nr; row++, index++) {
-						CComBSTR *bstr = new CComBSTR();
-						STRSXP2BSTR(*bstr, STRING_ELT(x, row));
-						pv[index].vt = VT_BSTR | VT_BYREF;
-						pv[index].pbstrVal = &(bstr->m_str);
-						bv.push_back(bstr);
-					}
-				}
-				else {
-					DebugOut("Unhandled type: %d\n", TYPEOF(x));
-				}
-			}
-		}
-
-		//else if (t == VECSXP) {
-		else if( Rf_isVector(arg)){
-			for (int i = 0; i < len; i++){
-				SEXP x = VECTOR_ELT(arg, i);
-				if (Rf_isLogical(x)) { pv[i].vt = VT_BOOL; pv[i].boolVal = (bool)(INTEGER(x)[0] != 0); }
-				else if (Rf_isInteger(x)) { pv[i].vt = VT_INT; pv[i].intVal = INTEGER(x)[0]; }
-				else if (Rf_isNumeric(x)) { pv[i].vt = VT_R8; pv[i].dblVal = REAL(x)[0]; }
-				else if (Rf_isString(x)) {
-
-					CComBSTR *bstr = new CComBSTR();
-					int tlen = Rf_length(x);
-					STRSXP2BSTR(*bstr, tlen == 1 ? x : STRING_ELT(x, 0));
-					pv[i].vt = VT_BSTR | VT_BYREF;
-					pv[i].pbstrVal = &(bstr->m_str);
-					bv.push_back(bstr);
-				}
-			}
-		}
-
+		SEXPIntoArray(value, arrayptr, index, stringcache);
+		
 		SafeArrayUnaccessData(cc);
 
 		cv = cc;
 		dispparams.rgvarg = &cv;
 		hr = pdisp->Invoke(dispid, IID_NULL, 1033, DISPATCH_PROPERTYPUT, &dispparams, NULL, NULL, NULL);
 
-		// clean up strings
-		for (std::vector< CComBSTR* > ::iterator iter = bv.begin(); iter != bv.end(); iter++) delete(*iter);
-
-		// and array
+		// clean up array
 		cc.Destroy();
 
 	}
 
+	// clean up strings
+	for (std::vector< CComBSTR* > ::iterator iter = stringcache.begin(); iter != stringcache.end(); iter++) delete(*iter);
 
 	if (FAILED(hr))
 	{
