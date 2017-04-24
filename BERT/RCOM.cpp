@@ -878,7 +878,7 @@ SEXP invokePropertyPut(std::string name, LPDISPATCH pdisp, SEXP value)
 
 	SEXP arg = value;
 	int t;
-
+	
 	// wrapped in an outside list to pass it in
 	if ((Rf_length(arg) == 1) && (TYPEOF(arg) == VECSXP)) {
 		arg = VECTOR_ELT(value, 0);
@@ -900,8 +900,6 @@ SEXP invokePropertyPut(std::string name, LPDISPATCH pdisp, SEXP value)
 		else if (Rf_isString(arg)) {
 
 			STRSXP2BSTR(bstr, arg);
-			//cv.vt = VT_BSTR | VT_BYREF;
-			//cv.pbstrVal = &(bstr);
 			cv.vt = VT_BSTR;
 			cv.bstrVal = bstr;
 
@@ -915,6 +913,17 @@ SEXP invokePropertyPut(std::string name, LPDISPATCH pdisp, SEXP value)
 
 		int nr = Rf_nrows(arg);
 		int nc = Rf_ncols(arg);
+
+		// if it's a frame, it's going to be represented as a VECSXP.
+		// in this case len is the number of columns, and we need to look
+		// at the first column (or any column) to get the row count.
+
+		bool frame = Rf_isFrame(arg);
+		if (frame && Rf_length(arg) > 0) {
+			nc = Rf_length(arg);
+			SEXP x = VECTOR_ELT(arg, 0);
+			nr = x ? Rf_length(x) : 0;
+		}
 
 		SAFEARRAYBOUND sab[2];
 		sab[0].cElements = nr;
@@ -934,24 +943,23 @@ SEXP invokePropertyPut(std::string name, LPDISPATCH pdisp, SEXP value)
 
 		t = TYPEOF(arg);
 
-		if (t == INTSXP) {
+		if( Rf_isInteger(arg)) {
 			int *src = INTEGER(arg);
 			for (int i = 0; i < len; i++) { pv[i].vt = VT_INT; pv[i].intVal = src[i]; }
 		}
-		else if (t == REALSXP) {
+		else if (Rf_isReal(arg)) {
 			double *src = REAL(arg);
 			for (int i = 0; i < len; i++) { 
 				pv[i].vt = VT_R8; 
 				pv[i].dblVal = src[i]; 
 			}
 		}
-		else if (t == LGLSXP) {
+		else if (Rf_isLogical(arg)) {
 			int *src = INTEGER(arg);
 			for (int i = 0; i < len; i++) { pv[i].vt = VT_BOOL; pv[i].boolVal = (bool)(src[i] != 0); }
 		}
-		else if (t == STRSXP) {
+		else if (Rf_isString(arg)) {
 			for (int i = 0; i < len; i++) {
-				//CComBSTR *bstr = new CComBSTR(CHAR(STRING_ELT(arg, i)));
 				CComBSTR *bstr = new CComBSTR();
 				STRSXP2BSTR(*bstr, STRING_ELT(arg, i));
 				pv[i].vt = VT_BSTR | VT_BYREF;
@@ -959,7 +967,66 @@ SEXP invokePropertyPut(std::string name, LPDISPATCH pdisp, SEXP value)
 				bv.push_back(bstr);
 			}
 		}
-		else if (t == VECSXP) {
+		else if (frame) {
+			int index = 0;
+			for (int col = 0; col < nc; col++) {
+
+				SEXP x = VECTOR_ELT(arg, col);
+				if (Rf_isLogical(x)) { 
+					for (int row = 0; row < nr; row++, index++) {
+						pv[index].vt = VT_BOOL; 
+						pv[index].boolVal = (bool)(INTEGER(x)[row] != 0);
+					}
+				}
+				else if (Rf_isInteger(x)) {
+					for (int row = 0; row < nr; row++, index++) {
+						pv[index].vt = VT_INT;
+						pv[index].intVal = INTEGER(x)[row];
+					}
+				}
+				else if (Rf_isFactor(x)) {
+
+					// map factor
+					SEXP levels = Rf_getAttrib(x, R_LevelsSymbol);
+					int lcount = Rf_length(levels);
+					std::vector< CComBSTR* > factor;
+					for (int i = 0; i < lcount; i++) {
+						CComBSTR *bstr = new CComBSTR();
+						STRSXP2BSTR(*bstr, STRING_ELT(levels, i));
+						factor.push_back(bstr);
+						bv.push_back(bstr);
+					}
+
+					for (int row = 0; row < nr; row++, index++) {
+						int level = INTEGER(x)[row];
+						pv[index].vt = VT_BSTR | VT_BYREF;
+						pv[index].pbstrVal = &(factor[level - 1]->m_str);
+					}
+				}
+				else if (Rf_isNumeric(x)) {
+
+					for (int row = 0; row < nr; row++, index++) {
+						pv[index].vt = VT_R8;
+						pv[index].dblVal = REAL(x)[row];
+					}
+				}
+				else if (Rf_isString(x)) {
+					for (int row = 0; row < nr; row++, index++) {
+						CComBSTR *bstr = new CComBSTR();
+						STRSXP2BSTR(*bstr, STRING_ELT(x, row));
+						pv[index].vt = VT_BSTR | VT_BYREF;
+						pv[index].pbstrVal = &(bstr->m_str);
+						bv.push_back(bstr);
+					}
+				}
+				else {
+					DebugOut("Unhandled type: %d\n", TYPEOF(x));
+				}
+			}
+		}
+
+		//else if (t == VECSXP) {
+		else if( Rf_isVector(arg)){
 			for (int i = 0; i < len; i++){
 				SEXP x = VECTOR_ELT(arg, i);
 				if (Rf_isLogical(x)) { pv[i].vt = VT_BOOL; pv[i].boolVal = (bool)(INTEGER(x)[0] != 0); }
