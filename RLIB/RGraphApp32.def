@@ -32,7 +32,7 @@ GA_apperror
 GA_askUserPass
 GA_askcdstring
 GA_askchangedir
-GA_askfilename = _GA_askfilesavewithdir
+GA_askfilename
 GA_askfilenames
 GA_askfilenamewithdir
 GA_askfilesave
@@ -41,8 +41,8 @@ GA_askok
 GA_askokcancel
 GA_askpassword
 GA_askstring
-GA_askyesno
-GA_askyesnocancel = _GA_askfilesave
+GA_askyesno = _GA_askchangedir
+GA_askyesnocancel
 GA_bitblt
 GA_bitmaptoimage
 GA_bottomleft
@@ -73,7 +73,7 @@ GA_copytext
 GA_copytoclipboard
 GA_countFilenames
 GA_createcursor
-GA_currentcursor = _GA_check
+GA_currentcursor
 GA_currentdrawing
 GA_currentfont
 GA_currentlinewidth
@@ -106,11 +106,11 @@ GA_drawdarker
 GA_drawellipse
 GA_drawgreyscale
 GA_drawimage
-GA_drawline
+GA_drawline = _GA_drawroundrect
 GA_drawmonochrome
 GA_drawpoint
 GA_drawpolygon
-GA_drawrect
+GA_drawrect = _GA_fillroundrect
 GA_drawroundrect
 GA_drawstr
 GA_drawtext
@@ -132,13 +132,13 @@ GA_fontascent
 GA_fontdescent
 GA_fontheight
 GA_fontwidth
-GA_gabeep
+GA_gabeep = _GA_newmenu
 GA_gamainloop
 GA_gbitblt
 GA_gchangemenubar
-GA_gchangepopup = _GA_newimage
-GA_gchangescrollbar
-GA_gcharmetric = _GA_devicewidth
+GA_gchangepopup
+GA_gchangescrollbar = _GA_gdrawline
+GA_gcharmetric
 GA_gcopy
 GA_gcopyalpha
 GA_gdrawellipse
@@ -148,12 +148,12 @@ GA_gdrawrect
 GA_gdrawstr
 GA_gdrawstr1
 GA_gdrawwcs
-GA_getHandle
+GA_getHandle = _GA_newimage
 GA_getSysFontSize
 GA_getbackground
 GA_getbitmapdata2
 GA_getcliprect
-GA_getcurrentline
+GA_getcurrentline = _GA_gdrawpolyline
 GA_getdata
 GA_getforeground
 GA_getkeystate
@@ -166,7 +166,7 @@ GA_getpastelength
 GA_getpixel
 GA_getpixels
 GA_getseltext
-GA_getstringfromclipboard
+GA_getstringfromclipboard = _GA_setlinewidth
 GA_gettext
 GA_gettextfont
 GA_getvalue
@@ -177,7 +177,7 @@ GA_ggetcliprect
 GA_ggetkeystate
 GA_ggetmodified
 GA_ggetpixel
-GA_ghasfixedwidth
+GA_ghasfixedwidth = _GA_devicewidth
 GA_ginvert
 GA_gmenubar
 GA_gnewfont
@@ -207,7 +207,7 @@ GA_imagetobitmap
 GA_imagewidth
 GA_initapp
 GA_inserttext
-GA_insetr
+GA_insetr = _draw_label
 GA_invertrect
 GA_isTopmost
 GA_isUnicodeWindow
@@ -230,9 +230,9 @@ GA_myMessageBox
 GA_nametorgb
 GA_new_font_object
 GA_newbitmap
-GA_newbutton = _GAI_handle_control
+GA_newbutton
 GA_newcheckbox
-GA_newcontrol = _GA_changescrollbar
+GA_newcontrol
 GA_newcursor
 GA_newdrawing
 GA_newdropfield
@@ -258,7 +258,7 @@ GA_newpopup
 GA_newprinter
 GA_newprogressbar
 GA_newradiobutton
-GA_newradiogroup
+GA_newradiogroup = _GA_newdroplist
 GA_newrect
 GA_newrichtextarea
 GA_newscrollbar
@@ -273,7 +273,7 @@ GA_objdepth
 GA_objheight
 GA_objrect
 GA_objwidth
-GA_oldfillellipse = _get_next_line
+GA_oldfillellipse
 GA_open1_image
 GA_open_image
 GA_parentwindow
@@ -282,16 +282,16 @@ GA_paste_image
 GA_pastetext
 GA_peekevent
 GA_print_image
-GA_ptinr
+GA_ptinr = _button_mouseup
 GA_raddpt
 GA_rcanon
 GA_rcenter
 GA_rdiv
-GA_redraw
+GA_redraw = _snprintf
 GA_remove_menu_item
 GA_replacedialog
 GA_resetdrawstate
-GA_resize
+GA_resize = _GA_enable
 GA_restoredrawstate
 GA_rgbtoname
 GA_rgbtonum
@@ -300,7 +300,7 @@ GA_rmove
 GA_rmul
 GA_rpt
 GA_rsubpt
-GA_rxr
+GA_rxr = _button_mousemove
 GA_save_image
 GA_scaleimage
 GA_screen_coords
@@ -325,7 +325,7 @@ GA_setforeground
 GA_sethit
 GA_setim
 GA_setimage
-GA_setkeyaction = _GA_disable
+GA_setkeyaction
 GA_setkeydown
 GA_setlimittext
 GA_setlinewidth
@@ -340,7 +340,7 @@ GA_setonfocus
 GA_setpalette
 GA_setpixel
 GA_setpixels
-GA_setprogressbar = _GA_currentpoint
+GA_setprogressbar
 GA_setprogressbarrange
 GA_setredraw
 GA_setresize
@@ -349,17 +349,17 @@ GA_setstatus
 GA_settext
 GA_settextfont
 GA_settimer
-GA_settimerfn
+GA_settimerfn = _GA_ggetmodified
 GA_setuserfilter
 GA_setvalue
 GA_show
 GA_showcaret
 GA_sortpalette
-GA_startgraphapp
-GA_stepprogressbar = _GA_getkeystate
+GA_startgraphapp = _GA_newmenuitem
+GA_stepprogressbar
 GA_stop_image
 GA_strrect
-GA_strsize = _handle_char
+GA_strsize
 GA_strwidth
 GA_subpt
 GA_textheight
@@ -376,11 +376,11 @@ GA_undotext
 GA_unhighlight
 GA_updatestatus
 GA_waitevent
-askfilenameW = _GA_askcdstring
+askfilenameW
 askfilenamesW
 askfilesaveW
 gcopyalpha2
-gdrawimage = _GA_gwcswidth
+gdrawimage
 gfillpolypolygon
 gmaskimage
 gstrwidth1

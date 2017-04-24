@@ -66,6 +66,8 @@ Function GenerateDef( $sub, $key ) {
 	$symbols = ($symbols -replace "(?s)\n\s*Summary.*?$", "");
 	$symbols = ($symbols -replace "(?m)^\s+\S+\s+\S+\s+\S+\s+", "");
 
+	$symbols = ($symbols -replace "(?m)^\(.*?\n", "");
+
 	echo "LIBRARY RGraphApp`nEXPORTS`n`n$symbols`n" | Out-File -encoding ASCII RGraphApp$key.def
 	ExitOnError;
 
