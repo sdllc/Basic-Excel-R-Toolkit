@@ -1063,10 +1063,11 @@ SEXP invokeFunc(std::string name, LPDISPATCH pdisp, SEXP args)
 						spTypeInfo->GetNames(fd->memid, (BSTR*)&bstrNameList, 32, &namecount);
 
 						found = true;
+						int arglen = Rf_length(args);
 
 						// this makes no sense.  it's based on what the call wants, not what the caller does.
 
-						if (fd->invkind == INVOKE_FUNC || ((fd->invkind == INVOKE_PROPERTYGET) && (fd->cParams - fd->cParamsOpt > 0)))
+						if (fd->invkind == INVOKE_FUNC || ((fd->invkind == INVOKE_PROPERTYGET) && ((fd->cParams - fd->cParamsOpt > 0) || (arglen > 0))))
 						{
 
 							DISPPARAMS dispparams;
@@ -1076,7 +1077,6 @@ SEXP invokeFunc(std::string name, LPDISPATCH pdisp, SEXP args)
 							CComVariant cvResult;
 
 							HRESULT hr;
-							int arglen = Rf_length(args);
 
 							dispparams.cArgs = 0; // arglen;
 							int type = TYPEOF(args);

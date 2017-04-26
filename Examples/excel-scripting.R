@@ -25,10 +25,10 @@ new.sheet <- wb$get_Sheets()$Add();
 new.sheet$put_Name( "R Data Set" );
 
 #
-# add some data. use matrices.
+# add some data. this is Fisher's iris data set.
 #
 range <- new.sheet$get_Range( "B3:F152" );
-range$put_Value( as.matrix( iris ));
+range$put_Value( iris );
 
 #
 # add column headers
