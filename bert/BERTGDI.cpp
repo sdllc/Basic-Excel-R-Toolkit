@@ -193,9 +193,7 @@ void findDeviceTarget(const WCHAR *name, CComPtr<Excel::Shape> &target ) {
 	
 	if (pdispApp) {
 
-		CComPtr<Excel::Sheets> sheets;
 		CComPtr<Excel::Workbooks> workbooks;
-
 		CComQIPtr<Excel::_Application> app(pdispApp);
 
 		if (app) app->get_Workbooks(&workbooks);
@@ -208,13 +206,15 @@ void findDeviceTarget(const WCHAR *name, CComPtr<Excel::Shape> &target ) {
 				CComVariant vwb = lwb + 1;
 				CComPtr<Excel::_Workbook> book;
 				HRESULT hr = workbooks->get_Item(vwb, &book);
+
 				if (FAILED(hr)) {
 					DebugOut("ERR 0x%X\n", hr);
 				}
 				if (SUCCEEDED(hr)) {
 
-					//if (app) app->get_Worksheets(&sheets);
-					book->get_Worksheets(&sheets);
+					CComPtr<Excel::Sheets> sheets;
+					if (book) book->get_Worksheets(&sheets);
+
 					if (sheets) {
 
 						long count = 0;
