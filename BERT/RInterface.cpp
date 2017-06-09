@@ -1458,7 +1458,14 @@ void SEXP2XLOPER(LPXLOPER12 xloper, SEXP sexp, bool inner = false, int r_offset 
 			}
 
 		}
-		else if (xlrslt.xltype == xltypeErr && xlrslt.val.err == xlerrRef ) {
+		else if ((xlrslt.xltype == xltypeErr && xlrslt.val.err == xlerrRef ) || (xlrslt.xltype == xltypeStr)){
+
+			// UPDATE: for issue #55, check if it's a string.  that indicates it has 
+			// been called by a button (or other worksheet control) and is running 
+			// in VBA.  the string value is the name of the button.  it's not clear 
+			// if there are other cases in which a string would be returned.
+
+			
 
 			// this probably indicates it's being called from VBA -- so we should treat
 			// as an API call? FIXME: testing

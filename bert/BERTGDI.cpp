@@ -207,9 +207,6 @@ void findDeviceTarget(const WCHAR *name, CComPtr<Excel::Shape> &target ) {
 				CComPtr<Excel::_Workbook> book;
 				HRESULT hr = workbooks->get_Item(vwb, &book);
 
-				if (FAILED(hr)) {
-					DebugOut("ERR 0x%X\n", hr);
-				}
 				if (SUCCEEDED(hr)) {
 
 					CComPtr<Excel::Sheets> sheets;

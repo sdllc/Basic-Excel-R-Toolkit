@@ -255,11 +255,36 @@ HRESULT SafeCall( SAFECALL_CMD cmd, std::vector< std::string > *vec, long arg, i
 		{
 		case SCC_EXEC:
 			{
-				CComSafeArray<VARIANT> cc;
-				cc.Create(vec->size());
-				std::vector< std::string > :: iterator iter = vec->begin();
+				// it seems that excel will reject the eventual Run2 call if any
+				// of the strings in this array are > 255.  for some reason, and 
+				// not documented.  I suspect it's because of the old XLOPER limitation,
+				// although it's not clear why that would be (or why it would persist
+				// into Excel 2007 and later).
 
-				for (int i = 0; i < vec->size(); i++)
+				// and what does that mean for UTF8?
+
+				// so preprocess strings...
+				std::vector <std::string> vec2;
+
+				for (std::vector< std::string >::iterator iter = vec->begin(); iter != vec->end(); iter++) {
+					std::string str = iter->c_str();
+					while(str.length() >= 255) {
+
+						size_t pivot = str.find_first_of(" \n\t+-;", 128);
+						std::string tmp = str.substr(0, pivot);
+						DebugOut("TMP %s\n", tmp.c_str());
+						vec2.push_back(tmp);
+						str = str.substr(pivot);
+					}
+					DebugOut("STR %s\n", str.c_str());
+					vec2.push_back(str);
+				}
+
+				CComSafeArray<VARIANT> cc;
+				cc.Create(vec2.size());
+				std::vector< std::string > :: iterator iter = vec2.begin();
+
+				for (int i = 0; i < vec2.size(); i++)
 				{
 					int len = MultiByteToWideChar(CP_UTF8, 0, iter->c_str(), -1, 0, 0);
 					WCHAR *pwc = new WCHAR[len];
