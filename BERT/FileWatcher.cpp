@@ -182,7 +182,7 @@ DWORD WINAPI startWatchThread(void *parameter) {
 		handles[index++] = pf->overlapped.hEvent;
 
 		// NOT watching subtree.  see docs.
-		ReadDirectoryChangesW(pf->fileHandle, pf->buffer, 1024, FALSE, FILE_NOTIFY_CHANGE_LAST_WRITE, &(pf->dwRead), &(pf->overlapped), NULL);
+		ReadDirectoryChangesW(pf->fileHandle, pf->buffer, 1024, FALSE, FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_LAST_WRITE, &(pf->dwRead), &(pf->overlapped), NULL);
 	}
 
 	while (!err) {
