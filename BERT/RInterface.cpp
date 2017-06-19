@@ -677,6 +677,44 @@ void installApplicationObject(ULONG_PTR p) {
 
 }
 
+SEXP constructBERTVersion(){
+	
+	const char *keys[] = {
+		"build.date",
+		"major",
+		"minor",
+		"patch",
+		"version.string",
+		"" };
+
+	int i, j, k, index = 1;
+	char buffer[256];
+	char n[256] = { 0 };
+
+	SEXP version = PROTECT(mkNamed(VECSXP, keys));
+
+	sprintf_s(buffer, "BERT Version ");
+	j = strlen(buffer);
+
+	for (i = k = 0; j < 256 && i<= wcslen(BERT_VERSION); i++, j++, k++) {
+		buffer[j] = BERT_VERSION[i] & 0xff;
+		if (!buffer[j] || buffer[j] == '.') {
+			n[k] = 0;
+			SET_VECTOR_ELT(version, index++, Rf_ScalarInteger(atoi(n)));
+			k = -1;
+		}
+		else n[k] = buffer[j];
+	}
+	SET_VECTOR_ELT(version, 4, Rf_mkString(buffer));
+
+//	sprintf_s(buffer, "%s %s", __DATE__, __TIME__);
+//	SET_VECTOR_ELT(version, 0, Rf_mkString(buffer));
+	SET_VECTOR_ELT(version, 0, Rf_mkString(__TIMESTAMP__));
+
+	return version;
+}
+
+
 int RInit()
 {
 	structRstart rp;
@@ -810,6 +848,16 @@ int RInit()
 
 
 	}
+
+	// construct version (somewhat like R.version).  for now we are dumping this in the 
+	// global environment, but it would probably be wiser to construct an environment
+	// for this (and any other constants) and `attach` it.
+
+	SEXP version = constructBERTVersion();
+	Rf_defineVar(Rf_install("BERT.version"), version, R_GlobalEnv);
+	UNPROTECT(1);
+
+	// callbacks
 
 	R_RegisterCCallable("BERT", "BERTExternalCallback", (DL_FUNC)BERTExternalCallback);
 	R_RegisterCCallable("BERT", "BERTExternalCOMCallback", (DL_FUNC)BERTExternalCOMCallback);
