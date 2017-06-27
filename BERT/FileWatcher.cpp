@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <iostream>
 #include <time.h>
+#include <cctype>
 
 #include "UtilityContainers.h";
 
@@ -116,6 +117,14 @@ DWORD WINAPI execFunctionThread(void *parameter) {
 
 }
 
+/**
+ * for lexicographical_compare; use tolower from cctype.  this is byte-based
+ * (because string::iterator is byte-based) so what happens with utf8? (...)
+ */
+bool icasecomp(char c1, char c2)
+{
+	return std::tolower(c1)<std::tolower(c2);
+}
 
 
 DWORD WINAPI startWatchThread(void *parameter) {
@@ -226,17 +235,9 @@ DWORD WINAPI startWatchThread(void *parameter) {
 								if (pf->directory_flag) changed_files.insert(str);
 								else {
 
-									// let's canonicalize then compare.  I think this is the best 
-									// we can do short of actually opening the files.
-									
-									char check[MAX_PATH];
-									char comp[MAX_PATH];
-
-									::GetFullPathNameA(str.c_str(), MAX_PATH, check, 0);
-
 									for (unordered_set<string>::iterator iter = files.begin(); iter != files.end(); iter++) {
-										::GetFullPathNameA(normalize_path(iter->c_str(), false), MAX_PATH, comp, 0);
-										if( !_stricmp(check, comp )){
+										std::string comp = *iter;
+										if(!std::lexicographical_compare<std::string::iterator, std::string::iterator>(str.begin(), str.end(), comp.begin(), comp.end(), icasecomp)){
 											changed_files.insert(*iter);
 											break;
 										}
