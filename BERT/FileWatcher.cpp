@@ -225,8 +225,18 @@ DWORD WINAPI startWatchThread(void *parameter) {
 
 								if (pf->directory_flag) changed_files.insert(str);
 								else {
+
+									// let's canonicalize then compare.  I think this is the best 
+									// we can do short of actually opening the files.
+									
+									char check[MAX_PATH];
+									char comp[MAX_PATH];
+
+									::GetFullPathNameA(str.c_str(), MAX_PATH, check, 0);
+
 									for (unordered_set<string>::iterator iter = files.begin(); iter != files.end(); iter++) {
-										if (!str.compare(normalize_path(iter->c_str(), false))) {
+										::GetFullPathNameA(normalize_path(iter->c_str(), false), MAX_PATH, comp, 0);
+										if( !_stricmp(check, comp )){
 											changed_files.insert(*iter);
 											break;
 										}
