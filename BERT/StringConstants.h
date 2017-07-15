@@ -35,7 +35,7 @@
 #define BERT_LINK			L"http://" BERT_LINK_TEXT
 
 #define ABOUT_R_TEXT \
-	L"Includes R version 3.4.0 (2017-04-21) -- \"You Stupid Darkness\"\r\n" \
+	L"Includes R version 3.4.1 (2017-06-30) -- \"Single Candle\"\r\n" \
 	L"Copyright (C) 2017 The R Foundation for Statistical Computing"
 
 #define R_LINK_TEXT			L"www.r-project.org"

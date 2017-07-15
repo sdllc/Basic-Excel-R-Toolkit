@@ -21,6 +21,13 @@ with( BERT, {
 .CALLBACK <- "BERT_Callback";
 
 #========================================================
+# remove "CRANextra" repo
+#========================================================
+suppressMessages({
+	options(repos=getOption("repos")[names(getOption("repos")) != 'CRANextra']);
+});
+
+#========================================================
 # functions - for general use
 #========================================================
 

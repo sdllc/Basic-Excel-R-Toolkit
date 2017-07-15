@@ -928,15 +928,14 @@ int RInit()
 		}
 	}
 
+	// BERT banner in the console.  needs to be narrow, though.
 	{
-		// BERT banner in the console.  needs to be narrow, though.
 		std::string strBanner = "---\n\n";
 		int i, len = wcslen(ABOUT_BERT_TEXT);
 		for (i = 0; i < len; i++) strBanner += ((char)(ABOUT_BERT_TEXT[i] & 0xff));
 		strBanner += "\n\n";
 		logMessage(strBanner.c_str(), 0, 1);
 	}
-
 
 	if (module_err) {
 		char message[256];
@@ -1621,8 +1620,8 @@ void SEXP2XLOPER(LPXLOPER12 xloper, SEXP sexp, bool inner = false, int r_offset 
 					
 	}
 
-	n_rows = MIN(n_rows, xlrows);
-	n_cols = MIN(n_cols, xlcols);
+	//n_rows = MIN(n_rows, xlrows);
+	//n_cols = MIN(n_cols, xlcols);
 	
 	int index = 0;
 

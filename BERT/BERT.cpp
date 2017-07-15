@@ -190,12 +190,6 @@ void logMessage(const char *buf, int len, bool console)
 
 	if( console ) rshell_send(entry.c_str());
 
-	/*
-	if (console && hWndConsole)
-	{
-		::SendMessage(hWndConsole, WM_APPEND_LOG, 0, (LPARAM)entry.c_str());
-	}
-	*/
 }
 
 void resetXlOper(LPXLOPER12 x)
@@ -601,7 +595,7 @@ bool RegisterBasicFunctions()
 
 	// set state and return
 
-	// CRASHER for crash (recovery) testing // Excel4( xlFree, 0, 1, 1000 );
+	// CRASHER for crash (recovery) testing // Excel12( xlFree, 0, 1, 1000 );
 
 	fRegisteredOnce = true;
 	return true;
