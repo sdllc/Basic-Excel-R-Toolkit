@@ -743,6 +743,9 @@ void appendLibraryPath(const char *lib) {
 	// NOTE: this might not be a good idea, if we want to ensure separation
 	// between BERT and other R installs.  maybe optional?
 
+	// OTOH that's the normal behavior, we were just breaking it.  so it 
+	// should be OK.  it's an optional env var anyway.
+
 	int i, pos, len = strlen(lib);
 	char escaped[MAX_PATH];
 	for (i = 0, pos = 0; i <= len && pos < MAX_PATH-1; i++) {
