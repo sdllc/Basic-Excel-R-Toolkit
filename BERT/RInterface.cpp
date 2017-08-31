@@ -714,6 +714,54 @@ SEXP constructBERTVersion(){
 	return version;
 }
 
+/**
+ * utility method for longer functions
+ */
+void execRString(std::string &str) {
+
+	std::stringstream ss(str);
+	std::string line;
+
+	int err;
+	ParseStatus status;
+	std::vector < std::string > vec;
+
+	while (std::getline(ss, line)) {
+		line = Util::trim(line);
+		if (line.length() > 0) vec.push_back(line);
+	}
+	if (vec.size() > 0)
+	{
+		ExecR(vec, &err, &status);
+	}
+
+}
+
+void appendLibraryPath(const char *lib) {
+	
+	// set lib paths to R_LIBS_USER, then our path, then (why not) R_LIBS
+	// NOTE: this might not be a good idea, if we want to ensure separation
+	// between BERT and other R installs.  maybe optional?
+
+	int i, pos, len = strlen(lib);
+	char escaped[MAX_PATH];
+	for (i = 0, pos = 0; i <= len && pos < MAX_PATH-1; i++) {
+		escaped[pos++] = lib[i];
+		if (lib[i] == '\\') escaped[pos++] = '\\';
+	}
+
+	std::string r;
+	
+	r = ".libPaths(c(";
+	r += "unlist(strsplit(Sys.getenv(\"R_LIBS_USER\"), \";\")), \"";
+	r += escaped;
+	r += "\", ";
+	r += "unlist(strsplit(Sys.getenv(\"R_LIBS\"), \";\"))";
+	r += "));\n";
+
+	execRString(r);
+
+}
 
 int RInit()
 {
@@ -875,7 +923,8 @@ int RInit()
 
 		// set path
 
-		R_tryEvalSilent(Rf_lang2(Rf_install(".libPaths"), Rf_mkString(libloc.c_str())), R_GlobalEnv, &err);
+		appendLibraryPath(libloc.c_str());
+		// R_tryEvalSilent(Rf_lang2(Rf_install(".libPaths"), Rf_mkString(libloc.c_str())), R_GlobalEnv, &err);
 
 		// OK, load library
 
