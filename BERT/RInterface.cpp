@@ -755,12 +755,12 @@ void appendLibraryPath(const char *lib) {
 
 	std::string r;
 	
-	r = ".libPaths(c(";
-	r += "unlist(strsplit(Sys.getenv(\"R_LIBS_USER\"), \";\")), \"";
+	r = ".libPaths(c("
+		"unlist(strsplit(Sys.getenv(\"R_LIBS_USER\"), \";\")), \"";
 	r += escaped;
-	r += "\", ";
-	r += "unlist(strsplit(Sys.getenv(\"R_LIBS\"), \";\"))";
-	r += "));\n";
+	r += "\", "
+		 "unlist(strsplit(Sys.getenv(\"R_LIBS\"), \";\"))"
+		 "));\n";
 
 	execRString(r);
 
@@ -1524,6 +1524,8 @@ void SEXP2XLOPER(LPXLOPER12 xloper, SEXP sexp, bool inner = false, int r_offset 
 	 
 	// check length first.  if the R function returns a scalar,
 	// use standard excel behavior (which is to fill up the output range)
+
+	api_call = true; // TESTING
 
 	int len = -1, type = -1;
 	if (sexp) {
