@@ -1645,7 +1645,7 @@ void SEXP2XLOPER(LPXLOPER12 xloper, SEXP sexp, bool inner = false, int r_offset 
 		n_cols = Rf_ncols(sexp);
 	}
 	
-	if (api_call) {
+	if (api_call && !inner) {
 
 		int check_len = n_cols;
 
