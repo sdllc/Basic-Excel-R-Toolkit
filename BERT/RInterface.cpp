@@ -1645,7 +1645,11 @@ void SEXP2XLOPER(LPXLOPER12 xloper, SEXP sexp, bool inner = false, int r_offset 
 		n_cols = Rf_ncols(sexp);
 	}
 	
-	if (api_call && !inner) {
+    // to support lists-of-lists in vba, we need nested ararys.
+    // not sure what happens in a spreadsheet if you have this
+    // result. should not be harmful (testing)
+
+	if(true){ // if (api_call && !inner) {
 
 		int check_len = n_cols;
 
