@@ -1,0 +1,16 @@
+{
+  "files":[
+    "src/renderer.ts",
+    "src/pipe.ts",
+    "src/terminal-implementation.ts",
+    "src/text-formatter.ts"
+  ],
+  "compilerOptions": {
+    "outDir": "build",
+    "target": "es5", 
+    "inlineSourceMap": true,
+    "inlineSources": true,
+    "moduleResolution": "node",
+    "lib": [ "es2015", "dom", "es5" ]
+  }
+}

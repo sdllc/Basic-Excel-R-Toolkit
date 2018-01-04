@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="source">
+      <UniqueIdentifier>{eaec0e65-b09a-4f4a-b0cf-36767ab73c6a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include">
+      <UniqueIdentifier>{c7527adb-7d4d-47cb-95c8-e837c5f10af9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PB">
+      <UniqueIdentifier>{c356d784-9c8e-4e2e-ae6f-46120e8ca313}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\PB\variable.pb.cc">
+      <Filter>PB</Filter>
+    </ClCompile>
+    <ClCompile Include="controlr.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="pipe.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="rinterface_common.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="rinterface_win.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\PB\variable.pb.h">
+      <Filter>PB</Filter>
+    </ClInclude>
+    <ClInclude Include="console_message.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="controlr.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="controlr_common.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="controlr_rinterface.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="controlr_version.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="pipe.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="util.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\PB\variable.proto">
+      <Filter>PB</Filter>
+    </None>
+  </ItemGroup>
+</Project>

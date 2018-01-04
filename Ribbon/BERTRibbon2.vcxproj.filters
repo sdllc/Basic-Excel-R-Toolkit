@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="ribbon.cc">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="ribbon_connect.cc">
+      <Filter>sources</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Resource.h">
+      <Filter>includes</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>includes</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>includes</Filter>
+    </ClInclude>
+    <ClInclude Include="ribbon_connect.h">
+      <Filter>includes</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="BERTRibbon2.rgs">
+      <Filter>sources</Filter>
+    </None>
+    <None Include="Ribbon.def">
+      <Filter>sources</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="includes">
+      <UniqueIdentifier>{9e49db10-9f75-486c-ac84-04bec76418e5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sources">
+      <UniqueIdentifier>{b56aa032-fd8e-4f8b-b70a-b3d5e5fa413f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="resources">
+      <UniqueIdentifier>{94ac2df8-10d8-41d0-943f-dae108c7f6a0}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="BERTRibbon2.idl">
+      <Filter>sources</Filter>
+    </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="BERTRibbon2.rc">
+      <Filter>resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="ribbon_ui.xml" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="source">
+      <UniqueIdentifier>{171a378d-f603-4cdf-9c66-cec0b65d95cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include">
+      <UniqueIdentifier>{6839659f-062b-40ca-acbd-14d0e71b613a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="R">
+      <UniqueIdentifier>{d0318f18-87ac-4f4a-8c25-85db8c49c5e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ExcelLib">
+      <UniqueIdentifier>{e89b11b5-95b2-4c71-af28-3347bcfcc847}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PB">
+      <UniqueIdentifier>{7cf281e1-904c-4b27-a3bc-37af0696e5a2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\stdafx.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\targetver.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="ExcelLib\XLCALL.H">
+      <Filter>ExcelLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\PB\variable.pb.h">
+      <Filter>PB</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="include\bert.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\windows_api_functions.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\utility_functions.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\type_conversions.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\function_description.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\basic_functions.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\bert_version.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\excel_com_types.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\object_mapping.h">
+      <Filter>include</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="R\startup.R">
+      <Filter>R</Filter>
+    </None>
+    <None Include="..\..\PB\variable.proto">
+      <Filter>PB</Filter>
+    </None>
+    <None Include="src\bert.def">
+      <Filter>source</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\dllmain.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="ExcelLib\XLCALL.CPP">
+      <Filter>ExcelLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\PB\variable.pb.cc">
+      <Filter>PB</Filter>
+    </ClCompile>
+    <ClCompile Include="src\bert.cc">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\windows_api_functions.cc">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\excel_functions.cc">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\debug_functions.cc">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\basic_functions.cc">
+      <Filter>source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="BERT.rc" />
+  </ItemGroup>
+</Project>

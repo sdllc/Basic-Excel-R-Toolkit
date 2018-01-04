@@ -1,0 +1,135 @@
+/**
+ * this is intended to be an interchange format for variables
+ * in excel (XLOPER12), R (SEXP), and javascript (JSON), and potentially
+ * other languages in the future. we have slightly different support 
+ * requirements depending on the platforms.
+ */
+
+syntax = "proto3";
+option optimize_for = SPEED;
+
+// protip: package gets defined as a c++ namespace, so don't use anything 
+// that might otherwise be defined
+
+package BERTBuffers;
+
+enum Type {
+	NIL = 0;	// pb converts "NULL" to "NULL_", but I would prefer to use a different symbol
+	STRING = 1;
+	NUMBER = 2; // both int and double
+	BOOL = 3;
+	COMPLEX = 4;
+	ARRAY = 5;
+}
+		 
+message Complex {
+	double r = 1;
+	double i = 2;
+}
+
+message Array {
+	int32 rows = 1;
+	int32 cols = 2;
+	repeated Variable data = 3;
+	repeated string rownames = 4;
+	repeated string colnames = 5;
+}
+
+enum ErrorType {
+	GENERIC = 0;
+	NA = 1;
+	INF = 2;
+	PARSE = 3;
+	EXECUTION = 4;
+}
+
+message Error {
+	ErrorType type = 1;
+	string message = 2;
+}
+
+message SheetReference {
+    uint32 start_row = 1;
+    uint32 start_column = 2;
+    uint32 end_row = 3;
+    uint32 end_column = 4;
+    uint64 sheet_id = 5;
+}
+
+message Variable {
+	oneof value {
+		bool nil = 1;
+        bool missing = 2;
+		Error err = 3;
+		double num = 4;
+		string str = 5;
+		bool boolean = 6;
+		Complex cpx = 7;
+		Array arr = 8;
+        SheetReference ref = 9;
+        uint64 external_pointer = 10;
+	}	
+	string name = 15;
+}
+
+message Code {
+	repeated string line = 1;
+}
+
+message FunctionCall {
+	string function = 1;
+	repeated Variable arguments = 2;
+}
+
+enum CallType {
+    undefined = 0;
+    get = 1;
+    put = 2;
+    method = 3;
+}
+
+message COMFunctionCall {
+	string function = 1;
+    uint32 pointer = 2;
+    CallType type = 3;
+	repeated Variable arguments = 4;
+}
+
+/**
+ * why callback and function_call, even though they're the same type?
+ * so we can switch appropriately. it seems like no extra data on the 
+ * wire but allows effective differentiation.
+ *
+ * FIXME: callback should switch to an enum (for the function)
+ */
+message Call {
+	uint32 id = 1;
+	bool wait = 2;
+	oneof call {
+		string system_command = 3;
+		FunctionCall function_call = 4;
+		Code code = 5;
+		string shell_command = 6;
+        FunctionCall callback = 7;
+        COMFunctionCall com_callback = 8;
+	}
+}
+
+message Console {
+    oneof message {
+        string text = 1;
+        string err = 2;
+        string prompt = 3;
+    }
+}
+
+message Response {
+	uint32 id = 1;
+	oneof result {
+		string err = 2;
+		Variable value = 3;
+		Console console = 4;
+        string control_message = 5;
+        FunctionCall callback = 6;
+	}
+}

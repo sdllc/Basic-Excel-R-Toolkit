@@ -1,0 +1,10 @@
+Package: BERTModule
+Type: Package
+Title: Utilities for BERT
+Version: 1.3.13
+Date: 2017-12-20
+Author: Duncan Werner
+Maintainer: Duncan Werner <dwerner@riskamp.com>
+Description: Utilities for BERT
+License: GPL (>= 2)
+RoxygenNote: 6.0.1

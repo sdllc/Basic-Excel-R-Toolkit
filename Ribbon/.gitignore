@@ -1,0 +1,25 @@
+x64
+.vs
+
+*.exp
+*.lib
+*.pdb
+*.ilk
+*.iobj
+*.ipdb
+*.aps
+
+*.vcxproj.user
+
+*.exe
+*.xll
+*.dll
+
+# these are generated, but it's kind of a simple
+# pattern. we might want to exclude by name just 
+# in case.
+
+*_i.c
+*_i.h
+
+

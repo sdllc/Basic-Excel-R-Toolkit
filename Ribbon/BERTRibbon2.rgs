@@ -1,0 +1,52 @@
+HKCU
+{
+	Software
+	{
+		Classes
+		{
+			BERT2Ribbon.Connect.1 = s 'BERT2 Ribbon Menu Class'
+			{
+				CLSID = s '{1451f06e-b530-4289-8d1f-7ea4a79f7732}'
+			}
+			BERT2Ribbon.Connect = s 'BERT2 Ribbon Menu Class'
+			{
+				CLSID = s '{1451f06e-b530-4289-8d1f-7ea4a79f7732}'
+				CurVer = s 'BERT2Ribbon.Connect.1'
+			}
+			NoRemove CLSID
+			{
+				ForceRemove '{1451f06e-b530-4289-8d1f-7ea4a79f7732}' = s 'BERT2 Ribbon Menu Class'
+				{
+					ProgID = s 'BERT2Ribbon.Connect.1'
+					VersionIndependentProgID = s 'BERT2Ribbon.Connect'
+					ForceRemove 'Programmable'
+					InprocServer32 = s '%MODULE%'
+					{
+						val ThreadingModel = s 'Apartment'
+					}
+					'TypeLib' = s '{443a0014-c3f3-4ced-a258-f170aff12659}'
+				}
+			}
+		}
+		Microsoft
+		{
+			Office
+			{
+				Excel
+				{
+					NoRemove Addins
+					{
+						ForceRemove BERT2Ribbon.Connect
+						{
+							val Description = s 'BERT2 Ribbon Menu Class'	
+							val FriendlyName = s 'BERT2 Ribbon Menu'
+							val LoadBehavior = d 3
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+

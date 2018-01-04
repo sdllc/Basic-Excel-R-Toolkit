@@ -1,0 +1,6 @@
+{
+  "watchFolder": "style",
+  "outputFolder": "build",
+  "mainFile": "style.less",
+  "sourceMap": true
+}

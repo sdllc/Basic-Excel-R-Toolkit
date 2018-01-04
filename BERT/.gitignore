@@ -1,0 +1,17 @@
+BERT/ExcelLib
+x64
+BERT/x64
+.vs
+
+*.exp
+*.lib
+*.pdb
+*.ilk
+*.iobj
+*.ipdb
+*.aps
+
+*.vcxproj.user
+
+*.exe
+*.xll

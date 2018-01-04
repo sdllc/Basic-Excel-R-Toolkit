@@ -1,0 +1,42 @@
+
+@font-face {
+    font-family: 'cogs';
+    src: url('./cogs.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+[class*='cog-']:before{
+	display: inline-block;
+   font-family: 'cogs';
+   font-style: normal;
+   font-weight: normal;
+   line-height: 1;
+   -webkit-font-smoothing: antialiased;
+   -moz-osx-font-smoothing: grayscale
+}
+
+.cog-01:before{content:'\0054';}
+.cog-02:before{content:'\0055';}
+.cog-03:before{content:'\0056';}
+.cog-04:before{content:'\0057';}
+.cog-05:before{content:'\0058';}
+.cog-06:before{content:'\0047';}
+.cog-07:before{content:'\0041';}
+.cog-08:before{content:'\0042';}
+.cog-09:before{content:'\0043';}
+.cog-10:before{content:'\0044';}
+.cog-11:before{content:'\0045';}
+.cog-12:before{content:'\0046';}
+.cog-13:before{content:'\0048';}
+.cog-14:before{content:'\0049';}
+.cog-15:before{content:'\004a';}
+.cog-16:before{content:'\004b';}
+.cog-17:before{content:'\004c';}
+.cog-18:before{content:'\004d';}
+.cog-19:before{content:'\004e';}
+.cog-20:before{content:'\004f';}
+.cog-21:before{content:'\0050';}
+.cog-22:before{content:'\0051';}
+.cog-23:before{content:'\0052';}
+.cog-24:before{content:'\0053';}

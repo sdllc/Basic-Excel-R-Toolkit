@@ -1,0 +1,26 @@
+// BERTRibbon2.idl : IDL source for BERTRibbon2
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (BERTRibbon2.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+	uuid(443a0014-c3f3-4ced-a258-f170aff12659),
+	version(2.0),
+	helpstring("BERT2 Ribbon Library")
+]
+library BERT2RibbonLib
+{
+	importlib("stdole2.tlb");
+	[
+		uuid(1451f06e-b530-4289-8d1f-7ea4a79f7732),
+		helpstring("BERT2 Ribbon")
+	]
+	coclass Connect
+	{
+		[default] interface IUnknown;
+	};
+};
