@@ -50,6 +50,7 @@ SEXP VariableToSEXP(const BERTBuffers::Variable &var) {
 
 	switch (var.value_case()) {
 	case BERTBuffers::Variable::ValueCase::kNil:
+    case BERTBuffers::Variable::ValueCase::kMissing:
 		return R_NilValue;
 
 	case BERTBuffers::Variable::ValueCase::kStr:
@@ -376,7 +377,7 @@ void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector < SEXP > 
 
 extern bool Callback(const BERTBuffers::Call &call, BERTBuffers::Response &response);
 
-SEXP COMCallback(SEXP function_name, SEXP call_type, SEXP pointer_key, SEXP arguments) {
+SEXP COMCallback(SEXP function_name, SEXP call_type, SEXP index, SEXP pointer_key, SEXP arguments) {
 
     static uint32_t callback_id = 1;
     SEXP sexp_result = R_NilValue;
@@ -396,6 +397,13 @@ SEXP COMCallback(SEXP function_name, SEXP call_type, SEXP pointer_key, SEXP argu
     call->set_wait(true);
     auto callback = call->mutable_com_callback();
     callback->set_function(string_name);
+
+    // index may be passed as a double instead of an int, convert
+    uint32_t call_index = 0;
+
+    if (Rf_isInteger(index)) call_index = (INTEGER(index))[0];
+    else if (Rf_isReal(index)) call_index = (uint32_t)((REAL(index))[0]);
+    callback->set_index(call_index);
 
     int key = (int)((intptr_t)R_ExternalPtrAddr(pointer_key));
     if (key) callback->set_pointer(key);

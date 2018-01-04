@@ -1902,7 +1902,7 @@ if (goog.DEBUG && !COMPILED) {
  * @private {!Array<number>}
  * @const
  */
-proto.BERTBuffers.COMFunctionCall.repeatedFields_ = [4];
+proto.BERTBuffers.COMFunctionCall.repeatedFields_ = [5];
 
 
 
@@ -1935,7 +1935,8 @@ proto.BERTBuffers.COMFunctionCall.toObject = function(includeInstance, msg) {
   var f, obj = {
     pb_function: jspb.Message.getFieldWithDefault(msg, 1, ""),
     pointer: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    type: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    index: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    type: jspb.Message.getFieldWithDefault(msg, 4, 0),
     argumentsList: jspb.Message.toObjectList(msg.getArgumentsList(),
     proto.BERTBuffers.Variable.toObject, includeInstance)
   };
@@ -1983,10 +1984,14 @@ proto.BERTBuffers.COMFunctionCall.deserializeBinaryFromReader = function(msg, re
       msg.setPointer(value);
       break;
     case 3:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setIndex(value);
+      break;
+    case 4:
       var value = /** @type {!proto.BERTBuffers.CallType} */ (reader.readEnum());
       msg.setType(value);
       break;
-    case 4:
+    case 5:
       var value = new proto.BERTBuffers.Variable;
       reader.readMessage(value,proto.BERTBuffers.Variable.deserializeBinaryFromReader);
       msg.addArguments(value);
@@ -2034,17 +2039,24 @@ proto.BERTBuffers.COMFunctionCall.serializeBinaryToWriter = function(message, wr
       f
     );
   }
+  f = message.getIndex();
+  if (f !== 0) {
+    writer.writeUint32(
+      3,
+      f
+    );
+  }
   f = message.getType();
   if (f !== 0.0) {
     writer.writeEnum(
-      3,
+      4,
       f
     );
   }
   f = message.getArgumentsList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      4,
+      5,
       f,
       proto.BERTBuffers.Variable.serializeBinaryToWriter
     );
@@ -2083,33 +2095,48 @@ proto.BERTBuffers.COMFunctionCall.prototype.setPointer = function(value) {
 
 
 /**
- * optional CallType type = 3;
+ * optional uint32 index = 3;
+ * @return {number}
+ */
+proto.BERTBuffers.COMFunctionCall.prototype.getIndex = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+};
+
+
+/** @param {number} value */
+proto.BERTBuffers.COMFunctionCall.prototype.setIndex = function(value) {
+  jspb.Message.setProto3IntField(this, 3, value);
+};
+
+
+/**
+ * optional CallType type = 4;
  * @return {!proto.BERTBuffers.CallType}
  */
 proto.BERTBuffers.COMFunctionCall.prototype.getType = function() {
-  return /** @type {!proto.BERTBuffers.CallType} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+  return /** @type {!proto.BERTBuffers.CallType} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
 
 /** @param {!proto.BERTBuffers.CallType} value */
 proto.BERTBuffers.COMFunctionCall.prototype.setType = function(value) {
-  jspb.Message.setProto3EnumField(this, 3, value);
+  jspb.Message.setProto3EnumField(this, 4, value);
 };
 
 
 /**
- * repeated Variable arguments = 4;
+ * repeated Variable arguments = 5;
  * @return {!Array.<!proto.BERTBuffers.Variable>}
  */
 proto.BERTBuffers.COMFunctionCall.prototype.getArgumentsList = function() {
   return /** @type{!Array.<!proto.BERTBuffers.Variable>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.BERTBuffers.Variable, 4));
+    jspb.Message.getRepeatedWrapperField(this, proto.BERTBuffers.Variable, 5));
 };
 
 
 /** @param {!Array.<!proto.BERTBuffers.Variable>} value */
 proto.BERTBuffers.COMFunctionCall.prototype.setArgumentsList = function(value) {
-  jspb.Message.setRepeatedWrapperField(this, 4, value);
+  jspb.Message.setRepeatedWrapperField(this, 5, value);
 };
 
 
@@ -2119,7 +2146,7 @@ proto.BERTBuffers.COMFunctionCall.prototype.setArgumentsList = function(value) {
  * @return {!proto.BERTBuffers.Variable}
  */
 proto.BERTBuffers.COMFunctionCall.prototype.addArguments = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 4, opt_value, proto.BERTBuffers.Variable, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 5, opt_value, proto.BERTBuffers.Variable, opt_index);
 };
 
 

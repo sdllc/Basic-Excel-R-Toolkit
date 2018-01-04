@@ -1,47 +1,74 @@
 #pragma once
 
 /**
-* conversion utilities.
-*/
+ * conversion utilities. converting between Excel/COM/PB types.
+ *
+ * note that Excel and R (the eventual target for these translations)
+ * use different ordering in 2D array data, so we are shifting back
+ * and forth. that might be different for different languages, so we 
+ * might think about moving that logic to the language-specific side
+ * (in this case, controlR).
+ */
 class Convert {
 
 public:
-	static std::string WideStringToUtf8(const WCHAR *s, int len) {
+
+    /** 
+     * FIXME: this is a string function, move to string utilities.
+     */
+	static std::string WideStringToUtf8(const WCHAR *source, int len) {
+
+        // FIXME: static buffer -- not thread safe. lock, use TLS 
+        // storage, or allocate on each call
 
 		static char *buffer = 0;
-		static int bufferlen = 0;
+		static int buffer_length = 0;
 
-		int u8len = WideCharToMultiByte(CP_UTF8, 0, s, len, 0, 0, 0, 0);
+		int u8_length = WideCharToMultiByte(CP_UTF8, 0, source, len, 0, 0, 0, 0);
 
-		if (bufferlen < u8len) {
+		if (buffer_length < u8_length) {
 			if (buffer) delete buffer;
-			bufferlen = ((u8len / 1024) + 1) * 1024;
-			buffer = new char[bufferlen];
+            buffer_length = ((u8_length / 1024) + 1) * 1024;
+			buffer = new char[buffer_length];
 		}
 
-		WideCharToMultiByte(CP_UTF8, 0, s, len, buffer, bufferlen, 0, 0);
-		std::string u8(buffer, u8len);
+		WideCharToMultiByte(CP_UTF8, 0, source, len, buffer, buffer_length, 0, 0);
+		std::string u8(buffer, u8_length);
 		return u8;
 
 	}
 
+    /** excel -> std::string */
 	static std::string XLOPERToString(LPXLOPER12 x) {
 		return WideStringToUtf8(&(x->val.str[1]), x->val.str[0]);
 	}
 
-	static void StringToXLOPER(LPXLOPER12 x, const std::string &s, bool dllfree = true) {
+    /** std::string -> excel */
+    static void StringToXLOPER(LPXLOPER12 target, const std::string &source, bool flag_dll_free = true) {
 
 		// FIXME: use a static (heap) buffer, and stop deleting it in the autofree routine
 
-		int tlen = MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, 0, 0);
-		WCHAR *wc = new WCHAR[tlen + 2];
-		wc[0] = tlen-1;
-		if (tlen > 0) MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, wc + 1, tlen + 1);
-		x->xltype = xltypeStr;
-		if( dllfree) x->xltype |= xlbitDLLFree;
-		x->val.str = wc;
+        // FIXME: absolutely not. there might be multiple allocated xlopers in flight at 
+        // the same time. if you want more efficiency, think about using a slab allocator.
+
+		int wide_char_count = MultiByteToWideChar(CP_UTF8, 0, source.c_str(), -1, 0, 0);
+
+        // plus one for length. excel doesn't use the zero terminator, but when we call 
+        // MBTWC again (below), it will expect space for it.
+		WCHAR *wide_string = new WCHAR[wide_char_count + 1];
+
+        // set length in WCHAR[0]
+        wide_string[0] = wide_char_count - 1;
+
+        // copy string starting at WCHAR[1]
+		if (wide_char_count > 0) MultiByteToWideChar(CP_UTF8, 0, source.c_str(), -1, wide_string + 1, wide_char_count);
+
+        target->xltype = xltypeStr;
+		if(flag_dll_free ) target->xltype |= xlbitDLLFree;
+        target->val.str = wide_string;
 	}
 
+    /** com -> pb */
     static void VariantToVariable(BERTBuffers::Variable *variable, const CComVariant &variant) {
 
         switch (variant.vt) {
@@ -62,6 +89,14 @@ public:
                 variable->set_str(WideStringToUtf8(string_value.m_str, string_value.Length()));
             }
             break;
+        case VT_ERROR:
+            if (variant.scode == DISP_E_PARAMNOTFOUND) {
+                variable->set_missing(true);
+            }
+            else {
+                variable->mutable_err()->set_message("COM error");
+            }
+            break;
         //case VT_DISPATCH:
         //    variable->set_external_pointer(reinterpret_cast<uint64_t>(variant.pdispVal));
         //    break;
@@ -71,9 +106,7 @@ public:
         
     }
 
-    /**
-     * 
-     */
+    /** pb -> com */
     static CComVariant VariableToVariant(const BERTBuffers::Variable &var) {
 
         // FIXME: array, factor, (frame?), ...
@@ -150,6 +183,7 @@ public:
         return variant;
     }
 
+    /** pb -> excel */
 	static LPXLOPER12 VariableToXLOPER(LPXLOPER12 x, const BERTBuffers::Variable &var) {
 	
 		switch (var.value_case()){
@@ -206,6 +240,7 @@ public:
 		return x; // fluent
 	}
 
+    /** excel -> pb */
 	static BERTBuffers::Variable * XLOPERToVariable(BERTBuffers::Variable *var, LPXLOPER12 x) {
 
 		if (x->xltype & xltypeStr) {

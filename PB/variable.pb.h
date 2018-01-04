@@ -1265,10 +1265,10 @@ class COMFunctionCall : public ::google::protobuf::Message /* @@protoc_insertion
 
   // accessors -------------------------------------------------------
 
-  // repeated .BERTBuffers.Variable arguments = 4;
+  // repeated .BERTBuffers.Variable arguments = 5;
   int arguments_size() const;
   void clear_arguments();
-  static const int kArgumentsFieldNumber = 4;
+  static const int kArgumentsFieldNumber = 5;
   const ::BERTBuffers::Variable& arguments(int index) const;
   ::BERTBuffers::Variable* mutable_arguments(int index);
   ::BERTBuffers::Variable* add_arguments();
@@ -1297,9 +1297,15 @@ class COMFunctionCall : public ::google::protobuf::Message /* @@protoc_insertion
   ::google::protobuf::uint32 pointer() const;
   void set_pointer(::google::protobuf::uint32 value);
 
-  // .BERTBuffers.CallType type = 3;
+  // uint32 index = 3;
+  void clear_index();
+  static const int kIndexFieldNumber = 3;
+  ::google::protobuf::uint32 index() const;
+  void set_index(::google::protobuf::uint32 value);
+
+  // .BERTBuffers.CallType type = 4;
   void clear_type();
-  static const int kTypeFieldNumber = 3;
+  static const int kTypeFieldNumber = 4;
   ::BERTBuffers::CallType type() const;
   void set_type(::BERTBuffers::CallType value);
 
@@ -1310,6 +1316,7 @@ class COMFunctionCall : public ::google::protobuf::Message /* @@protoc_insertion
   ::google::protobuf::RepeatedPtrField< ::BERTBuffers::Variable > arguments_;
   ::google::protobuf::internal::ArenaStringPtr function_;
   ::google::protobuf::uint32 pointer_;
+  ::google::protobuf::uint32 index_;
   int type_;
   mutable int _cached_size_;
   friend struct ::protobuf_variable_2eproto::TableStruct;
@@ -2959,7 +2966,21 @@ inline void COMFunctionCall::set_pointer(::google::protobuf::uint32 value) {
   // @@protoc_insertion_point(field_set:BERTBuffers.COMFunctionCall.pointer)
 }
 
-// .BERTBuffers.CallType type = 3;
+// uint32 index = 3;
+inline void COMFunctionCall::clear_index() {
+  index_ = 0u;
+}
+inline ::google::protobuf::uint32 COMFunctionCall::index() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.COMFunctionCall.index)
+  return index_;
+}
+inline void COMFunctionCall::set_index(::google::protobuf::uint32 value) {
+  
+  index_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.COMFunctionCall.index)
+}
+
+// .BERTBuffers.CallType type = 4;
 inline void COMFunctionCall::clear_type() {
   type_ = 0;
 }
@@ -2973,7 +2994,7 @@ inline void COMFunctionCall::set_type(::BERTBuffers::CallType value) {
   // @@protoc_insertion_point(field_set:BERTBuffers.COMFunctionCall.type)
 }
 
-// repeated .BERTBuffers.Variable arguments = 4;
+// repeated .BERTBuffers.Variable arguments = 5;
 inline int COMFunctionCall::arguments_size() const {
   return arguments_.size();
 }

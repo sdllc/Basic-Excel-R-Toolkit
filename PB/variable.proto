@@ -91,8 +91,9 @@ enum CallType {
 message COMFunctionCall {
 	string function = 1;
     uint32 pointer = 2;
-    CallType type = 3;
-	repeated Variable arguments = 4;
+    uint32 index = 3;
+    CallType type = 4;
+	repeated Variable arguments = 5;
 }
 
 /**

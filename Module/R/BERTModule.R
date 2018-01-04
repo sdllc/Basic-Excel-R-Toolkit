@@ -278,16 +278,16 @@ history <- function( max.show=25, reverse=FALSE, pattern="" ){
 }
 
 #' callback function for handling com calls 
-.DefineCOMFunc <- function( func.name, base.name, func.type, func.args, target.env ){
+.DefineCOMFunc <- function( func.name, base.name, func.type, func.index, func.args, target.env ){
 
 	if( missing( func.args ) || length(func.args) == 0 ){
 		target.env[[func.name]] <- function(...){ 
-      .Call("COMCallback", base.name, func.type, target.env$.p, list(...), PACKAGE="BERTModule" );
+      .Call("COMCallback", base.name, func.type, func.index, target.env$.p, list(...), PACKAGE="BERTModule" );
 		}
 	}
 	else {
 		target.env[[func.name]] <- function(){ 
-			.Call("COMCallback", base.name, func.type, target.env$.p, c(as.list(environment())), PACKAGE="BERTModule" );
+			.Call("COMCallback", base.name, func.type, func.index, target.env$.p, c(as.list(environment())), PACKAGE="BERTModule" );
 		}
 		aexp <- paste( "alist(", paste( sapply( func.args, function(x){ paste( x, "=", sep="" )}), collapse=", " ), ")" );
 		formals(target.env[[func.name]]) <- eval(parse(text=aexp));

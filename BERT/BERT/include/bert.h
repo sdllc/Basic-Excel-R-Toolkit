@@ -8,7 +8,7 @@
 
 #include <unordered_map>
 
-#include "object_mapping.h"
+#include "com_object_map.h"
 
 class CallbackInfo {
 public:
@@ -90,7 +90,7 @@ private:
 
 public:
 	/** mapped functions */
-	FUNCLIST function_list_;
+	FUNCTION_LIST function_list_;
 
 private:
     /** constructors are private (singleton) */
@@ -112,12 +112,6 @@ private:
 
     /** starts the console process. this can be delayed until needed. */
     int StartConsoleProcess();
-
-    /** unframes a PB message */
-    bool UnframeMessage(google::protobuf::Message &message, const char *data, DWORD len);
-
-    /** frames a PB message */
-    std::string FrameMessage(const google::protobuf::Message &message);
 
     /** handles callback functions from R */
     void HandleCallback();

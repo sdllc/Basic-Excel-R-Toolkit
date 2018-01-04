@@ -3,7 +3,7 @@
 #include "stdafx.h"
 #include "variable.pb.h"
 #include "XLCALL.h"
-#include "function_description.h"
+#include "function_descriptor.h"
 #include "bert.h"
 #include "basic_functions.h"
 #include "type_conversions.h"

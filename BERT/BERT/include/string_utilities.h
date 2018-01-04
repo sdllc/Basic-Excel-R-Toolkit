@@ -3,9 +3,14 @@
 #include <string>
 #include <vector>
 
-typedef std::vector<std::string> SVECTOR;
+/**
+ * some string utilities. these have varying semantics based on when they 
+ * were written and what they were written for. 
+ *
+ * FIXME: normalize input/output/return semantics
+ */
+class StringUtilities {
 
-class Util {
 public:
 
 	//
@@ -51,7 +56,7 @@ public:
 		return str.substr(strBegin, strRange);
 	}
 
-	static SVECTOR & Split(const std::string &s, char delim, int minLength, SVECTOR &elems, bool ftrim = false)
+    static std::vector<std::string> &Split(const std::string &s, char delim, int minLength, std::vector<std::string> &elems, bool ftrim = false)
 	{
 		std::stringstream ss(s);
 		std::string item;

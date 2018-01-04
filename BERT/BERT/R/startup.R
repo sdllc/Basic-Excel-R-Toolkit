@@ -26,7 +26,7 @@ with( BERT, {
             name <- method$name;
             if( method$type == "get" ){ name <- paste0( "get_", name ); }
             if( method$type == "put" ){ name <- paste0( "put_", name ); }
-            BERTModule:::.DefineCOMFunc( name, method$name, func.type=method$type, func.args=unlist(method$arguments), target.env=env );
+            BERTModule:::.DefineCOMFunc( name, method$name, func.type=method$type, func.index=method$index, func.args=unlist(method$arguments), target.env=env );
         });
         return(env);
     }
@@ -34,15 +34,6 @@ with( BERT, {
     install.application.pointer <- function(key, descriptor){
 
         excel.env <- new.env();
-
-        #env <- BERTModule:::.WrapDispatch2(key, descriptor$interface );
-
-        #lapply( descriptor$functions, function(method){
-        #    name <- method$name;
-        #    if( method$type == "get" ){ name <- paste0( "get_", name ); }
-        #    if( method$type == "put" ){ name <- paste0( "put_", name ); }
-        #    BERTModule:::.DefineCOMFunc( name, method$name, func.type=method$type, func.args=unlist(method$arguments), target.env=env );
-        #});
 
         assign( "Application", install.com.pointer(key, descriptor), envir=excel.env);
 

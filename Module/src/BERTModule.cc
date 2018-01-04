@@ -49,7 +49,7 @@
 
 using namespace std;
 
-typedef SEXP COM_CALLBACK_FN( SEXP, SEXP, SEXP, SEXP );
+typedef SEXP COM_CALLBACK_FN( SEXP, SEXP, SEXP, SEXP, SEXP );
 typedef SEXP CALLBACK_FN( int, void*, void* );
 
 // new style
@@ -173,9 +173,9 @@ SEXP InstallPointer(SEXP key){
   return pointer;
 }
 
-SEXP BERTModule_COM_Callback( SEXP name, SEXP calltype, SEXP p, SEXP args ){
+SEXP BERTModule_COM_Callback( SEXP name, SEXP calltype, SEXP index, SEXP p, SEXP args ){
   static COM_CALLBACK_FN *fn = (COM_CALLBACK_FN*)R_GetCCallable( "BERTControlR", "COMCallback" );
-  if( fn ) return fn( name, calltype, p, args );
+  if( fn ) return fn( name, calltype, index, p, args );
   else return R_NilValue;
 }
 
@@ -218,7 +218,7 @@ extern "C" {
             { "history", (DL_FUNC)&BERTModule_history, 1},
             { "InstallPointer", (DL_FUNC)&InstallPointer, 1},
             { "Callback", (DL_FUNC)&BERTModule_Callback, 2},
-            { "COMCallback", (DL_FUNC)&BERTModule_COM_Callback, 4},
+            { "COMCallback", (DL_FUNC)&BERTModule_COM_Callback, 5},
             { "close_console", (DL_FUNC)&BERTModule_close_console, 0},
             { NULL, NULL, 0 }
         };

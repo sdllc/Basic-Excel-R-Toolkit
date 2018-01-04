@@ -73,7 +73,7 @@
 
 SEXP ExternalCallback(int, void*, void *);
 SEXP RCallback(SEXP, SEXP);
-SEXP COMCallback(SEXP, SEXP, SEXP, SEXP);
+SEXP COMCallback(SEXP, SEXP, SEXP, SEXP, SEXP);
 
 #endif // #ifndef __CONTROLR_COMMON_H
 

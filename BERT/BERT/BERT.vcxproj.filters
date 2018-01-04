@@ -37,13 +37,7 @@
     <ClInclude Include="include\windows_api_functions.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\utility_functions.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="include\type_conversions.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\function_description.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\basic_functions.h">
@@ -52,10 +46,19 @@
     <ClInclude Include="include\bert_version.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\excel_com_types.h">
+    <ClInclude Include="include\com_object_map.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\object_mapping.h">
+    <ClInclude Include="include\function_descriptor.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\excel_com_type_libraries.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\string_utilities.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\message_utilities.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
@@ -93,6 +96,9 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="src\basic_functions.cc">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\com_object_map.cc">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
