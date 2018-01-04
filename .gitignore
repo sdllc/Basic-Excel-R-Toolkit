@@ -1,0 +1,6 @@
+
+# folders have local .gitignore files for the various relevant types.
+# this top-level folder is just for R module build artifacts
+
+BERTModule_*.gz
+
