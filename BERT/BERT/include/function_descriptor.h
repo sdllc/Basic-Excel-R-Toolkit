@@ -1,9 +1,9 @@
 #pragma once
 
 /**
-* class representing a function argument: name, description, default value.
-* FIXME: type?
-*/
+ * class representing a function argument: name, description, default value.
+ * FIXME: type?
+ */
 class ArgumentDescriptor {
 public:
     std::string name;
@@ -42,30 +42,28 @@ public:
 	 * this ID is assigned when we call xlfRegister, and we need to keep
 	 * it around to call xlfUnregister if we are rebuilding the functions.
 	 */
-	int32_t registerID;
+	int32_t register_id;
 
 public:
 	FunctionDescriptor(const std::string &name = "", const std::string &category = "", const std::string &description = "", const ARGUMENT_LIST &args = {})
 		: name(name)
 		, category(category)
 		, description(description)
-		, registerID(0)
+		, register_id(0)
 	{
 		for (auto arg : args) arguments.push_back(arg);
-		std::cout << "fd ctro" << std::endl;
 	}
 
 	~FunctionDescriptor() {
-		std::cout << "~fd" << std::endl;
-	}
+        // ...
+    }
 
 	FunctionDescriptor(const FunctionDescriptor &rhs) {
 		name = rhs.name;
 		category = rhs.category;
 		description = rhs.description;
-		registerID = rhs.registerID;
+		register_id = rhs.register_id;
 		for (auto arg : rhs.arguments) arguments.push_back(arg);
-		std::cout << "fd cc" << std::endl;
 	}
 };
 

@@ -26,6 +26,7 @@
     <ClCompile Include="rinterface_win.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\PB\message_utilities.h" />
     <ClInclude Include="..\PB\variable.pb.h" />
     <ClInclude Include="console_message.h" />
     <ClInclude Include="controlr.hpp" />
@@ -110,7 +111,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);WIN32;_WIN32</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\PB;E:\BERT2\protobuf-3.5.0\src;E:\BERT\R-3.4.1\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\PB;..\..\protobuf-3.5.0\src;E:\BERT\R-3.4.1\include</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4146</DisableSpecificWarnings>
     </ClCompile>
     <Link>

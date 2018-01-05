@@ -186,11 +186,12 @@ SEXP RCallSEXP(const BERTBuffers::FunctionCall &fc, bool wait, int &err) {
     
 }
 
-//BERTBuffers::Response& RCall(BERTBuffers::Response &rsp, const BERTBuffers::Call &call) {
-BERTBuffers::Response& RCall(BERTBuffers::Response &rsp, const BERTBuffers::FunctionCall &fc, bool wait) {
+BERTBuffers::CallResponse& RCall(BERTBuffers::CallResponse &rsp, const BERTBuffers::CallResponse &call) {
 
     int err = 0;
-    SEXP result = PROTECT(RCallSEXP(fc, wait, err));
+    bool wait = call.wait();
+
+    SEXP result = PROTECT(RCallSEXP(call.function_call(), wait, err));
 
 	if (err) {
 		rsp.set_err("parse error");
@@ -198,14 +199,14 @@ BERTBuffers::Response& RCall(BERTBuffers::Response &rsp, const BERTBuffers::Func
 	else
 	{
 		// we don't need to convert the result if we are not going to send it
-		if(wait) SEXPToVariable(rsp.mutable_value(), result);
+		if(wait) SEXPToVariable(rsp.mutable_result(), result);
 	}
 	UNPROTECT(1);
 
 	return rsp;
 }
 
-BERTBuffers::Response& RExec(BERTBuffers::Response &rsp, const BERTBuffers::Call &call) {
+BERTBuffers::CallResponse& RExec(BERTBuffers::CallResponse &rsp, const BERTBuffers::CallResponse &call) {
 
 	auto code = call.code();
 	int count = code.line_size();
@@ -213,7 +214,7 @@ BERTBuffers::Response& RExec(BERTBuffers::Response &rsp, const BERTBuffers::Call
 	ParseStatus ps;
 
 	if (count == 0) {
-		auto val = rsp.mutable_value();
+		auto val = rsp.mutable_result();
 		val->set_num(0);
 		return rsp;
 	}
@@ -237,7 +238,7 @@ BERTBuffers::Response& RExec(BERTBuffers::Response &rsp, const BERTBuffers::Call
 			result = R_tryEval(cmd, R_GlobalEnv, &err);
 		}
 		if (err) rsp.set_err("R error");
-		else if (call.wait()) SEXPToVariable(rsp.mutable_value(), result);
+		else if (call.wait()) SEXPToVariable(rsp.mutable_result(), result);
 	}
 
 	UNPROTECT(2);
@@ -375,7 +376,7 @@ void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector < SEXP > 
 
 }
 
-extern bool Callback(const BERTBuffers::Call &call, BERTBuffers::Response &response);
+extern bool Callback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response);
 
 SEXP COMCallback(SEXP function_name, SEXP call_type, SEXP index, SEXP pointer_key, SEXP arguments) {
 
@@ -390,8 +391,8 @@ SEXP COMCallback(SEXP function_name, SEXP call_type, SEXP index, SEXP pointer_ke
         
     if (!string_name.length()) return R_NilValue;
 
-    BERTBuffers::Call *call = new BERTBuffers::Call;
-    BERTBuffers::Response *response = new BERTBuffers::Response;
+    BERTBuffers::CallResponse *call = new BERTBuffers::CallResponse;
+    BERTBuffers::CallResponse *response = new BERTBuffers::CallResponse;
 
     call->set_id(callback_id);
     call->set_wait(true);
@@ -431,14 +432,11 @@ SEXP COMCallback(SEXP function_name, SEXP call_type, SEXP index, SEXP pointer_ke
     bool success = Callback(*call, *response);
 
     if (success) {
-        if (response->result_case() == BERTBuffers::Response::ResultCase::kCallback) {
-            //BERTBuffers::Response *response2 = new BERTBuffers::Response;
-            //RCall(*response2, response->callback(), true);
-            //sexp_result = VariableToSEXP(response2->value());
+        if (response->operation_case() == BERTBuffers::CallResponse::OperationCase::kFunctionCall) {
             int err = 0;
-            sexp_result = RCallSEXP(response->callback(), true, err);
+            sexp_result = RCallSEXP(response->function_call(), true, err);
         }
-        else sexp_result = VariableToSEXP(response->value());
+        else sexp_result = VariableToSEXP(response->result());
     }
 
     delete call;
@@ -469,12 +467,12 @@ SEXP RCallback(SEXP command, SEXP data) {
         return R_NilValue;
     }
 
-    BERTBuffers::Call *call = new BERTBuffers::Call;
-    BERTBuffers::Response *response = new BERTBuffers::Response;
+    BERTBuffers::CallResponse *call = new BERTBuffers::CallResponse;
+    BERTBuffers::CallResponse *response = new BERTBuffers::CallResponse;
 
     call->set_id(callback_id);
     call->set_wait(true);
-    auto callback = call->mutable_callback();
+    auto callback = call->mutable_function_call();
     callback->set_function(string_command);
 
     if(data) SEXPToVariable(callback->add_arguments(), reinterpret_cast<SEXP>(data));
@@ -483,7 +481,7 @@ SEXP RCallback(SEXP command, SEXP data) {
 
     // cout << "callback (2) complete (" << success << ")" << endl;
 
-    if (success) sexp_result = VariableToSEXP(response->value());
+    if (success) sexp_result = VariableToSEXP(response->result());
 
     delete call;
     delete response;
@@ -506,15 +504,12 @@ SEXP ExternalCallback(int command_id, void* a, void* b) {
     std::stringstream ss;
     ss << command_id;
 
-    //BERTBuffers::Call call;
-    //BERTBuffers::Response response;
-
-    BERTBuffers::Call *call = new BERTBuffers::Call;
-    BERTBuffers::Response *response = new BERTBuffers::Response;
+    BERTBuffers::CallResponse *call = new BERTBuffers::CallResponse;
+    BERTBuffers::CallResponse *response = new BERTBuffers::CallResponse;
 
     call->set_id(callback_id);
     call->set_wait(true);
-    auto callback = call->mutable_callback();
+    auto callback = call->mutable_function_call();
     callback->set_function(ss.str());
 
     // allow two arguments but not null, argument
@@ -527,7 +522,7 @@ SEXP ExternalCallback(int command_id, void* a, void* b) {
 
     // cout << "callback complete (" << success << ")" << endl;
 
-    if(success) sexp_result = VariableToSEXP(response->value());
+    if(success) sexp_result = VariableToSEXP(response->result());
 
 
     delete call;

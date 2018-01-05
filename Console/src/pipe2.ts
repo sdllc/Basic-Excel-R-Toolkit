@@ -27,10 +27,10 @@ export class Pipe2 {
    */
   SendMessage(message){
 
-    let call = new messages.Call();
+    let call = new messages.CallResponse();
     call.setId(this.transaction_id_++);
     call.setWait(false);
-    call.setSystemCommand(message);
+    call.setControlMessage(message);
 
     console.info(JSON.stringify(call.toObject(), undefined, 2));
 

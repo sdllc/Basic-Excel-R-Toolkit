@@ -16,8 +16,12 @@ let node = document.getElementById('terminal');
 
 let autocomplete_callback = function(buffer:string, position:number){
   return new Promise<any>((resolve, reject) => {
+
+    // dev // return resolve(null);
+
     buffer = buffer.replace( /\\/g, '\\\\').replace( '"', '\\"' );
     R.Internal(`BERTModule:::.Autocomplete("${buffer}",${position})`).then(x => resolve(x));
+
   });
 }
 

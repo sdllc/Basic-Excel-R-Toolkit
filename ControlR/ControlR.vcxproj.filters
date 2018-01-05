@@ -53,6 +53,9 @@
     <ClInclude Include="util.hpp">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\PB\message_utilities.h">
+      <Filter>PB</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\PB\variable.proto">

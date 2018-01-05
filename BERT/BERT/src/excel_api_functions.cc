@@ -39,13 +39,13 @@ void resetXlOper(LPXLOPER12 x)
 
 void UnregisterFunctions() {
 
-	XLOPER12 xlRegisterID;
+	XLOPER12 register_id;
 	BERT *bert = BERT::Instance();
 	for (auto entry : bert->function_list_) {
-		xlRegisterID.xltype = xltypeNum;
-		xlRegisterID.val.num = entry->registerID;
-		Excel12(xlfUnregister, 0, 1, &xlRegisterID);
-		entry->registerID = 0;
+        register_id.xltype = xltypeNum;
+        register_id.val.num = entry->register_id;
+		Excel12(xlfUnregister, 0, 1, &register_id);
+		entry->register_id = 0;
 	}
 }
 
@@ -98,7 +98,7 @@ void RegisterFunctions() {
 
 		xlRegisterID.xltype = xltypeMissing;
 		err = Excel12v(xlfRegister, &xlRegisterID, 16, xlParm);
-		entry->registerID = xlRegisterID.val.num;
+		entry->register_id = xlRegisterID.val.num;
 		Excel12(xlFree, 0, 1, &xlRegisterID);
 
 		for (int i = 1; i < 32; i++) {
@@ -114,65 +114,50 @@ void RegisterFunctions() {
 
 bool RegisterBasicFunctions()
 {
-	LPXLOPER12 xlParm[32];
-	XLOPER12 xlRegisterID;
+    int err;
+    XLOPER12 register_id;
+    std::vector<LPXLOPER12> arguments;
 
-	int err;
-	static bool fRegisteredOnce = false; // not used?
+    // here we're assuming that all strings are < 255 characters.
+    // these are the static strings defined in the header, not 
+    // anything user-defined.
 
-	char szHelpBuffer[512] = " ";
-	bool fExcel12 = false;
+    const int max_string_length = 256;
 
-	// init memory
+    for (int i = 0; i < 16; i++) arguments.push_back(new XLOPER12);
+    for (int i = 1; i < 16; i++) {
+        arguments[i]->xltype = xltypeStr;
+        arguments[i]->val.str = new XCHAR[max_string_length];
+    }
 
-	for (int i = 0; i< 32; i++) xlParm[i] = new XLOPER12;
+	// get the library; store as the first argument
 
-	// get the library; store as the first entry in our parameter list
-
-	Excel12(xlGetName, xlParm[0], 0);
+	Excel12(xlGetName, arguments[0], 0);
 
 	for (int i = 0; funcTemplates[i][0]; i++)
 	{
 		for (int j = 0; j < 15; j++)
 		{
 			int len = wcslen(funcTemplates[i][j]);
-			xlParm[j + 1]->xltype = xltypeStr;
-			xlParm[j + 1]->val.str = new XCHAR[len + 2];
+            assert(len < (max_string_length-1));
 
-			// strcpy_s(xlParm[j + 1]->val.str + 1, len + 1, funcTemplates[i][j]);
-			// for (int k = 0; k < len; k++) xlParm[j + 1]->val.str[k + 1] = funcTemplates[i][j][k];
-
-			wcscpy_s(&(xlParm[j + 1]->val.str[1]), len + 1, funcTemplates[i][j]);
-
-			xlParm[j + 1]->val.str[0] = len;
+			wcscpy_s(&(arguments[j + 1]->val.str[1]), max_string_length-1, funcTemplates[i][j]);
+			arguments[j + 1]->val.str[0] = len;
 		}
 
-		xlRegisterID.xltype = xltypeMissing;
-		err = Excel12v(xlfRegister, &xlRegisterID, 16, xlParm);
-
-		Excel12(xlFree, 0, 1, &xlRegisterID);
-
-		for (int j = 0; j < 15; j++)
-		{
-			delete[] xlParm[j + 1]->val.str;
-		}
-
+        register_id.xltype = xltypeMissing;
+		err = Excel12v(xlfRegister, &register_id, 16, &(arguments[0]));
+		Excel12(xlFree, 0, 1, &register_id);
 	}
 
-	// clean up (don't forget to free the retrieved dll xloper in parm 0)
+	Excel12(xlFree, 0, 1, arguments[0]);
 
-	Excel12(xlFree, 0, 1, xlParm[0]);
+    for (int i = 1; i < 16; i++) {
+        delete [] arguments[i]->val.str;
+    }
+    
+    for (auto argument : arguments) delete argument;
 
-	for (int i = 0; i< 32; i++) delete xlParm[i];
-
-
-	// debugLogf("Exit registerAddinFunctions\n");
-
-	// set state and return
-
-	// CRASHER for crash (recovery) testing // Excel12( xlFree, 0, 1, 1000 );
-
-	fRegisteredOnce = true;
 	return true;
 }
 

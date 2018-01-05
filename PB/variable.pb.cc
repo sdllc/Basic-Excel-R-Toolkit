@@ -70,17 +70,6 @@ class COMFunctionCallDefaultTypeInternal {
   ::google::protobuf::internal::ExplicitlyConstructed<COMFunctionCall>
       _instance;
 } _COMFunctionCall_default_instance_;
-class CallDefaultTypeInternal {
- public:
-  ::google::protobuf::internal::ExplicitlyConstructed<Call>
-      _instance;
-  ::google::protobuf::internal::ArenaStringPtr system_command_;
-  const ::BERTBuffers::FunctionCall* function_call_;
-  const ::BERTBuffers::Code* code_;
-  ::google::protobuf::internal::ArenaStringPtr shell_command_;
-  const ::BERTBuffers::FunctionCall* callback_;
-  const ::BERTBuffers::COMFunctionCall* com_callback_;
-} _Call_default_instance_;
 class ConsoleDefaultTypeInternal {
  public:
   ::google::protobuf::internal::ExplicitlyConstructed<Console>
@@ -89,16 +78,19 @@ class ConsoleDefaultTypeInternal {
   ::google::protobuf::internal::ArenaStringPtr err_;
   ::google::protobuf::internal::ArenaStringPtr prompt_;
 } _Console_default_instance_;
-class ResponseDefaultTypeInternal {
+class CallResponseDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<Response>
+  ::google::protobuf::internal::ExplicitlyConstructed<CallResponse>
       _instance;
   ::google::protobuf::internal::ArenaStringPtr err_;
-  const ::BERTBuffers::Variable* value_;
+  const ::BERTBuffers::Variable* result_;
   const ::BERTBuffers::Console* console_;
+  const ::BERTBuffers::Code* code_;
+  ::google::protobuf::internal::ArenaStringPtr shell_command_;
   ::google::protobuf::internal::ArenaStringPtr control_message_;
-  const ::BERTBuffers::FunctionCall* callback_;
-} _Response_default_instance_;
+  const ::BERTBuffers::FunctionCall* function_call_;
+  const ::BERTBuffers::COMFunctionCall* com_callback_;
+} _CallResponse_default_instance_;
 }  // namespace BERTBuffers
 namespace protobuf_variable_2eproto {
 void InitDefaultsComplexImpl() {
@@ -259,30 +251,6 @@ void InitDefaultsCOMFunctionCall() {
   ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsCOMFunctionCallImpl);
 }
 
-void InitDefaultsCallImpl() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-#ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-  ::google::protobuf::internal::InitProtobufDefaultsForceUnique();
-#else
-  ::google::protobuf::internal::InitProtobufDefaults();
-#endif  // GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-  protobuf_variable_2eproto::InitDefaultsFunctionCall();
-  protobuf_variable_2eproto::InitDefaultsCode();
-  protobuf_variable_2eproto::InitDefaultsCOMFunctionCall();
-  {
-    void* ptr = &::BERTBuffers::_Call_default_instance_;
-    new (ptr) ::BERTBuffers::Call();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::BERTBuffers::Call::InitAsDefaultInstance();
-}
-
-void InitDefaultsCall() {
-  static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
-  ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsCallImpl);
-}
-
 void InitDefaultsConsoleImpl() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
@@ -304,7 +272,7 @@ void InitDefaultsConsole() {
   ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsConsoleImpl);
 }
 
-void InitDefaultsResponseImpl() {
+void InitDefaultsCallResponseImpl() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
 #ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
@@ -314,22 +282,24 @@ void InitDefaultsResponseImpl() {
 #endif  // GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
   protobuf_variable_2eproto::InitDefaultsArray();
   protobuf_variable_2eproto::InitDefaultsConsole();
+  protobuf_variable_2eproto::InitDefaultsCode();
   protobuf_variable_2eproto::InitDefaultsFunctionCall();
+  protobuf_variable_2eproto::InitDefaultsCOMFunctionCall();
   {
-    void* ptr = &::BERTBuffers::_Response_default_instance_;
-    new (ptr) ::BERTBuffers::Response();
+    void* ptr = &::BERTBuffers::_CallResponse_default_instance_;
+    new (ptr) ::BERTBuffers::CallResponse();
     ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
   }
-  ::BERTBuffers::Response::InitAsDefaultInstance();
+  ::BERTBuffers::CallResponse::InitAsDefaultInstance();
 }
 
-void InitDefaultsResponse() {
+void InitDefaultsCallResponse() {
   static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
-  ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsResponseImpl);
+  ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsCallResponseImpl);
 }
 
-::google::protobuf::Metadata file_level_metadata[11];
-const ::google::protobuf::EnumDescriptor* file_level_enum_descriptors[3];
+::google::protobuf::Metadata file_level_metadata[10];
+const ::google::protobuf::EnumDescriptor* file_level_enum_descriptors[2];
 
 const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
   ~0u,  // no _has_bits_
@@ -407,20 +377,6 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::COMFunctionCall, type_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::COMFunctionCall, arguments_),
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::Call, _internal_metadata_),
-  ~0u,  // no _extensions_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::Call, _oneof_case_[0]),
-  ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::Call, id_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::Call, wait_),
-  offsetof(::BERTBuffers::CallDefaultTypeInternal, system_command_),
-  offsetof(::BERTBuffers::CallDefaultTypeInternal, function_call_),
-  offsetof(::BERTBuffers::CallDefaultTypeInternal, code_),
-  offsetof(::BERTBuffers::CallDefaultTypeInternal, shell_command_),
-  offsetof(::BERTBuffers::CallDefaultTypeInternal, callback_),
-  offsetof(::BERTBuffers::CallDefaultTypeInternal, com_callback_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::Call, call_),
-  ~0u,  // no _has_bits_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::Console, _internal_metadata_),
   ~0u,  // no _extensions_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::Console, _oneof_case_[0]),
@@ -430,17 +386,21 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   offsetof(::BERTBuffers::ConsoleDefaultTypeInternal, prompt_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::Console, message_),
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::Response, _internal_metadata_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::CallResponse, _internal_metadata_),
   ~0u,  // no _extensions_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::Response, _oneof_case_[0]),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::CallResponse, _oneof_case_[0]),
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::Response, id_),
-  offsetof(::BERTBuffers::ResponseDefaultTypeInternal, err_),
-  offsetof(::BERTBuffers::ResponseDefaultTypeInternal, value_),
-  offsetof(::BERTBuffers::ResponseDefaultTypeInternal, console_),
-  offsetof(::BERTBuffers::ResponseDefaultTypeInternal, control_message_),
-  offsetof(::BERTBuffers::ResponseDefaultTypeInternal, callback_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::Response, result_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::CallResponse, id_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::CallResponse, wait_),
+  offsetof(::BERTBuffers::CallResponseDefaultTypeInternal, err_),
+  offsetof(::BERTBuffers::CallResponseDefaultTypeInternal, result_),
+  offsetof(::BERTBuffers::CallResponseDefaultTypeInternal, console_),
+  offsetof(::BERTBuffers::CallResponseDefaultTypeInternal, code_),
+  offsetof(::BERTBuffers::CallResponseDefaultTypeInternal, shell_command_),
+  offsetof(::BERTBuffers::CallResponseDefaultTypeInternal, control_message_),
+  offsetof(::BERTBuffers::CallResponseDefaultTypeInternal, function_call_),
+  offsetof(::BERTBuffers::CallResponseDefaultTypeInternal, com_callback_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::CallResponse, operation_),
 };
 static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
   { 0, -1, sizeof(::BERTBuffers::Complex)},
@@ -451,9 +411,8 @@ static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROT
   { 51, -1, sizeof(::BERTBuffers::Code)},
   { 57, -1, sizeof(::BERTBuffers::FunctionCall)},
   { 64, -1, sizeof(::BERTBuffers::COMFunctionCall)},
-  { 74, -1, sizeof(::BERTBuffers::Call)},
-  { 88, -1, sizeof(::BERTBuffers::Console)},
-  { 97, -1, sizeof(::BERTBuffers::Response)},
+  { 74, -1, sizeof(::BERTBuffers::Console)},
+  { 83, -1, sizeof(::BERTBuffers::CallResponse)},
 };
 
 static ::google::protobuf::Message const * const file_default_instances[] = {
@@ -465,9 +424,8 @@ static ::google::protobuf::Message const * const file_default_instances[] = {
   reinterpret_cast<const ::google::protobuf::Message*>(&::BERTBuffers::_Code_default_instance_),
   reinterpret_cast<const ::google::protobuf::Message*>(&::BERTBuffers::_FunctionCall_default_instance_),
   reinterpret_cast<const ::google::protobuf::Message*>(&::BERTBuffers::_COMFunctionCall_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::BERTBuffers::_Call_default_instance_),
   reinterpret_cast<const ::google::protobuf::Message*>(&::BERTBuffers::_Console_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::BERTBuffers::_Response_default_instance_),
+  reinterpret_cast<const ::google::protobuf::Message*>(&::BERTBuffers::_CallResponse_default_instance_),
 };
 
 void protobuf_AssignDescriptors() {
@@ -486,7 +444,7 @@ void protobuf_AssignDescriptorsOnce() {
 void protobuf_RegisterTypes(const ::std::string&) GOOGLE_PROTOBUF_ATTRIBUTE_COLD;
 void protobuf_RegisterTypes(const ::std::string&) {
   protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::internal::RegisterAllTypes(file_level_metadata, 11);
+  ::google::protobuf::internal::RegisterAllTypes(file_level_metadata, 10);
 }
 
 void AddDescriptorsImpl() {
@@ -514,29 +472,24 @@ void AddDescriptorsImpl() {
       "onCall\022\020\n\010function\030\001 \001(\t\022\017\n\007pointer\030\002 \001("
       "\r\022\r\n\005index\030\003 \001(\r\022#\n\004type\030\004 \001(\0162\025.BERTBuf"
       "fers.CallType\022(\n\targuments\030\005 \003(\0132\025.BERTB"
-      "uffers.Variable\"\227\002\n\004Call\022\n\n\002id\030\001 \001(\r\022\014\n\004"
-      "wait\030\002 \001(\010\022\030\n\016system_command\030\003 \001(\tH\000\0222\n\r"
-      "function_call\030\004 \001(\0132\031.BERTBuffers.Functi"
-      "onCallH\000\022!\n\004code\030\005 \001(\0132\021.BERTBuffers.Cod"
-      "eH\000\022\027\n\rshell_command\030\006 \001(\tH\000\022-\n\010callback"
-      "\030\007 \001(\0132\031.BERTBuffers.FunctionCallH\000\0224\n\014c"
-      "om_callback\030\010 \001(\0132\034.BERTBuffers.COMFunct"
-      "ionCallH\000B\006\n\004call\"E\n\007Console\022\016\n\004text\030\001 \001"
-      "(\tH\000\022\r\n\003err\030\002 \001(\tH\000\022\020\n\006prompt\030\003 \001(\tH\000B\t\n"
-      "\007message\"\312\001\n\010Response\022\n\n\002id\030\001 \001(\r\022\r\n\003err"
-      "\030\002 \001(\tH\000\022&\n\005value\030\003 \001(\0132\025.BERTBuffers.Va"
-      "riableH\000\022\'\n\007console\030\004 \001(\0132\024.BERTBuffers."
-      "ConsoleH\000\022\031\n\017control_message\030\005 \001(\tH\000\022-\n\010"
-      "callback\030\006 \001(\0132\031.BERTBuffers.FunctionCal"
-      "lH\000B\010\n\006result*I\n\004Type\022\007\n\003NIL\020\000\022\n\n\006STRING"
-      "\020\001\022\n\n\006NUMBER\020\002\022\010\n\004BOOL\020\003\022\013\n\007COMPLEX\020\004\022\t\n"
-      "\005ARRAY\020\005*C\n\tErrorType\022\013\n\007GENERIC\020\000\022\006\n\002NA"
-      "\020\001\022\007\n\003INF\020\002\022\t\n\005PARSE\020\003\022\r\n\tEXECUTION\020\004*7\n"
-      "\010CallType\022\r\n\tundefined\020\000\022\007\n\003get\020\001\022\007\n\003put"
-      "\020\002\022\n\n\006method\020\003B\002H\001b\006proto3"
+      "uffers.Variable\"E\n\007Console\022\016\n\004text\030\001 \001(\t"
+      "H\000\022\r\n\003err\030\002 \001(\tH\000\022\020\n\006prompt\030\003 \001(\tH\000B\t\n\007m"
+      "essage\"\327\002\n\014CallResponse\022\n\n\002id\030\001 \001(\r\022\014\n\004w"
+      "ait\030\002 \001(\010\022\r\n\003err\030\003 \001(\tH\000\022\'\n\006result\030\004 \001(\013"
+      "2\025.BERTBuffers.VariableH\000\022\'\n\007console\030\005 \001"
+      "(\0132\024.BERTBuffers.ConsoleH\000\022!\n\004code\030\006 \001(\013"
+      "2\021.BERTBuffers.CodeH\000\022\027\n\rshell_command\030\007"
+      " \001(\tH\000\022\031\n\017control_message\030\010 \001(\tH\000\0222\n\rfun"
+      "ction_call\030\t \001(\0132\031.BERTBuffers.FunctionC"
+      "allH\000\0224\n\014com_callback\030\n \001(\0132\034.BERTBuffer"
+      "s.COMFunctionCallH\000B\013\n\toperation*N\n\tErro"
+      "rType\022\013\n\007GENERIC\020\000\022\006\n\002NA\020\001\022\007\n\003INF\020\002\022\t\n\005P"
+      "ARSE\020\003\022\r\n\tEXECUTION\020\004\022\t\n\005OTHER\020\017*7\n\010Call"
+      "Type\022\r\n\tundefined\020\000\022\007\n\003get\020\001\022\007\n\003put\020\002\022\n\n"
+      "\006method\020\003B\002H\001b\006proto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 1666);
+      descriptor, 1461);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "variable.proto", &protobuf_RegisterTypes);
 }
@@ -553,27 +506,9 @@ struct StaticDescriptorInitializer {
 } static_descriptor_initializer;
 }  // namespace protobuf_variable_2eproto
 namespace BERTBuffers {
-const ::google::protobuf::EnumDescriptor* Type_descriptor() {
-  protobuf_variable_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_variable_2eproto::file_level_enum_descriptors[0];
-}
-bool Type_IsValid(int value) {
-  switch (value) {
-    case 0:
-    case 1:
-    case 2:
-    case 3:
-    case 4:
-    case 5:
-      return true;
-    default:
-      return false;
-  }
-}
-
 const ::google::protobuf::EnumDescriptor* ErrorType_descriptor() {
   protobuf_variable_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_variable_2eproto::file_level_enum_descriptors[1];
+  return protobuf_variable_2eproto::file_level_enum_descriptors[0];
 }
 bool ErrorType_IsValid(int value) {
   switch (value) {
@@ -582,6 +517,7 @@ bool ErrorType_IsValid(int value) {
     case 2:
     case 3:
     case 4:
+    case 15:
       return true;
     default:
       return false;
@@ -590,7 +526,7 @@ bool ErrorType_IsValid(int value) {
 
 const ::google::protobuf::EnumDescriptor* CallType_descriptor() {
   protobuf_variable_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_variable_2eproto::file_level_enum_descriptors[2];
+  return protobuf_variable_2eproto::file_level_enum_descriptors[1];
 }
 bool CallType_IsValid(int value) {
   switch (value) {
@@ -3769,680 +3705,6 @@ void COMFunctionCall::InternalSwap(COMFunctionCall* other) {
 
 // ===================================================================
 
-void Call::InitAsDefaultInstance() {
-  ::BERTBuffers::_Call_default_instance_.system_command_.UnsafeSetDefault(
-      &::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  ::BERTBuffers::_Call_default_instance_.function_call_ = const_cast< ::BERTBuffers::FunctionCall*>(
-      ::BERTBuffers::FunctionCall::internal_default_instance());
-  ::BERTBuffers::_Call_default_instance_.code_ = const_cast< ::BERTBuffers::Code*>(
-      ::BERTBuffers::Code::internal_default_instance());
-  ::BERTBuffers::_Call_default_instance_.shell_command_.UnsafeSetDefault(
-      &::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  ::BERTBuffers::_Call_default_instance_.callback_ = const_cast< ::BERTBuffers::FunctionCall*>(
-      ::BERTBuffers::FunctionCall::internal_default_instance());
-  ::BERTBuffers::_Call_default_instance_.com_callback_ = const_cast< ::BERTBuffers::COMFunctionCall*>(
-      ::BERTBuffers::COMFunctionCall::internal_default_instance());
-}
-void Call::set_allocated_function_call(::BERTBuffers::FunctionCall* function_call) {
-  ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
-  clear_call();
-  if (function_call) {
-    ::google::protobuf::Arena* submessage_arena = NULL;
-    if (message_arena != submessage_arena) {
-      function_call = ::google::protobuf::internal::GetOwnedMessage(
-          message_arena, function_call, submessage_arena);
-    }
-    set_has_function_call();
-    call_.function_call_ = function_call;
-  }
-  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.Call.function_call)
-}
-void Call::set_allocated_code(::BERTBuffers::Code* code) {
-  ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
-  clear_call();
-  if (code) {
-    ::google::protobuf::Arena* submessage_arena = NULL;
-    if (message_arena != submessage_arena) {
-      code = ::google::protobuf::internal::GetOwnedMessage(
-          message_arena, code, submessage_arena);
-    }
-    set_has_code();
-    call_.code_ = code;
-  }
-  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.Call.code)
-}
-void Call::set_allocated_callback(::BERTBuffers::FunctionCall* callback) {
-  ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
-  clear_call();
-  if (callback) {
-    ::google::protobuf::Arena* submessage_arena = NULL;
-    if (message_arena != submessage_arena) {
-      callback = ::google::protobuf::internal::GetOwnedMessage(
-          message_arena, callback, submessage_arena);
-    }
-    set_has_callback();
-    call_.callback_ = callback;
-  }
-  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.Call.callback)
-}
-void Call::set_allocated_com_callback(::BERTBuffers::COMFunctionCall* com_callback) {
-  ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
-  clear_call();
-  if (com_callback) {
-    ::google::protobuf::Arena* submessage_arena = NULL;
-    if (message_arena != submessage_arena) {
-      com_callback = ::google::protobuf::internal::GetOwnedMessage(
-          message_arena, com_callback, submessage_arena);
-    }
-    set_has_com_callback();
-    call_.com_callback_ = com_callback;
-  }
-  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.Call.com_callback)
-}
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int Call::kIdFieldNumber;
-const int Call::kWaitFieldNumber;
-const int Call::kSystemCommandFieldNumber;
-const int Call::kFunctionCallFieldNumber;
-const int Call::kCodeFieldNumber;
-const int Call::kShellCommandFieldNumber;
-const int Call::kCallbackFieldNumber;
-const int Call::kComCallbackFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
-
-Call::Call()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
-    ::protobuf_variable_2eproto::InitDefaultsCall();
-  }
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:BERTBuffers.Call)
-}
-Call::Call(const Call& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL),
-      _cached_size_(0) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::memcpy(&id_, &from.id_,
-    static_cast<size_t>(reinterpret_cast<char*>(&wait_) -
-    reinterpret_cast<char*>(&id_)) + sizeof(wait_));
-  clear_has_call();
-  switch (from.call_case()) {
-    case kSystemCommand: {
-      set_system_command(from.system_command());
-      break;
-    }
-    case kFunctionCall: {
-      mutable_function_call()->::BERTBuffers::FunctionCall::MergeFrom(from.function_call());
-      break;
-    }
-    case kCode: {
-      mutable_code()->::BERTBuffers::Code::MergeFrom(from.code());
-      break;
-    }
-    case kShellCommand: {
-      set_shell_command(from.shell_command());
-      break;
-    }
-    case kCallback: {
-      mutable_callback()->::BERTBuffers::FunctionCall::MergeFrom(from.callback());
-      break;
-    }
-    case kComCallback: {
-      mutable_com_callback()->::BERTBuffers::COMFunctionCall::MergeFrom(from.com_callback());
-      break;
-    }
-    case CALL_NOT_SET: {
-      break;
-    }
-  }
-  // @@protoc_insertion_point(copy_constructor:BERTBuffers.Call)
-}
-
-void Call::SharedCtor() {
-  ::memset(&id_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&wait_) -
-      reinterpret_cast<char*>(&id_)) + sizeof(wait_));
-  clear_has_call();
-  _cached_size_ = 0;
-}
-
-Call::~Call() {
-  // @@protoc_insertion_point(destructor:BERTBuffers.Call)
-  SharedDtor();
-}
-
-void Call::SharedDtor() {
-  if (has_call()) {
-    clear_call();
-  }
-}
-
-void Call::SetCachedSize(int size) const {
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-}
-const ::google::protobuf::Descriptor* Call::descriptor() {
-  ::protobuf_variable_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_variable_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
-const Call& Call::default_instance() {
-  ::protobuf_variable_2eproto::InitDefaultsCall();
-  return *internal_default_instance();
-}
-
-Call* Call::New(::google::protobuf::Arena* arena) const {
-  Call* n = new Call;
-  if (arena != NULL) {
-    arena->Own(n);
-  }
-  return n;
-}
-
-void Call::clear_call() {
-// @@protoc_insertion_point(one_of_clear_start:BERTBuffers.Call)
-  switch (call_case()) {
-    case kSystemCommand: {
-      call_.system_command_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-      break;
-    }
-    case kFunctionCall: {
-      delete call_.function_call_;
-      break;
-    }
-    case kCode: {
-      delete call_.code_;
-      break;
-    }
-    case kShellCommand: {
-      call_.shell_command_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-      break;
-    }
-    case kCallback: {
-      delete call_.callback_;
-      break;
-    }
-    case kComCallback: {
-      delete call_.com_callback_;
-      break;
-    }
-    case CALL_NOT_SET: {
-      break;
-    }
-  }
-  _oneof_case_[0] = CALL_NOT_SET;
-}
-
-
-void Call::Clear() {
-// @@protoc_insertion_point(message_clear_start:BERTBuffers.Call)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  // Prevent compiler warnings about cached_has_bits being unused
-  (void) cached_has_bits;
-
-  ::memset(&id_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&wait_) -
-      reinterpret_cast<char*>(&id_)) + sizeof(wait_));
-  clear_call();
-  _internal_metadata_.Clear();
-}
-
-bool Call::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:BERTBuffers.Call)
-  for (;;) {
-    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // uint32 id = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(8u /* 8 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
-                 input, &id_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // bool wait = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &wait_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // string system_command = 3;
-      case 3: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(26u /* 26 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_system_command()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->system_command().data(), static_cast<int>(this->system_command().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "BERTBuffers.Call.system_command"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // .BERTBuffers.FunctionCall function_call = 4;
-      case 4: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(34u /* 34 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
-               input, mutable_function_call()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // .BERTBuffers.Code code = 5;
-      case 5: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(42u /* 42 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
-               input, mutable_code()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // string shell_command = 6;
-      case 6: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(50u /* 50 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_shell_command()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->shell_command().data(), static_cast<int>(this->shell_command().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "BERTBuffers.Call.shell_command"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // .BERTBuffers.FunctionCall callback = 7;
-      case 7: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(58u /* 58 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
-               input, mutable_callback()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // .BERTBuffers.COMFunctionCall com_callback = 8;
-      case 8: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(66u /* 66 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
-               input, mutable_com_callback()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      default: {
-      handle_unusual:
-        if (tag == 0) {
-          goto success;
-        }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
-      }
-    }
-  }
-success:
-  // @@protoc_insertion_point(parse_success:BERTBuffers.Call)
-  return true;
-failure:
-  // @@protoc_insertion_point(parse_failure:BERTBuffers.Call)
-  return false;
-#undef DO_
-}
-
-void Call::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:BERTBuffers.Call)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // uint32 id = 1;
-  if (this->id() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteUInt32(1, this->id(), output);
-  }
-
-  // bool wait = 2;
-  if (this->wait() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(2, this->wait(), output);
-  }
-
-  // string system_command = 3;
-  if (has_system_command()) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->system_command().data(), static_cast<int>(this->system_command().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "BERTBuffers.Call.system_command");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      3, this->system_command(), output);
-  }
-
-  // .BERTBuffers.FunctionCall function_call = 4;
-  if (has_function_call()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      4, *call_.function_call_, output);
-  }
-
-  // .BERTBuffers.Code code = 5;
-  if (has_code()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      5, *call_.code_, output);
-  }
-
-  // string shell_command = 6;
-  if (has_shell_command()) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->shell_command().data(), static_cast<int>(this->shell_command().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "BERTBuffers.Call.shell_command");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      6, this->shell_command(), output);
-  }
-
-  // .BERTBuffers.FunctionCall callback = 7;
-  if (has_callback()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      7, *call_.callback_, output);
-  }
-
-  // .BERTBuffers.COMFunctionCall com_callback = 8;
-  if (has_com_callback()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      8, *call_.com_callback_, output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:BERTBuffers.Call)
-}
-
-::google::protobuf::uint8* Call::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
-  // @@protoc_insertion_point(serialize_to_array_start:BERTBuffers.Call)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // uint32 id = 1;
-  if (this->id() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(1, this->id(), target);
-  }
-
-  // bool wait = 2;
-  if (this->wait() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(2, this->wait(), target);
-  }
-
-  // string system_command = 3;
-  if (has_system_command()) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->system_command().data(), static_cast<int>(this->system_command().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "BERTBuffers.Call.system_command");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        3, this->system_command(), target);
-  }
-
-  // .BERTBuffers.FunctionCall function_call = 4;
-  if (has_function_call()) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageToArray(
-        4, *call_.function_call_, deterministic, target);
-  }
-
-  // .BERTBuffers.Code code = 5;
-  if (has_code()) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageToArray(
-        5, *call_.code_, deterministic, target);
-  }
-
-  // string shell_command = 6;
-  if (has_shell_command()) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->shell_command().data(), static_cast<int>(this->shell_command().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "BERTBuffers.Call.shell_command");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        6, this->shell_command(), target);
-  }
-
-  // .BERTBuffers.FunctionCall callback = 7;
-  if (has_callback()) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageToArray(
-        7, *call_.callback_, deterministic, target);
-  }
-
-  // .BERTBuffers.COMFunctionCall com_callback = 8;
-  if (has_com_callback()) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageToArray(
-        8, *call_.com_callback_, deterministic, target);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
-  }
-  // @@protoc_insertion_point(serialize_to_array_end:BERTBuffers.Call)
-  return target;
-}
-
-size_t Call::ByteSizeLong() const {
-// @@protoc_insertion_point(message_byte_size_start:BERTBuffers.Call)
-  size_t total_size = 0;
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
-  // uint32 id = 1;
-  if (this->id() != 0) {
-    total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::UInt32Size(
-        this->id());
-  }
-
-  // bool wait = 2;
-  if (this->wait() != 0) {
-    total_size += 1 + 1;
-  }
-
-  switch (call_case()) {
-    // string system_command = 3;
-    case kSystemCommand: {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::StringSize(
-          this->system_command());
-      break;
-    }
-    // .BERTBuffers.FunctionCall function_call = 4;
-    case kFunctionCall: {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::MessageSize(
-          *call_.function_call_);
-      break;
-    }
-    // .BERTBuffers.Code code = 5;
-    case kCode: {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::MessageSize(
-          *call_.code_);
-      break;
-    }
-    // string shell_command = 6;
-    case kShellCommand: {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::StringSize(
-          this->shell_command());
-      break;
-    }
-    // .BERTBuffers.FunctionCall callback = 7;
-    case kCallback: {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::MessageSize(
-          *call_.callback_);
-      break;
-    }
-    // .BERTBuffers.COMFunctionCall com_callback = 8;
-    case kComCallback: {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::MessageSize(
-          *call_.com_callback_);
-      break;
-    }
-    case CALL_NOT_SET: {
-      break;
-    }
-  }
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = cached_size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-  return total_size;
-}
-
-void Call::MergeFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:BERTBuffers.Call)
-  GOOGLE_DCHECK_NE(&from, this);
-  const Call* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const Call>(
-          &from);
-  if (source == NULL) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:BERTBuffers.Call)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:BERTBuffers.Call)
-    MergeFrom(*source);
-  }
-}
-
-void Call::MergeFrom(const Call& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:BERTBuffers.Call)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  if (from.id() != 0) {
-    set_id(from.id());
-  }
-  if (from.wait() != 0) {
-    set_wait(from.wait());
-  }
-  switch (from.call_case()) {
-    case kSystemCommand: {
-      set_system_command(from.system_command());
-      break;
-    }
-    case kFunctionCall: {
-      mutable_function_call()->::BERTBuffers::FunctionCall::MergeFrom(from.function_call());
-      break;
-    }
-    case kCode: {
-      mutable_code()->::BERTBuffers::Code::MergeFrom(from.code());
-      break;
-    }
-    case kShellCommand: {
-      set_shell_command(from.shell_command());
-      break;
-    }
-    case kCallback: {
-      mutable_callback()->::BERTBuffers::FunctionCall::MergeFrom(from.callback());
-      break;
-    }
-    case kComCallback: {
-      mutable_com_callback()->::BERTBuffers::COMFunctionCall::MergeFrom(from.com_callback());
-      break;
-    }
-    case CALL_NOT_SET: {
-      break;
-    }
-  }
-}
-
-void Call::CopyFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:BERTBuffers.Call)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-void Call::CopyFrom(const Call& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:BERTBuffers.Call)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-bool Call::IsInitialized() const {
-  return true;
-}
-
-void Call::Swap(Call* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
-void Call::InternalSwap(Call* other) {
-  using std::swap;
-  swap(id_, other->id_);
-  swap(wait_, other->wait_);
-  swap(call_, other->call_);
-  swap(_oneof_case_[0], other->_oneof_case_[0]);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_cached_size_, other->_cached_size_);
-}
-
-::google::protobuf::Metadata Call::GetMetadata() const {
-  protobuf_variable_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_variable_2eproto::file_level_metadata[kIndexInFileMessages];
-}
-
-
-// ===================================================================
-
 void Console::InitAsDefaultInstance() {
   ::BERTBuffers::_Console_default_instance_.text_.UnsafeSetDefault(
       &::google::protobuf::internal::GetEmptyStringAlreadyInited());
@@ -4853,35 +4115,41 @@ void Console::InternalSwap(Console* other) {
 
 // ===================================================================
 
-void Response::InitAsDefaultInstance() {
-  ::BERTBuffers::_Response_default_instance_.err_.UnsafeSetDefault(
+void CallResponse::InitAsDefaultInstance() {
+  ::BERTBuffers::_CallResponse_default_instance_.err_.UnsafeSetDefault(
       &::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  ::BERTBuffers::_Response_default_instance_.value_ = const_cast< ::BERTBuffers::Variable*>(
+  ::BERTBuffers::_CallResponse_default_instance_.result_ = const_cast< ::BERTBuffers::Variable*>(
       ::BERTBuffers::Variable::internal_default_instance());
-  ::BERTBuffers::_Response_default_instance_.console_ = const_cast< ::BERTBuffers::Console*>(
+  ::BERTBuffers::_CallResponse_default_instance_.console_ = const_cast< ::BERTBuffers::Console*>(
       ::BERTBuffers::Console::internal_default_instance());
-  ::BERTBuffers::_Response_default_instance_.control_message_.UnsafeSetDefault(
+  ::BERTBuffers::_CallResponse_default_instance_.code_ = const_cast< ::BERTBuffers::Code*>(
+      ::BERTBuffers::Code::internal_default_instance());
+  ::BERTBuffers::_CallResponse_default_instance_.shell_command_.UnsafeSetDefault(
       &::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  ::BERTBuffers::_Response_default_instance_.callback_ = const_cast< ::BERTBuffers::FunctionCall*>(
+  ::BERTBuffers::_CallResponse_default_instance_.control_message_.UnsafeSetDefault(
+      &::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  ::BERTBuffers::_CallResponse_default_instance_.function_call_ = const_cast< ::BERTBuffers::FunctionCall*>(
       ::BERTBuffers::FunctionCall::internal_default_instance());
+  ::BERTBuffers::_CallResponse_default_instance_.com_callback_ = const_cast< ::BERTBuffers::COMFunctionCall*>(
+      ::BERTBuffers::COMFunctionCall::internal_default_instance());
 }
-void Response::set_allocated_value(::BERTBuffers::Variable* value) {
+void CallResponse::set_allocated_result(::BERTBuffers::Variable* result) {
   ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
-  clear_result();
-  if (value) {
+  clear_operation();
+  if (result) {
     ::google::protobuf::Arena* submessage_arena = NULL;
     if (message_arena != submessage_arena) {
-      value = ::google::protobuf::internal::GetOwnedMessage(
-          message_arena, value, submessage_arena);
+      result = ::google::protobuf::internal::GetOwnedMessage(
+          message_arena, result, submessage_arena);
     }
-    set_has_value();
-    result_.value_ = value;
+    set_has_result();
+    operation_.result_ = result;
   }
-  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.Response.value)
+  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.CallResponse.result)
 }
-void Response::set_allocated_console(::BERTBuffers::Console* console) {
+void CallResponse::set_allocated_console(::BERTBuffers::Console* console) {
   ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
-  clear_result();
+  clear_operation();
   if (console) {
     ::google::protobuf::Arena* submessage_arena = NULL;
     if (message_arena != submessage_arena) {
@@ -4889,163 +4157,225 @@ void Response::set_allocated_console(::BERTBuffers::Console* console) {
           message_arena, console, submessage_arena);
     }
     set_has_console();
-    result_.console_ = console;
+    operation_.console_ = console;
   }
-  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.Response.console)
+  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.CallResponse.console)
 }
-void Response::set_allocated_callback(::BERTBuffers::FunctionCall* callback) {
+void CallResponse::set_allocated_code(::BERTBuffers::Code* code) {
   ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
-  clear_result();
-  if (callback) {
+  clear_operation();
+  if (code) {
     ::google::protobuf::Arena* submessage_arena = NULL;
     if (message_arena != submessage_arena) {
-      callback = ::google::protobuf::internal::GetOwnedMessage(
-          message_arena, callback, submessage_arena);
+      code = ::google::protobuf::internal::GetOwnedMessage(
+          message_arena, code, submessage_arena);
     }
-    set_has_callback();
-    result_.callback_ = callback;
+    set_has_code();
+    operation_.code_ = code;
   }
-  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.Response.callback)
+  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.CallResponse.code)
+}
+void CallResponse::set_allocated_function_call(::BERTBuffers::FunctionCall* function_call) {
+  ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
+  clear_operation();
+  if (function_call) {
+    ::google::protobuf::Arena* submessage_arena = NULL;
+    if (message_arena != submessage_arena) {
+      function_call = ::google::protobuf::internal::GetOwnedMessage(
+          message_arena, function_call, submessage_arena);
+    }
+    set_has_function_call();
+    operation_.function_call_ = function_call;
+  }
+  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.CallResponse.function_call)
+}
+void CallResponse::set_allocated_com_callback(::BERTBuffers::COMFunctionCall* com_callback) {
+  ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
+  clear_operation();
+  if (com_callback) {
+    ::google::protobuf::Arena* submessage_arena = NULL;
+    if (message_arena != submessage_arena) {
+      com_callback = ::google::protobuf::internal::GetOwnedMessage(
+          message_arena, com_callback, submessage_arena);
+    }
+    set_has_com_callback();
+    operation_.com_callback_ = com_callback;
+  }
+  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.CallResponse.com_callback)
 }
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int Response::kIdFieldNumber;
-const int Response::kErrFieldNumber;
-const int Response::kValueFieldNumber;
-const int Response::kConsoleFieldNumber;
-const int Response::kControlMessageFieldNumber;
-const int Response::kCallbackFieldNumber;
+const int CallResponse::kIdFieldNumber;
+const int CallResponse::kWaitFieldNumber;
+const int CallResponse::kErrFieldNumber;
+const int CallResponse::kResultFieldNumber;
+const int CallResponse::kConsoleFieldNumber;
+const int CallResponse::kCodeFieldNumber;
+const int CallResponse::kShellCommandFieldNumber;
+const int CallResponse::kControlMessageFieldNumber;
+const int CallResponse::kFunctionCallFieldNumber;
+const int CallResponse::kComCallbackFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
-Response::Response()
+CallResponse::CallResponse()
   : ::google::protobuf::Message(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
-    ::protobuf_variable_2eproto::InitDefaultsResponse();
+    ::protobuf_variable_2eproto::InitDefaultsCallResponse();
   }
   SharedCtor();
-  // @@protoc_insertion_point(constructor:BERTBuffers.Response)
+  // @@protoc_insertion_point(constructor:BERTBuffers.CallResponse)
 }
-Response::Response(const Response& from)
+CallResponse::CallResponse(const CallResponse& from)
   : ::google::protobuf::Message(),
       _internal_metadata_(NULL),
       _cached_size_(0) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  id_ = from.id_;
-  clear_has_result();
-  switch (from.result_case()) {
+  ::memcpy(&id_, &from.id_,
+    static_cast<size_t>(reinterpret_cast<char*>(&wait_) -
+    reinterpret_cast<char*>(&id_)) + sizeof(wait_));
+  clear_has_operation();
+  switch (from.operation_case()) {
     case kErr: {
       set_err(from.err());
       break;
     }
-    case kValue: {
-      mutable_value()->::BERTBuffers::Variable::MergeFrom(from.value());
+    case kResult: {
+      mutable_result()->::BERTBuffers::Variable::MergeFrom(from.result());
       break;
     }
     case kConsole: {
       mutable_console()->::BERTBuffers::Console::MergeFrom(from.console());
       break;
     }
+    case kCode: {
+      mutable_code()->::BERTBuffers::Code::MergeFrom(from.code());
+      break;
+    }
+    case kShellCommand: {
+      set_shell_command(from.shell_command());
+      break;
+    }
     case kControlMessage: {
       set_control_message(from.control_message());
       break;
     }
-    case kCallback: {
-      mutable_callback()->::BERTBuffers::FunctionCall::MergeFrom(from.callback());
+    case kFunctionCall: {
+      mutable_function_call()->::BERTBuffers::FunctionCall::MergeFrom(from.function_call());
       break;
     }
-    case RESULT_NOT_SET: {
+    case kComCallback: {
+      mutable_com_callback()->::BERTBuffers::COMFunctionCall::MergeFrom(from.com_callback());
+      break;
+    }
+    case OPERATION_NOT_SET: {
       break;
     }
   }
-  // @@protoc_insertion_point(copy_constructor:BERTBuffers.Response)
+  // @@protoc_insertion_point(copy_constructor:BERTBuffers.CallResponse)
 }
 
-void Response::SharedCtor() {
-  id_ = 0u;
-  clear_has_result();
+void CallResponse::SharedCtor() {
+  ::memset(&id_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&wait_) -
+      reinterpret_cast<char*>(&id_)) + sizeof(wait_));
+  clear_has_operation();
   _cached_size_ = 0;
 }
 
-Response::~Response() {
-  // @@protoc_insertion_point(destructor:BERTBuffers.Response)
+CallResponse::~CallResponse() {
+  // @@protoc_insertion_point(destructor:BERTBuffers.CallResponse)
   SharedDtor();
 }
 
-void Response::SharedDtor() {
-  if (has_result()) {
-    clear_result();
+void CallResponse::SharedDtor() {
+  if (has_operation()) {
+    clear_operation();
   }
 }
 
-void Response::SetCachedSize(int size) const {
+void CallResponse::SetCachedSize(int size) const {
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
 }
-const ::google::protobuf::Descriptor* Response::descriptor() {
+const ::google::protobuf::Descriptor* CallResponse::descriptor() {
   ::protobuf_variable_2eproto::protobuf_AssignDescriptorsOnce();
   return ::protobuf_variable_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
 }
 
-const Response& Response::default_instance() {
-  ::protobuf_variable_2eproto::InitDefaultsResponse();
+const CallResponse& CallResponse::default_instance() {
+  ::protobuf_variable_2eproto::InitDefaultsCallResponse();
   return *internal_default_instance();
 }
 
-Response* Response::New(::google::protobuf::Arena* arena) const {
-  Response* n = new Response;
+CallResponse* CallResponse::New(::google::protobuf::Arena* arena) const {
+  CallResponse* n = new CallResponse;
   if (arena != NULL) {
     arena->Own(n);
   }
   return n;
 }
 
-void Response::clear_result() {
-// @@protoc_insertion_point(one_of_clear_start:BERTBuffers.Response)
-  switch (result_case()) {
+void CallResponse::clear_operation() {
+// @@protoc_insertion_point(one_of_clear_start:BERTBuffers.CallResponse)
+  switch (operation_case()) {
     case kErr: {
-      result_.err_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+      operation_.err_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
       break;
     }
-    case kValue: {
-      delete result_.value_;
+    case kResult: {
+      delete operation_.result_;
       break;
     }
     case kConsole: {
-      delete result_.console_;
+      delete operation_.console_;
+      break;
+    }
+    case kCode: {
+      delete operation_.code_;
+      break;
+    }
+    case kShellCommand: {
+      operation_.shell_command_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
       break;
     }
     case kControlMessage: {
-      result_.control_message_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+      operation_.control_message_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
       break;
     }
-    case kCallback: {
-      delete result_.callback_;
+    case kFunctionCall: {
+      delete operation_.function_call_;
       break;
     }
-    case RESULT_NOT_SET: {
+    case kComCallback: {
+      delete operation_.com_callback_;
+      break;
+    }
+    case OPERATION_NOT_SET: {
       break;
     }
   }
-  _oneof_case_[0] = RESULT_NOT_SET;
+  _oneof_case_[0] = OPERATION_NOT_SET;
 }
 
 
-void Response::Clear() {
-// @@protoc_insertion_point(message_clear_start:BERTBuffers.Response)
+void CallResponse::Clear() {
+// @@protoc_insertion_point(message_clear_start:BERTBuffers.CallResponse)
   ::google::protobuf::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  id_ = 0u;
-  clear_result();
+  ::memset(&id_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&wait_) -
+      reinterpret_cast<char*>(&id_)) + sizeof(wait_));
+  clear_operation();
   _internal_metadata_.Clear();
 }
 
-bool Response::MergePartialFromCodedStream(
+bool CallResponse::MergePartialFromCodedStream(
     ::google::protobuf::io::CodedInputStream* input) {
 #define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
   ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:BERTBuffers.Response)
+  // @@protoc_insertion_point(parse_start:BERTBuffers.CallResponse)
   for (;;) {
     ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
     tag = p.first;
@@ -5065,38 +4395,52 @@ bool Response::MergePartialFromCodedStream(
         break;
       }
 
-      // string err = 2;
+      // bool wait = 2;
       case 2: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
+            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &wait_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // string err = 3;
+      case 3: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(26u /* 26 & 0xFF */)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->mutable_err()));
           DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
             this->err().data(), static_cast<int>(this->err().length()),
             ::google::protobuf::internal::WireFormatLite::PARSE,
-            "BERTBuffers.Response.err"));
+            "BERTBuffers.CallResponse.err"));
         } else {
           goto handle_unusual;
         }
         break;
       }
 
-      // .BERTBuffers.Variable value = 3;
-      case 3: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(26u /* 26 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
-               input, mutable_value()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // .BERTBuffers.Console console = 4;
+      // .BERTBuffers.Variable result = 4;
       case 4: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(34u /* 34 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
+               input, mutable_result()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // .BERTBuffers.Console console = 5;
+      case 5: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(42u /* 42 & 0xFF */)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
                input, mutable_console()));
         } else {
@@ -5105,28 +4449,68 @@ bool Response::MergePartialFromCodedStream(
         break;
       }
 
-      // string control_message = 5;
-      case 5: {
+      // .BERTBuffers.Code code = 6;
+      case 6: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(42u /* 42 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_control_message()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->control_message().data(), static_cast<int>(this->control_message().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "BERTBuffers.Response.control_message"));
+            static_cast< ::google::protobuf::uint8>(50u /* 50 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
+               input, mutable_code()));
         } else {
           goto handle_unusual;
         }
         break;
       }
 
-      // .BERTBuffers.FunctionCall callback = 6;
-      case 6: {
+      // string shell_command = 7;
+      case 7: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(50u /* 50 & 0xFF */)) {
+            static_cast< ::google::protobuf::uint8>(58u /* 58 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_shell_command()));
+          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+            this->shell_command().data(), static_cast<int>(this->shell_command().length()),
+            ::google::protobuf::internal::WireFormatLite::PARSE,
+            "BERTBuffers.CallResponse.shell_command"));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // string control_message = 8;
+      case 8: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(66u /* 66 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_control_message()));
+          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+            this->control_message().data(), static_cast<int>(this->control_message().length()),
+            ::google::protobuf::internal::WireFormatLite::PARSE,
+            "BERTBuffers.CallResponse.control_message"));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // .BERTBuffers.FunctionCall function_call = 9;
+      case 9: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(74u /* 74 & 0xFF */)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
-               input, mutable_callback()));
+               input, mutable_function_call()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // .BERTBuffers.COMFunctionCall com_callback = 10;
+      case 10: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(82u /* 82 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
+               input, mutable_com_callback()));
         } else {
           goto handle_unusual;
         }
@@ -5145,17 +4529,17 @@ bool Response::MergePartialFromCodedStream(
     }
   }
 success:
-  // @@protoc_insertion_point(parse_success:BERTBuffers.Response)
+  // @@protoc_insertion_point(parse_success:BERTBuffers.CallResponse)
   return true;
 failure:
-  // @@protoc_insertion_point(parse_failure:BERTBuffers.Response)
+  // @@protoc_insertion_point(parse_failure:BERTBuffers.CallResponse)
   return false;
 #undef DO_
 }
 
-void Response::SerializeWithCachedSizes(
+void CallResponse::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:BERTBuffers.Response)
+  // @@protoc_insertion_point(serialize_start:BERTBuffers.CallResponse)
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -5164,55 +4548,82 @@ void Response::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteUInt32(1, this->id(), output);
   }
 
-  // string err = 2;
+  // bool wait = 2;
+  if (this->wait() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(2, this->wait(), output);
+  }
+
+  // string err = 3;
   if (has_err()) {
     ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
       this->err().data(), static_cast<int>(this->err().length()),
       ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "BERTBuffers.Response.err");
+      "BERTBuffers.CallResponse.err");
     ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      2, this->err(), output);
+      3, this->err(), output);
   }
 
-  // .BERTBuffers.Variable value = 3;
-  if (has_value()) {
+  // .BERTBuffers.Variable result = 4;
+  if (has_result()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      3, *result_.value_, output);
+      4, *operation_.result_, output);
   }
 
-  // .BERTBuffers.Console console = 4;
+  // .BERTBuffers.Console console = 5;
   if (has_console()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      4, *result_.console_, output);
+      5, *operation_.console_, output);
   }
 
-  // string control_message = 5;
+  // .BERTBuffers.Code code = 6;
+  if (has_code()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+      6, *operation_.code_, output);
+  }
+
+  // string shell_command = 7;
+  if (has_shell_command()) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->shell_command().data(), static_cast<int>(this->shell_command().length()),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "BERTBuffers.CallResponse.shell_command");
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      7, this->shell_command(), output);
+  }
+
+  // string control_message = 8;
   if (has_control_message()) {
     ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
       this->control_message().data(), static_cast<int>(this->control_message().length()),
       ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "BERTBuffers.Response.control_message");
+      "BERTBuffers.CallResponse.control_message");
     ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      5, this->control_message(), output);
+      8, this->control_message(), output);
   }
 
-  // .BERTBuffers.FunctionCall callback = 6;
-  if (has_callback()) {
+  // .BERTBuffers.FunctionCall function_call = 9;
+  if (has_function_call()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      6, *result_.callback_, output);
+      9, *operation_.function_call_, output);
+  }
+
+  // .BERTBuffers.COMFunctionCall com_callback = 10;
+  if (has_com_callback()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+      10, *operation_.com_callback_, output);
   }
 
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
   }
-  // @@protoc_insertion_point(serialize_end:BERTBuffers.Response)
+  // @@protoc_insertion_point(serialize_end:BERTBuffers.CallResponse)
 }
 
-::google::protobuf::uint8* Response::InternalSerializeWithCachedSizesToArray(
+::google::protobuf::uint8* CallResponse::InternalSerializeWithCachedSizesToArray(
     bool deterministic, ::google::protobuf::uint8* target) const {
   (void)deterministic; // Unused
-  // @@protoc_insertion_point(serialize_to_array_start:BERTBuffers.Response)
+  // @@protoc_insertion_point(serialize_to_array_start:BERTBuffers.CallResponse)
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -5221,59 +4632,89 @@ void Response::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(1, this->id(), target);
   }
 
-  // string err = 2;
+  // bool wait = 2;
+  if (this->wait() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(2, this->wait(), target);
+  }
+
+  // string err = 3;
   if (has_err()) {
     ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
       this->err().data(), static_cast<int>(this->err().length()),
       ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "BERTBuffers.Response.err");
+      "BERTBuffers.CallResponse.err");
     target =
       ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        2, this->err(), target);
+        3, this->err(), target);
   }
 
-  // .BERTBuffers.Variable value = 3;
-  if (has_value()) {
+  // .BERTBuffers.Variable result = 4;
+  if (has_result()) {
     target = ::google::protobuf::internal::WireFormatLite::
       InternalWriteMessageToArray(
-        3, *result_.value_, deterministic, target);
+        4, *operation_.result_, deterministic, target);
   }
 
-  // .BERTBuffers.Console console = 4;
+  // .BERTBuffers.Console console = 5;
   if (has_console()) {
     target = ::google::protobuf::internal::WireFormatLite::
       InternalWriteMessageToArray(
-        4, *result_.console_, deterministic, target);
+        5, *operation_.console_, deterministic, target);
   }
 
-  // string control_message = 5;
+  // .BERTBuffers.Code code = 6;
+  if (has_code()) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      InternalWriteMessageToArray(
+        6, *operation_.code_, deterministic, target);
+  }
+
+  // string shell_command = 7;
+  if (has_shell_command()) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->shell_command().data(), static_cast<int>(this->shell_command().length()),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "BERTBuffers.CallResponse.shell_command");
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        7, this->shell_command(), target);
+  }
+
+  // string control_message = 8;
   if (has_control_message()) {
     ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
       this->control_message().data(), static_cast<int>(this->control_message().length()),
       ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "BERTBuffers.Response.control_message");
+      "BERTBuffers.CallResponse.control_message");
     target =
       ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        5, this->control_message(), target);
+        8, this->control_message(), target);
   }
 
-  // .BERTBuffers.FunctionCall callback = 6;
-  if (has_callback()) {
+  // .BERTBuffers.FunctionCall function_call = 9;
+  if (has_function_call()) {
     target = ::google::protobuf::internal::WireFormatLite::
       InternalWriteMessageToArray(
-        6, *result_.callback_, deterministic, target);
+        9, *operation_.function_call_, deterministic, target);
+  }
+
+  // .BERTBuffers.COMFunctionCall com_callback = 10;
+  if (has_com_callback()) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      InternalWriteMessageToArray(
+        10, *operation_.com_callback_, deterministic, target);
   }
 
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
   }
-  // @@protoc_insertion_point(serialize_to_array_end:BERTBuffers.Response)
+  // @@protoc_insertion_point(serialize_to_array_end:BERTBuffers.CallResponse)
   return target;
 }
 
-size_t Response::ByteSizeLong() const {
-// @@protoc_insertion_point(message_byte_size_start:BERTBuffers.Response)
+size_t CallResponse::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:BERTBuffers.CallResponse)
   size_t total_size = 0;
 
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
@@ -5288,43 +4729,69 @@ size_t Response::ByteSizeLong() const {
         this->id());
   }
 
-  switch (result_case()) {
-    // string err = 2;
+  // bool wait = 2;
+  if (this->wait() != 0) {
+    total_size += 1 + 1;
+  }
+
+  switch (operation_case()) {
+    // string err = 3;
     case kErr: {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::StringSize(
           this->err());
       break;
     }
-    // .BERTBuffers.Variable value = 3;
-    case kValue: {
+    // .BERTBuffers.Variable result = 4;
+    case kResult: {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::MessageSize(
-          *result_.value_);
+          *operation_.result_);
       break;
     }
-    // .BERTBuffers.Console console = 4;
+    // .BERTBuffers.Console console = 5;
     case kConsole: {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::MessageSize(
-          *result_.console_);
+          *operation_.console_);
       break;
     }
-    // string control_message = 5;
+    // .BERTBuffers.Code code = 6;
+    case kCode: {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSize(
+          *operation_.code_);
+      break;
+    }
+    // string shell_command = 7;
+    case kShellCommand: {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->shell_command());
+      break;
+    }
+    // string control_message = 8;
     case kControlMessage: {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::StringSize(
           this->control_message());
       break;
     }
-    // .BERTBuffers.FunctionCall callback = 6;
-    case kCallback: {
+    // .BERTBuffers.FunctionCall function_call = 9;
+    case kFunctionCall: {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::MessageSize(
-          *result_.callback_);
+          *operation_.function_call_);
       break;
     }
-    case RESULT_NOT_SET: {
+    // .BERTBuffers.COMFunctionCall com_callback = 10;
+    case kComCallback: {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSize(
+          *operation_.com_callback_);
+      break;
+    }
+    case OPERATION_NOT_SET: {
       break;
     }
   }
@@ -5335,23 +4802,23 @@ size_t Response::ByteSizeLong() const {
   return total_size;
 }
 
-void Response::MergeFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:BERTBuffers.Response)
+void CallResponse::MergeFrom(const ::google::protobuf::Message& from) {
+// @@protoc_insertion_point(generalized_merge_from_start:BERTBuffers.CallResponse)
   GOOGLE_DCHECK_NE(&from, this);
-  const Response* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const Response>(
+  const CallResponse* source =
+      ::google::protobuf::internal::DynamicCastToGenerated<const CallResponse>(
           &from);
   if (source == NULL) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:BERTBuffers.Response)
+  // @@protoc_insertion_point(generalized_merge_from_cast_fail:BERTBuffers.CallResponse)
     ::google::protobuf::internal::ReflectionOps::Merge(from, this);
   } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:BERTBuffers.Response)
+  // @@protoc_insertion_point(generalized_merge_from_cast_success:BERTBuffers.CallResponse)
     MergeFrom(*source);
   }
 }
 
-void Response::MergeFrom(const Response& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:BERTBuffers.Response)
+void CallResponse::MergeFrom(const CallResponse& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:BERTBuffers.CallResponse)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   ::google::protobuf::uint32 cached_has_bits = 0;
@@ -5360,65 +4827,81 @@ void Response::MergeFrom(const Response& from) {
   if (from.id() != 0) {
     set_id(from.id());
   }
-  switch (from.result_case()) {
+  if (from.wait() != 0) {
+    set_wait(from.wait());
+  }
+  switch (from.operation_case()) {
     case kErr: {
       set_err(from.err());
       break;
     }
-    case kValue: {
-      mutable_value()->::BERTBuffers::Variable::MergeFrom(from.value());
+    case kResult: {
+      mutable_result()->::BERTBuffers::Variable::MergeFrom(from.result());
       break;
     }
     case kConsole: {
       mutable_console()->::BERTBuffers::Console::MergeFrom(from.console());
       break;
     }
+    case kCode: {
+      mutable_code()->::BERTBuffers::Code::MergeFrom(from.code());
+      break;
+    }
+    case kShellCommand: {
+      set_shell_command(from.shell_command());
+      break;
+    }
     case kControlMessage: {
       set_control_message(from.control_message());
       break;
     }
-    case kCallback: {
-      mutable_callback()->::BERTBuffers::FunctionCall::MergeFrom(from.callback());
+    case kFunctionCall: {
+      mutable_function_call()->::BERTBuffers::FunctionCall::MergeFrom(from.function_call());
       break;
     }
-    case RESULT_NOT_SET: {
+    case kComCallback: {
+      mutable_com_callback()->::BERTBuffers::COMFunctionCall::MergeFrom(from.com_callback());
+      break;
+    }
+    case OPERATION_NOT_SET: {
       break;
     }
   }
 }
 
-void Response::CopyFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:BERTBuffers.Response)
+void CallResponse::CopyFrom(const ::google::protobuf::Message& from) {
+// @@protoc_insertion_point(generalized_copy_from_start:BERTBuffers.CallResponse)
   if (&from == this) return;
   Clear();
   MergeFrom(from);
 }
 
-void Response::CopyFrom(const Response& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:BERTBuffers.Response)
+void CallResponse::CopyFrom(const CallResponse& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:BERTBuffers.CallResponse)
   if (&from == this) return;
   Clear();
   MergeFrom(from);
 }
 
-bool Response::IsInitialized() const {
+bool CallResponse::IsInitialized() const {
   return true;
 }
 
-void Response::Swap(Response* other) {
+void CallResponse::Swap(CallResponse* other) {
   if (other == this) return;
   InternalSwap(other);
 }
-void Response::InternalSwap(Response* other) {
+void CallResponse::InternalSwap(CallResponse* other) {
   using std::swap;
   swap(id_, other->id_);
-  swap(result_, other->result_);
+  swap(wait_, other->wait_);
+  swap(operation_, other->operation_);
   swap(_oneof_case_[0], other->_oneof_case_[0]);
   _internal_metadata_.Swap(&other->_internal_metadata_);
   swap(_cached_size_, other->_cached_size_);
 }
 
-::google::protobuf::Metadata Response::GetMetadata() const {
+::google::protobuf::Metadata CallResponse::GetMetadata() const {
   protobuf_variable_2eproto::protobuf_AssignDescriptorsOnce();
   return ::protobuf_variable_2eproto::file_level_metadata[kIndexInFileMessages];
 }

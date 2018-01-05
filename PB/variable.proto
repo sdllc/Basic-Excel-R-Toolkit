@@ -13,6 +13,7 @@ option optimize_for = SPEED;
 
 package BERTBuffers;
 
+/*
 enum Type {
 	NIL = 0;	// pb converts "NULL" to "NULL_", but I would prefer to use a different symbol
 	STRING = 1;
@@ -21,12 +22,15 @@ enum Type {
 	COMPLEX = 4;
 	ARRAY = 5;
 }
-		 
+*/
+
+/** complex numbers */
 message Complex {
 	double r = 1;
 	double i = 2;
 }
 
+/** array/matrix/frame type */
 message Array {
 	int32 rows = 1;
 	int32 cols = 2;
@@ -35,19 +39,23 @@ message Array {
 	repeated string colnames = 5;
 }
 
+/** error types */
 enum ErrorType {
 	GENERIC = 0;
 	NA = 1;
 	INF = 2;
 	PARSE = 3;
 	EXECUTION = 4;
+    OTHER = 15;
 }
 
+/** error has a type and/or message */
 message Error {
 	ErrorType type = 1;
 	string message = 2;
 }
 
+/** sheet reference */
 message SheetReference {
     uint32 start_row = 1;
     uint32 start_column = 2;
@@ -56,6 +64,7 @@ message SheetReference {
     uint64 sheet_id = 5;
 }
 
+/** basic variable type, optionally named */
 message Variable {
 	oneof value {
 		bool nil = 1;
@@ -72,15 +81,18 @@ message Variable {
 	string name = 15;
 }
 
+/** why not have a single string and then split on the RX side? */
 message Code {
 	repeated string line = 1;
 }
 
+/** basic function call */
 message FunctionCall {
 	string function = 1;
 	repeated Variable arguments = 2;
 }
 
+/** distinction between calls and accessors (and accesor type) */
 enum CallType {
     undefined = 0;
     get = 1;
@@ -88,6 +100,7 @@ enum CallType {
     method = 3;
 }
 
+/** com function calls require extra metadata */
 message COMFunctionCall {
 	string function = 1;
     uint32 pointer = 2;
@@ -96,26 +109,7 @@ message COMFunctionCall {
 	repeated Variable arguments = 5;
 }
 
-/**
- * why callback and function_call, even though they're the same type?
- * so we can switch appropriately. it seems like no extra data on the 
- * wire but allows effective differentiation.
- *
- * FIXME: callback should switch to an enum (for the function)
- */
-message Call {
-	uint32 id = 1;
-	bool wait = 2;
-	oneof call {
-		string system_command = 3;
-		FunctionCall function_call = 4;
-		Code code = 5;
-		string shell_command = 6;
-        FunctionCall callback = 7;
-        COMFunctionCall com_callback = 8;
-	}
-}
-
+/** console message */
 message Console {
     oneof message {
         string text = 1;
@@ -124,13 +118,38 @@ message Console {
     }
 }
 
-message Response {
-	uint32 id = 1;
-	oneof result {
-		string err = 2;
-		Variable value = 3;
-		Console console = 4;
-        string control_message = 5;
-        FunctionCall callback = 6;
-	}
+/** 
+ * unifying call and response, since there are some fuzzy cases,
+ * callbacks, and so on. it makes sense for this to be a single 
+ * message with a switch.
+ *
+ * FIXME: let's revert "callback" to a separate field for clarity,
+ * even though it has the same type as function_call; we have space.
+ */
+message CallResponse {
+    
+    uint32 id = 1;
+    bool wait = 2;      // FIXME: this can go? should we always require full transactions?
+
+    oneof operation {
+
+        // response types
+
+		string err = 3;             // FIXME: use error type? [yes, work towards that]
+		Variable result = 4;
+
+        // push / notification
+
+		Console console = 5;
+
+        // call types and callbacks
+
+        Code code = 6;
+		string shell_command = 7;
+        string control_message = 8;         // fka "system_command"
+        FunctionCall function_call = 9;     // also callback
+        COMFunctionCall com_callback = 10;
+
+    }
 }
+

@@ -49,7 +49,7 @@
     <ClCompile Include="src\bert.cc" />
     <ClCompile Include="src\debug_functions.cc" />
     <ClCompile Include="src\dllmain.cpp" />
-    <ClCompile Include="src\excel_functions.cc" />
+    <ClCompile Include="src\excel_api_functions.cc" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="BERT.rc" />

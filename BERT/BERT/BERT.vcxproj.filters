@@ -59,7 +59,7 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\message_utilities.h">
-      <Filter>include</Filter>
+      <Filter>PB</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -89,9 +89,6 @@
     <ClCompile Include="src\windows_api_functions.cc">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="src\excel_functions.cc">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="src\debug_functions.cc">
       <Filter>source</Filter>
     </ClCompile>
@@ -99,6 +96,9 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="src\com_object_map.cc">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\excel_api_functions.cc">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

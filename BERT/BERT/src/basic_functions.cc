@@ -41,7 +41,7 @@ LPXLOPER12 BERTFunctionCall(
 		input_8, input_9, input_10, input_11, input_12, input_13, input_14, input_15
 	};
 
-	BERTBuffers::Call call;
+	BERTBuffers::CallResponse call;
 	call.set_wait(true);
 	auto function_call = call.mutable_function_call();
 	function_call->set_function(bert->function_list_[index]->name);
@@ -54,12 +54,12 @@ LPXLOPER12 BERTFunctionCall(
 		Convert::XLOPERToVariable(argument, arglist[i]);
 	}
 
-	BERTBuffers::Response rsp;
+	BERTBuffers::CallResponse rsp;
 	BERT::Instance()->RCall(rsp, call);
 
-	if (rsp.has_value()) {
-		Convert::VariableToXLOPER(&rslt, rsp.value());
-	}
+    if (rsp.operation_case() == BERTBuffers::CallResponse::OperationCase::kResult) {
+        Convert::VariableToXLOPER(&rslt, rsp.result());
+    }
 	else {
 		rslt.xltype = xltypeErr;
 		rslt.val.err = xlerrValue;
@@ -78,16 +78,16 @@ LPXLOPER12 BERT_Exec(LPXLOPER12 code) {
 		return &rslt;
 	}
 
-	BERTBuffers::Call call;
+	BERTBuffers::CallResponse call;
 	call.set_wait(true);
 	call.mutable_code()->add_line(Convert::XLOPERToString(code));
 
-	BERTBuffers::Response rsp;
+	BERTBuffers::CallResponse rsp;
 	BERT::Instance()->RCall(rsp, call);
 
-	if (rsp.has_value()) {
-		Convert::VariableToXLOPER(&rslt, rsp.value());
-	}
+    if (rsp.operation_case() == BERTBuffers::CallResponse::OperationCase::kResult) {
+        Convert::VariableToXLOPER(&rslt, rsp.result());
+    }
 	else {
 		rslt.xltype = xltypeErr;
 		rslt.val.err = xlerrValue;
@@ -110,7 +110,7 @@ LPXLOPER12 BERT_Call(LPXLOPER12 func,
 		return &rslt;
 	}
 
-	BERTBuffers::Call call;
+	BERTBuffers::CallResponse call;
 	call.set_wait(true);
 	auto function_call = call.mutable_function_call();
 	function_call->set_function(Convert::XLOPERToString(func));
@@ -128,11 +128,11 @@ LPXLOPER12 BERT_Call(LPXLOPER12 func,
 		Convert::XLOPERToVariable(argument, arglist[i]);
 	}
 
-	BERTBuffers::Response rsp;
+	BERTBuffers::CallResponse rsp;
 	BERT::Instance()->RCall(rsp, call);
 
-	if (rsp.has_value()) {
-		Convert::VariableToXLOPER(&rslt, rsp.value());
+    if(rsp.operation_case() == BERTBuffers::CallResponse::OperationCase::kResult){
+		Convert::VariableToXLOPER(&rslt, rsp.result());
 	}
 	else {
 		rslt.xltype = xltypeErr;

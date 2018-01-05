@@ -125,7 +125,7 @@ public:
      * special response type if we need to install and then return
      * a wrapped dispatch pointer
      */
-    void DispatchResponse(BERTBuffers::Response &response, const LPDISPATCH dispatch_pointer);
+    void DispatchResponse(BERTBuffers::CallResponse &response, const LPDISPATCH dispatch_pointer);
 
     /**
      * similar to how we pass function definitions from R -> BERT, we use our
@@ -136,9 +136,9 @@ public:
      */
     void DispatchToVariable(BERTBuffers::Variable *variable, LPDISPATCH dispatch_pointer, bool enums = false);
     
-    void InvokeCOMPropertyPut(const BERTBuffers::COMFunctionCall &callback, BERTBuffers::Response &response);
+    void InvokeCOMPropertyPut(const BERTBuffers::COMFunctionCall &callback, BERTBuffers::CallResponse &response);
 
-    void InvokeCOMFunction(const BERTBuffers::COMFunctionCall &callback, BERTBuffers::Response &response);
+    void InvokeCOMFunction(const BERTBuffers::COMFunctionCall &callback, BERTBuffers::CallResponse &response);
 
 };
 

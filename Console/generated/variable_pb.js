@@ -13,7 +13,7 @@ var global = Function('return this')();
 
 goog.exportSymbol('proto.BERTBuffers.Array', null, global);
 goog.exportSymbol('proto.BERTBuffers.COMFunctionCall', null, global);
-goog.exportSymbol('proto.BERTBuffers.Call', null, global);
+goog.exportSymbol('proto.BERTBuffers.CallResponse', null, global);
 goog.exportSymbol('proto.BERTBuffers.CallType', null, global);
 goog.exportSymbol('proto.BERTBuffers.Code', null, global);
 goog.exportSymbol('proto.BERTBuffers.Complex', null, global);
@@ -21,9 +21,7 @@ goog.exportSymbol('proto.BERTBuffers.Console', null, global);
 goog.exportSymbol('proto.BERTBuffers.Error', null, global);
 goog.exportSymbol('proto.BERTBuffers.ErrorType', null, global);
 goog.exportSymbol('proto.BERTBuffers.FunctionCall', null, global);
-goog.exportSymbol('proto.BERTBuffers.Response', null, global);
 goog.exportSymbol('proto.BERTBuffers.SheetReference', null, global);
-goog.exportSymbol('proto.BERTBuffers.Type', null, global);
 goog.exportSymbol('proto.BERTBuffers.Variable', null, global);
 
 /**
@@ -2166,465 +2164,6 @@ proto.BERTBuffers.COMFunctionCall.prototype.clearArgumentsList = function() {
  * @extends {jspb.Message}
  * @constructor
  */
-proto.BERTBuffers.Call = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, proto.BERTBuffers.Call.oneofGroups_);
-};
-goog.inherits(proto.BERTBuffers.Call, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  proto.BERTBuffers.Call.displayName = 'proto.BERTBuffers.Call';
-}
-/**
- * Oneof group definitions for this message. Each group defines the field
- * numbers belonging to that group. When of these fields' value is set, all
- * other fields in the group are cleared. During deserialization, if multiple
- * fields are encountered for a group, only the last value seen will be kept.
- * @private {!Array<!Array<number>>}
- * @const
- */
-proto.BERTBuffers.Call.oneofGroups_ = [[3,4,5,6,7,8]];
-
-/**
- * @enum {number}
- */
-proto.BERTBuffers.Call.CallCase = {
-  CALL_NOT_SET: 0,
-  SYSTEM_COMMAND: 3,
-  FUNCTION_CALL: 4,
-  CODE: 5,
-  SHELL_COMMAND: 6,
-  CALLBACK: 7,
-  COM_CALLBACK: 8
-};
-
-/**
- * @return {proto.BERTBuffers.Call.CallCase}
- */
-proto.BERTBuffers.Call.prototype.getCallCase = function() {
-  return /** @type {proto.BERTBuffers.Call.CallCase} */(jspb.Message.computeOneofCase(this, proto.BERTBuffers.Call.oneofGroups_[0]));
-};
-
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto suitable for use in Soy templates.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     com.google.apps.jspb.JsClassTemplate.JS_RESERVED_WORDS.
- * @param {boolean=} opt_includeInstance Whether to include the JSPB instance
- *     for transitional soy proto support: http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.BERTBuffers.Call.prototype.toObject = function(opt_includeInstance) {
-  return proto.BERTBuffers.Call.toObject(opt_includeInstance, this);
-};
-
-
-/**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Whether to include the JSPB
- *     instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.BERTBuffers.Call} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.BERTBuffers.Call.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    id: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    wait: jspb.Message.getFieldWithDefault(msg, 2, false),
-    systemCommand: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    functionCall: (f = msg.getFunctionCall()) && proto.BERTBuffers.FunctionCall.toObject(includeInstance, f),
-    code: (f = msg.getCode()) && proto.BERTBuffers.Code.toObject(includeInstance, f),
-    shellCommand: jspb.Message.getFieldWithDefault(msg, 6, ""),
-    callback: (f = msg.getCallback()) && proto.BERTBuffers.FunctionCall.toObject(includeInstance, f),
-    comCallback: (f = msg.getComCallback()) && proto.BERTBuffers.COMFunctionCall.toObject(includeInstance, f)
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.BERTBuffers.Call}
- */
-proto.BERTBuffers.Call.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.BERTBuffers.Call;
-  return proto.BERTBuffers.Call.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.BERTBuffers.Call} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.BERTBuffers.Call}
- */
-proto.BERTBuffers.Call.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 1:
-      var value = /** @type {number} */ (reader.readUint32());
-      msg.setId(value);
-      break;
-    case 2:
-      var value = /** @type {boolean} */ (reader.readBool());
-      msg.setWait(value);
-      break;
-    case 3:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setSystemCommand(value);
-      break;
-    case 4:
-      var value = new proto.BERTBuffers.FunctionCall;
-      reader.readMessage(value,proto.BERTBuffers.FunctionCall.deserializeBinaryFromReader);
-      msg.setFunctionCall(value);
-      break;
-    case 5:
-      var value = new proto.BERTBuffers.Code;
-      reader.readMessage(value,proto.BERTBuffers.Code.deserializeBinaryFromReader);
-      msg.setCode(value);
-      break;
-    case 6:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setShellCommand(value);
-      break;
-    case 7:
-      var value = new proto.BERTBuffers.FunctionCall;
-      reader.readMessage(value,proto.BERTBuffers.FunctionCall.deserializeBinaryFromReader);
-      msg.setCallback(value);
-      break;
-    case 8:
-      var value = new proto.BERTBuffers.COMFunctionCall;
-      reader.readMessage(value,proto.BERTBuffers.COMFunctionCall.deserializeBinaryFromReader);
-      msg.setComCallback(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.BERTBuffers.Call.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.BERTBuffers.Call.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.BERTBuffers.Call} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.BERTBuffers.Call.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getId();
-  if (f !== 0) {
-    writer.writeUint32(
-      1,
-      f
-    );
-  }
-  f = message.getWait();
-  if (f) {
-    writer.writeBool(
-      2,
-      f
-    );
-  }
-  f = /** @type {string} */ (jspb.Message.getField(message, 3));
-  if (f != null) {
-    writer.writeString(
-      3,
-      f
-    );
-  }
-  f = message.getFunctionCall();
-  if (f != null) {
-    writer.writeMessage(
-      4,
-      f,
-      proto.BERTBuffers.FunctionCall.serializeBinaryToWriter
-    );
-  }
-  f = message.getCode();
-  if (f != null) {
-    writer.writeMessage(
-      5,
-      f,
-      proto.BERTBuffers.Code.serializeBinaryToWriter
-    );
-  }
-  f = /** @type {string} */ (jspb.Message.getField(message, 6));
-  if (f != null) {
-    writer.writeString(
-      6,
-      f
-    );
-  }
-  f = message.getCallback();
-  if (f != null) {
-    writer.writeMessage(
-      7,
-      f,
-      proto.BERTBuffers.FunctionCall.serializeBinaryToWriter
-    );
-  }
-  f = message.getComCallback();
-  if (f != null) {
-    writer.writeMessage(
-      8,
-      f,
-      proto.BERTBuffers.COMFunctionCall.serializeBinaryToWriter
-    );
-  }
-};
-
-
-/**
- * optional uint32 id = 1;
- * @return {number}
- */
-proto.BERTBuffers.Call.prototype.getId = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
-};
-
-
-/** @param {number} value */
-proto.BERTBuffers.Call.prototype.setId = function(value) {
-  jspb.Message.setProto3IntField(this, 1, value);
-};
-
-
-/**
- * optional bool wait = 2;
- * Note that Boolean fields may be set to 0/1 when serialized from a Java server.
- * You should avoid comparisons like {@code val === true/false} in those cases.
- * @return {boolean}
- */
-proto.BERTBuffers.Call.prototype.getWait = function() {
-  return /** @type {boolean} */ (jspb.Message.getFieldWithDefault(this, 2, false));
-};
-
-
-/** @param {boolean} value */
-proto.BERTBuffers.Call.prototype.setWait = function(value) {
-  jspb.Message.setProto3BooleanField(this, 2, value);
-};
-
-
-/**
- * optional string system_command = 3;
- * @return {string}
- */
-proto.BERTBuffers.Call.prototype.getSystemCommand = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
-};
-
-
-/** @param {string} value */
-proto.BERTBuffers.Call.prototype.setSystemCommand = function(value) {
-  jspb.Message.setOneofField(this, 3, proto.BERTBuffers.Call.oneofGroups_[0], value);
-};
-
-
-proto.BERTBuffers.Call.prototype.clearSystemCommand = function() {
-  jspb.Message.setOneofField(this, 3, proto.BERTBuffers.Call.oneofGroups_[0], undefined);
-};
-
-
-/**
- * Returns whether this field is set.
- * @return {!boolean}
- */
-proto.BERTBuffers.Call.prototype.hasSystemCommand = function() {
-  return jspb.Message.getField(this, 3) != null;
-};
-
-
-/**
- * optional FunctionCall function_call = 4;
- * @return {?proto.BERTBuffers.FunctionCall}
- */
-proto.BERTBuffers.Call.prototype.getFunctionCall = function() {
-  return /** @type{?proto.BERTBuffers.FunctionCall} */ (
-    jspb.Message.getWrapperField(this, proto.BERTBuffers.FunctionCall, 4));
-};
-
-
-/** @param {?proto.BERTBuffers.FunctionCall|undefined} value */
-proto.BERTBuffers.Call.prototype.setFunctionCall = function(value) {
-  jspb.Message.setOneofWrapperField(this, 4, proto.BERTBuffers.Call.oneofGroups_[0], value);
-};
-
-
-proto.BERTBuffers.Call.prototype.clearFunctionCall = function() {
-  this.setFunctionCall(undefined);
-};
-
-
-/**
- * Returns whether this field is set.
- * @return {!boolean}
- */
-proto.BERTBuffers.Call.prototype.hasFunctionCall = function() {
-  return jspb.Message.getField(this, 4) != null;
-};
-
-
-/**
- * optional Code code = 5;
- * @return {?proto.BERTBuffers.Code}
- */
-proto.BERTBuffers.Call.prototype.getCode = function() {
-  return /** @type{?proto.BERTBuffers.Code} */ (
-    jspb.Message.getWrapperField(this, proto.BERTBuffers.Code, 5));
-};
-
-
-/** @param {?proto.BERTBuffers.Code|undefined} value */
-proto.BERTBuffers.Call.prototype.setCode = function(value) {
-  jspb.Message.setOneofWrapperField(this, 5, proto.BERTBuffers.Call.oneofGroups_[0], value);
-};
-
-
-proto.BERTBuffers.Call.prototype.clearCode = function() {
-  this.setCode(undefined);
-};
-
-
-/**
- * Returns whether this field is set.
- * @return {!boolean}
- */
-proto.BERTBuffers.Call.prototype.hasCode = function() {
-  return jspb.Message.getField(this, 5) != null;
-};
-
-
-/**
- * optional string shell_command = 6;
- * @return {string}
- */
-proto.BERTBuffers.Call.prototype.getShellCommand = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 6, ""));
-};
-
-
-/** @param {string} value */
-proto.BERTBuffers.Call.prototype.setShellCommand = function(value) {
-  jspb.Message.setOneofField(this, 6, proto.BERTBuffers.Call.oneofGroups_[0], value);
-};
-
-
-proto.BERTBuffers.Call.prototype.clearShellCommand = function() {
-  jspb.Message.setOneofField(this, 6, proto.BERTBuffers.Call.oneofGroups_[0], undefined);
-};
-
-
-/**
- * Returns whether this field is set.
- * @return {!boolean}
- */
-proto.BERTBuffers.Call.prototype.hasShellCommand = function() {
-  return jspb.Message.getField(this, 6) != null;
-};
-
-
-/**
- * optional FunctionCall callback = 7;
- * @return {?proto.BERTBuffers.FunctionCall}
- */
-proto.BERTBuffers.Call.prototype.getCallback = function() {
-  return /** @type{?proto.BERTBuffers.FunctionCall} */ (
-    jspb.Message.getWrapperField(this, proto.BERTBuffers.FunctionCall, 7));
-};
-
-
-/** @param {?proto.BERTBuffers.FunctionCall|undefined} value */
-proto.BERTBuffers.Call.prototype.setCallback = function(value) {
-  jspb.Message.setOneofWrapperField(this, 7, proto.BERTBuffers.Call.oneofGroups_[0], value);
-};
-
-
-proto.BERTBuffers.Call.prototype.clearCallback = function() {
-  this.setCallback(undefined);
-};
-
-
-/**
- * Returns whether this field is set.
- * @return {!boolean}
- */
-proto.BERTBuffers.Call.prototype.hasCallback = function() {
-  return jspb.Message.getField(this, 7) != null;
-};
-
-
-/**
- * optional COMFunctionCall com_callback = 8;
- * @return {?proto.BERTBuffers.COMFunctionCall}
- */
-proto.BERTBuffers.Call.prototype.getComCallback = function() {
-  return /** @type{?proto.BERTBuffers.COMFunctionCall} */ (
-    jspb.Message.getWrapperField(this, proto.BERTBuffers.COMFunctionCall, 8));
-};
-
-
-/** @param {?proto.BERTBuffers.COMFunctionCall|undefined} value */
-proto.BERTBuffers.Call.prototype.setComCallback = function(value) {
-  jspb.Message.setOneofWrapperField(this, 8, proto.BERTBuffers.Call.oneofGroups_[0], value);
-};
-
-
-proto.BERTBuffers.Call.prototype.clearComCallback = function() {
-  this.setComCallback(undefined);
-};
-
-
-/**
- * Returns whether this field is set.
- * @return {!boolean}
- */
-proto.BERTBuffers.Call.prototype.hasComCallback = function() {
-  return jspb.Message.getField(this, 8) != null;
-};
-
-
-
-/**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
- */
 proto.BERTBuffers.Console = function(opt_data) {
   jspb.Message.initialize(this, opt_data, 0, -1, null, proto.BERTBuffers.Console.oneofGroups_);
 };
@@ -2890,12 +2429,12 @@ proto.BERTBuffers.Console.prototype.hasPrompt = function() {
  * @extends {jspb.Message}
  * @constructor
  */
-proto.BERTBuffers.Response = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, proto.BERTBuffers.Response.oneofGroups_);
+proto.BERTBuffers.CallResponse = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, proto.BERTBuffers.CallResponse.oneofGroups_);
 };
-goog.inherits(proto.BERTBuffers.Response, jspb.Message);
+goog.inherits(proto.BERTBuffers.CallResponse, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
-  proto.BERTBuffers.Response.displayName = 'proto.BERTBuffers.Response';
+  proto.BERTBuffers.CallResponse.displayName = 'proto.BERTBuffers.CallResponse';
 }
 /**
  * Oneof group definitions for this message. Each group defines the field
@@ -2905,25 +2444,28 @@ if (goog.DEBUG && !COMPILED) {
  * @private {!Array<!Array<number>>}
  * @const
  */
-proto.BERTBuffers.Response.oneofGroups_ = [[2,3,4,5,6]];
+proto.BERTBuffers.CallResponse.oneofGroups_ = [[3,4,5,6,7,8,9,10]];
 
 /**
  * @enum {number}
  */
-proto.BERTBuffers.Response.ResultCase = {
-  RESULT_NOT_SET: 0,
-  ERR: 2,
-  VALUE: 3,
-  CONSOLE: 4,
-  CONTROL_MESSAGE: 5,
-  CALLBACK: 6
+proto.BERTBuffers.CallResponse.OperationCase = {
+  OPERATION_NOT_SET: 0,
+  ERR: 3,
+  RESULT: 4,
+  CONSOLE: 5,
+  CODE: 6,
+  SHELL_COMMAND: 7,
+  CONTROL_MESSAGE: 8,
+  FUNCTION_CALL: 9,
+  COM_CALLBACK: 10
 };
 
 /**
- * @return {proto.BERTBuffers.Response.ResultCase}
+ * @return {proto.BERTBuffers.CallResponse.OperationCase}
  */
-proto.BERTBuffers.Response.prototype.getResultCase = function() {
-  return /** @type {proto.BERTBuffers.Response.ResultCase} */(jspb.Message.computeOneofCase(this, proto.BERTBuffers.Response.oneofGroups_[0]));
+proto.BERTBuffers.CallResponse.prototype.getOperationCase = function() {
+  return /** @type {proto.BERTBuffers.CallResponse.OperationCase} */(jspb.Message.computeOneofCase(this, proto.BERTBuffers.CallResponse.oneofGroups_[0]));
 };
 
 
@@ -2939,8 +2481,8 @@ if (jspb.Message.GENERATE_TO_OBJECT) {
  *     for transitional soy proto support: http://goto/soy-param-migration
  * @return {!Object}
  */
-proto.BERTBuffers.Response.prototype.toObject = function(opt_includeInstance) {
-  return proto.BERTBuffers.Response.toObject(opt_includeInstance, this);
+proto.BERTBuffers.CallResponse.prototype.toObject = function(opt_includeInstance) {
+  return proto.BERTBuffers.CallResponse.toObject(opt_includeInstance, this);
 };
 
 
@@ -2949,18 +2491,22 @@ proto.BERTBuffers.Response.prototype.toObject = function(opt_includeInstance) {
  * @param {boolean|undefined} includeInstance Whether to include the JSPB
  *     instance for transitional soy proto support:
  *     http://goto/soy-param-migration
- * @param {!proto.BERTBuffers.Response} msg The msg instance to transform.
+ * @param {!proto.BERTBuffers.CallResponse} msg The msg instance to transform.
  * @return {!Object}
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
-proto.BERTBuffers.Response.toObject = function(includeInstance, msg) {
+proto.BERTBuffers.CallResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    err: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    value: (f = msg.getValue()) && proto.BERTBuffers.Variable.toObject(includeInstance, f),
+    wait: jspb.Message.getFieldWithDefault(msg, 2, false),
+    err: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    result: (f = msg.getResult()) && proto.BERTBuffers.Variable.toObject(includeInstance, f),
     console: (f = msg.getConsole()) && proto.BERTBuffers.Console.toObject(includeInstance, f),
-    controlMessage: jspb.Message.getFieldWithDefault(msg, 5, ""),
-    callback: (f = msg.getCallback()) && proto.BERTBuffers.FunctionCall.toObject(includeInstance, f)
+    code: (f = msg.getCode()) && proto.BERTBuffers.Code.toObject(includeInstance, f),
+    shellCommand: jspb.Message.getFieldWithDefault(msg, 7, ""),
+    controlMessage: jspb.Message.getFieldWithDefault(msg, 8, ""),
+    functionCall: (f = msg.getFunctionCall()) && proto.BERTBuffers.FunctionCall.toObject(includeInstance, f),
+    comCallback: (f = msg.getComCallback()) && proto.BERTBuffers.COMFunctionCall.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -2974,23 +2520,23 @@ proto.BERTBuffers.Response.toObject = function(includeInstance, msg) {
 /**
  * Deserializes binary data (in protobuf wire format).
  * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.BERTBuffers.Response}
+ * @return {!proto.BERTBuffers.CallResponse}
  */
-proto.BERTBuffers.Response.deserializeBinary = function(bytes) {
+proto.BERTBuffers.CallResponse.deserializeBinary = function(bytes) {
   var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.BERTBuffers.Response;
-  return proto.BERTBuffers.Response.deserializeBinaryFromReader(msg, reader);
+  var msg = new proto.BERTBuffers.CallResponse;
+  return proto.BERTBuffers.CallResponse.deserializeBinaryFromReader(msg, reader);
 };
 
 
 /**
  * Deserializes binary data (in protobuf wire format) from the
  * given reader into the given message object.
- * @param {!proto.BERTBuffers.Response} msg The message object to deserialize into.
+ * @param {!proto.BERTBuffers.CallResponse} msg The message object to deserialize into.
  * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.BERTBuffers.Response}
+ * @return {!proto.BERTBuffers.CallResponse}
  */
-proto.BERTBuffers.Response.deserializeBinaryFromReader = function(msg, reader) {
+proto.BERTBuffers.CallResponse.deserializeBinaryFromReader = function(msg, reader) {
   while (reader.nextField()) {
     if (reader.isEndGroup()) {
       break;
@@ -3002,27 +2548,45 @@ proto.BERTBuffers.Response.deserializeBinaryFromReader = function(msg, reader) {
       msg.setId(value);
       break;
     case 2:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setWait(value);
+      break;
+    case 3:
       var value = /** @type {string} */ (reader.readString());
       msg.setErr(value);
       break;
-    case 3:
+    case 4:
       var value = new proto.BERTBuffers.Variable;
       reader.readMessage(value,proto.BERTBuffers.Variable.deserializeBinaryFromReader);
-      msg.setValue(value);
+      msg.setResult(value);
       break;
-    case 4:
+    case 5:
       var value = new proto.BERTBuffers.Console;
       reader.readMessage(value,proto.BERTBuffers.Console.deserializeBinaryFromReader);
       msg.setConsole(value);
       break;
-    case 5:
+    case 6:
+      var value = new proto.BERTBuffers.Code;
+      reader.readMessage(value,proto.BERTBuffers.Code.deserializeBinaryFromReader);
+      msg.setCode(value);
+      break;
+    case 7:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setShellCommand(value);
+      break;
+    case 8:
       var value = /** @type {string} */ (reader.readString());
       msg.setControlMessage(value);
       break;
-    case 6:
+    case 9:
       var value = new proto.BERTBuffers.FunctionCall;
       reader.readMessage(value,proto.BERTBuffers.FunctionCall.deserializeBinaryFromReader);
-      msg.setCallback(value);
+      msg.setFunctionCall(value);
+      break;
+    case 10:
+      var value = new proto.BERTBuffers.COMFunctionCall;
+      reader.readMessage(value,proto.BERTBuffers.COMFunctionCall.deserializeBinaryFromReader);
+      msg.setComCallback(value);
       break;
     default:
       reader.skipField();
@@ -3037,9 +2601,9 @@ proto.BERTBuffers.Response.deserializeBinaryFromReader = function(msg, reader) {
  * Serializes the message to binary data (in protobuf wire format).
  * @return {!Uint8Array}
  */
-proto.BERTBuffers.Response.prototype.serializeBinary = function() {
+proto.BERTBuffers.CallResponse.prototype.serializeBinary = function() {
   var writer = new jspb.BinaryWriter();
-  proto.BERTBuffers.Response.serializeBinaryToWriter(this, writer);
+  proto.BERTBuffers.CallResponse.serializeBinaryToWriter(this, writer);
   return writer.getResultBuffer();
 };
 
@@ -3047,11 +2611,11 @@ proto.BERTBuffers.Response.prototype.serializeBinary = function() {
 /**
  * Serializes the given message to binary data (in protobuf wire
  * format), writing to the given BinaryWriter.
- * @param {!proto.BERTBuffers.Response} message
+ * @param {!proto.BERTBuffers.CallResponse} message
  * @param {!jspb.BinaryWriter} writer
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
-proto.BERTBuffers.Response.serializeBinaryToWriter = function(message, writer) {
+proto.BERTBuffers.CallResponse.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
   f = message.getId();
   if (f !== 0) {
@@ -3060,17 +2624,24 @@ proto.BERTBuffers.Response.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = /** @type {string} */ (jspb.Message.getField(message, 2));
-  if (f != null) {
-    writer.writeString(
+  f = message.getWait();
+  if (f) {
+    writer.writeBool(
       2,
       f
     );
   }
-  f = message.getValue();
+  f = /** @type {string} */ (jspb.Message.getField(message, 3));
+  if (f != null) {
+    writer.writeString(
+      3,
+      f
+    );
+  }
+  f = message.getResult();
   if (f != null) {
     writer.writeMessage(
-      3,
+      4,
       f,
       proto.BERTBuffers.Variable.serializeBinaryToWriter
     );
@@ -3078,24 +2649,47 @@ proto.BERTBuffers.Response.serializeBinaryToWriter = function(message, writer) {
   f = message.getConsole();
   if (f != null) {
     writer.writeMessage(
-      4,
+      5,
       f,
       proto.BERTBuffers.Console.serializeBinaryToWriter
     );
   }
-  f = /** @type {string} */ (jspb.Message.getField(message, 5));
-  if (f != null) {
-    writer.writeString(
-      5,
-      f
-    );
-  }
-  f = message.getCallback();
+  f = message.getCode();
   if (f != null) {
     writer.writeMessage(
       6,
       f,
+      proto.BERTBuffers.Code.serializeBinaryToWriter
+    );
+  }
+  f = /** @type {string} */ (jspb.Message.getField(message, 7));
+  if (f != null) {
+    writer.writeString(
+      7,
+      f
+    );
+  }
+  f = /** @type {string} */ (jspb.Message.getField(message, 8));
+  if (f != null) {
+    writer.writeString(
+      8,
+      f
+    );
+  }
+  f = message.getFunctionCall();
+  if (f != null) {
+    writer.writeMessage(
+      9,
+      f,
       proto.BERTBuffers.FunctionCall.serializeBinaryToWriter
+    );
+  }
+  f = message.getComCallback();
+  if (f != null) {
+    writer.writeMessage(
+      10,
+      f,
+      proto.BERTBuffers.COMFunctionCall.serializeBinaryToWriter
     );
   }
 };
@@ -3105,64 +2699,51 @@ proto.BERTBuffers.Response.serializeBinaryToWriter = function(message, writer) {
  * optional uint32 id = 1;
  * @return {number}
  */
-proto.BERTBuffers.Response.prototype.getId = function() {
+proto.BERTBuffers.CallResponse.prototype.getId = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
 
 /** @param {number} value */
-proto.BERTBuffers.Response.prototype.setId = function(value) {
+proto.BERTBuffers.CallResponse.prototype.setId = function(value) {
   jspb.Message.setProto3IntField(this, 1, value);
 };
 
 
 /**
- * optional string err = 2;
+ * optional bool wait = 2;
+ * Note that Boolean fields may be set to 0/1 when serialized from a Java server.
+ * You should avoid comparisons like {@code val === true/false} in those cases.
+ * @return {boolean}
+ */
+proto.BERTBuffers.CallResponse.prototype.getWait = function() {
+  return /** @type {boolean} */ (jspb.Message.getFieldWithDefault(this, 2, false));
+};
+
+
+/** @param {boolean} value */
+proto.BERTBuffers.CallResponse.prototype.setWait = function(value) {
+  jspb.Message.setProto3BooleanField(this, 2, value);
+};
+
+
+/**
+ * optional string err = 3;
  * @return {string}
  */
-proto.BERTBuffers.Response.prototype.getErr = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+proto.BERTBuffers.CallResponse.prototype.getErr = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
 };
 
 
 /** @param {string} value */
-proto.BERTBuffers.Response.prototype.setErr = function(value) {
-  jspb.Message.setOneofField(this, 2, proto.BERTBuffers.Response.oneofGroups_[0], value);
+proto.BERTBuffers.CallResponse.prototype.setErr = function(value) {
+  jspb.Message.setOneofField(this, 3, proto.BERTBuffers.CallResponse.oneofGroups_[0], value);
 };
 
 
-proto.BERTBuffers.Response.prototype.clearErr = function() {
-  jspb.Message.setOneofField(this, 2, proto.BERTBuffers.Response.oneofGroups_[0], undefined);
-};
-
-
-/**
- * Returns whether this field is set.
- * @return {!boolean}
- */
-proto.BERTBuffers.Response.prototype.hasErr = function() {
-  return jspb.Message.getField(this, 2) != null;
-};
-
-
-/**
- * optional Variable value = 3;
- * @return {?proto.BERTBuffers.Variable}
- */
-proto.BERTBuffers.Response.prototype.getValue = function() {
-  return /** @type{?proto.BERTBuffers.Variable} */ (
-    jspb.Message.getWrapperField(this, proto.BERTBuffers.Variable, 3));
-};
-
-
-/** @param {?proto.BERTBuffers.Variable|undefined} value */
-proto.BERTBuffers.Response.prototype.setValue = function(value) {
-  jspb.Message.setOneofWrapperField(this, 3, proto.BERTBuffers.Response.oneofGroups_[0], value);
-};
-
-
-proto.BERTBuffers.Response.prototype.clearValue = function() {
-  this.setValue(undefined);
+proto.BERTBuffers.CallResponse.prototype.clearErr = function() {
+  jspb.Message.setOneofField(this, 3, proto.BERTBuffers.CallResponse.oneofGroups_[0], undefined);
 };
 
 
@@ -3170,28 +2751,58 @@ proto.BERTBuffers.Response.prototype.clearValue = function() {
  * Returns whether this field is set.
  * @return {!boolean}
  */
-proto.BERTBuffers.Response.prototype.hasValue = function() {
+proto.BERTBuffers.CallResponse.prototype.hasErr = function() {
   return jspb.Message.getField(this, 3) != null;
 };
 
 
 /**
- * optional Console console = 4;
+ * optional Variable result = 4;
+ * @return {?proto.BERTBuffers.Variable}
+ */
+proto.BERTBuffers.CallResponse.prototype.getResult = function() {
+  return /** @type{?proto.BERTBuffers.Variable} */ (
+    jspb.Message.getWrapperField(this, proto.BERTBuffers.Variable, 4));
+};
+
+
+/** @param {?proto.BERTBuffers.Variable|undefined} value */
+proto.BERTBuffers.CallResponse.prototype.setResult = function(value) {
+  jspb.Message.setOneofWrapperField(this, 4, proto.BERTBuffers.CallResponse.oneofGroups_[0], value);
+};
+
+
+proto.BERTBuffers.CallResponse.prototype.clearResult = function() {
+  this.setResult(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {!boolean}
+ */
+proto.BERTBuffers.CallResponse.prototype.hasResult = function() {
+  return jspb.Message.getField(this, 4) != null;
+};
+
+
+/**
+ * optional Console console = 5;
  * @return {?proto.BERTBuffers.Console}
  */
-proto.BERTBuffers.Response.prototype.getConsole = function() {
+proto.BERTBuffers.CallResponse.prototype.getConsole = function() {
   return /** @type{?proto.BERTBuffers.Console} */ (
-    jspb.Message.getWrapperField(this, proto.BERTBuffers.Console, 4));
+    jspb.Message.getWrapperField(this, proto.BERTBuffers.Console, 5));
 };
 
 
 /** @param {?proto.BERTBuffers.Console|undefined} value */
-proto.BERTBuffers.Response.prototype.setConsole = function(value) {
-  jspb.Message.setOneofWrapperField(this, 4, proto.BERTBuffers.Response.oneofGroups_[0], value);
+proto.BERTBuffers.CallResponse.prototype.setConsole = function(value) {
+  jspb.Message.setOneofWrapperField(this, 5, proto.BERTBuffers.CallResponse.oneofGroups_[0], value);
 };
 
 
-proto.BERTBuffers.Response.prototype.clearConsole = function() {
+proto.BERTBuffers.CallResponse.prototype.clearConsole = function() {
   this.setConsole(undefined);
 };
 
@@ -3200,58 +2811,29 @@ proto.BERTBuffers.Response.prototype.clearConsole = function() {
  * Returns whether this field is set.
  * @return {!boolean}
  */
-proto.BERTBuffers.Response.prototype.hasConsole = function() {
-  return jspb.Message.getField(this, 4) != null;
-};
-
-
-/**
- * optional string control_message = 5;
- * @return {string}
- */
-proto.BERTBuffers.Response.prototype.getControlMessage = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
-};
-
-
-/** @param {string} value */
-proto.BERTBuffers.Response.prototype.setControlMessage = function(value) {
-  jspb.Message.setOneofField(this, 5, proto.BERTBuffers.Response.oneofGroups_[0], value);
-};
-
-
-proto.BERTBuffers.Response.prototype.clearControlMessage = function() {
-  jspb.Message.setOneofField(this, 5, proto.BERTBuffers.Response.oneofGroups_[0], undefined);
-};
-
-
-/**
- * Returns whether this field is set.
- * @return {!boolean}
- */
-proto.BERTBuffers.Response.prototype.hasControlMessage = function() {
+proto.BERTBuffers.CallResponse.prototype.hasConsole = function() {
   return jspb.Message.getField(this, 5) != null;
 };
 
 
 /**
- * optional FunctionCall callback = 6;
- * @return {?proto.BERTBuffers.FunctionCall}
+ * optional Code code = 6;
+ * @return {?proto.BERTBuffers.Code}
  */
-proto.BERTBuffers.Response.prototype.getCallback = function() {
-  return /** @type{?proto.BERTBuffers.FunctionCall} */ (
-    jspb.Message.getWrapperField(this, proto.BERTBuffers.FunctionCall, 6));
+proto.BERTBuffers.CallResponse.prototype.getCode = function() {
+  return /** @type{?proto.BERTBuffers.Code} */ (
+    jspb.Message.getWrapperField(this, proto.BERTBuffers.Code, 6));
 };
 
 
-/** @param {?proto.BERTBuffers.FunctionCall|undefined} value */
-proto.BERTBuffers.Response.prototype.setCallback = function(value) {
-  jspb.Message.setOneofWrapperField(this, 6, proto.BERTBuffers.Response.oneofGroups_[0], value);
+/** @param {?proto.BERTBuffers.Code|undefined} value */
+proto.BERTBuffers.CallResponse.prototype.setCode = function(value) {
+  jspb.Message.setOneofWrapperField(this, 6, proto.BERTBuffers.CallResponse.oneofGroups_[0], value);
 };
 
 
-proto.BERTBuffers.Response.prototype.clearCallback = function() {
-  this.setCallback(undefined);
+proto.BERTBuffers.CallResponse.prototype.clearCode = function() {
+  this.setCode(undefined);
 };
 
 
@@ -3259,22 +2841,128 @@ proto.BERTBuffers.Response.prototype.clearCallback = function() {
  * Returns whether this field is set.
  * @return {!boolean}
  */
-proto.BERTBuffers.Response.prototype.hasCallback = function() {
+proto.BERTBuffers.CallResponse.prototype.hasCode = function() {
   return jspb.Message.getField(this, 6) != null;
 };
 
 
 /**
- * @enum {number}
+ * optional string shell_command = 7;
+ * @return {string}
  */
-proto.BERTBuffers.Type = {
-  NIL: 0,
-  STRING: 1,
-  NUMBER: 2,
-  BOOL: 3,
-  COMPLEX: 4,
-  ARRAY: 5
+proto.BERTBuffers.CallResponse.prototype.getShellCommand = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 7, ""));
 };
+
+
+/** @param {string} value */
+proto.BERTBuffers.CallResponse.prototype.setShellCommand = function(value) {
+  jspb.Message.setOneofField(this, 7, proto.BERTBuffers.CallResponse.oneofGroups_[0], value);
+};
+
+
+proto.BERTBuffers.CallResponse.prototype.clearShellCommand = function() {
+  jspb.Message.setOneofField(this, 7, proto.BERTBuffers.CallResponse.oneofGroups_[0], undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {!boolean}
+ */
+proto.BERTBuffers.CallResponse.prototype.hasShellCommand = function() {
+  return jspb.Message.getField(this, 7) != null;
+};
+
+
+/**
+ * optional string control_message = 8;
+ * @return {string}
+ */
+proto.BERTBuffers.CallResponse.prototype.getControlMessage = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 8, ""));
+};
+
+
+/** @param {string} value */
+proto.BERTBuffers.CallResponse.prototype.setControlMessage = function(value) {
+  jspb.Message.setOneofField(this, 8, proto.BERTBuffers.CallResponse.oneofGroups_[0], value);
+};
+
+
+proto.BERTBuffers.CallResponse.prototype.clearControlMessage = function() {
+  jspb.Message.setOneofField(this, 8, proto.BERTBuffers.CallResponse.oneofGroups_[0], undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {!boolean}
+ */
+proto.BERTBuffers.CallResponse.prototype.hasControlMessage = function() {
+  return jspb.Message.getField(this, 8) != null;
+};
+
+
+/**
+ * optional FunctionCall function_call = 9;
+ * @return {?proto.BERTBuffers.FunctionCall}
+ */
+proto.BERTBuffers.CallResponse.prototype.getFunctionCall = function() {
+  return /** @type{?proto.BERTBuffers.FunctionCall} */ (
+    jspb.Message.getWrapperField(this, proto.BERTBuffers.FunctionCall, 9));
+};
+
+
+/** @param {?proto.BERTBuffers.FunctionCall|undefined} value */
+proto.BERTBuffers.CallResponse.prototype.setFunctionCall = function(value) {
+  jspb.Message.setOneofWrapperField(this, 9, proto.BERTBuffers.CallResponse.oneofGroups_[0], value);
+};
+
+
+proto.BERTBuffers.CallResponse.prototype.clearFunctionCall = function() {
+  this.setFunctionCall(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {!boolean}
+ */
+proto.BERTBuffers.CallResponse.prototype.hasFunctionCall = function() {
+  return jspb.Message.getField(this, 9) != null;
+};
+
+
+/**
+ * optional COMFunctionCall com_callback = 10;
+ * @return {?proto.BERTBuffers.COMFunctionCall}
+ */
+proto.BERTBuffers.CallResponse.prototype.getComCallback = function() {
+  return /** @type{?proto.BERTBuffers.COMFunctionCall} */ (
+    jspb.Message.getWrapperField(this, proto.BERTBuffers.COMFunctionCall, 10));
+};
+
+
+/** @param {?proto.BERTBuffers.COMFunctionCall|undefined} value */
+proto.BERTBuffers.CallResponse.prototype.setComCallback = function(value) {
+  jspb.Message.setOneofWrapperField(this, 10, proto.BERTBuffers.CallResponse.oneofGroups_[0], value);
+};
+
+
+proto.BERTBuffers.CallResponse.prototype.clearComCallback = function() {
+  this.setComCallback(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {!boolean}
+ */
+proto.BERTBuffers.CallResponse.prototype.hasComCallback = function() {
+  return jspb.Message.getField(this, 10) != null;
+};
+
 
 /**
  * @enum {number}
@@ -3284,7 +2972,8 @@ proto.BERTBuffers.ErrorType = {
   NA: 1,
   INF: 2,
   PARSE: 3,
-  EXECUTION: 4
+  EXECUTION: 4,
+  OTHER: 15
 };
 
 /**

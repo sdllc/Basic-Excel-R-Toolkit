@@ -19,6 +19,11 @@ public:
         return message.ParseFromArray(data + sizeof(int32_t), bytes);
     }
 
+    /** unframe passed string */
+    static bool Unframe(google::protobuf::Message &message, const std::string &message_buffer) {
+        return Unframe(message, message_buffer.c_str(), (uint32_t)message_buffer.length());
+    }
+
     /**
      * frame and return string
      */

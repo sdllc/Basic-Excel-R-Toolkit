@@ -150,7 +150,7 @@ void COMObjectMap::MapInterface(std::string &name, std::vector< MemberFunction >
     }
 }
 
-void COMObjectMap::InvokeCOMPropertyPut(const BERTBuffers::COMFunctionCall &callback, BERTBuffers::Response &response) {
+void COMObjectMap::InvokeCOMPropertyPut(const BERTBuffers::COMFunctionCall &callback, BERTBuffers::CallResponse &response) {
 
     uint32_t key = callback.pointer();
     ULONG_PTR pointer = com_pointer_map_[key];
@@ -204,7 +204,7 @@ void COMObjectMap::InvokeCOMPropertyPut(const BERTBuffers::COMFunctionCall &call
     hresult = pdisp->Invoke(dispid, IID_NULL, 1033, DISPATCH_PROPERTYPUT, &dispparams, NULL, NULL, NULL);
 
     if (SUCCEEDED(hresult)) {
-        response.mutable_value()->set_boolean(true);
+        response.mutable_result()->set_boolean(true);
     }
     else {
         response.set_err("COM error");
@@ -212,7 +212,7 @@ void COMObjectMap::InvokeCOMPropertyPut(const BERTBuffers::COMFunctionCall &call
 
 }
 
-void COMObjectMap::InvokeCOMFunction(const BERTBuffers::COMFunctionCall &callback, BERTBuffers::Response &response)
+void COMObjectMap::InvokeCOMFunction(const BERTBuffers::COMFunctionCall &callback, BERTBuffers::CallResponse &response)
 {
     if (callback.type() == BERTBuffers::CallType::put) {
         return InvokeCOMPropertyPut(callback, response);
@@ -252,6 +252,8 @@ void COMObjectMap::InvokeCOMFunction(const BERTBuffers::COMFunctionCall &callbac
     // actually to get the FUNCDESC, you need the index in the typeinfo, which
     // you cannot look up; if you look up by memid/dispid, you will always
     // get the first one. there does not seem to be a "GetFuncDescs" function.
+    // (I suppose you could get the first one and then iterate; it would still 
+    // require iteration, but probably no more than 3 times).
 
     // we're now caching this value along with the function descriptor. this is
     // not ideal, but it's preferable to looping every time.
@@ -265,12 +267,6 @@ void COMObjectMap::InvokeCOMFunction(const BERTBuffers::COMFunctionCall &callbac
         hresult = type_info_pointer->GetFuncDesc(callback.index(), &function_desctiptor);
         if (SUCCEEDED(hresult))
         {
-            //UINT namecount;
-            //CComBSTR bstrNameList[32];
-            //type_info_pointer->GetNames(function_desctiptor->memid, (BSTR*)&bstrNameList, 32, &namecount);
-
-            // we expect one argument, a list of arguments.
-
             int arguments_count = callback.arguments_size();
 
             DISPPARAMS dispparams;
@@ -279,8 +275,6 @@ void COMObjectMap::InvokeCOMFunction(const BERTBuffers::COMFunctionCall &callbac
             dispparams.rgvarg = 0;
 
             CComVariant cvResult;
-
-            // this makes no sense.  it's based on what the call wants, not what the caller does.
 
             if (function_desctiptor->invkind == INVOKE_FUNC || 
                 ((function_desctiptor->invkind == INVOKE_PROPERTYGET) && ((function_desctiptor->cParams - function_desctiptor->cParamsOpt > 0) || (arguments_count > 0))))
@@ -297,30 +291,6 @@ void COMObjectMap::InvokeCOMFunction(const BERTBuffers::COMFunctionCall &callbac
                 }
                 hresult = dispatch_pointer->Invoke(dispid, IID_NULL, 1033, (function_desctiptor->invkind == INVOKE_PROPERTYGET) ? DISPATCH_PROPERTYGET : DISPATCH_METHOD, &dispparams, &cvResult, NULL, NULL);
 
-                /*
-                CComVariant *pcv = 0;
-                if (arguments_count > 0)
-                {
-                    pcv = new CComVariant[arguments_count];
-                    dispparams.rgvarg = pcv;
-
-                    for (int i = 0; i < arguments_count; i++)
-                    {
-                        int k = arguments_count - 1 - i; // backwards
-                        pcv[k] = Convert::VariableToVariant(callback.arguments(i));
-
-                        if (pcv[k].vt == VT_ERROR) {
-                            pcv[k] = CComVariant(DISP_E_PARAMNOTFOUND, VT_ERROR); // missing
-                        }
-
-                        dispparams.cArgs++;
-                    }
-                }
-
-                hresult = dispatch_pointer->Invoke(dispid, IID_NULL, 1033, (function_desctiptor->invkind == INVOKE_PROPERTYGET) ? DISPATCH_PROPERTYGET : DISPATCH_METHOD, &dispparams, &cvResult, NULL, NULL);
-                if (pcv) delete[] pcv;
-                */
-
             }
             else if (function_desctiptor->invkind == INVOKE_PROPERTYGET)
             {
@@ -330,7 +300,7 @@ void COMObjectMap::InvokeCOMFunction(const BERTBuffers::COMFunctionCall &callbac
             if (SUCCEEDED(hresult))
             {
                 if (cvResult.vt == VT_DISPATCH) DispatchResponse(response, cvResult.pdispVal);
-                else  Convert::VariantToVariable(response.mutable_value(), cvResult);
+                else  Convert::VariantToVariable(response.mutable_result(), cvResult);
             }
             else
             {
@@ -345,12 +315,12 @@ void COMObjectMap::InvokeCOMFunction(const BERTBuffers::COMFunctionCall &callbac
     }
 }
 
-void COMObjectMap::DispatchResponse(BERTBuffers::Response &response, const LPDISPATCH dispatch_pointer) {
+void COMObjectMap::DispatchResponse(BERTBuffers::CallResponse &response, const LPDISPATCH dispatch_pointer) {
 
     // this can happen. it happens on the start screen.
 
     if (!dispatch_pointer) {
-        response.mutable_value()->set_nil(true);
+        response.mutable_result()->set_nil(true);
     }
     else {
 
@@ -358,7 +328,7 @@ void COMObjectMap::DispatchResponse(BERTBuffers::Response &response, const LPDIS
 
         int32_t key = MapCOMPointer(reinterpret_cast<ULONG_PTR>(dispatch_pointer));
 
-        auto function_call = response.mutable_callback();
+        auto function_call = response.mutable_function_call();
         function_call->set_function("BERT$install.com.pointer");
         function_call->add_arguments()->set_num(key);
 
@@ -537,6 +507,9 @@ void COMObjectMap::MapObject(IDispatch *dispatch_pointer, std::vector< MemberFun
 
 }
 
+/**
+ * using this function? ...
+
 bool COMObjectMap::GetCoClassForDispatch(ITypeInfo **coclass_ref, IDispatch *dispatch_pointer)
 {
     CComPtr<ITypeInfo> type_info_pointer;
@@ -610,6 +583,7 @@ bool COMObjectMap::GetCoClassForDispatch(ITypeInfo **coclass_ref, IDispatch *dis
 
     return match_interface;
 }
+*/
 
 bool COMObjectMap::GetObjectInterface(CComBSTR &name, IDispatch *dispatch_pointer)
 {

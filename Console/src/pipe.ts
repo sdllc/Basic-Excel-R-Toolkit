@@ -179,7 +179,7 @@ export class Pipe {
 
     // console.info("TX message", message.id, message);
 
-    let call = new messages.Call();
+    let call = new messages.CallResponse();
     call.setId(message.id);
     call.setWait(true);
 
@@ -190,7 +190,7 @@ export class Pipe {
         call.setCode(code);
         break;
       case Channel.SYSTEM:
-        call.setSystemCommand(message.command);
+        call.setControlMessage(message.command);
         break;
       case Channel.CALL:
         break;
@@ -270,7 +270,7 @@ export class Pipe {
 
       while (array && array.length) {
         let byte_length = new Int32Array(array.buffer.slice(0, 4))[0];
-        let response = messages.Response.deserializeBinary(array.slice(4, byte_length + 4));
+        let response = messages.CallResponse.deserializeBinary(array.slice(4, byte_length + 4));
         stack.push(response);
         array = array.slice(byte_length + 4);
       }
@@ -299,8 +299,8 @@ export class Pipe {
         
         // [FIXME: need to do this at each level]
 
-        switch (response.getResultCase()) {
-          case messages.Response.ResultCase.CONTROL_MESSAGE:
+        switch (response.getOperationCase()) {
+          case messages.CallResponse.OperationCase.CONTROL_MESSAGE:
             let control_message = response.getControlMessage();
             if( control_message === "reset-prompt" && pending ){
               this.Resolve(pending, -1);
@@ -309,7 +309,7 @@ export class Pipe {
             else setImmediate(() => this.ControlMessageCallback(control_message));
             break;
 
-          case messages.Response.ResultCase.CONSOLE:
+          case messages.CallResponse.OperationCase.CONSOLE:
             let message_case = response.getConsole().getMessageCase();
 
             if (pending && (message_case === messages.Console.MessageCase.PROMPT)) {
@@ -323,13 +323,13 @@ export class Pipe {
             else setImmediate(() => this.ConsoleCallback(response));
             break;
 
-          case messages.Response.ResultCase.ERR:
+          case messages.CallResponse.OperationCase.ERR:
             if(pending) this.Reject(pending, response.getErr());
             resolve = true;
             break;
 
-          case messages.Response.ResultCase.VALUE:
-            let result = this.VariableToObject(response.getValue());
+          case messages.CallResponse.OperationCase.RESULT:
+            let result = this.VariableToObject(response.getResult());
             if(pending) this.Resolve(pending, result);
             resolve = true;
             break;

@@ -17,15 +17,15 @@
   },
   "scripts": {
     "start": "electron .",
-    "build": "./node_modules/.bin/less-watch-compiler --run-once & ./node_modules/.bin/tsc",
-    "watch": "./node_modules/.bin/less-watch-compiler & ./node_modules/.bin/tsc --watch",
+    "build": "./node_modules/.bin/less-watch-compiler --run-once && ./node_modules/.bin/tsc",
+    "watch": "./node_modules/.bin/less-watch-compiler & ./node_modules/.bin/tsc --watch &",
     "package": "./node_modules/.bin/electron-builder"
   },
   "devDependencies": {
     "@types/node": "^8.5.2",
     "asar": "^0.14.0",
     "electron": "^1.7.10",
-    "electron-builder": "^19.49.2",
+    "electron-builder": "^19.49.1",
     "less": "^2.7.3",
     "less-watch-compiler": "^1.10.2",
     "typescript": "^2.6.2"

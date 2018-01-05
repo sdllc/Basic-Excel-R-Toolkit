@@ -14,8 +14,8 @@ class CallbackInfo {
 public:
     HANDLE default_unsignaled_event_;
     HANDLE default_signaled_event_;
-    BERTBuffers::Call callback_call_;
-    BERTBuffers::Response callback_response_;
+    BERTBuffers::CallResponse callback_call_;
+    BERTBuffers::CallResponse callback_response_;
 
 public:
     CallbackInfo() {
@@ -139,7 +139,7 @@ public:
 	void MapFunctions();
 
     /** calls R; the call object has the details and semantics */
-	BERTBuffers::Response* RCall(BERTBuffers::Response &response, BERTBuffers::Call &call);
+	BERTBuffers::CallResponse* RCall(BERTBuffers::CallResponse &response, BERTBuffers::CallResponse &call);
 
     /** Excel API function callback */
     int ExcelCallback();

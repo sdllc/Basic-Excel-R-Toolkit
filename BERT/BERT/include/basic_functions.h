@@ -35,6 +35,24 @@ static LPWSTR funcTemplates[][16] = {
 	{ 0 }
 };
 
+/** exported function */
+LPXLOPER12 BERT_Call(LPXLOPER12 func,
+    LPXLOPER12 arg0, LPXLOPER12 arg1, LPXLOPER12 arg2, LPXLOPER12 arg3,
+    LPXLOPER12 arg4, LPXLOPER12 arg5, LPXLOPER12 arg6, LPXLOPER12 arg7,
+    LPXLOPER12 arg8, LPXLOPER12 arg9, LPXLOPER12 arg10, LPXLOPER12 arg11,
+    LPXLOPER12 arg12, LPXLOPER12 arg13, LPXLOPER12 arg14, LPXLOPER12 arg15);
+
+/** exported function */
+LPXLOPER12 BERT_Exec(LPXLOPER12 code);
+
+/** exported function */
+int BERT_SetPointers(ULONG_PTR excel_pointer, ULONG_PTR ribbon_pointer);
+
+/** exported function */
+int BERT_Console();
+
+/** exported function */
+int BERT_ContextSwitch();
 
 /**
 * generic call dispatcher function, exported from dll
