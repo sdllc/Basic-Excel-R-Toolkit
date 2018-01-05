@@ -147,7 +147,7 @@ SEXP VariableToSEXP(const BERTBuffers::Variable &var) {
     }
     case BERTBuffers::Variable::ValueCase::kExternalPointer:
         {
-            cout << "installing external pointer: " << var.external_pointer() << endl;
+            cout << "installing external pointer: " << std::hex << var.external_pointer() << endl;
             SEXP pointer = R_MakeExternalPtr((void*)(var.external_pointer()), install("COM dispatch pointer"), R_NilValue);
             R_RegisterCFinalizerEx(pointer, (R_CFinalizer_t)ReleaseExternalPointer, TRUE);
             return pointer;
@@ -350,6 +350,7 @@ void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector < SEXP > 
 		}
         else if (rtype == EXTPTRSXP) {
             var->set_external_pointer(reinterpret_cast<uint64_t>(R_ExternalPtrAddr(sexp)));
+            cout << "read external pointer: " << std::hex << var->external_pointer() << endl;
         }
 		else if (rtype == VECSXP) {
 			for (int i = 0; i< len; i++) {
@@ -424,8 +425,9 @@ SEXP COMCallback(SEXP function_name, SEXP call_type, SEXP index, SEXP pointer_ke
     else if (Rf_isReal(index)) call_index = (uint32_t)((REAL(index))[0]);
     callback->set_index(call_index);
 
-    int key = (int)((intptr_t)R_ExternalPtrAddr(pointer_key));
-    if (key) callback->set_pointer(key);
+    //int key = (int)((intptr_t)R_ExternalPtrAddr(pointer_key));
+    //if (key) callback->set_pointer(key);
+    callback->set_pointer(reinterpret_cast<uint64_t>(R_ExternalPtrAddr(pointer_key)));
 
     if (!string_type.compare("get")) callback->set_type(BERTBuffers::CallType::get);
     else if (!string_type.compare("put")) callback->set_type(BERTBuffers::CallType::put);

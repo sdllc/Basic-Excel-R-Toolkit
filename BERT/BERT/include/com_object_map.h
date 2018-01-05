@@ -134,12 +134,14 @@ public:
      * very simple object structure to pass COM definitions from BERT -> R. this
      * generates a lot of excess structure, but it's simple and clean.
      *
-     * FIXME: tools to reduce all the generation boilerplate
+     * if you include enms, it gets very large.
      */
     void DispatchToVariable(BERTBuffers::Variable *variable, LPDISPATCH dispatch_pointer, bool enums = false);
     
+    /** call a put/set accessor */
     void InvokeCOMPropertyPut(const BERTBuffers::CompositeFunctionCall &callback, BERTBuffers::CallResponse &response);
 
+    /** call a function OR a get accessor */
     void InvokeCOMFunction(const BERTBuffers::CompositeFunctionCall &callback, BERTBuffers::CallResponse &response);
 
 };

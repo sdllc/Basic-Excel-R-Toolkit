@@ -9,30 +9,9 @@
 #include "string_utilities.h"
 #include "windows_api_functions.h"
 #include "message_utilities.h"
-#include "..\resource.h"
-
+//#include "..\resource.h"
 #include "excel_com_type_libraries.h"
-
 #include "com_object_map.h"
-
-/*
-int32_t COMObjectMap::MapCOMPointer(ULONG_PTR pointer) {
-    int32_t key = key_generator_++;
-    reinterpret_cast<IUnknown*>(pointer)->AddRef();
-    com_pointer_map_.insert({ key, pointer });
-    return key;
-}
-
-ULONG_PTR COMObjectMap::UnmapCOMPointer(int32_t key) {
-    return com_pointer_map_[key];
-}
-
-void COMObjectMap::RemoveCOMPointer(int32_t key) {
-    IUnknown *pointer = reinterpret_cast<IUnknown*>(com_pointer_map_[key]);
-    if( pointer ) pointer->Release();
-    com_pointer_map_.erase(key);
-}
-*/
 
 COMObjectMap::EnumValues COMObjectMap::MapEnum(std::string &name, CComPtr<ITypeInfo> type_info, TYPEATTR *type_attributes)
 {
