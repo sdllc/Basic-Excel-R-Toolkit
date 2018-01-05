@@ -26961,7 +26961,7 @@ extern "C" const GUID __declspec(selectany) IID_SmartArtNode =
 // Function implementation mapping
 //
 
-#pragma start_map_region("e:\bert2\monorepo\bert\bert\x64\debug\mso.tli")
+#pragma start_map_region("../../OfficeTypes/mso.tli")
 __declspec(implementation_key(1)) IDispatchPtr IAccessible::GetaccParent ( );
 __declspec(implementation_key(2)) long IAccessible::GetaccChildCount ( );
 __declspec(implementation_key(3)) IDispatchPtr IAccessible::GetaccChild ( const _variant_t & varChild );

@@ -98,7 +98,7 @@ void RegisterFunctions() {
 
 		xlRegisterID.xltype = xltypeMissing;
 		err = Excel12v(xlfRegister, &xlRegisterID, 16, xlParm);
-		entry->register_id = xlRegisterID.val.num;
+		entry->register_id = (int32_t)xlRegisterID.val.num;
 		Excel12(xlFree, 0, 1, &xlRegisterID);
 
 		for (int i = 1; i < 32; i++) {
@@ -138,7 +138,7 @@ bool RegisterBasicFunctions()
 	{
 		for (int j = 0; j < 15; j++)
 		{
-			int len = wcslen(funcTemplates[i][j]);
+			int len = (int)wcslen(funcTemplates[i][j]);
             assert(len < (max_string_length-1));
 
 			wcscpy_s(&(arguments[j + 1]->val.str[1]), max_string_length-1, funcTemplates[i][j]);

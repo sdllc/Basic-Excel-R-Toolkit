@@ -75,7 +75,7 @@ int Pipe::NextWrite() {
         ResetEvent(write_io_.hEvent);
         std::string message = write_stack_.front();
         write_stack_.pop_front();
-        WriteFile(handle_, message.c_str(), message.length(), NULL, &write_io_);
+        WriteFile(handle_, message.c_str(), (DWORD)message.length(), NULL, &write_io_);
         result = GetOverlappedResultEx(handle_, &write_io_, &bytes, 0, FALSE);
         if (result) {
             // cout << "immediate write success (" << bytes << ")" << endl;

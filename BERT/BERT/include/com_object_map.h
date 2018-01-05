@@ -61,7 +61,7 @@ protected:
     };
 
 public:
-    COMObjectMap() : key_generator_(0xCa11) {}
+    COMObjectMap() {} // : key_generator_(0xCa11) {}
 
 protected:
     static std::string BSTRToString(CComBSTR &bstr) { return Convert::WideStringToUtf8(bstr.m_str, bstr.Length()); }
@@ -79,27 +79,29 @@ protected:
     * because R only has 32-bit ints, it's a bit cumbersome to pass pointers around
     * as-is; also that seems like just generally a bad idea. we use a map instead.
     */
-    std::unordered_map<int32_t, ULONG_PTR> com_pointer_map_;
+    // std::unordered_map<int32_t, ULONG_PTR> com_pointer_map_;
 
     /** base for map keys */
-    int32_t key_generator_;
+    // int32_t key_generator_;
 
 public:
 
     /**
      * store pointer in map; add reference; return key
      */
-    int32_t MapCOMPointer(ULONG_PTR pointer);
+    // int32_t MapCOMPointer(ULONG_PTR pointer);
 
     /**
      * return pointer for given key (lookup)
      */
-    ULONG_PTR UnmapCOMPointer(int32_t key);
+    // ULONG_PTR UnmapCOMPointer(int32_t key);
 
     /**
      * remove pointer from map and call release().
      */
-    void RemoveCOMPointer(int32_t key);
+    // void RemoveCOMPointer(int32_t key);
+
+    void RemoveCOMPointer(ULONG_PTR pointer);
 
     /**
      * map an enum into name->value pairs, stored in a map.
@@ -136,9 +138,9 @@ public:
      */
     void DispatchToVariable(BERTBuffers::Variable *variable, LPDISPATCH dispatch_pointer, bool enums = false);
     
-    void InvokeCOMPropertyPut(const BERTBuffers::COMFunctionCall &callback, BERTBuffers::CallResponse &response);
+    void InvokeCOMPropertyPut(const BERTBuffers::CompositeFunctionCall &callback, BERTBuffers::CallResponse &response);
 
-    void InvokeCOMFunction(const BERTBuffers::COMFunctionCall &callback, BERTBuffers::CallResponse &response);
+    void InvokeCOMFunction(const BERTBuffers::CompositeFunctionCall &callback, BERTBuffers::CallResponse &response);
 
 };
 

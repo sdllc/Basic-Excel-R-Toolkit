@@ -142,9 +142,9 @@ public:
 	BERTBuffers::CallResponse* RCall(BERTBuffers::CallResponse &response, BERTBuffers::CallResponse &call);
 
     /** Excel API function callback */
-    int ExcelCallback();
+    int ExcelCallback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response);
 
     /** handles callback functions from R */
-    int HandleCallbackOnThread();
+    int HandleCallbackOnThread(const BERTBuffers::CallResponse *call = 0, BERTBuffers::CallResponse *response = 0);
 
 };

@@ -15,6 +15,7 @@
 
 #include "com_object_map.h"
 
+/*
 int32_t COMObjectMap::MapCOMPointer(ULONG_PTR pointer) {
     int32_t key = key_generator_++;
     reinterpret_cast<IUnknown*>(pointer)->AddRef();
@@ -28,9 +29,10 @@ ULONG_PTR COMObjectMap::UnmapCOMPointer(int32_t key) {
 
 void COMObjectMap::RemoveCOMPointer(int32_t key) {
     IUnknown *pointer = reinterpret_cast<IUnknown*>(com_pointer_map_[key]);
-    pointer->Release();
+    if( pointer ) pointer->Release();
     com_pointer_map_.erase(key);
 }
+*/
 
 COMObjectMap::EnumValues COMObjectMap::MapEnum(std::string &name, CComPtr<ITypeInfo> type_info, TYPEATTR *type_attributes)
 {
@@ -150,11 +152,11 @@ void COMObjectMap::MapInterface(std::string &name, std::vector< MemberFunction >
     }
 }
 
-void COMObjectMap::InvokeCOMPropertyPut(const BERTBuffers::COMFunctionCall &callback, BERTBuffers::CallResponse &response) {
+void COMObjectMap::InvokeCOMPropertyPut(const BERTBuffers::CompositeFunctionCall &callback, BERTBuffers::CallResponse &response) {
 
-    uint32_t key = callback.pointer();
-    ULONG_PTR pointer = com_pointer_map_[key];
-    LPDISPATCH pdisp = reinterpret_cast<LPDISPATCH>(pointer);
+//    uint32_t key = callback.pointer();
+//    ULONG_PTR pointer = com_pointer_map_[key];
+    LPDISPATCH pdisp = reinterpret_cast<LPDISPATCH>(callback.pointer());
 
     std::string error_message;
 
@@ -212,15 +214,15 @@ void COMObjectMap::InvokeCOMPropertyPut(const BERTBuffers::COMFunctionCall &call
 
 }
 
-void COMObjectMap::InvokeCOMFunction(const BERTBuffers::COMFunctionCall &callback, BERTBuffers::CallResponse &response)
+void COMObjectMap::InvokeCOMFunction(const BERTBuffers::CompositeFunctionCall &callback, BERTBuffers::CallResponse &response)
 {
     if (callback.type() == BERTBuffers::CallType::put) {
         return InvokeCOMPropertyPut(callback, response);
     }
 
-    uint32_t key = callback.pointer();
-    ULONG_PTR pointer = com_pointer_map_[key];
-    LPDISPATCH dispatch_pointer = reinterpret_cast<LPDISPATCH>(pointer);
+//    uint32_t key = callback.pointer();
+//    ULONG_PTR pointer = com_pointer_map_[key];
+    LPDISPATCH dispatch_pointer = reinterpret_cast<LPDISPATCH>(callback.pointer());
 
     std::string error_message;
 
@@ -315,6 +317,11 @@ void COMObjectMap::InvokeCOMFunction(const BERTBuffers::COMFunctionCall &callbac
     }
 }
 
+void COMObjectMap::RemoveCOMPointer(ULONG_PTR pointer) {
+    IUnknown *unknown_pointer = reinterpret_cast<IUnknown*>(pointer);
+    unknown_pointer->Release();
+}
+
 void COMObjectMap::DispatchResponse(BERTBuffers::CallResponse &response, const LPDISPATCH dispatch_pointer) {
 
     // this can happen. it happens on the start screen.
@@ -326,11 +333,14 @@ void COMObjectMap::DispatchResponse(BERTBuffers::CallResponse &response, const L
 
         //response.mutable_value()->set_nil(true);
 
-        int32_t key = MapCOMPointer(reinterpret_cast<ULONG_PTR>(dispatch_pointer));
+        //int32_t key = MapCOMPointer(reinterpret_cast<ULONG_PTR>(dispatch_pointer));
+
+        dispatch_pointer->AddRef();
 
         auto function_call = response.mutable_function_call();
         function_call->set_function("BERT$install.com.pointer");
-        function_call->add_arguments()->set_num(key);
+        //function_call->add_arguments()->set_num(key);
+        function_call->add_arguments()->set_external_pointer(reinterpret_cast<ULONG_PTR>(dispatch_pointer));
 
         auto function_descriptor = function_call->add_arguments();
         DispatchToVariable(function_descriptor, dispatch_pointer);

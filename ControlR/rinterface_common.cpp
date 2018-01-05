@@ -39,7 +39,13 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
+extern bool Callback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response);
+
+// forward
 void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector < SEXP > envir_list = std::vector < SEXP >());
+
+// forward
+void ReleaseExternalPointer(SEXP external_pointer);
 
 extern "C" {
 	extern void Rf_PrintWarnings();
@@ -139,6 +145,15 @@ SEXP VariableToSEXP(const BERTBuffers::Variable &var) {
 
         return list;
     }
+    case BERTBuffers::Variable::ValueCase::kExternalPointer:
+        {
+            cout << "installing external pointer: " << var.external_pointer() << endl;
+            SEXP pointer = R_MakeExternalPtr((void*)(var.external_pointer()), install("COM dispatch pointer"), R_NilValue);
+            R_RegisterCFinalizerEx(pointer, (R_CFinalizer_t)ReleaseExternalPointer, TRUE);
+            return pointer;
+        }
+        break;
+
 	case BERTBuffers::Variable::ValueCase::kErr:
 		if( var.err().type() == BERTBuffers::ErrorType::NA ) return Rf_ScalarInteger(NA_INTEGER);
 
@@ -148,7 +163,7 @@ SEXP VariableToSEXP(const BERTBuffers::Variable &var) {
 
 }
 
-SEXP RCallSEXP(const BERTBuffers::FunctionCall &fc, bool wait, int &err) {
+SEXP RCallSEXP(const BERTBuffers::CompositeFunctionCall &fc, bool wait, int &err) {
 
     // auto fc = call.function_call();
     err = 0;
@@ -333,7 +348,9 @@ void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector < SEXP > 
 				ptr->set_str(CHAR(Rf_asChar(strsxp)));
 			}
 		}
-
+        else if (rtype == EXTPTRSXP) {
+            var->set_external_pointer(reinterpret_cast<uint64_t>(R_ExternalPtrAddr(sexp)));
+        }
 		else if (rtype == VECSXP) {
 			for (int i = 0; i< len; i++) {
 				SEXPToVariable(arr->add_data(), VECTOR_ELT(sexp, i));
@@ -376,8 +393,6 @@ void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector < SEXP > 
 
 }
 
-extern bool Callback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response);
-
 SEXP COMCallback(SEXP function_name, SEXP call_type, SEXP index, SEXP pointer_key, SEXP arguments) {
 
     static uint32_t callback_id = 1;
@@ -396,7 +411,10 @@ SEXP COMCallback(SEXP function_name, SEXP call_type, SEXP index, SEXP pointer_ke
 
     call->set_id(callback_id);
     call->set_wait(true);
-    auto callback = call->mutable_com_callback();
+
+    //auto callback = call->mutable_com_callback();
+    auto callback = call->mutable_function_call();
+    callback->set_target(BERTBuffers::CallTarget::COM);
     callback->set_function(string_name);
 
     // index may be passed as a double instead of an int, convert
@@ -493,6 +511,13 @@ SEXP RCallback(SEXP command, SEXP data) {
     return sexp_result;
 }
 
+void ReleaseExternalPointer(SEXP external_pointer) {
+    //int key = (int)((intptr_t)R_ExternalPtrAddr(pointer));
+    
+    RCallback(Rf_mkString("release-pointer"), external_pointer);
+
+}
+
 SEXP ExternalCallback(int command_id, void* a, void* b) {
 
     static uint32_t callback_id = 1;
@@ -534,3 +559,4 @@ SEXP ExternalCallback(int command_id, void* a, void* b) {
 
     return sexp_result;
 }
+

@@ -60,16 +60,11 @@ class CodeDefaultTypeInternal {
   ::google::protobuf::internal::ExplicitlyConstructed<Code>
       _instance;
 } _Code_default_instance_;
-class FunctionCallDefaultTypeInternal {
+class CompositeFunctionCallDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<FunctionCall>
+  ::google::protobuf::internal::ExplicitlyConstructed<CompositeFunctionCall>
       _instance;
-} _FunctionCall_default_instance_;
-class COMFunctionCallDefaultTypeInternal {
- public:
-  ::google::protobuf::internal::ExplicitlyConstructed<COMFunctionCall>
-      _instance;
-} _COMFunctionCall_default_instance_;
+} _CompositeFunctionCall_default_instance_;
 class ConsoleDefaultTypeInternal {
  public:
   ::google::protobuf::internal::ExplicitlyConstructed<Console>
@@ -88,8 +83,7 @@ class CallResponseDefaultTypeInternal {
   const ::BERTBuffers::Code* code_;
   ::google::protobuf::internal::ArenaStringPtr shell_command_;
   ::google::protobuf::internal::ArenaStringPtr control_message_;
-  const ::BERTBuffers::FunctionCall* function_call_;
-  const ::BERTBuffers::COMFunctionCall* com_callback_;
+  const ::BERTBuffers::CompositeFunctionCall* function_call_;
 } _CallResponse_default_instance_;
 }  // namespace BERTBuffers
 namespace protobuf_variable_2eproto {
@@ -207,7 +201,7 @@ void InitDefaultsCode() {
   ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsCodeImpl);
 }
 
-void InitDefaultsFunctionCallImpl() {
+void InitDefaultsCompositeFunctionCallImpl() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
 #ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
@@ -217,38 +211,16 @@ void InitDefaultsFunctionCallImpl() {
 #endif  // GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
   protobuf_variable_2eproto::InitDefaultsArray();
   {
-    void* ptr = &::BERTBuffers::_FunctionCall_default_instance_;
-    new (ptr) ::BERTBuffers::FunctionCall();
+    void* ptr = &::BERTBuffers::_CompositeFunctionCall_default_instance_;
+    new (ptr) ::BERTBuffers::CompositeFunctionCall();
     ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
   }
-  ::BERTBuffers::FunctionCall::InitAsDefaultInstance();
+  ::BERTBuffers::CompositeFunctionCall::InitAsDefaultInstance();
 }
 
-void InitDefaultsFunctionCall() {
+void InitDefaultsCompositeFunctionCall() {
   static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
-  ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsFunctionCallImpl);
-}
-
-void InitDefaultsCOMFunctionCallImpl() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-#ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-  ::google::protobuf::internal::InitProtobufDefaultsForceUnique();
-#else
-  ::google::protobuf::internal::InitProtobufDefaults();
-#endif  // GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-  protobuf_variable_2eproto::InitDefaultsArray();
-  {
-    void* ptr = &::BERTBuffers::_COMFunctionCall_default_instance_;
-    new (ptr) ::BERTBuffers::COMFunctionCall();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::BERTBuffers::COMFunctionCall::InitAsDefaultInstance();
-}
-
-void InitDefaultsCOMFunctionCall() {
-  static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
-  ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsCOMFunctionCallImpl);
+  ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsCompositeFunctionCallImpl);
 }
 
 void InitDefaultsConsoleImpl() {
@@ -283,8 +255,7 @@ void InitDefaultsCallResponseImpl() {
   protobuf_variable_2eproto::InitDefaultsArray();
   protobuf_variable_2eproto::InitDefaultsConsole();
   protobuf_variable_2eproto::InitDefaultsCode();
-  protobuf_variable_2eproto::InitDefaultsFunctionCall();
-  protobuf_variable_2eproto::InitDefaultsCOMFunctionCall();
+  protobuf_variable_2eproto::InitDefaultsCompositeFunctionCall();
   {
     void* ptr = &::BERTBuffers::_CallResponse_default_instance_;
     new (ptr) ::BERTBuffers::CallResponse();
@@ -298,8 +269,8 @@ void InitDefaultsCallResponse() {
   ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsCallResponseImpl);
 }
 
-::google::protobuf::Metadata file_level_metadata[10];
-const ::google::protobuf::EnumDescriptor* file_level_enum_descriptors[2];
+::google::protobuf::Metadata file_level_metadata[9];
+const ::google::protobuf::EnumDescriptor* file_level_enum_descriptors[3];
 
 const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
   ~0u,  // no _has_bits_
@@ -360,22 +331,16 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   ~0u,  // no _weak_field_map_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::Code, line_),
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::FunctionCall, _internal_metadata_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::CompositeFunctionCall, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::FunctionCall, function_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::FunctionCall, arguments_),
-  ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::COMFunctionCall, _internal_metadata_),
-  ~0u,  // no _extensions_
-  ~0u,  // no _oneof_case_
-  ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::COMFunctionCall, function_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::COMFunctionCall, pointer_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::COMFunctionCall, index_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::COMFunctionCall, type_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::COMFunctionCall, arguments_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::CompositeFunctionCall, function_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::CompositeFunctionCall, arguments_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::CompositeFunctionCall, pointer_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::CompositeFunctionCall, index_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::CompositeFunctionCall, type_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::CompositeFunctionCall, target_),
   ~0u,  // no _has_bits_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::Console, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -399,7 +364,6 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   offsetof(::BERTBuffers::CallResponseDefaultTypeInternal, shell_command_),
   offsetof(::BERTBuffers::CallResponseDefaultTypeInternal, control_message_),
   offsetof(::BERTBuffers::CallResponseDefaultTypeInternal, function_call_),
-  offsetof(::BERTBuffers::CallResponseDefaultTypeInternal, com_callback_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::CallResponse, operation_),
 };
 static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
@@ -409,10 +373,9 @@ static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROT
   { 24, -1, sizeof(::BERTBuffers::SheetReference)},
   { 34, -1, sizeof(::BERTBuffers::Variable)},
   { 51, -1, sizeof(::BERTBuffers::Code)},
-  { 57, -1, sizeof(::BERTBuffers::FunctionCall)},
-  { 64, -1, sizeof(::BERTBuffers::COMFunctionCall)},
-  { 74, -1, sizeof(::BERTBuffers::Console)},
-  { 83, -1, sizeof(::BERTBuffers::CallResponse)},
+  { 57, -1, sizeof(::BERTBuffers::CompositeFunctionCall)},
+  { 68, -1, sizeof(::BERTBuffers::Console)},
+  { 77, -1, sizeof(::BERTBuffers::CallResponse)},
 };
 
 static ::google::protobuf::Message const * const file_default_instances[] = {
@@ -422,8 +385,7 @@ static ::google::protobuf::Message const * const file_default_instances[] = {
   reinterpret_cast<const ::google::protobuf::Message*>(&::BERTBuffers::_SheetReference_default_instance_),
   reinterpret_cast<const ::google::protobuf::Message*>(&::BERTBuffers::_Variable_default_instance_),
   reinterpret_cast<const ::google::protobuf::Message*>(&::BERTBuffers::_Code_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::BERTBuffers::_FunctionCall_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::BERTBuffers::_COMFunctionCall_default_instance_),
+  reinterpret_cast<const ::google::protobuf::Message*>(&::BERTBuffers::_CompositeFunctionCall_default_instance_),
   reinterpret_cast<const ::google::protobuf::Message*>(&::BERTBuffers::_Console_default_instance_),
   reinterpret_cast<const ::google::protobuf::Message*>(&::BERTBuffers::_CallResponse_default_instance_),
 };
@@ -444,7 +406,7 @@ void protobuf_AssignDescriptorsOnce() {
 void protobuf_RegisterTypes(const ::std::string&) GOOGLE_PROTOBUF_ATTRIBUTE_COLD;
 void protobuf_RegisterTypes(const ::std::string&) {
   protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::internal::RegisterAllTypes(file_level_metadata, 10);
+  ::google::protobuf::internal::RegisterAllTypes(file_level_metadata, 9);
 }
 
 void AddDescriptorsImpl() {
@@ -466,30 +428,29 @@ void AddDescriptorsImpl() {
       "\n\003arr\030\010 \001(\0132\022.BERTBuffers.ArrayH\000\022*\n\003ref"
       "\030\t \001(\0132\033.BERTBuffers.SheetReferenceH\000\022\032\n"
       "\020external_pointer\030\n \001(\004H\000\022\014\n\004name\030\017 \001(\tB"
-      "\007\n\005value\"\024\n\004Code\022\014\n\004line\030\001 \003(\t\"J\n\014Functi"
-      "onCall\022\020\n\010function\030\001 \001(\t\022(\n\targuments\030\002 "
-      "\003(\0132\025.BERTBuffers.Variable\"\222\001\n\017COMFuncti"
-      "onCall\022\020\n\010function\030\001 \001(\t\022\017\n\007pointer\030\002 \001("
-      "\r\022\r\n\005index\030\003 \001(\r\022#\n\004type\030\004 \001(\0162\025.BERTBuf"
-      "fers.CallType\022(\n\targuments\030\005 \003(\0132\025.BERTB"
-      "uffers.Variable\"E\n\007Console\022\016\n\004text\030\001 \001(\t"
-      "H\000\022\r\n\003err\030\002 \001(\tH\000\022\020\n\006prompt\030\003 \001(\tH\000B\t\n\007m"
-      "essage\"\327\002\n\014CallResponse\022\n\n\002id\030\001 \001(\r\022\014\n\004w"
-      "ait\030\002 \001(\010\022\r\n\003err\030\003 \001(\tH\000\022\'\n\006result\030\004 \001(\013"
-      "2\025.BERTBuffers.VariableH\000\022\'\n\007console\030\005 \001"
-      "(\0132\024.BERTBuffers.ConsoleH\000\022!\n\004code\030\006 \001(\013"
-      "2\021.BERTBuffers.CodeH\000\022\027\n\rshell_command\030\007"
-      " \001(\tH\000\022\031\n\017control_message\030\010 \001(\tH\000\0222\n\rfun"
-      "ction_call\030\t \001(\0132\031.BERTBuffers.FunctionC"
-      "allH\000\0224\n\014com_callback\030\n \001(\0132\034.BERTBuffer"
-      "s.COMFunctionCallH\000B\013\n\toperation*N\n\tErro"
-      "rType\022\013\n\007GENERIC\020\000\022\006\n\002NA\020\001\022\007\n\003INF\020\002\022\t\n\005P"
-      "ARSE\020\003\022\r\n\tEXECUTION\020\004\022\t\n\005OTHER\020\017*7\n\010Call"
-      "Type\022\r\n\tundefined\020\000\022\007\n\003get\020\001\022\007\n\003put\020\002\022\n\n"
-      "\006method\020\003B\002H\001b\006proto3"
+      "\007\n\005value\"\024\n\004Code\022\014\n\004line\030\001 \003(\t\"\301\001\n\025Compo"
+      "siteFunctionCall\022\020\n\010function\030\001 \001(\t\022(\n\tar"
+      "guments\030\002 \003(\0132\025.BERTBuffers.Variable\022\017\n\007"
+      "pointer\030\003 \001(\004\022\r\n\005index\030\004 \001(\r\022#\n\004type\030\005 \001"
+      "(\0162\025.BERTBuffers.CallType\022\'\n\006target\030\006 \001("
+      "\0162\027.BERTBuffers.CallTarget\"E\n\007Console\022\016\n"
+      "\004text\030\001 \001(\tH\000\022\r\n\003err\030\002 \001(\tH\000\022\020\n\006prompt\030\003"
+      " \001(\tH\000B\t\n\007message\"\252\002\n\014CallResponse\022\n\n\002id"
+      "\030\001 \001(\r\022\014\n\004wait\030\002 \001(\010\022\r\n\003err\030\003 \001(\tH\000\022\'\n\006r"
+      "esult\030\004 \001(\0132\025.BERTBuffers.VariableH\000\022\'\n\007"
+      "console\030\005 \001(\0132\024.BERTBuffers.ConsoleH\000\022!\n"
+      "\004code\030\006 \001(\0132\021.BERTBuffers.CodeH\000\022\027\n\rshel"
+      "l_command\030\007 \001(\tH\000\022\031\n\017control_message\030\010 \001"
+      "(\tH\000\022;\n\rfunction_call\030\t \001(\0132\".BERTBuffer"
+      "s.CompositeFunctionCallH\000B\013\n\toperation*N"
+      "\n\tErrorType\022\013\n\007GENERIC\020\000\022\006\n\002NA\020\001\022\007\n\003INF\020"
+      "\002\022\t\n\005PARSE\020\003\022\r\n\tEXECUTION\020\004\022\t\n\005OTHER\020\017*7"
+      "\n\010CallType\022\r\n\tundefined\020\000\022\007\n\003get\020\001\022\007\n\003pu"
+      "t\020\002\022\n\n\006method\020\003*/\n\nCallTarget\022\014\n\010languag"
+      "e\020\000\022\007\n\003COM\020\001\022\n\n\006system\020\002B\002H\001b\006proto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 1461);
+      descriptor, 1436);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "variable.proto", &protobuf_RegisterTypes);
 }
@@ -534,6 +495,21 @@ bool CallType_IsValid(int value) {
     case 1:
     case 2:
     case 3:
+      return true;
+    default:
+      return false;
+  }
+}
+
+const ::google::protobuf::EnumDescriptor* CallTarget_descriptor() {
+  protobuf_variable_2eproto::protobuf_AssignDescriptorsOnce();
+  return protobuf_variable_2eproto::file_level_enum_descriptors[2];
+}
+bool CallTarget_IsValid(int value) {
+  switch (value) {
+    case 0:
+    case 1:
+    case 2:
       return true;
     default:
       return false;
@@ -2990,22 +2966,26 @@ void Code::InternalSwap(Code* other) {
 
 // ===================================================================
 
-void FunctionCall::InitAsDefaultInstance() {
+void CompositeFunctionCall::InitAsDefaultInstance() {
 }
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int FunctionCall::kFunctionFieldNumber;
-const int FunctionCall::kArgumentsFieldNumber;
+const int CompositeFunctionCall::kFunctionFieldNumber;
+const int CompositeFunctionCall::kArgumentsFieldNumber;
+const int CompositeFunctionCall::kPointerFieldNumber;
+const int CompositeFunctionCall::kIndexFieldNumber;
+const int CompositeFunctionCall::kTypeFieldNumber;
+const int CompositeFunctionCall::kTargetFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
-FunctionCall::FunctionCall()
+CompositeFunctionCall::CompositeFunctionCall()
   : ::google::protobuf::Message(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
-    ::protobuf_variable_2eproto::InitDefaultsFunctionCall();
+    ::protobuf_variable_2eproto::InitDefaultsCompositeFunctionCall();
   }
   SharedCtor();
-  // @@protoc_insertion_point(constructor:BERTBuffers.FunctionCall)
+  // @@protoc_insertion_point(constructor:BERTBuffers.CompositeFunctionCall)
 }
-FunctionCall::FunctionCall(const FunctionCall& from)
+CompositeFunctionCall::CompositeFunctionCall(const CompositeFunctionCall& from)
   : ::google::protobuf::Message(),
       _internal_metadata_(NULL),
       arguments_(from.arguments_),
@@ -3015,62 +2995,71 @@ FunctionCall::FunctionCall(const FunctionCall& from)
   if (from.function().size() > 0) {
     function_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.function_);
   }
-  // @@protoc_insertion_point(copy_constructor:BERTBuffers.FunctionCall)
+  ::memcpy(&pointer_, &from.pointer_,
+    static_cast<size_t>(reinterpret_cast<char*>(&target_) -
+    reinterpret_cast<char*>(&pointer_)) + sizeof(target_));
+  // @@protoc_insertion_point(copy_constructor:BERTBuffers.CompositeFunctionCall)
 }
 
-void FunctionCall::SharedCtor() {
+void CompositeFunctionCall::SharedCtor() {
   function_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  ::memset(&pointer_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&target_) -
+      reinterpret_cast<char*>(&pointer_)) + sizeof(target_));
   _cached_size_ = 0;
 }
 
-FunctionCall::~FunctionCall() {
-  // @@protoc_insertion_point(destructor:BERTBuffers.FunctionCall)
+CompositeFunctionCall::~CompositeFunctionCall() {
+  // @@protoc_insertion_point(destructor:BERTBuffers.CompositeFunctionCall)
   SharedDtor();
 }
 
-void FunctionCall::SharedDtor() {
+void CompositeFunctionCall::SharedDtor() {
   function_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 
-void FunctionCall::SetCachedSize(int size) const {
+void CompositeFunctionCall::SetCachedSize(int size) const {
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
 }
-const ::google::protobuf::Descriptor* FunctionCall::descriptor() {
+const ::google::protobuf::Descriptor* CompositeFunctionCall::descriptor() {
   ::protobuf_variable_2eproto::protobuf_AssignDescriptorsOnce();
   return ::protobuf_variable_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
 }
 
-const FunctionCall& FunctionCall::default_instance() {
-  ::protobuf_variable_2eproto::InitDefaultsFunctionCall();
+const CompositeFunctionCall& CompositeFunctionCall::default_instance() {
+  ::protobuf_variable_2eproto::InitDefaultsCompositeFunctionCall();
   return *internal_default_instance();
 }
 
-FunctionCall* FunctionCall::New(::google::protobuf::Arena* arena) const {
-  FunctionCall* n = new FunctionCall;
+CompositeFunctionCall* CompositeFunctionCall::New(::google::protobuf::Arena* arena) const {
+  CompositeFunctionCall* n = new CompositeFunctionCall;
   if (arena != NULL) {
     arena->Own(n);
   }
   return n;
 }
 
-void FunctionCall::Clear() {
-// @@protoc_insertion_point(message_clear_start:BERTBuffers.FunctionCall)
+void CompositeFunctionCall::Clear() {
+// @@protoc_insertion_point(message_clear_start:BERTBuffers.CompositeFunctionCall)
   ::google::protobuf::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   arguments_.Clear();
   function_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  ::memset(&pointer_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&target_) -
+      reinterpret_cast<char*>(&pointer_)) + sizeof(target_));
   _internal_metadata_.Clear();
 }
 
-bool FunctionCall::MergePartialFromCodedStream(
+bool CompositeFunctionCall::MergePartialFromCodedStream(
     ::google::protobuf::io::CodedInputStream* input) {
 #define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
   ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:BERTBuffers.FunctionCall)
+  // @@protoc_insertion_point(parse_start:BERTBuffers.CompositeFunctionCall)
   for (;;) {
     ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
     tag = p.first;
@@ -3085,7 +3074,7 @@ bool FunctionCall::MergePartialFromCodedStream(
           DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
             this->function().data(), static_cast<int>(this->function().length()),
             ::google::protobuf::internal::WireFormatLite::PARSE,
-            "BERTBuffers.FunctionCall.function"));
+            "BERTBuffers.CompositeFunctionCall.function"));
         } else {
           goto handle_unusual;
         }
@@ -3103,6 +3092,64 @@ bool FunctionCall::MergePartialFromCodedStream(
         break;
       }
 
+      // uint64 pointer = 3;
+      case 3: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(24u /* 24 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
+                 input, &pointer_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // uint32 index = 4;
+      case 4: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(32u /* 32 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
+                 input, &index_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // .BERTBuffers.CallType type = 5;
+      case 5: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(40u /* 40 & 0xFF */)) {
+          int value;
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
+                 input, &value)));
+          set_type(static_cast< ::BERTBuffers::CallType >(value));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // .BERTBuffers.CallTarget target = 6;
+      case 6: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(48u /* 48 & 0xFF */)) {
+          int value;
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
+                 input, &value)));
+          set_target(static_cast< ::BERTBuffers::CallTarget >(value));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0) {
@@ -3115,17 +3162,17 @@ bool FunctionCall::MergePartialFromCodedStream(
     }
   }
 success:
-  // @@protoc_insertion_point(parse_success:BERTBuffers.FunctionCall)
+  // @@protoc_insertion_point(parse_success:BERTBuffers.CompositeFunctionCall)
   return true;
 failure:
-  // @@protoc_insertion_point(parse_failure:BERTBuffers.FunctionCall)
+  // @@protoc_insertion_point(parse_failure:BERTBuffers.CompositeFunctionCall)
   return false;
 #undef DO_
 }
 
-void FunctionCall::SerializeWithCachedSizes(
+void CompositeFunctionCall::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:BERTBuffers.FunctionCall)
+  // @@protoc_insertion_point(serialize_start:BERTBuffers.CompositeFunctionCall)
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -3134,7 +3181,7 @@ void FunctionCall::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
       this->function().data(), static_cast<int>(this->function().length()),
       ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "BERTBuffers.FunctionCall.function");
+      "BERTBuffers.CompositeFunctionCall.function");
     ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
       1, this->function(), output);
   }
@@ -3146,17 +3193,39 @@ void FunctionCall::SerializeWithCachedSizes(
       2, this->arguments(static_cast<int>(i)), output);
   }
 
+  // uint64 pointer = 3;
+  if (this->pointer() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt64(3, this->pointer(), output);
+  }
+
+  // uint32 index = 4;
+  if (this->index() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt32(4, this->index(), output);
+  }
+
+  // .BERTBuffers.CallType type = 5;
+  if (this->type() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteEnum(
+      5, this->type(), output);
+  }
+
+  // .BERTBuffers.CallTarget target = 6;
+  if (this->target() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteEnum(
+      6, this->target(), output);
+  }
+
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
   }
-  // @@protoc_insertion_point(serialize_end:BERTBuffers.FunctionCall)
+  // @@protoc_insertion_point(serialize_end:BERTBuffers.CompositeFunctionCall)
 }
 
-::google::protobuf::uint8* FunctionCall::InternalSerializeWithCachedSizesToArray(
+::google::protobuf::uint8* CompositeFunctionCall::InternalSerializeWithCachedSizesToArray(
     bool deterministic, ::google::protobuf::uint8* target) const {
   (void)deterministic; // Unused
-  // @@protoc_insertion_point(serialize_to_array_start:BERTBuffers.FunctionCall)
+  // @@protoc_insertion_point(serialize_to_array_start:BERTBuffers.CompositeFunctionCall)
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -3165,7 +3234,7 @@ void FunctionCall::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
       this->function().data(), static_cast<int>(this->function().length()),
       ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "BERTBuffers.FunctionCall.function");
+      "BERTBuffers.CompositeFunctionCall.function");
     target =
       ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
         1, this->function(), target);
@@ -3179,16 +3248,38 @@ void FunctionCall::SerializeWithCachedSizes(
         2, this->arguments(static_cast<int>(i)), deterministic, target);
   }
 
+  // uint64 pointer = 3;
+  if (this->pointer() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(3, this->pointer(), target);
+  }
+
+  // uint32 index = 4;
+  if (this->index() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(4, this->index(), target);
+  }
+
+  // .BERTBuffers.CallType type = 5;
+  if (this->type() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
+      5, this->type(), target);
+  }
+
+  // .BERTBuffers.CallTarget target = 6;
+  if (this->target() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
+      6, this->target(), target);
+  }
+
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
   }
-  // @@protoc_insertion_point(serialize_to_array_end:BERTBuffers.FunctionCall)
+  // @@protoc_insertion_point(serialize_to_array_end:BERTBuffers.CompositeFunctionCall)
   return target;
 }
 
-size_t FunctionCall::ByteSizeLong() const {
-// @@protoc_insertion_point(message_byte_size_start:BERTBuffers.FunctionCall)
+size_t CompositeFunctionCall::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:BERTBuffers.CompositeFunctionCall)
   size_t total_size = 0;
 
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
@@ -3214,409 +3305,30 @@ size_t FunctionCall::ByteSizeLong() const {
         this->function());
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = cached_size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-  return total_size;
-}
-
-void FunctionCall::MergeFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:BERTBuffers.FunctionCall)
-  GOOGLE_DCHECK_NE(&from, this);
-  const FunctionCall* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const FunctionCall>(
-          &from);
-  if (source == NULL) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:BERTBuffers.FunctionCall)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:BERTBuffers.FunctionCall)
-    MergeFrom(*source);
-  }
-}
-
-void FunctionCall::MergeFrom(const FunctionCall& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:BERTBuffers.FunctionCall)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  arguments_.MergeFrom(from.arguments_);
-  if (from.function().size() > 0) {
-
-    function_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.function_);
-  }
-}
-
-void FunctionCall::CopyFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:BERTBuffers.FunctionCall)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-void FunctionCall::CopyFrom(const FunctionCall& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:BERTBuffers.FunctionCall)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-bool FunctionCall::IsInitialized() const {
-  return true;
-}
-
-void FunctionCall::Swap(FunctionCall* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
-void FunctionCall::InternalSwap(FunctionCall* other) {
-  using std::swap;
-  arguments_.InternalSwap(&other->arguments_);
-  function_.Swap(&other->function_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_cached_size_, other->_cached_size_);
-}
-
-::google::protobuf::Metadata FunctionCall::GetMetadata() const {
-  protobuf_variable_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_variable_2eproto::file_level_metadata[kIndexInFileMessages];
-}
-
-
-// ===================================================================
-
-void COMFunctionCall::InitAsDefaultInstance() {
-}
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int COMFunctionCall::kFunctionFieldNumber;
-const int COMFunctionCall::kPointerFieldNumber;
-const int COMFunctionCall::kIndexFieldNumber;
-const int COMFunctionCall::kTypeFieldNumber;
-const int COMFunctionCall::kArgumentsFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
-
-COMFunctionCall::COMFunctionCall()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
-    ::protobuf_variable_2eproto::InitDefaultsCOMFunctionCall();
-  }
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:BERTBuffers.COMFunctionCall)
-}
-COMFunctionCall::COMFunctionCall(const COMFunctionCall& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL),
-      arguments_(from.arguments_),
-      _cached_size_(0) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  function_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.function().size() > 0) {
-    function_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.function_);
-  }
-  ::memcpy(&pointer_, &from.pointer_,
-    static_cast<size_t>(reinterpret_cast<char*>(&type_) -
-    reinterpret_cast<char*>(&pointer_)) + sizeof(type_));
-  // @@protoc_insertion_point(copy_constructor:BERTBuffers.COMFunctionCall)
-}
-
-void COMFunctionCall::SharedCtor() {
-  function_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  ::memset(&pointer_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&type_) -
-      reinterpret_cast<char*>(&pointer_)) + sizeof(type_));
-  _cached_size_ = 0;
-}
-
-COMFunctionCall::~COMFunctionCall() {
-  // @@protoc_insertion_point(destructor:BERTBuffers.COMFunctionCall)
-  SharedDtor();
-}
-
-void COMFunctionCall::SharedDtor() {
-  function_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-
-void COMFunctionCall::SetCachedSize(int size) const {
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-}
-const ::google::protobuf::Descriptor* COMFunctionCall::descriptor() {
-  ::protobuf_variable_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_variable_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
-const COMFunctionCall& COMFunctionCall::default_instance() {
-  ::protobuf_variable_2eproto::InitDefaultsCOMFunctionCall();
-  return *internal_default_instance();
-}
-
-COMFunctionCall* COMFunctionCall::New(::google::protobuf::Arena* arena) const {
-  COMFunctionCall* n = new COMFunctionCall;
-  if (arena != NULL) {
-    arena->Own(n);
-  }
-  return n;
-}
-
-void COMFunctionCall::Clear() {
-// @@protoc_insertion_point(message_clear_start:BERTBuffers.COMFunctionCall)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  // Prevent compiler warnings about cached_has_bits being unused
-  (void) cached_has_bits;
-
-  arguments_.Clear();
-  function_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  ::memset(&pointer_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&type_) -
-      reinterpret_cast<char*>(&pointer_)) + sizeof(type_));
-  _internal_metadata_.Clear();
-}
-
-bool COMFunctionCall::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:BERTBuffers.COMFunctionCall)
-  for (;;) {
-    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // string function = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_function()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->function().data(), static_cast<int>(this->function().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "BERTBuffers.COMFunctionCall.function"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // uint32 pointer = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
-                 input, &pointer_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // uint32 index = 3;
-      case 3: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(24u /* 24 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
-                 input, &index_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // .BERTBuffers.CallType type = 4;
-      case 4: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(32u /* 32 & 0xFF */)) {
-          int value;
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
-                 input, &value)));
-          set_type(static_cast< ::BERTBuffers::CallType >(value));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // repeated .BERTBuffers.Variable arguments = 5;
-      case 5: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(42u /* 42 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(input, add_arguments()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      default: {
-      handle_unusual:
-        if (tag == 0) {
-          goto success;
-        }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
-      }
-    }
-  }
-success:
-  // @@protoc_insertion_point(parse_success:BERTBuffers.COMFunctionCall)
-  return true;
-failure:
-  // @@protoc_insertion_point(parse_failure:BERTBuffers.COMFunctionCall)
-  return false;
-#undef DO_
-}
-
-void COMFunctionCall::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:BERTBuffers.COMFunctionCall)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // string function = 1;
-  if (this->function().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->function().data(), static_cast<int>(this->function().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "BERTBuffers.COMFunctionCall.function");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      1, this->function(), output);
-  }
-
-  // uint32 pointer = 2;
-  if (this->pointer() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteUInt32(2, this->pointer(), output);
-  }
-
-  // uint32 index = 3;
-  if (this->index() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteUInt32(3, this->index(), output);
-  }
-
-  // .BERTBuffers.CallType type = 4;
-  if (this->type() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteEnum(
-      4, this->type(), output);
-  }
-
-  // repeated .BERTBuffers.Variable arguments = 5;
-  for (unsigned int i = 0,
-      n = static_cast<unsigned int>(this->arguments_size()); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      5, this->arguments(static_cast<int>(i)), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:BERTBuffers.COMFunctionCall)
-}
-
-::google::protobuf::uint8* COMFunctionCall::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
-  // @@protoc_insertion_point(serialize_to_array_start:BERTBuffers.COMFunctionCall)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // string function = 1;
-  if (this->function().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->function().data(), static_cast<int>(this->function().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "BERTBuffers.COMFunctionCall.function");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        1, this->function(), target);
-  }
-
-  // uint32 pointer = 2;
-  if (this->pointer() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(2, this->pointer(), target);
-  }
-
-  // uint32 index = 3;
-  if (this->index() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(3, this->index(), target);
-  }
-
-  // .BERTBuffers.CallType type = 4;
-  if (this->type() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
-      4, this->type(), target);
-  }
-
-  // repeated .BERTBuffers.Variable arguments = 5;
-  for (unsigned int i = 0,
-      n = static_cast<unsigned int>(this->arguments_size()); i < n; i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageToArray(
-        5, this->arguments(static_cast<int>(i)), deterministic, target);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
-  }
-  // @@protoc_insertion_point(serialize_to_array_end:BERTBuffers.COMFunctionCall)
-  return target;
-}
-
-size_t COMFunctionCall::ByteSizeLong() const {
-// @@protoc_insertion_point(message_byte_size_start:BERTBuffers.COMFunctionCall)
-  size_t total_size = 0;
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
-  // repeated .BERTBuffers.Variable arguments = 5;
-  {
-    unsigned int count = static_cast<unsigned int>(this->arguments_size());
-    total_size += 1UL * count;
-    for (unsigned int i = 0; i < count; i++) {
-      total_size +=
-        ::google::protobuf::internal::WireFormatLite::MessageSize(
-          this->arguments(static_cast<int>(i)));
-    }
-  }
-
-  // string function = 1;
-  if (this->function().size() > 0) {
-    total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->function());
-  }
-
-  // uint32 pointer = 2;
+  // uint64 pointer = 3;
   if (this->pointer() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::UInt32Size(
+      ::google::protobuf::internal::WireFormatLite::UInt64Size(
         this->pointer());
   }
 
-  // uint32 index = 3;
+  // uint32 index = 4;
   if (this->index() != 0) {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::UInt32Size(
         this->index());
   }
 
-  // .BERTBuffers.CallType type = 4;
+  // .BERTBuffers.CallType type = 5;
   if (this->type() != 0) {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::EnumSize(this->type());
+  }
+
+  // .BERTBuffers.CallTarget target = 6;
+  if (this->target() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::EnumSize(this->target());
   }
 
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
@@ -3626,23 +3338,23 @@ size_t COMFunctionCall::ByteSizeLong() const {
   return total_size;
 }
 
-void COMFunctionCall::MergeFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:BERTBuffers.COMFunctionCall)
+void CompositeFunctionCall::MergeFrom(const ::google::protobuf::Message& from) {
+// @@protoc_insertion_point(generalized_merge_from_start:BERTBuffers.CompositeFunctionCall)
   GOOGLE_DCHECK_NE(&from, this);
-  const COMFunctionCall* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const COMFunctionCall>(
+  const CompositeFunctionCall* source =
+      ::google::protobuf::internal::DynamicCastToGenerated<const CompositeFunctionCall>(
           &from);
   if (source == NULL) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:BERTBuffers.COMFunctionCall)
+  // @@protoc_insertion_point(generalized_merge_from_cast_fail:BERTBuffers.CompositeFunctionCall)
     ::google::protobuf::internal::ReflectionOps::Merge(from, this);
   } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:BERTBuffers.COMFunctionCall)
+  // @@protoc_insertion_point(generalized_merge_from_cast_success:BERTBuffers.CompositeFunctionCall)
     MergeFrom(*source);
   }
 }
 
-void COMFunctionCall::MergeFrom(const COMFunctionCall& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:BERTBuffers.COMFunctionCall)
+void CompositeFunctionCall::MergeFrom(const CompositeFunctionCall& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:BERTBuffers.CompositeFunctionCall)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   ::google::protobuf::uint32 cached_has_bits = 0;
@@ -3662,42 +3374,46 @@ void COMFunctionCall::MergeFrom(const COMFunctionCall& from) {
   if (from.type() != 0) {
     set_type(from.type());
   }
+  if (from.target() != 0) {
+    set_target(from.target());
+  }
 }
 
-void COMFunctionCall::CopyFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:BERTBuffers.COMFunctionCall)
+void CompositeFunctionCall::CopyFrom(const ::google::protobuf::Message& from) {
+// @@protoc_insertion_point(generalized_copy_from_start:BERTBuffers.CompositeFunctionCall)
   if (&from == this) return;
   Clear();
   MergeFrom(from);
 }
 
-void COMFunctionCall::CopyFrom(const COMFunctionCall& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:BERTBuffers.COMFunctionCall)
+void CompositeFunctionCall::CopyFrom(const CompositeFunctionCall& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:BERTBuffers.CompositeFunctionCall)
   if (&from == this) return;
   Clear();
   MergeFrom(from);
 }
 
-bool COMFunctionCall::IsInitialized() const {
+bool CompositeFunctionCall::IsInitialized() const {
   return true;
 }
 
-void COMFunctionCall::Swap(COMFunctionCall* other) {
+void CompositeFunctionCall::Swap(CompositeFunctionCall* other) {
   if (other == this) return;
   InternalSwap(other);
 }
-void COMFunctionCall::InternalSwap(COMFunctionCall* other) {
+void CompositeFunctionCall::InternalSwap(CompositeFunctionCall* other) {
   using std::swap;
   arguments_.InternalSwap(&other->arguments_);
   function_.Swap(&other->function_);
   swap(pointer_, other->pointer_);
   swap(index_, other->index_);
   swap(type_, other->type_);
+  swap(target_, other->target_);
   _internal_metadata_.Swap(&other->_internal_metadata_);
   swap(_cached_size_, other->_cached_size_);
 }
 
-::google::protobuf::Metadata COMFunctionCall::GetMetadata() const {
+::google::protobuf::Metadata CompositeFunctionCall::GetMetadata() const {
   protobuf_variable_2eproto::protobuf_AssignDescriptorsOnce();
   return ::protobuf_variable_2eproto::file_level_metadata[kIndexInFileMessages];
 }
@@ -4128,10 +3844,8 @@ void CallResponse::InitAsDefaultInstance() {
       &::google::protobuf::internal::GetEmptyStringAlreadyInited());
   ::BERTBuffers::_CallResponse_default_instance_.control_message_.UnsafeSetDefault(
       &::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  ::BERTBuffers::_CallResponse_default_instance_.function_call_ = const_cast< ::BERTBuffers::FunctionCall*>(
-      ::BERTBuffers::FunctionCall::internal_default_instance());
-  ::BERTBuffers::_CallResponse_default_instance_.com_callback_ = const_cast< ::BERTBuffers::COMFunctionCall*>(
-      ::BERTBuffers::COMFunctionCall::internal_default_instance());
+  ::BERTBuffers::_CallResponse_default_instance_.function_call_ = const_cast< ::BERTBuffers::CompositeFunctionCall*>(
+      ::BERTBuffers::CompositeFunctionCall::internal_default_instance());
 }
 void CallResponse::set_allocated_result(::BERTBuffers::Variable* result) {
   ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
@@ -4175,7 +3889,7 @@ void CallResponse::set_allocated_code(::BERTBuffers::Code* code) {
   }
   // @@protoc_insertion_point(field_set_allocated:BERTBuffers.CallResponse.code)
 }
-void CallResponse::set_allocated_function_call(::BERTBuffers::FunctionCall* function_call) {
+void CallResponse::set_allocated_function_call(::BERTBuffers::CompositeFunctionCall* function_call) {
   ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
   clear_operation();
   if (function_call) {
@@ -4189,20 +3903,6 @@ void CallResponse::set_allocated_function_call(::BERTBuffers::FunctionCall* func
   }
   // @@protoc_insertion_point(field_set_allocated:BERTBuffers.CallResponse.function_call)
 }
-void CallResponse::set_allocated_com_callback(::BERTBuffers::COMFunctionCall* com_callback) {
-  ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
-  clear_operation();
-  if (com_callback) {
-    ::google::protobuf::Arena* submessage_arena = NULL;
-    if (message_arena != submessage_arena) {
-      com_callback = ::google::protobuf::internal::GetOwnedMessage(
-          message_arena, com_callback, submessage_arena);
-    }
-    set_has_com_callback();
-    operation_.com_callback_ = com_callback;
-  }
-  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.CallResponse.com_callback)
-}
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int CallResponse::kIdFieldNumber;
 const int CallResponse::kWaitFieldNumber;
@@ -4213,7 +3913,6 @@ const int CallResponse::kCodeFieldNumber;
 const int CallResponse::kShellCommandFieldNumber;
 const int CallResponse::kControlMessageFieldNumber;
 const int CallResponse::kFunctionCallFieldNumber;
-const int CallResponse::kComCallbackFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 CallResponse::CallResponse()
@@ -4259,11 +3958,7 @@ CallResponse::CallResponse(const CallResponse& from)
       break;
     }
     case kFunctionCall: {
-      mutable_function_call()->::BERTBuffers::FunctionCall::MergeFrom(from.function_call());
-      break;
-    }
-    case kComCallback: {
-      mutable_com_callback()->::BERTBuffers::COMFunctionCall::MergeFrom(from.com_callback());
+      mutable_function_call()->::BERTBuffers::CompositeFunctionCall::MergeFrom(from.function_call());
       break;
     }
     case OPERATION_NOT_SET: {
@@ -4344,10 +4039,6 @@ void CallResponse::clear_operation() {
     }
     case kFunctionCall: {
       delete operation_.function_call_;
-      break;
-    }
-    case kComCallback: {
-      delete operation_.com_callback_;
       break;
     }
     case OPERATION_NOT_SET: {
@@ -4493,24 +4184,12 @@ bool CallResponse::MergePartialFromCodedStream(
         break;
       }
 
-      // .BERTBuffers.FunctionCall function_call = 9;
+      // .BERTBuffers.CompositeFunctionCall function_call = 9;
       case 9: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(74u /* 74 & 0xFF */)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
                input, mutable_function_call()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // .BERTBuffers.COMFunctionCall com_callback = 10;
-      case 10: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(82u /* 82 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
-               input, mutable_com_callback()));
         } else {
           goto handle_unusual;
         }
@@ -4601,16 +4280,10 @@ void CallResponse::SerializeWithCachedSizes(
       8, this->control_message(), output);
   }
 
-  // .BERTBuffers.FunctionCall function_call = 9;
+  // .BERTBuffers.CompositeFunctionCall function_call = 9;
   if (has_function_call()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
       9, *operation_.function_call_, output);
-  }
-
-  // .BERTBuffers.COMFunctionCall com_callback = 10;
-  if (has_com_callback()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      10, *operation_.com_callback_, output);
   }
 
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
@@ -4691,18 +4364,11 @@ void CallResponse::SerializeWithCachedSizes(
         8, this->control_message(), target);
   }
 
-  // .BERTBuffers.FunctionCall function_call = 9;
+  // .BERTBuffers.CompositeFunctionCall function_call = 9;
   if (has_function_call()) {
     target = ::google::protobuf::internal::WireFormatLite::
       InternalWriteMessageToArray(
         9, *operation_.function_call_, deterministic, target);
-  }
-
-  // .BERTBuffers.COMFunctionCall com_callback = 10;
-  if (has_com_callback()) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageToArray(
-        10, *operation_.com_callback_, deterministic, target);
   }
 
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
@@ -4777,18 +4443,11 @@ size_t CallResponse::ByteSizeLong() const {
           this->control_message());
       break;
     }
-    // .BERTBuffers.FunctionCall function_call = 9;
+    // .BERTBuffers.CompositeFunctionCall function_call = 9;
     case kFunctionCall: {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::MessageSize(
           *operation_.function_call_);
-      break;
-    }
-    // .BERTBuffers.COMFunctionCall com_callback = 10;
-    case kComCallback: {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::MessageSize(
-          *operation_.com_callback_);
       break;
     }
     case OPERATION_NOT_SET: {
@@ -4856,11 +4515,7 @@ void CallResponse::MergeFrom(const CallResponse& from) {
       break;
     }
     case kFunctionCall: {
-      mutable_function_call()->::BERTBuffers::FunctionCall::MergeFrom(from.function_call());
-      break;
-    }
-    case kComCallback: {
-      mutable_com_callback()->::BERTBuffers::COMFunctionCall::MergeFrom(from.com_callback());
+      mutable_function_call()->::BERTBuffers::CompositeFunctionCall::MergeFrom(from.function_call());
       break;
     }
     case OPERATION_NOT_SET: {

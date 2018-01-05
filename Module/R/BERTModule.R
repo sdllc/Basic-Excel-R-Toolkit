@@ -277,6 +277,14 @@ history <- function( max.show=25, reverse=FALSE, pattern="" ){
 
 }
 
+.WrapDispatch3 <- function( pointer, class.name = NULL ){
+	env <- new.env();
+	if( is.null( class.name )){ class(env) <- "IDispatch"; }
+	else { class(env) <- c( class.name, "IDispatch" ) };
+  assign( ".p", pointer, env=env );
+	return(env);
+}
+
 #' callback function for handling com calls 
 .DefineCOMFunc <- function( func.name, base.name, func.type, func.index, func.args, target.env ){
 

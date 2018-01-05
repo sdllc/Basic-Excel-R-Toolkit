@@ -86,12 +86,6 @@ message Code {
 	repeated string line = 1;
 }
 
-/** basic function call */
-message FunctionCall {
-	string function = 1;
-	repeated Variable arguments = 2;
-}
-
 /** distinction between calls and accessors (and accesor type) */
 enum CallType {
     undefined = 0;
@@ -100,13 +94,30 @@ enum CallType {
     method = 3;
 }
 
-/** com function calls require extra metadata */
-message COMFunctionCall {
-	string function = 1;
-    uint32 pointer = 2;
-    uint32 index = 3;
-    CallType type = 4;
-	repeated Variable arguments = 5;
+enum CallTarget {   
+    language = 0;
+    COM = 1;
+    system = 2;
+}
+
+/**
+ * consolidating function call, callback, COM function call, 
+ * and control/system calls with arguments 
+ */
+message CompositeFunctionCall {
+
+    string function = 1;
+    repeated Variable arguments = 2;
+
+    // mostly for COM
+
+    uint64 pointer = 3;
+    uint32 index = 4;
+    CallType type = 5;
+
+    // new [enum or string?]
+
+    CallTarget target = 6;
 }
 
 /** console message */
@@ -146,9 +157,10 @@ message CallResponse {
 
         Code code = 6;
 		string shell_command = 7;
-        string control_message = 8;         // fka "system_command"
-        FunctionCall function_call = 9;     // also callback
-        COMFunctionCall com_callback = 10;
+        string control_message = 8;         // fka "system_command" // FIXME: merge with function call
+        //FunctionCall function_call = 9;     // also callback
+        //COMFunctionCall com_callback = 10;
+        CompositeFunctionCall function_call = 9;
 
     }
 }

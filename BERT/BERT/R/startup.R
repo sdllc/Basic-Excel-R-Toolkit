@@ -21,7 +21,7 @@ with( BERT, {
     }
 
     install.com.pointer <- function(key, descriptor){
-        env <- BERTModule:::.WrapDispatch2(key, descriptor$interface );
+        env <- BERTModule:::.WrapDispatch3(key, descriptor$interface );
         lapply( descriptor$functions, function(method){
             name <- method$name;
             if( method$type == "get" ){ name <- paste0( "get_", name ); }

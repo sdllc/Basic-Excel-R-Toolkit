@@ -10,6 +10,9 @@
     <Filter Include="PB">
       <UniqueIdentifier>{c356d784-9c8e-4e2e-ae6f-46120e8ca313}</UniqueIdentifier>
     </Filter>
+    <Filter Include="R">
+      <UniqueIdentifier>{aa31411f-55c6-4bff-a7d1-b840cf200be4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\PB\variable.pb.cc">
