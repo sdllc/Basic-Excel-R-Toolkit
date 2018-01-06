@@ -11,6 +11,28 @@ The new version uses a monorepo so we can tie together the various components,
 instead of having mutliple repos.  Once this is the active version we will 
 shut down the separate components.
 
+Roadmap
+-------
+
+* Full replacement for BERTv1
+
+  The main aim of the v2 project is to fully rewrite BERT, with a more stable
+  and extensible base. The original BERT project was kind of a mishmash of old
+  code and libraries, plus new stuff written on the fly. v2 gives us the 
+  opportunity to go back and clean up, organize, and streamline how it works.
+
+* Additional language(s)
+
+  Separation between the interface (Excel) and the language service (R) means
+  we should be able to add more languages without too much trouble. While R is 
+  still the main target, we will look to add at least one additional language
+  as an experiment (possibly Julia, maybe Javascript).
+
+* LibreOffice implementation
+
+  The same applies to the front-end; so we'll look at implementing at least 
+  basic support in LibreOffice (assuming it's feasible).
+
 Requirements
 ------------
 
