@@ -1,0 +1,100 @@
+
+/** defaults to horizontal orientation (left and right) */
+.splitter-parent {
+
+  display: flex;
+  flex-direction: row;
+  
+  .splitter-child {
+
+    &:first-child {
+      order: 1;
+    }
+
+    &:nth-child(2) {
+      order: 3;
+    }
+
+  }
+
+  .splitter-splitter {
+
+    width: 9px;
+    height: auto;
+    cursor: ew-resize;
+    order: 2;
+    position: relative;
+    overflow: hidden;
+
+    &:after {
+      border: 0px solid #bbb;
+      position: absolute;
+      border-left-width: 1px;
+      border-top-width: 0;
+      width: 1px;
+      height: 100%;
+      top: 0;
+      left: 50%;
+      content: ' ';
+      overflow: hidden;
+    }
+
+  }
+
+}
+
+/** vertical orientation (top and bottom) */
+.splitter-parent.splitter-orientation-vertical {
+  flex-direction: column;
+
+  .splitter-splitter {
+    width: auto; // 9px;
+    height: 9px; // auto;
+    cursor: ns-resize; // ew-resize;
+
+    &:after {
+      border-left: 0; // 1px solid #bbb;
+      border-left-width: 0; // 1px;
+      border-top-width: 1px; // 0;
+      width: 100%; // 1px;
+      height: 1px; // 100%;
+      top: 50%; // 0;
+      left: 0; // 50%;
+    }
+
+  }  
+}
+
+/** drag overlay. only need one for any number of splitters. */
+#splitter-drag-overlay {
+
+  z-index: 9999;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  cursor: ew-resize;
+
+  justify-content: center;
+  align-items: center;
+  display: none; 
+
+  &.visible { display: flex; }
+
+  &.splitter-orientation-vertical {
+    cursor: ns-resize;
+  }
+ 
+  /** indicator */
+  div {
+    position: relative;
+    border-radius: 2px;
+    color: #666;
+    padding: 4px 10px;
+    background: rgba( 255, 255, 255, .85);
+    box-shadow: 0px 2px 4px 2px rgba(0,0,0,0.1);
+  }
+
+}
+

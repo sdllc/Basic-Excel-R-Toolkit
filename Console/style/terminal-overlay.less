@@ -1,0 +1,76 @@
+
+// --- busy --------------------------------------------------------------------
+
+@keyframes spin { 100% { transform:rotate(360deg); } }
+
+.terminal:after {
+  font-family: cogs;
+  font-style: normal;
+  font-weight: normal;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  content: '\0056';
+  position: fixed;
+  bottom: 4px;
+  right: 20px;
+  z-index: 999;
+  font-size: 45px;
+  opacity: 0;
+  transition: opacity 0.25s;
+  animation: spin 5s linear infinite;
+}
+
+.busy > .terminal:after {
+  opacity: .25;
+}
+
+// --- tooltip -----------------------------------------------------------------
+
+.tooltip {
+  background: rgb(255, 255, 192);
+  border: 1px solid yellow;
+  border-radius: 2px;
+  padding: 2px;
+  position: absolute;
+  z-index: 100;
+  font-family: consolas;
+  font-size: 12px;
+  transition: opacity .1s;
+  opacity: 0;
+  top: 0px;
+  left: -1000px;
+}
+
+// --- autocomplete ------------------------------------------------------------
+
+.completion-list {
+  margin: 0;
+  padding: 0;
+
+  background: #fff;
+  border: 1px solid #ececec;
+  position: absolute;
+  z-index: 100;
+  top: 0px;
+  left: -1000px;
+  font-family: consolas;
+  font-size: 12px;
+  transition: opacity .1s;
+  opacity: 0;
+  box-shadow: 0px 2px 3px 0px rgba(0,0,0,0.25);
+
+  overflow: auto;
+  max-height: 10em;
+
+}
+
+.completion-list li {
+  width: 100%;
+  cursor: default;
+  padding: 1px 4px;
+}
+
+.completion-list .active {
+  color: #fff;
+  background: #3879d9;
+}

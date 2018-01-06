@@ -1,10 +1,13 @@
 
 import {Pipe, ConsoleMessage, ConsoleMessageType} from './pipe';
+import {Pipe2} from './pipe2';
 import {clipboard, remote} from 'electron';
 const {Menu, MenuItem} = remote;
-import {Pipe2} from './pipe2';
+
 import {PromptMessage, TerminalImplementation, TerminalConfig} from './terminal-implementation';
 import {RTextFormatter} from './text-formatter';
+import {Splitter, SplitterOrientation} from './splitter';
+
 import * as Rx from "rxjs";
 
 const R = new Pipe();
@@ -12,7 +15,10 @@ window['R'] = R;
 
 const management_pipe = new Pipe2();
 
-let node = document.getElementById('terminal');
+let main = document.getElementById("main-window");
+let splitter = new Splitter(main, SplitterOrientation.Horizontal);
+
+let node = document.getElementById("terminal-container");
 
 let autocomplete_callback = function(buffer:string, position:number){
   return new Promise<any>((resolve, reject) => {
@@ -166,3 +172,4 @@ setTimeout(() => {
   }).catch( e => console.info( "error", e ));
 }, 1 );
 
+splitter.dragging.filter(x => !x).subscribe(x => terminal.Resize());

@@ -1,0 +1,43 @@
+
+.terminal {
+
+  font-family: consolas;
+  font-size: 13px;
+  color: #000;
+  background-color: #fff;
+  position: relative;
+  top: 0px;
+  left: 0px;
+  height: 100%;
+
+  .xterm-viewport { background-color: inherit; }
+  .xterm-rows { padding-left: .25em; }
+
+  .xterm-color-1 { color: darkblue; }
+  .xterm-color-2 { color: darkgreen; }
+
+  .xterm-selection > div {
+    background-color: yellow;
+    opacity: 0.33;
+  }
+
+}
+
+/* cursor */
+
+.terminal:not(.focus) .terminal-cursor {
+  outline: 1px solid #333;
+  outline-offset: -1px;
+}
+
+.terminal.xterm-cursor-style-block.focus:not(.xterm-cursor-blink-on) .terminal-cursor {
+  background-color: #333;
+  color: #fff;
+}
+
+.terminal.focus.xterm-cursor-style-bar:not(.xterm-cursor-blink-on) .terminal-cursor::before,
+.terminal.focus.xterm-cursor-style-underline:not(.xterm-cursor-blink-on) .terminal-cursor::before {
+  content: '';
+  position: absolute;
+  background-color: #333;
+}

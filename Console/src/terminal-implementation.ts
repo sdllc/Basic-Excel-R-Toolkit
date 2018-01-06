@@ -641,6 +641,10 @@ export class TerminalImplementation {
 
   }
 
+  Resize(){
+    this.xterm_.fit();
+  }
+
   Init() {
 
     this.xterm_ = new XTerm({

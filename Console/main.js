@@ -10,8 +10,8 @@ require('electron-reload')(path.join(__dirname,"build"));
 
 let dev_flags = 0;
 
-for( let i = 0; i< process.argv.length-1; i++ ){
-  if( process.argv[i] === "-p" ){
+for( let i = 0; i< process.argv.length; i++ ){
+  if( process.argv[i] === "-p" && i< process.argv.length-1 ){
     let pipe_name = process.argv[++i];
     process.env['BERT_PIPE_NAME'] = pipe_name;
   }
