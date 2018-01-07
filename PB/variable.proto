@@ -147,8 +147,6 @@ message CallResponse {
     Code code = 6;
     string shell_command = 7;
     string control_message = 8;         // fka "system_command" // FIXME: merge with function call
-    //FunctionCall function_call = 9;     // also callback
-    //COMFunctionCall com_callback = 10;
     CompositeFunctionCall function_call = 9;
 
   }
