@@ -13,91 +13,80 @@ option optimize_for = SPEED;
 
 package BERTBuffers;
 
-/*
-enum Type {
-	NIL = 0;	// pb converts "NULL" to "NULL_", but I would prefer to use a different symbol
-	STRING = 1;
-	NUMBER = 2; // both int and double
-	BOOL = 3;
-	COMPLEX = 4;
-	ARRAY = 5;
-}
-*/
-
 /** complex numbers */
 message Complex {
-	double r = 1;
-	double i = 2;
+  double r = 1;
+  double i = 2;
 }
 
-/** array/matrix/frame type */
+/** array/list/matrix/frame type */
 message Array {
-	int32 rows = 1;
-	int32 cols = 2;
-	repeated Variable data = 3;
-	repeated string rownames = 4;
-	repeated string colnames = 5;
+  int32 rows = 1;
+  int32 cols = 2;
+  repeated Variable data = 3;
+  repeated string rownames = 4;
+  repeated string colnames = 5;
 }
 
 /** error types */
 enum ErrorType {
-	GENERIC = 0;
-	NA = 1;
-	INF = 2;
-	PARSE = 3;
-	EXECUTION = 4;
-    OTHER = 15;
+  GENERIC = 0;
+  NA = 1;
+  INF = 2;
+  PARSE = 3;
+  EXECUTION = 4;
+  OTHER = 15;
 }
 
 /** error has a type and/or message */
 message Error {
-	ErrorType type = 1;
-	string message = 2;
+  ErrorType type = 1;
+  string message = 2;
 }
 
 /** sheet reference */
 message SheetReference {
-    uint32 start_row = 1;
-    uint32 start_column = 2;
-    uint32 end_row = 3;
-    uint32 end_column = 4;
-    uint64 sheet_id = 5;
+  uint32 start_row = 1;
+  uint32 start_column = 2;
+  uint32 end_row = 3;
+  uint32 end_column = 4;
+  uint64 sheet_id = 5;
 }
 
 /** basic variable type, optionally named */
 message Variable {
-	oneof value {
-		bool nil = 1;
-        bool missing = 2;
-		Error err = 3;
-		double num = 4;
-		string str = 5;
-		bool boolean = 6;
-		Complex cpx = 7;
-		Array arr = 8;
-        SheetReference ref = 9;
-        uint64 external_pointer = 10;
-	}	
-	string name = 15;
+  oneof value {
+    bool nil = 1;
+    bool missing = 2;
+    Error err = 3;
+    double num = 4;
+    string str = 5;
+    bool boolean = 6;
+    Complex cpx = 7;
+    Array arr = 8;
+    SheetReference ref = 9;
+    uint64 external_pointer = 10;
+  }	
+  string name = 15;
 }
 
 /** why not have a single string and then split on the RX side? */
 message Code {
-	repeated string line = 1;
+  repeated string line = 1;
 }
 
 /** distinction between calls and accessors (and accesor type) */
 enum CallType {
-    undefined = 0;
-    get = 1;
-    put = 2;
-    method = 3;
+  undefined = 0;
+  get = 1;
+  put = 2;
+  method = 3;
 }
 
 enum CallTarget {   
-    language = 0;
-    COM = 1;
-    system = 2;
+  language = 0;
+  COM = 1;
+  system = 2;
 }
 
 /**
@@ -106,27 +95,27 @@ enum CallTarget {
  */
 message CompositeFunctionCall {
 
-    string function = 1;
-    repeated Variable arguments = 2;
+  string function = 1;
+  repeated Variable arguments = 2;
 
-    // mostly for COM
+  // mostly for COM
 
-    uint64 pointer = 3;
-    uint32 index = 4;
-    CallType type = 5;
+  uint64 pointer = 3;
+  uint32 index = 4;
+  CallType type = 5;
 
-    // new [enum or string?]
+  // new [enum or string?]
 
-    CallTarget target = 6;
+  CallTarget target = 6;
 }
 
 /** console message */
 message Console {
-    oneof message {
-        string text = 1;
-        string err = 2;
-        string prompt = 3;
-    }
+  oneof message {
+    string text = 1;
+    string err = 2;
+    string prompt = 3;
+  }
 }
 
 /** 
@@ -139,29 +128,29 @@ message Console {
  */
 message CallResponse {
     
-    uint32 id = 1;
-    bool wait = 2;      // FIXME: this can go? should we always require full transactions?
+  uint32 id = 1;
+  bool wait = 2;      // FIXME: this can go? should we always require full transactions?
 
-    oneof operation {
+  oneof operation {
 
-        // response types
+    // response types
 
-		string err = 3;             // FIXME: use error type? [yes, work towards that]
-		Variable result = 4;
+    string err = 3;             // FIXME: use error type? [yes, work towards that]
+    Variable result = 4;
 
-        // push / notification
+    // push / notification
 
-		Console console = 5;
+    Console console = 5;
 
-        // call types and callbacks
+    // call types and callbacks
 
-        Code code = 6;
-		string shell_command = 7;
-        string control_message = 8;         // fka "system_command" // FIXME: merge with function call
-        //FunctionCall function_call = 9;     // also callback
-        //COMFunctionCall com_callback = 10;
-        CompositeFunctionCall function_call = 9;
+    Code code = 6;
+    string shell_command = 7;
+    string control_message = 8;         // fka "system_command" // FIXME: merge with function call
+    //FunctionCall function_call = 9;     // also callback
+    //COMFunctionCall com_callback = 10;
+    CompositeFunctionCall function_call = 9;
 
-    }
+  }
 }
 
