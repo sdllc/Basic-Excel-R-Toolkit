@@ -7,29 +7,53 @@ const {Menu, MenuItem} = remote;
 import {PromptMessage, TerminalImplementation, TerminalConfig} from './terminal-implementation';
 import {RTextFormatter} from './text-formatter';
 import {Splitter, SplitterOrientation} from './splitter';
+import {TabPanel} from './tab-panel';
 
+import {PropertyManager} from './properties';
 import * as Rx from "rxjs";
 
 const R = new Pipe();
 window['R'] = R;
 
+let property_manager = new PropertyManager("bert2-console-settings", {
+  terminal: {}, editor: {}, console: {}
+});
+
+let properties = property_manager.properties;
+window['properties'] = properties;
+
 const management_pipe = new Pipe2();
 
-let main = document.getElementById("main-window");
-let splitter = new Splitter(main, SplitterOrientation.Horizontal);
+// create splitter (main layout)
+
+let splitter = new Splitter(
+  document.getElementById("main-window"), 
+  SplitterOrientation.Horizontal, properties.terminal.split || 50);
+
+// terminal tabs
+
+let terminal_tabs = new TabPanel("#terminal-tabs");
+terminal_tabs.AddTabs({label:"R Console"}, {label:"Other Console"});
+
+// create terminal
 
 let node = document.getElementById("terminal-container");
 
 let autocomplete_callback = function(buffer:string, position:number){
   return new Promise<any>((resolve, reject) => {
-
-    // dev // return resolve(null);
-
     buffer = buffer.replace( /\\/g, '\\\\').replace( '"', '\\"' );
     R.Internal(`BERTModule:::.Autocomplete("${buffer}",${position})`).then(x => resolve(x));
 
   });
 }
+
+// editor tabs
+
+let editor_tabs = new TabPanel("#editor-tabs");
+editor_tabs.AddTabs(
+  {label:"File1.js", closeable:true}, 
+  {label:"File2.R", closeable:true},
+  {label:"Another-File.md", closeable:true, dirty:true});
 
 /**
  * response to a shell command is the next prompt. in some cases, 
@@ -53,8 +77,6 @@ let break_callback = function(){
 
 let terminal_config:TerminalConfig = {
   node_: node,
-  autocomplete_node_: document.getElementById("autocomplete-chooser"),
-  function_tip_node_: document.getElementById("function-tooltip"),
   autocomplete_callback_: autocomplete_callback,
   exec_callback_: exec_callback,
   break_callback_: break_callback,
@@ -116,16 +138,6 @@ R.console_messages.subscribe((console_message) => {
       push_stack: console_message.id !== 0 // true
     });
   }
-  /*
-  else if( console_message.type === ConsoleMessageType.CONTROL_MESSAGE ){
-    console.info( "CM", console_message.text );
-    if( console_message.text === "shutdown" ){
-      terminal.CleanUp();
-      allow_close = true;
-      remote.getCurrentWindow().close();
-    } 
-  }
-  */
   else {
     terminal.PrintConsole(console_message.text, !R.busy);
   }
@@ -172,4 +184,9 @@ setTimeout(() => {
   }).catch( e => console.info( "error", e ));
 }, 1 );
 
-splitter.dragging.filter(x => !x).subscribe(x => terminal.Resize());
+// deal with splitter change on drag end 
+
+splitter.dragging.filter(x => !x).subscribe(x => {
+  terminal.Resize();
+  properties.terminal.split = splitter.split;
+});

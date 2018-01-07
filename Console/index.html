@@ -4,20 +4,32 @@
     <meta charset="UTF-8">
     <title>BERT Console</title>
     <link rel="stylesheet" href="ext/xterm.css">
+    <link rel="stylesheet" href="ext/icomoon.css">
     <link rel="stylesheet" href="ext/cogs/cogs.css">
     <link rel="stylesheet" href="build/style.css">
   </head>
   <body>
+    
+    <!-- layout -->
     <div id="main-window">
-      <div id="some-other-component">
-        FIXME: put editor here
+
+      <!-- left/top component -->
+      <div id="editor-tabs">
+        <div id="some-other-component">
+          FIXME: put editor here
+        </div>
       </div>
-      <div id="terminal-container"></div>
+
+      <!-- right/bottom component -->
+      <div id="terminal-tabs">
+        <div id="terminal-container"></div>
+      </div>
+
     </div>
-    <div class="tooltip" id="function-tooltip"></div>
-    <ul class="completion-list" id="autocomplete-chooser"></ul>
+
     <script>
       require("./build/renderer.js")
     </script>
+
   </body>
 </html>

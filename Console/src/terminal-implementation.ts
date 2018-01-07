@@ -58,7 +58,19 @@ class Autocomplete {
   visible_ = false;
   last_: any;
 
-  constructor(private node_: HTMLElement, private accept_: Function) {
+  private node_:HTMLElement;
+
+  /**
+   * 
+   */
+  constructor(private accept_: Function) {
+
+    this.node_ = document.createElement("ul");
+    this.node_.classList.add("terminal-completion-list");
+    document.body.appendChild(this.node_);
+
+    // FIXME: do these need to be attached at all times?
+    // if not, we could use a single static node
 
     this.node_.addEventListener("mousemove", e => {
       let node = e.target as HTMLElement;
@@ -79,15 +91,31 @@ class Autocomplete {
 
   }
 
-  Show() {
+  /**
+   * show autocomplete. if there's a single completion, we want that to
+   * populate immediately; but only if it's the initial tab. if we are 
+   * showing the list, then as the user types we narrow choices but we
+   * don't automatically select the last option (that's what the flag
+   * argument is for).
+   */
+  Show(acceptSingleCompletion = true) {
 
     if (!this.last_ || !this.last_.comps) {
       this.Dismiss();
       return;
     }
 
+    let comps = this.last_.comps.split(/\n/);
+
+    if( comps.length === 1 && acceptSingleCompletion ){
+      this.Dismiss();
+      let addition = comps[0].substr(this.last_.token.length);
+      this.accept_(addition);
+      return;
+    }
+
     this.node_.textContent = "";
-    this.last_.comps.split(/\n/).forEach((comp, index) => {
+    comps.forEach((comp, index) => {
       let li = document.createElement("li");
       let a = document.createElement("a");
       a.textContent = comp;
@@ -98,11 +126,12 @@ class Autocomplete {
 
     let cursorNode = document.querySelector(".terminal-cursor") as HTMLElement;
     this.node_.scrollTop = 0;
+    let cursor_bounds = cursorNode.getBoundingClientRect();
 
-    let top = cursorNode.offsetTop - this.node_.offsetHeight;
-    if (top < 0) top = cursorNode.offsetTop + cursorNode.offsetHeight;
+    let top = Math.round(cursor_bounds.top - this.node_.offsetHeight);
+    if (top < 0) top = Math.round(cursor_bounds.bottom); 
 
-    let left = cursorNode.offsetLeft;
+    let left = Math.round(cursor_bounds.left);
 
     // FIXME: move to the left if necessary
 
@@ -170,6 +199,7 @@ class Autocomplete {
 }
 
 export interface AutocompleteCallbackType { (buffer: string, position: number): Promise<any> }
+
 export interface ExecCallbackType { (buffer: string): Promise<any> }
 
 export interface TerminalConfig {
@@ -177,8 +207,6 @@ export interface TerminalConfig {
   // nodes
 
   node_: HTMLElement;
-  autocomplete_node_: HTMLElement;
-  function_tip_node_: HTMLElement;
 
   // callbacks
 
@@ -281,11 +309,20 @@ export class TerminalImplementation {
   private dismissed_tip_: any;
   private autocomplete_: Autocomplete;
 
+  private static function_tip_node_:HTMLElement;
+
   // private prompt_stack_: string[] = [];
   private prompt_stack_:LineInfo[] = [];
 
   constructor(private config_:TerminalConfig) {
     this.history_.Restore();
+
+    if( !TerminalImplementation.function_tip_node_ ){
+      TerminalImplementation.function_tip_node_ = document.createElement("div");
+      TerminalImplementation.function_tip_node_.classList.add("terminal-tooltip");
+      document.body.appendChild(TerminalImplementation.function_tip_node_);
+    }
+
   }
 
   /**
@@ -299,7 +336,7 @@ export class TerminalImplementation {
     this.config_.autocomplete_callback_.call(this, this.line_info_.buffer, this.line_info_.cursor_position).then(x => {
       if (!x) return;
       this.autocomplete_.Update(x);
-      if (this.autocomplete_.visible_) this.autocomplete_.Show();
+      if (this.autocomplete_.visible_) this.autocomplete_.Show(false);
       else this.FunctionTip(x['function.signature'], x.fguess);
     });
   }
@@ -309,7 +346,7 @@ export class TerminalImplementation {
   }
 
   FunctionTip(message?: string, function_guess?: string) {
-    if (!message) this.config_.function_tip_node_.style.opacity = "0";
+    if (!message) TerminalImplementation.function_tip_node_.style.opacity = "0";
     else {
 
       if (message === this.dismissed_tip_) return;
@@ -329,14 +366,14 @@ export class TerminalImplementation {
       this.current_tip_ = message;
       this.dismissed_tip_ = null;
 
-      node = this.config_.function_tip_node_;
-
+      node = TerminalImplementation.function_tip_node_;
       node.textContent = message;
 
-      let top = cursorNode.offsetTop - this.config_.function_tip_node_.offsetHeight;
+      node.style.left = `${rect.right}px`;
+      
+      let top = cursorNode.offsetTop - node.offsetHeight;
       if (top < 0) { top = rect.bottom + 2; }
 
-      node.style.left = `${rect.right}px`;
       node.style.top = `${top}px`;
       node.style.opacity = "1";
 
@@ -504,29 +541,12 @@ export class TerminalImplementation {
           if (lines.length > (index + 1)) {
             this.xterm_.writeln(line);
             if (!index) line = this.line_info_.buffer + line;
-            //this.line_info_.buffer = "";
             this.line_info_.set("");
             this.history_.Push(line);
-
-            //R.ShellExec(line).then(x => {
-            //  prompt(x);
-            //  resolve();
-            //});
-
-            //R.once('prompt', () => { resolve(); });
-
             this.config_.exec_callback_.call(this, line).then(x => {
               this.Prompt(x);
               resolve(x);
             });
-
-            /*
-            R.ShellExec(line).then(x => {
-              prompt(x);
-              resolve(x);
-            });
-            */
-
           }
           else {
 
@@ -655,27 +675,21 @@ export class TerminalImplementation {
     this.xterm_.fit();
     this.xterm_.write(`\x1b[\x35 q`);
 
-    this.autocomplete_ = new Autocomplete(this.config_.autocomplete_node_, (addition: string) => {
-      this.xterm_.write(addition);
-      this.line_info_.append_or_insert(addition);      
-      this.RunAutocomplete();
-    });
+    this.autocomplete_ = new Autocomplete(
+      (addition: string) => {
+        this.xterm_.write(addition);
+        this.line_info_.append_or_insert(addition);      
+        this.RunAutocomplete();
+      });
 
-    //let rto = null;
     window.addEventListener("resize", event => {
-      /*
-      if( rto ) window.clearTimeout(rto);
-      rto = window.setTimeout(() => {
-        term.fit();
-      }, 100);
-      */
-      this.xterm_.fit();
+      this.xterm_.fit(); // fixme: debounce?
     });
 
     this.xterm_.on("key", (key, event) => this.KeyDown(key, event));
-    // this.xterm_.on("keypress", (key, event) => { console.info( "KP event?"); });
+
     this.xterm_.on("title", title => {
-      console.info( "title change:", title );
+      console.info( "title change:", title ); // ??
     });
 
   }

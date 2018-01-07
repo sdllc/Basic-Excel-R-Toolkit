@@ -8,6 +8,7 @@ html, body {
   margin: 0;
   height: 100%;
   font-family: consolas;
+  font-size: 14px;
 }
 
 #main-window {
@@ -20,11 +21,12 @@ html, body {
 }
 
 #terminal-container {
-  height: 100%;
+  position: relative;
   padding: 0;
   margin: 0;
 }
 
 @import "terminal.less";
 @import "terminal-overlay.less";
+@import "tab-panel.less";
 @import "splitter-window.less";

@@ -5,11 +5,15 @@ import * as Rx from 'rxjs';
  * splitter orientation
  */
 export enum SplitterOrientation {
-  Horizontal = "horizontal",
-  Vertical = "vertical"
+  Horizontal = "horizontal", Vertical = "vertical"
 }
 
 type EventHandler = (event) => void;
+
+export interface SplitterStatus {
+  split:number;
+  orientation:SplitterOrientation;
+}
 
 /**
  * html splitter window. when instantiated, it determines layout from
@@ -59,11 +63,17 @@ export class Splitter {
   private orientation_:SplitterOrientation = SplitterOrientation.Horizontal;
 
   /** current split, as a % */
-  private split_:Rx.BehaviorSubject<number>;
+  private split_:Rx.BehaviorSubject<SplitterStatus>;
 
-  /** accessor */
-  public get split() { return this.split_; }
-  
+  /** value accessor */
+  public get split() { return this.split_.value.split; }
+
+  /** value accessor */
+  public get orientation() { return this.split_.value.orientation; }
+
+  /** subject accessor */
+  public get status() { return this.split_; }
+
   /** drag events */
   private dragging_ = new Rx.BehaviorSubject<boolean>(false);
 
@@ -118,7 +128,8 @@ export class Splitter {
     // create subject for split. that subject also is the de-facto
     // accessor for the current split value
 
-    this.split_ = new Rx.BehaviorSubject<number>(split);
+    this.split_ = new Rx.BehaviorSubject<SplitterStatus>({
+      split, orientation: this.orientation_ });
 
     // set orientation for any switches
 
@@ -205,8 +216,9 @@ export class Splitter {
    * set split and update layout
    */
   Set(split:number){
-    this.Update( this.orientation_ === SplitterOrientation.Vertical ? "height" : "width", 
-      this.split_.value);
+    this.Update( 
+      this.orientation_ === SplitterOrientation.Vertical ? "height" : "width", 
+      this.split_.value.split);
   }
 
   /**
@@ -226,14 +238,14 @@ export class Splitter {
       this.parent_.classList.add(Splitter.vertical_class);
       this.children_[0].style.width = "";
       this.children_[1].style.width = "";
-      this.Update("height", this.split_.value);
+      this.Update("height", this.split_.value.split);
     }
     else {
       this.parent_.classList.remove(Splitter.vertical_class);
       this.parent_.classList.add(Splitter.horizontal_class);
       this.children_[0].style.height = "";
       this.children_[1].style.height = "";
-      this.Update("width", this.split_.value);
+      this.Update("width", this.split_.value.split);
     }
   }
 
@@ -244,7 +256,7 @@ export class Splitter {
     this.children_[0].style[key] = `${split}%`;
     this.children_[1].style[key] = `${100-split}%`;
     Splitter.overlay_display_.textContent = `${split.toFixed(1)}%`;  
-    this.split_.next(split);
+    this.split_.next({split, orientation: this.orientation_});
   }
 
 }

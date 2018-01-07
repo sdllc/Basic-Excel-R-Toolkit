@@ -6,6 +6,8 @@ const app = electron.app
 // Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow
 
+const WindowState = require('electron-window-state');
+
 require('electron-reload')(path.join(__dirname,"build"));
 
 let dev_flags = 0;
@@ -26,8 +28,15 @@ for( let i = 0; i< process.argv.length; i++ ){
 let mainWindow
 
 function createWindow () {
+
+  let window_state = WindowState({
+    defaultWidth: 1100, defaultHeight: 800
+  });
+
   // Create the browser window.
-  mainWindow = new BrowserWindow({width: 800, height: 600})
+  mainWindow = new BrowserWindow(window_state);
+
+  window_state.manage(mainWindow);
 
   // and load the index.html of the app.
   mainWindow.loadURL(url.format({

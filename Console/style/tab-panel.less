@@ -1,0 +1,89 @@
+
+.tab-panel-container {
+
+  display: flex;
+  flex-direction: column;
+
+  .tab-panel-tabs {
+
+    background: #eee;
+    display: flex;
+    flex-direction: row;
+    
+    .tab-panel-tab {
+
+      font-family: calibri;
+
+      padding: 8px 8px 4px 8px;
+      color: #999;
+      cursor: default;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+
+      &.tab-panel-active-tab {
+        background: #fff;
+        border-top-right-radius: 3px;
+        border-top-left-radius: 3px;
+        color: #333;
+      }
+
+      .tab-panel-tab-label {
+        padding-left: .5em;
+        padding-right: .5em;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+      
+      .tab-panel-tab-icon, .tab-panel-tab-button {
+        white-space: nowrap;
+        width: 16px;
+        overflow:hidden; 
+      }
+
+      .tab-panel-tab-icon:before, .tab-panel-tab-button:before {
+        color: #666;
+        font-family: icomoon;
+        font-size: 16px;
+        content: ' ';
+        // content: '\e904';
+        font-style: normal;
+        font-weight: normal;
+        font-variant: normal;
+        text-transform: none;
+        line-height: 1;
+        -webkit-font-smoothing: antialiased;
+        padding: 0;
+        margin: 0;
+        position: relative;
+        text-align: center;
+        top: 2px;
+      }      
+
+      // show close (X) on active and hover
+      &.tab-panel-active-tab, &:hover {
+        .tab-panel-tab-closeable:before {
+          content: '\e904';
+        }
+      }
+
+      // show dot on dirty
+      .tab-panel-tab-dirty:before {
+        content: '\e902';
+      }
+
+    }
+
+  }
+
+  .tab-panel-content {
+    flex-grow: 1;
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    * > { flex-grow: 1; }
+  }
+
+}
+
