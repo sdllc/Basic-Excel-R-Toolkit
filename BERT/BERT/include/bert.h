@@ -12,139 +12,139 @@
 
 class CallbackInfo {
 public:
-    HANDLE default_unsignaled_event_;
-    HANDLE default_signaled_event_;
-    BERTBuffers::CallResponse callback_call_;
-    BERTBuffers::CallResponse callback_response_;
+  HANDLE default_unsignaled_event_;
+  HANDLE default_signaled_event_;
+  BERTBuffers::CallResponse callback_call_;
+  BERTBuffers::CallResponse callback_response_;
 
 public:
-    CallbackInfo() {
-        default_signaled_event_ = CreateEvent(0, TRUE, TRUE, 0);
-        default_unsignaled_event_ = CreateEvent(0, TRUE, FALSE, 0);
-    }
+  CallbackInfo() {
+    default_signaled_event_ = CreateEvent(0, TRUE, TRUE, 0);
+    default_unsignaled_event_ = CreateEvent(0, TRUE, FALSE, 0);
+  }
 
-    ~CallbackInfo() {
-        CloseHandle(default_signaled_event_);
-        CloseHandle(default_unsignaled_event_);
-    }
+  ~CallbackInfo() {
+    CloseHandle(default_signaled_event_);
+    CloseHandle(default_unsignaled_event_);
+  }
 
 };
 
 class BERT {
 
 private:
-    /** the single instance */
-	static BERT *instance_;
+  /** the single instance */
+  static BERT *instance_;
 
 private:
 
-    COMObjectMap object_map_;
+  COMObjectMap object_map_;
 
-    /** marshalled excel pointer for calls from separate threads */
-    IStream *stream_pointer_;
+  /** marshalled excel pointer for calls from separate threads */
+  IStream *stream_pointer_;
 
-    /** excel COM pointer */
-    LPDISPATCH application_dispatch_;
+  /** excel COM pointer */
+  LPDISPATCH application_dispatch_;
 
-    CallbackInfo callback_info_;
+  CallbackInfo callback_info_;
 
-    /** 
-     * handle to the job object we use to manage child-processes (it
-     * will kill all children when the parent process exits for any 
-     * reason -- reducing zombies)
-     */
-    HANDLE job_handle_;
+  /**
+   * handle to the job object we use to manage child-processes (it
+   * will kill all children when the parent process exits for any
+   * reason -- reducing zombies)
+   */
+  HANDLE job_handle_;
 
-	/** pipename */
-	std::string pipe_name_;
+  /** pipename */
+  std::string pipe_name_;
 
-	/** pipe handle */
-	HANDLE pipe_handle_;
+  /** pipe handle */
+  HANDLE pipe_handle_;
 
-	/** overlapped structure for nonblocking io */
-	OVERLAPPED io_;
+  /** overlapped structure for nonblocking io */
+  OVERLAPPED io_;
 
-	/** child process */
-	DWORD child_process_id_;
+  /** child process */
+  DWORD child_process_id_;
 
-    /** console process */
-    DWORD console_process_id_;
+  /** console process */
+  DWORD console_process_id_;
 
-	/** flag (used? FIXME) */
-	bool connected_;
+  /** flag (used? FIXME) */
+  bool connected_;
 
-	/** read/write buffer */
-	char *buffer_;
-	
-	/** ID generator */
-	uint32_t transaction_id_;
+  /** read/write buffer */
+  char *buffer_;
 
-	/** RHOME field */
-	std::string r_home_;
+  /** ID generator */
+  uint32_t transaction_id_;
 
-	/** path to controlr executable */
-	std::string child_path_;
+  /** RHOME field */
+  std::string r_home_;
 
-    /** some dev flags that get passed around */
-    DWORD dev_flags_;
+  /** path to controlr executable */
+  std::string child_path_;
+
+  /** some dev flags that get passed around */
+  DWORD dev_flags_;
 
 public:
-	/** mapped functions */
-	FUNCTION_LIST function_list_;
+  /** mapped functions */
+  FUNCTION_LIST function_list_;
 
 private:
-    /** constructors are private (singleton) */
-	BERT();
+  /** constructors are private (singleton) */
+  BERT();
 
-    /** constructors are private (singleton) */
-    BERT(BERT const&) {};
-	
-    /** constructors are private (singleton) */
-    BERT& operator = (BERT const&) {};
+  /** constructors are private (singleton) */
+  BERT(BERT const&) {};
 
-private:
-    static unsigned CallbackThreadFunction(void *param);
-    void RunCallbackThread();
+  /** constructors are private (singleton) */
+  BERT& operator = (BERT const&) {};
 
 private:
-    /** starts the external R host process */
-	int StartChildProcess();
+  static unsigned CallbackThreadFunction(void *param);
+  void RunCallbackThread();
 
-    /** starts the console process. this can be delayed until needed. */
-    int StartConsoleProcess();
+private:
+  /** starts the external R host process */
+  int StartChildProcess();
 
-    /** handles callback functions from R */
-    void HandleCallback();
+  /** starts the console process. this can be delayed until needed. */
+  int StartConsoleProcess();
 
-public:
-
-    /** single static instance of this class */
-	static BERT* Instance();
+  /** handles callback functions from R */
+  void HandleCallback();
 
 public:
 
-    /** sets COM pointers */
-    void SetPointers(ULONG_PTR excel_pointer, ULONG_PTR ribbon_pointer);
+  /** single static instance of this class */
+  static BERT* Instance();
 
-    /** opens the console, creating the process if necessary */
-    void OpenConsole();
+public:
 
-    /** initializes; starts R, threads, pipes */
-    void Init(); 
+  /** sets COM pointers */
+  void SetPointers(ULONG_PTR excel_pointer, ULONG_PTR ribbon_pointer);
 
-    /** shuts down pipes and processes */
-	void Close();
+  /** opens the console, creating the process if necessary */
+  void OpenConsole();
 
-    /** maps global R functions to Excel functions */
-	void MapFunctions();
+  /** initializes; starts R, threads, pipes */
+  void Init();
 
-    /** calls R; the call object has the details and semantics */
-	BERTBuffers::CallResponse* RCall(BERTBuffers::CallResponse &response, BERTBuffers::CallResponse &call);
+  /** shuts down pipes and processes */
+  void Close();
 
-    /** Excel API function callback */
-    int ExcelCallback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response);
+  /** maps global R functions to Excel functions */
+  void MapFunctions();
 
-    /** handles callback functions from R */
-    int HandleCallbackOnThread(const BERTBuffers::CallResponse *call = 0, BERTBuffers::CallResponse *response = 0);
+  /** calls R; the call object has the details and semantics */
+  BERTBuffers::CallResponse* RCall(BERTBuffers::CallResponse &response, BERTBuffers::CallResponse &call);
+
+  /** Excel API function callback */
+  int ExcelCallback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response);
+
+  /** handles callback functions from R */
+  int HandleCallbackOnThread(const BERTBuffers::CallResponse *call = 0, BERTBuffers::CallResponse *response = 0);
 
 };
