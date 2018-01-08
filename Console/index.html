@@ -15,9 +15,7 @@
 
       <!-- left/top component -->
       <div id="editor-tabs">
-        <div id="some-other-component">
-          FIXME: put editor here
-        </div>
+        <div id="editor-container"></div>
       </div>
 
       <!-- right/bottom component -->
@@ -28,6 +26,12 @@
     </div>
 
     <script>
+      let nodeRequire = global.require;
+    </script>
+  	<script src="node_modules/monaco-editor/min/vs/loader.js"></script>
+    <script>
+      var amdRequire = global.require;
+      global.require = nodeRequire;
       require("./build/renderer.js")
     </script>
 

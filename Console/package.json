@@ -34,6 +34,7 @@
     "electron-reload": "^1.2.2",
     "electron-window-state": "^4.1.1",
     "google-protobuf": "^3.5.0",
+    "monaco-editor": "^0.10.1",
     "rxjs": "^5.5.6",
     "xterm": "^2.9.2"
   }

@@ -528,6 +528,8 @@ export class TerminalImplementation {
 
   Paste(text?: string) {
 
+    this.xterm_.scrollToBottom();
+    
     if (!text) text = (clipboard.readText() || "");
 
     // FIXME: cursor pos

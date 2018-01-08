@@ -59,6 +59,9 @@ export class Splitter {
   /** splitter */
   private splitter_:HTMLElement;
 
+  /** mouse target/handle */
+  private handle_:HTMLElement;
+
   /** local ref to orientation */
   private orientation_:SplitterOrientation = SplitterOrientation.Horizontal;
 

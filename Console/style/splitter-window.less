@@ -21,22 +21,20 @@
 
   .splitter-splitter {
 
-    width: 9px;
+    width: 1px;
+    background: #bbb;
     height: auto;
     cursor: ew-resize;
     order: 2;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
 
     &:after {
-      border: 0px solid #bbb;
       position: absolute;
-      border-left-width: 1px;
-      border-top-width: 0;
-      width: 1px;
-      height: 100%;
+      width: 13px;
+      bottom: 0;
       top: 0;
-      left: 50%;
+      left: -6px;
       content: ' ';
       overflow: hidden;
     }
@@ -50,18 +48,16 @@
   flex-direction: column;
 
   .splitter-splitter {
-    width: auto; // 9px;
-    height: 9px; // auto;
-    cursor: ns-resize; // ew-resize;
+    width: auto; 
+    height: 1px; 
+    cursor: ns-resize; 
 
     &:after {
-      border-left: 0; // 1px solid #bbb;
-      border-left-width: 0; // 1px;
-      border-top-width: 1px; // 0;
-      width: 100%; // 1px;
-      height: 1px; // 100%;
-      top: 50%; // 0;
-      left: 0; // 50%;
+      height: 13px;
+      right: 0;
+      width: 100%;
+      left: 0;
+      top: -6px;
     }
 
   }  

@@ -1,33 +1,77 @@
 
+@import "./common.less";
+
+/**
+ * structure of tab panel looks like this (generated from script):
+ * 
+ * <div class="tab-panel-container">
+ *
+ *   <div class="tab-panel-tabs">
+ *      <div class="tab-panel-tab (attribute classes)">
+ *        <div class="tab-panel-tab-label">
+ *           Tab Text
+ *        </div>
+ *        <div class="tab-panel-tab-button"></div>
+ *      </div>
+ *   </div>
+ *
+ *   <div class="tab-panel-content">
+ *     ...
+ *   </div>
+ *
+ * </div>
+ *
+ * attribute classes are active, closeable, dirty, (...)
+ *
+ * button is a separate element (not a pseudoelement) so that we can attach
+ * to it and select on it properly in script. there's also a concept of an
+ * icon which is the same as the button but in front; that's not used atm.
+ */
+
 .tab-panel-container {
 
   display: flex;
   flex-direction: column;
 
+  /** the tab bar */
   .tab-panel-tabs {
 
     background: #eee;
     display: flex;
     flex-direction: row;
-    
+    justify-content: flex-start;
+    height: 33px;
+    min-height: 33px;
+
+    overflow: hidden;
+
+    &.tab-panel-justify-right {
+      justify-content: flex-end;
+    }
+
+    /** individual tab; this is the containing element */
     .tab-panel-tab {
 
-      font-family: calibri;
+      font-family: @ui-font-family;
+      font-size: 14px; 
 
       padding: 8px 8px 4px 8px;
       color: #999;
-      cursor: default;
+      cursor: pointer;
       display: flex;
       flex-direction: row;
       align-items: center;
+      overflow: hidden;
 
-      &.tab-panel-active-tab {
+      /** active tab */
+      &.active {
         background: #fff;
         border-top-right-radius: 3px;
         border-top-left-radius: 3px;
         color: #333;
       }
 
+      /** tab label */
       .tab-panel-tab-label {
         padding-left: .5em;
         padding-right: .5em;
@@ -36,41 +80,58 @@
         text-overflow: ellipsis;
       }
       
+      /** common to icon (left) and button (right) */
       .tab-panel-tab-icon, .tab-panel-tab-button {
         white-space: nowrap;
         width: 16px;
         overflow:hidden; 
+
+        /** image for tab icon/button */
+        &::before {
+          color: #999;
+          background:transparent;
+          font-family: icomoon;
+          font-size: 16px;
+          content: ' ';
+          font-style: normal;
+          font-weight: normal;
+          font-variant: normal;
+          text-transform: none;
+          line-height: 1;
+          -webkit-font-smoothing: antialiased;
+          padding: 0;
+          margin: 0;
+          position: relative;
+          text-align: center;
+          top: 2px;
+        }      
+
       }
 
-      .tab-panel-tab-icon:before, .tab-panel-tab-button:before {
-        color: #666;
-        font-family: icomoon;
-        font-size: 16px;
-        content: ' ';
-        // content: '\e904';
-        font-style: normal;
-        font-weight: normal;
-        font-variant: normal;
-        text-transform: none;
-        line-height: 1;
-        -webkit-font-smoothing: antialiased;
-        padding: 0;
-        margin: 0;
-        position: relative;
-        text-align: center;
-        top: 2px;
-      }      
-
       // show close (X) on active and hover
-      &.tab-panel-active-tab, &:hover {
-        .tab-panel-tab-closeable:before {
-          content: '\e904';
+      &.active.closeable, &.closeable:hover {
+        .tab-panel-tab-button:before {
+          content: '\e905';
         }
       }
 
-      // show dot on dirty
-      .tab-panel-tab-dirty:before {
-        content: '\e902';
+      // show dot on dirty, overriding close (X)...
+      &.dirty, &.active.dirty, &.dirty:hover {
+        .tab-panel-tab-button:before {
+          content: '\e901';
+        }
+      }
+
+      // ...except when hovering over the actual button
+      &.dirty .tab-panel-tab-button:hover:before {
+        content: '\e905';
+      }
+
+      // tab icons are attached to the icon, because they have no
+      // semantic meaning or control effect 
+
+      .tab-panel-tab-icon.terminal:before {
+        content: '\f120'
       }
 
     }
