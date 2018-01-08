@@ -26,12 +26,12 @@
     </div>
 
     <script>
-      let nodeRequire = global.require;
+      let cached_require = global.require;
     </script>
   	<script src="node_modules/monaco-editor/min/vs/loader.js"></script>
     <script>
-      var amdRequire = global.require;
-      global.require = nodeRequire;
+      var amd_require = global.require;
+      global.require = cached_require;
       require("./build/renderer.js")
     </script>
 

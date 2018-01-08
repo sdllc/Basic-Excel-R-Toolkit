@@ -2,7 +2,8 @@
 
 import * as path from 'path';
 
-declare var amdRequire:any;
+// ambient, declared in html
+declare const amd_require:any;
 
 export class Editor {
 
@@ -18,7 +19,7 @@ export class Editor {
       return encodeURI('file://' + pathName);
     }
   
-    amdRequire.config({
+    amd_require.config({
       baseUrl: uriFromPath(path.join(__dirname, '../node_modules/monaco-editor/min'))
     });
   
@@ -27,7 +28,7 @@ export class Editor {
     // workaround monaco-typescript not understanding the environment
     self['process'].browser = true;
   
-    amdRequire(['vs/editor/editor.main'], function() {
+    amd_require(['vs/editor/editor.main'], function() {
       Editor.editor_ = monaco.editor.create(document.getElementById('editor-container'), {
         language: 'r',
         lineNumbers: "on",
