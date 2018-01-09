@@ -1,0 +1,38 @@
+{
+  "main-menu": {
+    "items": [
+      {
+        "label": "File", "id": "file",
+        "items": [
+          { "label": "Open File", "id": "open" },
+          { "label": "Close File", "id": "close" },
+          { "type": "separator" },
+          { "label": "Close Console", "id": "close-console" }
+        ]
+      },
+      {
+        "label": "Edit", "id": "edit",
+        "items": [
+
+        ]
+      },
+      {
+        "label": "View", "id": "view",
+        "items": [
+          { "label": "Show Editor", "id": "show-editor", "type": "checkbox", "checked": true },
+          { "label": "Show Shell", "id": "show-shell", "type": "checkbox", "checked": true },
+          { 
+            "label": "Layout", "id": "layout",
+            "items": [
+              { "label": "Left/Right", "type": "radio", "id": "layout-horizontal", "checked": true },
+              { "label": "Top/Bottom", "type": "radio", "id": "layout-vertical" }
+            ]
+          },
+          { "type": "separator" },
+          { "label": "Reload", "accelerator": "Ctrl+R", "id": "reload" },
+          { "label": "Toggle Developer Tools", "accelerator": "Ctrl+Shift+I", "id": "toggle-developer-tools" }
+        ]
+      }
+    ]
+  }
+}

@@ -8,6 +8,14 @@ export enum SplitterOrientation {
   Horizontal = "horizontal", Vertical = "vertical"
 }
 
+/** drag events for broadcast */
+export enum SplitterEvent {
+  StartDrag = "start-drag",
+  Drag = "drag", 
+  EndDrag = "end-drag",
+  UpdateLayout = "update-layout"
+}
+
 type EventHandler = (event) => void;
 
 export interface SplitterStatus {
@@ -74,15 +82,24 @@ export class Splitter {
   /** value accessor */
   public get orientation() { return this.split_.value.orientation; }
 
+  /** value accessor */
+  public set orientation(orientation:SplitterOrientation) { 
+    this.SetOrientation(orientation);
+  }
+
   /** subject accessor */
   public get status() { return this.split_; }
 
   /** drag events */
-  private dragging_ = new Rx.BehaviorSubject<boolean>(false);
+  // private dragging_ = new Rx.BehaviorSubject<boolean>(false);
 
   /** accessor */
-  public get dragging() { return this.dragging_; }
+  // public get dragging() { return this.dragging_; }
   
+  private events_ = new Rx.Subject<SplitterEvent>();
+
+  public get events() { return this.events_; }
+
   /** cache event handlers so we can remove them */
   private event_handlers_:{[index:string]: EventHandler} = {}; 
 
@@ -153,7 +170,7 @@ export class Splitter {
     Splitter.overlay_.removeEventListener("mouseup", this.event_handlers_.up);
     Splitter.overlay_.classList.remove("visible");
     this.event_handlers_ = {};
-    this.dragging_.next(false);
+    this.events_.next(SplitterEvent.EndDrag);
   }
 
   /** 
@@ -188,6 +205,7 @@ export class Splitter {
         if( drag_split !== current_split ){
           current_split = drag_split;
           this.Update("width", drag_split);
+          this.events_.next(SplitterEvent.Drag);
         }
       }
     }
@@ -200,6 +218,7 @@ export class Splitter {
         if( drag_split !== current_split ){
           current_split = drag_split;
           this.Update("height", drag_split);
+          this.events_.next(SplitterEvent.Drag);
         }
       }
     }
@@ -211,7 +230,7 @@ export class Splitter {
     Splitter.overlay_.addEventListener("mouseleave", this.event_handlers_.leave);
     Splitter.overlay_.addEventListener("mouseup", this.event_handlers_.up);
 
-    this.dragging_.next(true);
+    this.events_.next(SplitterEvent.StartDrag);
     
   }
 
@@ -228,8 +247,11 @@ export class Splitter {
    * set orientation and update layout
    */
   SetOrientation(orientation:SplitterOrientation){
-    this.orientation_ = orientation;
-    this.UpdateClasses();
+    if(this.orientation_ !== orientation){
+      this.orientation_ = orientation;
+      this.UpdateClasses();
+      this.events_.next(SplitterEvent.UpdateLayout);
+    }
   }
 
   /**

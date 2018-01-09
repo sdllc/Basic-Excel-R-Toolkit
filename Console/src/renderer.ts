@@ -6,15 +6,18 @@ const {Menu, MenuItem} = remote;
 
 import {PromptMessage, TerminalImplementation, TerminalConfig} from './terminal-implementation';
 import {RTextFormatter} from './text-formatter';
-import {Splitter, SplitterOrientation} from './splitter';
+import {Splitter, SplitterOrientation, SplitterEvent} from './splitter';
 import {TabPanel, TabJustify, TabEventType} from './tab-panel';
 
 import {PropertyManager} from './properties';
+
+import {MenuUtilities} from './menu_utilities';
 
 import {Editor} from './editor';
 
 import * as Rx from "rxjs";
 import * as path from 'path';
+import { prototype } from 'stream';
 
 const R = new Pipe();
 window['R'] = R;
@@ -39,7 +42,7 @@ let splitter = new Splitter(
 
 let terminal_tabs = new TabPanel("#terminal-tabs", TabJustify.left);
 terminal_tabs.AddTabs(
-  {label:"R Console" } // , {label:"Other Console" }
+  {label:"R Shell" } // , {label:"Other Shell" }
 );
 
 // create terminal
@@ -53,24 +56,6 @@ let autocomplete_callback = function(buffer:string, position:number){
 
   });
 }
-
-// editor tabs
-
-let editor_tabs = new TabPanel("#editor-tabs");
-editor_tabs.AddTabs(
-  {label:"File1.js", closeable:true, button:true}, 
-  {label:"File2.R", closeable:true, button:true},
-  {label:"Another-File.md", closeable:true, dirty:true, button:true});
-
-editor_tabs.events.filter(x => x.type === TabEventType.activate ).subscribe(x => {
-  console.info(x);
-})
-
-editor_tabs.events.filter(x => x.type === TabEventType.rightClick ).subscribe(x => {
-  console.info("RC!", x);
-})
-
-window['ET'] = editor_tabs;
 
 /**
  * response to a shell command is the next prompt. in some cases, 
@@ -201,63 +186,45 @@ setTimeout(() => {
   }).catch( e => console.info( "error", e ));
 }, 1 );
 
+let editor = new Editor("#editor", properties.editor);
+
 // deal with splitter change on drag end 
 
-splitter.dragging.filter(x => !x).subscribe(x => {
+splitter.events.filter(x => (x === SplitterEvent.EndDrag||x === SplitterEvent.UpdateLayout)).subscribe(x => {
   terminal.Resize();
-  Editor.Resize();
+  editor.UpdateLayout();
   properties.terminal.split = splitter.split;
 });
 
 /////////////////////////////
 
-Editor.Load();
-
-/*
-var editor = monaco.editor.create(document.getElementById("container"), {
-	value: "// First line\nfunction hello() {\n\talert('Hello world!');\n}\n// Last line",
-	language: "javascript",
-
-	lineNumbers: false,
-	roundedSelection: false,
-	scrollBeyondLastLine: false,
-	readOnly: false,
-	theme: "vs-dark",
+MenuUtilities.Load("data/menu.json").catch( e => {
+  console.info("menu load error: ", e);
 });
-setTimeout(function() {
-	editor.updateOptions({
-		lineNumbers: true
-	});
-}, 2000);
-*/
 
-/*
-declare var amdRequire:any;
-declare var monaco:any;
+MenuUtilities.events.subscribe(event => {
 
-  function uriFromPath(_path) {
-    var pathName = path.resolve(_path).replace(/\\/g, '/');
-    if (pathName.length > 0 && pathName.charAt(0) !== '/') {
-      pathName = '/' + pathName;
-    }
-    return encodeURI('file://' + pathName);
+  switch(event.id){
+
+  // dev
+
+  case "main.view.reload":
+    remote.getCurrentWindow().reload();
+    break;
+  case "main.view.toggle-developer-tools":
+    remote.getCurrentWindow()['toggleDevTools']();
+    break;
+
+  // layout
+
+  case "main.view.layout.layout-horizontal":
+    splitter.orientation = SplitterOrientation.Horizontal;
+    break;
+  case "main.view.layout.layout-vertical":
+    splitter.orientation = SplitterOrientation.Vertical;
+    break;
+  default:
+    console.info(event.id);
   }
-  amdRequire.config({
-    baseUrl: uriFromPath(path.join(__dirname, '../node_modules/monaco-editor/min'))
-  });
-  // workaround monaco-css not understanding the environment
-  self['module'] = undefined;
-  // workaround monaco-typescript not understanding the environment
-  self['process'].browser = true;
-  amdRequire(['vs/editor/editor.main'], function() {
-    var editor = monaco.editor.create(document.getElementById('editor-container'), {
-      value: [
-        'function x() {',
-        '\tconsole.log("Hello world!");',
-        '}'
-      ].join('\n'),
-      language: 'javascript'
-    });
-  });
-*/
 
+});

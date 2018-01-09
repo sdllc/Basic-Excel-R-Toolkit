@@ -18,7 +18,7 @@ for( let i = 0; i< process.argv.length; i++ ){
     process.env['BERT_PIPE_NAME'] = pipe_name;
   }
   else if( process.argv[i] === "-d" ){
-    dev_flags = Number(process.argv[++i]||0);
+    dev_flags = Number(process.argv[++i]||1);
     process.env['BERT_DEV_FLAGS'] = dev_flags;
   }
 }
