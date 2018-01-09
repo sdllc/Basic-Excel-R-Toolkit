@@ -1,7 +1,15 @@
 /// <reference path="../node_modules/monaco-editor/monaco.d.ts" />
 
+import {remote} from 'electron';
+const ElectronDialog = remote.dialog;
+
 import { TabPanel, TabJustify, TabEventType } from './tab-panel';
+
 import * as path from 'path';
+import * as fs from 'fs';
+
+import * as Rx from 'rxjs';
+import { MenuUtilities } from './menu_utilities';
 
 // ambient, declared in html
 declare const amd_require: any;
@@ -109,8 +117,59 @@ export class Editor {
 
     });
 
+    MenuUtilities.events.subscribe(event => {
+      switch(event.id){
+      case "main.file.open":
+        this.OpenFile();
+        break;
+      case "main.file.close":
+        this.CloseFile();
+        break;
+      case "main.file.revert":
+        this.RevertFile();
+        break;
+      }
+    });
+
   }
 
+  private OpenFileInternal(file_path:string){
+    return new Promise((resolve, reject) => {
+      fs.readFile(file_path, "utf8", (err, data) => {
+        if(err) return reject(err);
+
+        // create new model...
+
+        // add tab...
+
+        // ... 
+
+        this.editor_.setValue(data); // temp only
+
+      });
+    });
+  }
+
+  /** 
+   * select and open file. if no path is passed, show a file chooser.
+   */
+  public OpenFile(file_path?:string){
+    if(file_path) return this.OpenFileInternal(file_path);
+    let files = ElectronDialog.showOpenDialog({
+      title: "Open File",
+      properties: ["openFile"],
+      filters: [
+        {name: 'R source files', extensions: ['r', 'rsrc', 'rscript']},
+        {name: 'All Files', extensions: ['*']}
+      ]
+    });
+    if( files && files.length ) return this.OpenFileInternal(files[0]);
+    return Promise.reject("no file selected");
+  }
+
+  public CloseFile(){}
+  public RevertFile(){}
+  
   /** update layout, should be called after resize */
   public UpdateLayout() {
     if (this.editor_) this.editor_.layout();
