@@ -194,11 +194,12 @@ splitter.events.filter(x => (x === SplitterEvent.EndDrag||x === SplitterEvent.Up
   terminal.Resize();
   editor.UpdateLayout();
   properties.terminal.split = splitter.split;
+  properties.terminal.orientation = splitter.orientation;
 });
 
 /////////////////////////////
 
-MenuUtilities.Load("data/menu.json").catch( e => {
+MenuUtilities.Load(path.join(__dirname, "..", "data/menu.json")).catch( e => {
   console.info("menu load error: ", e);
 });
 
