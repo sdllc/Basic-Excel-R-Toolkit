@@ -15,6 +15,11 @@ import * as Rx from 'rxjs';
 // ambient, declared in html
 declare const amd_require: any;
 
+interface UncloseRecord {
+  id:number;
+  position:number;
+}
+
 /**
  * class represents a document in the editor; has content, view state
  */
@@ -203,8 +208,16 @@ export class Editor {
    */
   private untitled_id_generator_ = 1;
 
-  /** internal document IDs need to be unique, but no other constraints */
-  private document_id_generator = 0;
+  /** 
+   * internal document IDs need to be unique, but no other constraints. we 
+   * start at > 0 just for aesthetic reasons.
+   */
+  private document_id_generator = 1000;
+
+  /** 
+   * recently closed documents, for unclosing. session only. lifo.
+   */
+  private closed_tabs_:UncloseRecord[] = [];
 
   /**
    * builds layout, does any necessary initialization and then instantiates 
@@ -283,6 +296,7 @@ export class Editor {
           this.active_tab_.dirty = dirty;
           this.active_document_.dirty_ = dirty;
           this.tabs_.UpdateTab(this.active_tab_);
+          MenuUtilities.SetEnabled("main.file.revert-file", this.active_document_.dirty_ && !!this.active_document_.file_path_);
         }
 
         this.CacheDocument();
@@ -312,6 +326,9 @@ export class Editor {
         break;
       case "main.file.revert-file":
         this.RevertFile();
+        break;
+      case "main.file.unclose-tab":
+        this.UncloseTab();
         break;
       case "main.file.open-recent.open-recent-file":
         this.OpenFile(event.item.data);
@@ -348,7 +365,7 @@ export class Editor {
    * can get called when a new file is opened or when a file is 
    * closed.
    */
-  private UpdateOpenFiles(){
+  private UpdateOpenFiles(flush = false){
   
     let open_files:number[] = this.properties_.open_files || [];
     let new_list:number[] = [];
@@ -362,15 +379,90 @@ export class Editor {
     });
 
     // something removed?
-    open_files.forEach(check => {
+    open_files.forEach((check, index) => {
       if( undefined === new_list.find( x => ( x === check ))){
         console.info( "remove", check);
-        localStorage.removeItem(`cached-document-${check}`);
+        this.closed_tabs_.unshift({id:check, position: index});
+        if(flush) localStorage.removeItem(`cached-document-${check}`);
       }
     });
 
+    MenuUtilities.SetEnabled("main.file.unclose-tab", this.closed_tabs_.length > 0);    
+
     this.properties_.open_files = new_list;
-   
+
+    let enable_items = (new_list.length > 0);
+    // MenuUtilities.SetEnabled("main.file.revert-file", enable_items);
+    MenuUtilities.SetEnabled("main.file.close-file", enable_items);
+
+  }
+
+  /**
+   * load a document from storage. this does not call update 
+   * on the tab list, so be sure to do that.
+   */
+  private LoadStoredDocument(entry:number, position?:number) : [Document, TabSpec] {
+    
+    let key = `cached-document-${entry}`;
+    let text = localStorage.getItem(key);
+
+    let document:Document;
+    let tab:TabSpec;
+
+    if( text ){
+      try {
+
+        let unserialized = JSON.parse(text);
+        document = new Document();
+        document.label_ = unserialized.label;
+        document.file_path_ = unserialized.file_path;
+
+        if(unserialized.file_path){
+          document.model_ = monaco.editor.createModel(unserialized.text, undefined, 
+            monaco.Uri.parse(Editor.UriFromPath(unserialized.file_path)));
+        }
+        else {
+          //let match = document.label_.match(untitled_regex);
+          //if( match ){
+          //  this.untitled_id_generator_ = Math.max(this.untitled_id_generator_, Number(match[1]) + 1);
+          //}
+          document.model_ = monaco.editor.createModel(unserialized.text, "plaintext"); 
+        }
+
+        document.saved_version_ = document.model_.getAlternativeVersionId()
+        document.id_ = entry; 
+        document.dirty_ = !!unserialized.dirty;
+        document.view_state_ = unserialized.view_state;
+
+        if( document.dirty_ ) document.saved_version_--;
+
+        // max_id = Math.max(max_id, entry);
+      
+        tab = {
+          label: document.label_,
+          tooltip: document.file_path_,
+          closeable: true,
+          button: true,
+          dirty: document.dirty_,
+          data: document
+        };
+
+        // if(entry === active_id) activate = tab;
+        
+        if( typeof position === "undefined" ) this.tabs_.AddTab(tab, false);
+        else this.tabs_.InsertTab(tab, position, false);
+       
+      }
+      catch(e){
+        console.error(e);
+      }
+    }
+    else {
+      console.info("NF", key);
+    }
+
+    return [document, tab];
+
   }
 
   /**
@@ -390,61 +482,28 @@ export class Editor {
     let active_id = this.properties_.active_tab;
     let activate:TabSpec = null;
 
+    let untitled_regex = new RegExp(Constants.files.untitled + "-(\\d+)$");
+
     (this.properties_.open_files || []).forEach(entry => {
-
-      let key = `cached-document-${entry}`;
-      let text = localStorage.getItem(key);
-
-      if( text ){
-        try {
-
-          let unserialized = JSON.parse(text);
-          let document = new Document();
-          document.label_ = unserialized.label;
-          document.file_path_ = unserialized.file_path;
-
-          if(unserialized.file_path){
-            document.model_ = monaco.editor.createModel(unserialized.text, undefined, 
-              monaco.Uri.parse(Editor.UriFromPath(unserialized.file_path)));
-          }
-          else {
-            document.model_ = monaco.editor.createModel(unserialized.text, "plaintext"); 
-          }
-  
-          document.saved_version_ = document.model_.getAlternativeVersionId()
-          document.id_ = entry; 
-          document.dirty_ = !!unserialized.dirty;
-          document.view_state_ = unserialized.view_state;
-
-          if( document.dirty_ ) document.saved_version_--;
-
-          max_id = Math.max(max_id, entry);
-        
-          let tab:TabSpec = {
-            label: document.label_,
-            tooltip: document.file_path_,
-            closeable: true,
-            button: true,
-            dirty: document.dirty_,
-            data: document
-          };
-
-          if(entry === active_id) activate = tab;
-          this.tabs_.AddTabs(tab);
-         
+      let [document, tab] = this.LoadStoredDocument(entry);
+      if( document ){
+        // check max id, untitled id
+        let match = document.label_.match(untitled_regex);
+        if( match ){
+          this.untitled_id_generator_ = Math.max(this.untitled_id_generator_, Number(match[1]) + 1);
         }
-        catch(e){
-          console.error(e);
-        }
+        max_id = Math.max(max_id, entry);
       }
-      else {
-        console.info("NF", key);
-      }
+      if(active_id === entry) activate = tab;
     });
+
+    this.tabs_.UpdateLayout();
+
+    if( max_id >= this.document_id_generator ) this.document_id_generator = max_id + 1;
 
     if(activate) this.tabs_.ActivateTab(activate);
 
-    this.UpdateOpenFiles();
+    this.UpdateOpenFiles(true); // flush junk
    
   }
 
@@ -457,6 +516,20 @@ export class Editor {
     MenuUtilities.SetSubmenu("main.file.open-recent", recent_files.map( file_path => {
       return { label: file_path, id: "open-recent-file", data: file_path };
     }));
+  }
+
+  private UncloseTab(){
+    if( this.closed_tabs_.length === 0) throw( "no closed tabs");
+    let unclosed_tab = this.closed_tabs_.shift();
+
+    console.info("UC", unclosed_tab);
+    let [document, tab] = this.LoadStoredDocument(unclosed_tab.id, unclosed_tab.position);
+    if( tab ){
+      this.tabs_.UpdateLayout();
+      this.tabs_.ActivateTab(tab);
+      this.UpdateOpenFiles();
+    }
+
   }
 
   /** close tab (called on button click) */
@@ -518,6 +591,7 @@ export class Editor {
         this.status_bar_.language = language;
       }
       this.properties_.active_tab = document.id_;
+      MenuUtilities.SetEnabled("main.file.revert-file", document.dirty_ && !!document.file_path_);
     }
 
   }

@@ -177,6 +177,17 @@ export class TabPanel {
     if(do_layout) this.UpdateLayout();
   }
 
+  InsertTab(tab:TabSpec, position:number, update=true){
+    if( position < 0 ) position = 0;
+    this.tabs_.splice(position, 0, tab);
+    if(update) this.UpdateLayout();
+  }
+
+  AddTab(tab:TabSpec, update=true){
+    this.tabs_.push(tab);
+    if(update) this.UpdateLayout();
+  }
+
   AddTabs(...tabs:(TabSpec|TabSpec[])[]){
     tabs.forEach( element => {
       if( Array.isArray(element)) element.forEach( x => this.tabs_.push(x));
@@ -239,7 +250,7 @@ export class TabPanel {
 
   }
 
-  private UpdateLayout(){
+  UpdateLayout(){
 
     while( this.tab_container_.lastChild ) this.tab_container_.removeChild(this.tab_container_.lastChild);
 

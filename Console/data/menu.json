@@ -7,12 +7,13 @@
           { "label": "New File", "id": "new-file", "accelerator": "Ctrl+N" },
           { "label": "Open File...", "id": "open-file", "accelerator": "Ctrl+O" },
           { "label": "Open Recent", "id": "open-recent", "enabled": false, "type": "submenu", "items": [] },
+          { "label": "Unclose Tab", "id": "unclose-tab", "enabled": false },
           { "type": "separator" },
           { "label": "Save", "id": "save-file", "accelerator": "Ctrl+S" },
           { "label": "Save As...", "id": "save-file-as", "accelerator": "Ctrl+Shift+S"  },
           { "type": "separator" },
-          { "label": "Revert File", "id": "revert-file" },
-          { "label": "Close File", "id": "close-file", "accelerator": "Ctrl+W" },
+          { "label": "Revert File", "id": "revert-file", "accelerator": "Ctrl+Shift+T", "enabled": false },
+          { "label": "Close File", "id": "close-file", "accelerator": "Ctrl+W", "enabled": false  },
           { "type": "separator" },
           { "label": "Close Console", "id": "close-console" }
         ]

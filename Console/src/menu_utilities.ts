@@ -56,41 +56,13 @@ export class MenuUtilities {
 
   public static get events() { return this.events_; }
 
-  /** 
-   * find the item, by id (path). 
-   * 
-   * this should only be used by this class. don't let menu items leak into 
-   * other classes, we want to abstract all menu behavior.
-   * /
-  private static Find(id:string):Electron.MenuItem {
-
-    let elements = id.split(".");
-    if(!elements.length) throw( "invalid menu id");
-
-    let item_path = elements.shift();
-    let menu:Electron.Menu = this.menus_[item_path];
-    if(!menu) throw( "invalid menu root" );
-
-    let menu_item:Electron.MenuItem;
-
-    elements.forEach(element => {
-      item_path += "." + element;
-      menu_item = menu.items.find(item => (item['id'] === item_path));
-      if(!menu_item) throw( "item not found: " + item_path);
-      menu = menu_item['submenu'];
-    });
-
-    return menu_item;
-  }  
-*/
-
   private static Find(id:string) : LocalMenuItem {
 
     let elements = id.split(".");
     if(!elements.length) throw( "invalid menu id");
     
     let item_root = elements.shift(); 
-
+    
     let item = this.template_;
     if(!item) throw( "missing root");
 
@@ -105,9 +77,6 @@ export class MenuUtilities {
 
   /** get check from menu item, by path */
   static GetCheck(id:string){
-//    let menu_item = this.Find(id);
-//    return menu_item.checked;
-
     let item = this.Find(id);
     return !!item.checked;
 
@@ -115,24 +84,24 @@ export class MenuUtilities {
 
   /** set menu item check and optionally trigger the related event */
   static SetCheck(id:string, checked=true){ // , trigger_event=false){
-//    let menu_item = this.Find(id);
-//    menu_item.checked = checked;
-//    if(trigger_event && menu_item.click) menu_item.click.call(0);
-
     let item = this.Find(id);
-    item.checked = checked;
-    this.Update();
-    // if(trigger_event && menu_item.click) menu_item.click.call(0);
-    
+    if(item.checked !== checked){
+      item.checked = checked;
+      this.Update();
+    }
+  }
+
+  /** enable/disable */
+  static SetEnabled(id:string, enabled=true){
+    let item = this.Find(id);
+    if( item.enabled !== enabled ){
+      item.enabled = enabled;
+      this.Update();
+    }
   }
 
   /** update submenu. for recent files, essentially. */
   static SetSubmenu(id:string, items:LocalMenuItem[]){
-//    let menu_item = this.Find(id);
-//    if(!menu_item) throw( "menu item not found");
-//    console.info("MI", menu_item);
-//    window['MI'] = menu_item;
-
     let item = this.Find(id);
     item.items = items;
     item.enabled = (items.length > 0);
