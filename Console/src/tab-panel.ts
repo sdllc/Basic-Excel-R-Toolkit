@@ -6,6 +6,9 @@ export interface TabSpec {
   /** tab label */
   label:string;
 
+  /** tooltip. html title, ideally something better */
+  tooltip?:string;
+
   /** should only be set by tab panel */
   active?:boolean;
 
@@ -229,6 +232,7 @@ export class TabPanel {
       let label = document.createElement("div");
       label.classList.add("tab-panel-tab-label");
       label.textContent = tab.label;
+      if(tab.tooltip) label.setAttribute("title", tab.tooltip);
       node.appendChild(label);
 
       if(tab.button){

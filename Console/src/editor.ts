@@ -1,18 +1,65 @@
 /// <reference path="../node_modules/monaco-editor/monaco.d.ts" />
 
 import {remote} from 'electron';
-const ElectronDialog = remote.dialog;
 
-import { TabPanel, TabJustify, TabEventType } from './tab-panel';
+import { MenuUtilities } from './menu_utilities';
+import * as JuliaLanguage from './julia-language';
+import { TabPanel, TabJustify, TabEventType, TabSpec } from './tab-panel';
 
 import * as path from 'path';
 import * as fs from 'fs';
-
 import * as Rx from 'rxjs';
-import { MenuUtilities } from './menu_utilities';
 
 // ambient, declared in html
 declare const amd_require: any;
+
+/**
+ * class represents a document in the editor; has content, view state
+ */
+class Document {
+  model_:monaco.editor.IModel;
+  view_state_:monaco.editor.ICodeEditorViewState;
+  dirty_ = false;
+}
+
+class EditorStatusBar {
+
+  private node_:HTMLElement;
+  private label_:HTMLElement;
+  private position_:HTMLElement;
+  private language_:HTMLElement;
+  
+  public get node() { return this.node_; }
+
+  public set label(text){ this.label_.textContent = text; }
+  
+  public set language(text){ this.language_.textContent = text; }
+
+  public set position([line, column]){ 
+    this.position_.textContent = `Line ${line}, Col ${column}`;
+  }
+
+  constructor(){
+
+    this.node_ = document.createElement("div");
+    this.node_.classList.add("editor-status-bar");
+
+    this.label_ = document.createElement("div");
+    this.node_.appendChild(this.label_);
+
+    let spacer = document.createElement("div");
+    spacer.classList.add("spacer");
+    this.node_.appendChild(spacer);
+
+    this.position_ = document.createElement("div");
+    this.node_.appendChild(this.position_);
+
+    this.language_ = document.createElement("div");
+    this.node_.appendChild(this.language_);
+
+  }
+
+}
 
 /**
  * class represents an editor; handles its own layout. basically a wrapper
@@ -27,26 +74,55 @@ export class Editor {
   /** flag for loading, in case we have multiple instances */
   static loaded_ = false;
 
+  /** utility function */
+  static UriFromPath(_path) {
+    var pathName = path.resolve(_path).replace(/\\/g, '/');
+    if (pathName.length > 0 && pathName.charAt(0) !== '/') {
+      pathName = '/' + pathName;
+    }
+    return encodeURI('file://' + pathName);
+  }
+
   /**
    * finish loading monaco
    */
-  static Load() {
-    function uriFromPath(_path) {
-      var pathName = path.resolve(_path).replace(/\\/g, '/');
-      if (pathName.length > 0 && pathName.charAt(0) !== '/') {
-        pathName = '/' + pathName;
-      }
-      return encodeURI('file://' + pathName);
-    }
-    amd_require.config({
-      baseUrl: uriFromPath(path.join(__dirname, '../node_modules/monaco-editor/min'))
+  static Load() : Promise<void> {
+
+    if(this.loaded_) return Promise.resolve();
+    return new Promise((resolve, reject) => {
+
+      this.loaded_ = true;
+
+      amd_require.config({
+        baseUrl: Editor.UriFromPath(path.join(__dirname, '../node_modules/monaco-editor/min'))
+      });
+
+      // workaround monaco-css not understanding the environment
+      self['module'] = undefined;
+      // workaround monaco-typescript not understanding the environment
+      self['process'].browser = true;
+
+      // this is async
+      amd_require(['vs/editor/editor.main'], () => {
+
+        // register additional languages (if any)
+        // TODO: abstract this
+
+        let conf = { id: 'julia', extensions: ['.jl', '.julia'] };
+        monaco.languages.register(conf);    
+        monaco.languages.onLanguage(conf.id, () => {
+          monaco.languages.setMonarchTokensProvider(conf.id, JuliaLanguage.language);
+          monaco.languages.setLanguageConfiguration(conf.id, JuliaLanguage.conf);
+        });
+
+        resolve();
+
+      });
     });
 
-    // workaround monaco-css not understanding the environment
-    self['module'] = undefined;
-    // workaround monaco-typescript not understanding the environment
-    self['process'].browser = true;
   }
+
+  private status_bar_ = new EditorStatusBar();
 
   /** editor instance */
   private editor_: monaco.editor.IStandaloneCodeEditor;
@@ -60,9 +136,11 @@ export class Editor {
   /** properties */
   private properties_: any;
 
+  private documents_:Document[] = [];
+
   /**
-   * build layout, do any necessary initialization and then instantiate the
-   * editor instance
+   * builds layout, does any necessary initialization and then instantiates 
+   * the editor instance
    * 
    * @param node an element, or a selector we can pass to `querySelector()`.
    */
@@ -72,7 +150,6 @@ export class Editor {
 
     if (typeof node === "string") this.container_ = document.querySelector(node);
     else this.container_ = node;
-    if (!Editor.loaded_) Editor.Load();
 
     this.container_.classList.add("editor-container");
 
@@ -84,17 +161,20 @@ export class Editor {
     editor.classList.add("editor-editor");
     tabs.appendChild(editor);
 
+    this.container_.appendChild(this.status_bar_.node);
+    this.status_bar_.label = "Ready";
+
     this.tabs_ = new TabPanel(tabs);
-    this.tabs_.AddTabs(
-      { label: "File1.js", closeable: true, button: true },
-      { label: "File2.R", closeable: true, button: true },
-      { label: "Another-File.md", closeable: true, dirty: true, button: true });
+   
+    this.tabs_.events.filter(event => event.type === TabEventType.deactivate ).subscribe(event => {
+      this.DeactivateTab(event.tab);
+    });
+    
+    this.tabs_.events.filter(event => event.type === TabEventType.activate ).subscribe(event => {
+      this.ActivateTab(event.tab);
+    });
 
     /*
-    editor_tabs.events.filter(x => x.type === TabEventType.activate ).subscribe(x => {
-      console.info(x);
-    })
-    
     editor_tabs.events.filter(x => x.type === TabEventType.rightClick ).subscribe(x => {
       console.info("RC!", x);
     })
@@ -104,15 +184,26 @@ export class Editor {
     })
     */
 
-    amd_require(['vs/editor/editor.main'], () => {
+    // the load call ensures monaco is loaded via the amd loader;
+    // if it's already been loaded once this will return immediately
+    // via Promise.resolve().
+
+    // FIXME: options
+
+    Editor.Load().then(() => {
       this.editor_ = monaco.editor.create(editor, {
-        language: 'r',
+        model: null, // don't create an empty model
         lineNumbers: "on",
         roundedSelection: true,
         scrollBeyondLastLine: false,
         readOnly: false,
         minimap: { enabled: false },
         // theme: "vs-dark",
+      });
+
+      // cursor position -> status bar
+      this.editor_.onDidChangeCursorPosition(event => {
+        this.status_bar_.position = [event.position.lineNumber, event.position.column];
       });
 
     });
@@ -133,18 +224,55 @@ export class Editor {
 
   }
 
+  /** deactivates tab and saves view state. */
+  private DeactivateTab(tab:TabSpec){
+    if( tab.data ){
+      let document = tab.data as Document;
+      document.view_state_ = this.editor_.saveViewState();
+      console.info("VS", document.view_state_);
+    }
+  }
+
+  /** activates tab, loads document and restores view state (if available) */
+  private ActivateTab(tab:TabSpec){
+    if( tab.data ){
+      let document = tab.data as Document;
+      if( document.model_ ) {
+        this.editor_.setModel(document.model_);
+        if( document.view_state_) 
+          this.editor_.restoreViewState(document.view_state_);
+        let language = document.model_['_languageIdentifier'].language;
+        language = language.substr(0,1).toUpperCase() + language.substr(1);
+        this.status_bar_.language = language;
+      }
+    }
+  }
+
+  /** load a file from a given path */
   private OpenFileInternal(file_path:string){
+
+    // FIXME: already open? switch to (...)
+
     return new Promise((resolve, reject) => {
       fs.readFile(file_path, "utf8", (err, data) => {
         if(err) return reject(err);
 
-        // create new model...
+        let document = new Document();
 
-        // add tab...
+        document.model_ = monaco.editor.createModel(data, undefined, 
+          monaco.Uri.parse(Editor.UriFromPath(file_path)));
 
-        // ... 
+        let tab:TabSpec = {
+          label: path.basename(file_path),
+          tooltip: file_path,
+          closeable: true,
+          button: true,
+          dirty: false,
+          data: document
+        };
 
-        this.editor_.setValue(data); // temp only
+        this.tabs_.AddTabs(tab);
+        this.tabs_.ActivateTab(tab);
 
       });
     });
@@ -155,7 +283,7 @@ export class Editor {
    */
   public OpenFile(file_path?:string){
     if(file_path) return this.OpenFileInternal(file_path);
-    let files = ElectronDialog.showOpenDialog({
+    let files = remote.dialog.showOpenDialog({
       title: "Open File",
       properties: ["openFile"],
       filters: [

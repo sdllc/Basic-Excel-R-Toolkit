@@ -4,8 +4,8 @@
       {
         "label": "File", "id": "file",
         "items": [
-          { "label": "Open File", "id": "open" },
-          { "label": "Close File", "id": "close" },
+          { "label": "Open File", "id": "open", "accelerator": "Ctrl+O" },
+          { "label": "Close File", "id": "close", "accelerator": "Ctrl+W" },
           { "type": "separator" },
           { "label": "Close Console", "id": "close-console" }
         ]

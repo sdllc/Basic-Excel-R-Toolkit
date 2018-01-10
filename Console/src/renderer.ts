@@ -187,6 +187,7 @@ setTimeout(() => {
 }, 1 );
 
 let editor = new Editor("#editor", properties.editor);
+window['E'] = editor;
 
 // deal with splitter change on drag end 
 

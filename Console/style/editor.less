@@ -1,14 +1,38 @@
 
 .editor-container {
   position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-status-bar {
+
+  border-top: 1px solid #ccc;
+  color: #333;
+
+  display: flex;
+  flex-direction: row;
+  background: #eee;
+  align-items: center;
+  height: 2em;
+  font-family: calibri;
+  font-size: 14px;
+  overflow: hidden;
+
+  > div {
+    padding-left: .5em;
+    padding-right: .5em;
+    display: inline-block;
+    &.spacer { flex-grow: 1; }
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
 }
 
 .editor-tabs {
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  right: 0px;
-  bottom: 0px;
+  position: relative;
+  flex-grow: 1;
 }
 
 .editor-editor {
