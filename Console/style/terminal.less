@@ -23,7 +23,7 @@
 
 }
 
-/* cursor */
+// cursor 
 
 .terminal:not(.focus) .terminal-cursor {
   outline: 1px solid #333;
@@ -41,3 +41,53 @@
   position: absolute;
   background-color: #333;
 }
+
+/*
+.terminal {
+
+  font-family: consolas;
+  font-size: 13px;
+  color: #fff;
+  background-color: #000;
+  position: relative;
+  top: 0px;
+  left: 0px;
+  height: 100%;
+
+  .xterm-viewport { background-color: inherit; }
+  .xterm-rows { padding-left: .25em; }
+
+  .xterm-color-1 { color: lightblue; }
+  .xterm-color-2 { color: yellow; }
+  .xterm-color-3 { color: #def; }
+  .xterm-color-4 { color: #fac; }
+  .xterm-color-5 { color: orange; }
+  .xterm-color-6 { color: #dfe; }
+  
+  .xterm-selection > div {
+    background-color: yellow;
+    opacity: 0.5;
+  }
+
+}
+
+// cursor 
+
+.terminal:not(.focus) .terminal-cursor {
+  outline: 1px solid #ccc;
+  outline-offset: -1px;
+}
+
+.terminal.xterm-cursor-style-block.focus:not(.xterm-cursor-blink-on) .terminal-cursor {
+  background-color: #ccc;
+  color: #000;
+}
+
+.terminal.focus.xterm-cursor-style-bar:not(.xterm-cursor-blink-on) .terminal-cursor::before,
+.terminal.focus.xterm-cursor-style-underline:not(.xterm-cursor-blink-on) .terminal-cursor::before {
+  content: '';
+  position: absolute;
+  background-color: #ccc;
+}
+
+*/
