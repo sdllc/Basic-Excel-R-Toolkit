@@ -41,4 +41,25 @@
   left: 0px;
   right: 0px;
   bottom: 0px;
+
+  // if you want content in the editor background (toggled on open file),
+  // use this after block. either content or background (for text, maybe
+  // use svg background)
+
+  &::after {
+    position: absolute;
+    top: 50%;
+    left: 0px;
+    right: 0px;
+    font-family: icomoon;
+    font-size: 30px;
+    color: #999;
+    content: '\e903';
+    text-align: center;
+  }
+
+  &[data-mode-id]::after {
+    content: ""
+  }
+  
 }

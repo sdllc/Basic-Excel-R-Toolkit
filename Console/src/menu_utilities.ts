@@ -3,21 +3,40 @@ import {remote} from 'electron';
 const {Menu, MenuItem} = remote;
 
 import * as Rx from 'rxjs';
-
 import * as path from 'path';
 import * as fs from 'fs';
 
-interface LocalMenuItem {
+export interface LocalMenuItem {
+
+  // submenu
   items?:LocalMenuItem[];
+
+  // displayed text
   label?:string;
+
+  // id for path in events
   id?:string;
+
+  // enable/disable; default is ENABLE
+  enabled?:boolean;
+
+  // checked/unchecked; default false
   checked?:boolean;
+
+  // key accelerator
   accelerator?:string;
+
+  // arbitrary data
+  data?:any;
+
+  // defaults to "normal"
   type?:"normal"|"separator"|"submenu"|"checkbox"|"radio";
+
 }
 
 export interface MenuEvent {
-  id?:string
+  id?:string;
+  item?:LocalMenuItem;
 }
 
 /**
@@ -27,7 +46,13 @@ export class MenuUtilities {
 
   private static events_:Rx.Subject<MenuEvent> = new Rx.Subject<MenuEvent>();
 
+  private static loaded_:Rx.BehaviorSubject<boolean> = new Rx.BehaviorSubject(false);
+
+  public static get loaded() { return this.loaded_; }
+
   private static menus_:any = {};
+
+  private static template_:any;
 
   public static get events() { return this.events_; }
 
@@ -36,7 +61,7 @@ export class MenuUtilities {
    * 
    * this should only be used by this class. don't let menu items leak into 
    * other classes, we want to abstract all menu behavior.
-   */
+   * /
   private static Find(id:string):Electron.MenuItem {
 
     let elements = id.split(".");
@@ -57,26 +82,80 @@ export class MenuUtilities {
 
     return menu_item;
   }  
+*/
+
+  private static Find(id:string) : LocalMenuItem {
+
+    let elements = id.split(".");
+    if(!elements.length) throw( "invalid menu id");
+    
+    let item_root = elements.shift(); 
+
+    let item = this.template_;
+    if(!item) throw( "missing root");
+
+    elements.forEach(element => {
+      item = item.items.find(item => item.id === element);
+      if(!item) throw( "Couldn't find item: " + element );
+    });
+
+    return item;
+
+  }
 
   /** get check from menu item, by path */
   static GetCheck(id:string){
-    let menu_item = this.Find(id);
-    return menu_item.checked;
+//    let menu_item = this.Find(id);
+//    return menu_item.checked;
+
+    let item = this.Find(id);
+    return !!item.checked;
+
   }
 
   /** set menu item check and optionally trigger the related event */
-  static SetCheck(id:string, checked=true, trigger_event=false){
-    let menu_item = this.Find(id);
-    menu_item.checked = checked;
-    if(trigger_event && menu_item.click) menu_item.click.call(0);
+  static SetCheck(id:string, checked=true){ // , trigger_event=false){
+//    let menu_item = this.Find(id);
+//    menu_item.checked = checked;
+//    if(trigger_event && menu_item.click) menu_item.click.call(0);
+
+    let item = this.Find(id);
+    item.checked = checked;
+    this.Update();
+    // if(trigger_event && menu_item.click) menu_item.click.call(0);
+    
   }
 
-  private static Click(id:string, menuItem:Electron.MenuItem, browserWindow, event){
-    this.events_.next({id});
+  /** update submenu. for recent files, essentially. */
+  static SetSubmenu(id:string, items:LocalMenuItem[]){
+//    let menu_item = this.Find(id);
+//    if(!menu_item) throw( "menu item not found");
+//    console.info("MI", menu_item);
+//    window['MI'] = menu_item;
+
+    let item = this.Find(id);
+    item.items = items;
+    item.enabled = (items.length > 0);
+    this.Update();
+
+  }
+
+  private static Click(id:string, item:LocalMenuItem, menuItem:Electron.MenuItem, browserWindow, event){
+
+    // special: handle checks, map back to item
+    if((typeof item.checked !== "undefined") || (typeof menuItem.checked !== "undefined")){
+      item.checked = !!menuItem.checked;
+    }
+
+    this.events_.next({id, item});
   }
 
   static Install(template){
+    this.template_ = template;
+    this.Update();
+  }
 
+  static Update(){
     let build_menu = (items, id) => {
       let menu = new Menu();
       items.map(item => {
@@ -87,14 +166,17 @@ export class MenuUtilities {
           accelerator: item.accelerator,
           id: id + "." + (item.id||item.label)
         };
+        if( item.type !== "separator" && !item.id ) throw( "id is required for non-separator menu items");
+        if( typeof item.enabled !== "undefined" ) options.enabled = item.enabled;
         if( item.items && item.items.length ) options.submenu = build_menu(item.items, options.id);
-        else options.click = this.Click.bind(this, options.id);
+        else if(item.items) options.submenu = [];
+        else options.click = this.Click.bind(this, options.id, item);
         menu.append(new MenuItem(options));
       });
       return menu;
     }
 
-    let items = template.items as LocalMenuItem[];
+    let items = this.template_.items as LocalMenuItem[];
     let main_menu = build_menu(items, "main");
     this.menus_.main = main_menu;
 
@@ -108,6 +190,7 @@ export class MenuUtilities {
     });
     this.menus_.disabled = disabled_menu;
 
+    this.loaded_.next(true);    
     this.Enable();
   }
 

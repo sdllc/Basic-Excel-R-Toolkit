@@ -73,6 +73,11 @@ export class TabPanel {
   /** list of tabs */
   private tabs_:TabSpec[] = [];
 
+  public get tabs(){ return this.tabs_; }
+
+  /** return a list of data items */
+  public get data(){ return this.tabs_.map( x => x.data ); }
+  
   private active_index_ = -1;
 
   /** observable for tab events */
@@ -80,6 +85,8 @@ export class TabPanel {
 
   /** accessor */
   public get events() { return this.events_; }
+
+  public get count(){ return this.tabs_.length; }
 
   /** accessor: returns tab or null */
   get active() { 
@@ -162,9 +169,12 @@ export class TabPanel {
     this.ActivateTab((this.active_index_ + this.tabs_.length - 1) % this.tabs_.length);
   }
 
-  ClearTabs(){
+  /**
+   * use the flag if you are running multiple operations
+   */
+  ClearTabs(do_layout = true){
     this.tabs_ = [];
-    this.UpdateLayout();
+    if(do_layout) this.UpdateLayout();
   }
 
   AddTabs(...tabs:(TabSpec|TabSpec[])[]){
@@ -173,6 +183,30 @@ export class TabPanel {
       else this.tabs_.push(element)
     });
     this.UpdateLayout();
+  }
+
+  /**
+   * remove tab, by reference
+   */
+  RemoveTab(tab:TabSpec, do_layout=true){
+    this.tabs_ = this.tabs_.filter(compare => compare !== tab);
+    if(do_layout) this.UpdateLayout();
+  }
+
+  UpdateTab(tab:TabSpec){
+
+    // FIXME: unify all class-setting code 
+
+    Array.prototype.some.call(this.tab_container_.children, (child, i) => {
+      let check_tab = (child as DecoratedElement).ref_;
+      if( tab === check_tab ){
+        if( tab.dirty ) child.classList.add(TabClasses.dirty);
+        else child.classList.remove(TabClasses.dirty);
+        return true;
+      }
+      return false;
+    });
+
   }
 
   ActivateTab(index:number|HTMLElement|TabSpec){
@@ -242,8 +276,10 @@ export class TabPanel {
       }
 
       this.tab_container_.appendChild(node);
+
     });
 
+    //if(this.tabs_.length > 0) 
     this.ActivateTab(this.active_index_||0);
 
   }

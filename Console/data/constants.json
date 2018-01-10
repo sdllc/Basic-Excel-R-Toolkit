@@ -1,0 +1,17 @@
+{
+  "documentation": [
+    "this file contains various constant strings, intended to support",
+    "replacement in other languages. some specific functions -- menus",
+    "in particular -- are defined separately."
+  ],
+
+  "status": {
+    "ready": "Ready",
+    "line": "Line",
+    "column": "Col"
+  },
+
+  "files": {
+    "untitled": "Untitled"
+  }
+}
