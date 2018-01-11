@@ -164,7 +164,8 @@ STDMETHODIMP CConnect::OnConnection(IDispatch *pApplication, AddInDesignerObject
 		::GetEnvironmentVariableA("PATH", &(buffer[blen]), elen);
 	}
 
-	::SetEnvironmentVariableA("PATH", buffer);
+  ::SetEnvironmentVariableA("PATH", buffer);
+  ::SetEnvironmentVariableA("Path", buffer); // !
 
 	// load xll
 

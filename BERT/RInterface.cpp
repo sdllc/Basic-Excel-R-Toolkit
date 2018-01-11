@@ -777,6 +777,8 @@ int RInit()
 
 	char functionsDir[MAX_PATH];
 
+  memset(&rp, 0, sizeof(structRstart));
+
 	DWORD dwPreserve = 0;
 
 	sprintf_s(Rversion, 25, "%s.%s", R_MAJOR, R_MINOR);

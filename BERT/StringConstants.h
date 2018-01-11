@@ -24,19 +24,19 @@
 #ifdef _DEBUG
 #define ABOUT_BERT_TEXT \
 	L"Basic Excel R Toolkit (BERT) v " BERT_VERSION L" (D)\r\n" \
-	L"Copyright (C) 2014-2017 Structured Data, LLC"
+	L"Copyright (C) 2014-2018 Structured Data, LLC"
 #else 
 #define ABOUT_BERT_TEXT \
 	L"Basic Excel R Toolkit (BERT) v " BERT_VERSION L"\r\n" \
-	L"Copyright (C) 2014-2017 Structured Data, LLC"
+	L"Copyright (C) 2014-2018 Structured Data, LLC"
 #endif
 
 #define BERT_LINK_TEXT		L"bert-toolkit.com"
 #define BERT_LINK			L"http://" BERT_LINK_TEXT
 
 #define ABOUT_R_TEXT \
-	L"Includes R version 3.4.2 (2017-09-28) -- \"Short Summer\"\r\n" \
-	L"Copyright (C) 2017 The R Foundation for Statistical Computing"
+  L"Includes R version 3.4.3 (2017 - 11 - 30)-- \"Kite-Eating Tree\"\r\n" \
+  L"Copyright (C) 2017 The R Foundation for Statistical Computing"
 
 #define R_LINK_TEXT			L"www.r-project.org"
 #define R_LINK				L"http://" R_LINK_TEXT
