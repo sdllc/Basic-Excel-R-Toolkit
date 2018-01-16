@@ -16,8 +16,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Ribbon", "..\Ribbon\BERTRib
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ControlJulia", "..\ControlJulia\ControlJulia.vcxproj", "{3F1862DE-C93C-4980-84E1-D69792BF271F}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JlTest4", "..\JlTest4\JlTest4.vcxproj", "{4A17B619-98C6-438D-803B-7BCF96B4EBEF}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -58,14 +56,6 @@ Global
 		{3F1862DE-C93C-4980-84E1-D69792BF271F}.Release|x64.Build.0 = Release|x64
 		{3F1862DE-C93C-4980-84E1-D69792BF271F}.Release|x86.ActiveCfg = Release|Win32
 		{3F1862DE-C93C-4980-84E1-D69792BF271F}.Release|x86.Build.0 = Release|Win32
-		{4A17B619-98C6-438D-803B-7BCF96B4EBEF}.Debug|x64.ActiveCfg = Debug|x64
-		{4A17B619-98C6-438D-803B-7BCF96B4EBEF}.Debug|x64.Build.0 = Debug|x64
-		{4A17B619-98C6-438D-803B-7BCF96B4EBEF}.Debug|x86.ActiveCfg = Debug|Win32
-		{4A17B619-98C6-438D-803B-7BCF96B4EBEF}.Debug|x86.Build.0 = Debug|Win32
-		{4A17B619-98C6-438D-803B-7BCF96B4EBEF}.Release|x64.ActiveCfg = Release|x64
-		{4A17B619-98C6-438D-803B-7BCF96B4EBEF}.Release|x64.Build.0 = Release|x64
-		{4A17B619-98C6-438D-803B-7BCF96B4EBEF}.Release|x86.ActiveCfg = Release|Win32
-		{4A17B619-98C6-438D-803B-7BCF96B4EBEF}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
