@@ -66,6 +66,8 @@ void RegisterFunctions() {
 
   for (auto entry : bert->function_list_) {
 
+    auto language_service = bert->GetLanguageService(entry->language_key_);
+
     std::stringstream ss;
 
     ss.clear();
@@ -76,7 +78,10 @@ void RegisterFunctions() {
 
     ss.clear();
     ss.str("");
-    ss << "R." << entry->name;
+
+    ss << language_service->prefix();
+    ss << ".";
+    ss << entry->name;
     Convert::StringToXLOPER(xlParm[3], ss.str(), false);
 
     ss.clear();
@@ -85,7 +90,11 @@ void RegisterFunctions() {
     Convert::StringToXLOPER(xlParm[4], ss.str().c_str() + 2, false);
 
     Convert::StringToXLOPER(xlParm[5], "1", false);
-    Convert::StringToXLOPER(xlParm[6], "Exported R Functions", false);
+
+    ss.clear();
+    ss.str("");
+    ss << "Exported " << language_service->name() << " Functions";
+    Convert::StringToXLOPER(xlParm[6], ss.str().c_str(), false);
 
     ss.clear();
     ss.str("");

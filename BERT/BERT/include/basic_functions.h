@@ -3,12 +3,24 @@
 #define MAX_FUNCTIONS 2048
 #define MAX_ARGS 16
 
+// FIXME: add dynamic Exec and Call functions based on loaded languages
+//
+// BUT NOTE: we probably need to use constant IDs for those functions, in the event
+// excel refers to them by ID and not by name.
+//
+// HOWEVER: I'm fairly certain that Excel never does that, at least not in current
+// excel. perhaps in previous versions (going way back). 
+
 static LPWSTR funcTemplates[][16] = {
 
-	{ L"BERT_Call", L"UQQQQQQQQQQQQQQQQQ", L"BERT.Call", L"R Function, Argument", L"1", L"BERT", L"", L"99", L"", L"", L"", L"", L"", L"", L"", L"" },
-    { L"BERT_Exec", L"UQ", L"BERT.Exec", L"R Code", L"1", L"BERT", L"", L"98", L"Exec R Code", L"", L"", L"", L"", L"", L"", L"" },
-    { L"BERT_Console", L"J", L"BERT.Console", L"", L"2", L"BERT", L"", L"97", L"", L"", L"", L"", L"", L"", L"", L"" },
-    { L"BERT_ContextSwitch", L"J", L"BERT.ContextSwitch", L"", L"2", L"BERT", L"", L"96", L"", L"", L"", L"", L"", L"", L"", L"" },
+  { L"BERT_Call_R", L"UQQQQQQQQQQQQQQQQQ", L"BERT.Call.R", L"R Function, Argument", L"1", L"BERT", L"", L"99", L"", L"", L"", L"", L"", L"", L"", L"" },
+  { L"BERT_Call_Julia", L"UQQQQQQQQQQQQQQQQQ", L"BERT.Call.Julia", L"Julia Function, Argument", L"1", L"BERT", L"", L"98", L"", L"", L"", L"", L"", L"", L"", L"" },
+  
+  { L"BERT_Exec_R", L"UQ", L"BERT.Exec.R", L"R Code", L"1", L"BERT", L"", L"97", L"Exec R Code", L"", L"", L"", L"", L"", L"", L"" },
+  { L"BERT_Exec_Julia", L"UQ", L"BERT.Exec.Julia", L"Julia Code", L"1", L"BERT", L"", L"96", L"Exec Julia Code", L"", L"", L"", L"", L"", L"", L"" },
+  
+  { L"BERT_Console", L"J", L"BERT.Console", L"", L"2", L"BERT", L"", L"95", L"", L"", L"", L"", L"", L"", L"", L"" },
+  { L"BERT_ContextSwitch", L"J", L"BERT.ContextSwitch", L"", L"2", L"BERT", L"", L"94", L"", L"", L"", L"", L"", L"", L"", L"" },
 
 	/*
 	// type 2 functions

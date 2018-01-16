@@ -54,4 +54,41 @@ bool APIFunctions::GetRegistryDWORD(DWORD &result_value, const char *name, const
   return(0 == RegGetValueA(base_key, key, name, RRF_RT_DWORD, 0, &result_value, &data_size));
 }
 
+std::string APIFunctions::GetPath() {
+
+  // we do this infrequently enough that it's not worth having a persistent 
+  // buffer, just allocate
+
+  int length = ::GetEnvironmentVariableA("PATH", 0, 0);
+  char *buffer = new char[length + 1];
+  if (length > 0) ::GetEnvironmentVariableA("PATH", buffer, length);
+  buffer[length] = 0; // not necessary
+  std::string path(buffer, length);
+  delete[] buffer;
+
+  return path;
+}
+
+std::string APIFunctions::AppendPath(const std::string &new_path) {
+  std::string path = GetPath();
+  path += PATH_PATH_SEPARATOR;
+  path += new_path;
+  SetPath(path);
+  return path;
+}
+
+std::string APIFunctions::PrependPath(const std::string &new_path) {
+  std::string old_path = GetPath();
+  std::string path = new_path;
+  path += PATH_PATH_SEPARATOR;
+  path += old_path;
+  SetPath(path);
+  return path;
+}
+
+/** sets path (for uncaching) */
+void APIFunctions::SetPath(const std::string &path) {
+  ::SetEnvironmentVariableA("PATH", path.c_str());
+}
+
 

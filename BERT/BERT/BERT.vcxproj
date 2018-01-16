@@ -21,8 +21,13 @@
   <ItemGroup>
     <ClInclude Include="..\..\PB\variable.pb.h" />
     <ClInclude Include="ExcelLib\XLCALL.H" />
+    <ClInclude Include="include\callback_info.h" />
     <ClInclude Include="include\com_object_map.h" />
+    <ClInclude Include="include\language_service_julia.h" />
+    <ClInclude Include="include\language_keys.h" />
+    <ClInclude Include="include\language_service.h" />
     <ClInclude Include="include\message_utilities.h" />
+    <ClInclude Include="include\language_service_r.h" />
     <ClInclude Include="include\windows_api_functions.h" />
     <ClInclude Include="include\basic_functions.h" />
     <ClInclude Include="include\bert.h" />
@@ -39,11 +44,13 @@
     <None Include="..\..\PB\variable.proto" />
     <None Include="R\startup.R" />
     <None Include="src\bert.def" />
+    <None Include="Startup.jl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\PB\variable.pb.cc" />
     <ClCompile Include="ExcelLib\XLCALL.CPP" />
     <ClCompile Include="src\com_object_map.cc" />
+    <ClCompile Include="src\language_service.cc" />
     <ClCompile Include="src\windows_api_functions.cc" />
     <ClCompile Include="src\basic_functions.cc" />
     <ClCompile Include="src\bert.cc" />

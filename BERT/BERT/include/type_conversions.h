@@ -207,6 +207,13 @@ public:
       int rows = arr.rows();
       int cols = arr.cols();
       int count = rows * cols;
+      int len = arr.data_size();
+
+      if (len > 0 && count == 0) {
+        count = len;
+        cols = len;
+        rows = 1;
+      }
 
       if (count > 0) {
 

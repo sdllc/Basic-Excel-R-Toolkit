@@ -17,8 +17,10 @@ xlAddInManagerInfo12
 ; Functions
 ;
 
-BERT_Call
-BERT_Exec
+BERT_Call_R
+BERT_Exec_R
+BERT_Call_Julia
+BERT_Exec_Julia
 BERT_Console
 BERT_SetPointers
 BERT_ContextSwitch

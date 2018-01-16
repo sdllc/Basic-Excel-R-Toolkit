@@ -36,6 +36,13 @@ public:
   std::string name;
   std::string category;
   std::string description;
+  
+  /** it's a waste to carry this around, but it seems convenient */
+  // std::string language_prefix_;
+
+  /** since we have the key, and prefix is a one-time lookup, create a lookup */
+  uint32_t language_key_;
+
   ARGUMENT_LIST arguments;
 
   /**
@@ -45,8 +52,9 @@ public:
   int32_t register_id;
 
 public:
-  FunctionDescriptor(const std::string &name = "", const std::string &category = "", const std::string &description = "", const ARGUMENT_LIST &args = {})
+  FunctionDescriptor(const std::string &name, uint32_t language_key, const std::string &category = "", const std::string &description = "", const ARGUMENT_LIST &args = {})
     : name(name)
+    , language_key_(language_key)
     , category(category)
     , description(description)
     , register_id(0)
@@ -63,6 +71,7 @@ public:
     category = rhs.category;
     description = rhs.description;
     register_id = rhs.register_id;
+    language_key_ = rhs.language_key_;
     for (auto arg : rhs.arguments) arguments.push_back(arg);
   }
 };

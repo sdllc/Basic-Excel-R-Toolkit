@@ -16,6 +16,9 @@
     <Filter Include="PB">
       <UniqueIdentifier>{7cf281e1-904c-4b27-a3bc-37af0696e5a2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="language-services">
+      <UniqueIdentifier>{1842e8ea-b1af-4f61-84ac-231b63ca436b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\stdafx.h">
@@ -61,6 +64,21 @@
     <ClInclude Include="include\message_utilities.h">
       <Filter>PB</Filter>
     </ClInclude>
+    <ClInclude Include="include\callback_info.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\language_service.h">
+      <Filter>language-services</Filter>
+    </ClInclude>
+    <ClInclude Include="include\language_keys.h">
+      <Filter>language-services</Filter>
+    </ClInclude>
+    <ClInclude Include="include\language_service_julia.h">
+      <Filter>language-services</Filter>
+    </ClInclude>
+    <ClInclude Include="include\language_service_r.h">
+      <Filter>language-services</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="R\startup.R">
@@ -72,6 +90,7 @@
     <None Include="src\bert.def">
       <Filter>source</Filter>
     </None>
+    <None Include="Startup.jl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\dllmain.cpp">
@@ -100,6 +119,9 @@
     </ClCompile>
     <ClCompile Include="src\excel_api_functions.cc">
       <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\language_service.cc">
+      <Filter>language-services</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

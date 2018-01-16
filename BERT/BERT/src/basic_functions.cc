@@ -8,6 +8,8 @@
 #include "basic_functions.h"
 #include "type_conversions.h"
 
+#include "language_keys.h"
+
 LPXLOPER12 BERTFunctionCall(
 	int index
 	, LPXLOPER12 input_0
@@ -41,10 +43,13 @@ LPXLOPER12 BERTFunctionCall(
 		input_8, input_9, input_10, input_11, input_12, input_13, input_14, input_15
 	};
 
-	BERTBuffers::CallResponse call;
+	BERTBuffers::CallResponse call, response;
 	call.set_wait(true);
 	auto function_call = call.mutable_function_call();
-	function_call->set_function(bert->function_list_[index]->name);
+
+  auto function_descriptor = bert->function_list_[index];
+
+	function_call->set_function(function_descriptor->name);
 
 	int argcount = 16;
 	for (; argcount && arglist[argcount - 1]->xltype == xltypeMissing; argcount--);
@@ -54,92 +59,122 @@ LPXLOPER12 BERTFunctionCall(
 		Convert::XLOPERToVariable(argument, arglist[i]);
 	}
 
-	BERTBuffers::CallResponse rsp;
-	BERT::Instance()->RCall(rsp, call);
+  bert->CallLanguage(function_descriptor->language_key_, response, call);
 
-    if (rsp.operation_case() == BERTBuffers::CallResponse::OperationCase::kResult) {
-        Convert::VariableToXLOPER(&rslt, rsp.result());
-    }
-	else {
-		rslt.xltype = xltypeErr;
-		rslt.val.err = xlerrValue;
-	}
-
-	return &rslt;
-}
-
-LPXLOPER12 BERT_Exec(LPXLOPER12 code) {
-
-	static XLOPER12 rslt; // TLS?
-
-	if (code->xltype != xltypeStr) {
-		rslt.xltype = xltypeErr;
-		rslt.val.err = xlerrValue;
-		return &rslt;
-	}
-
-	BERTBuffers::CallResponse call;
-	call.set_wait(true);
-	call.mutable_code()->add_line(Convert::XLOPERToString(code));
-
-	BERTBuffers::CallResponse rsp;
-	BERT::Instance()->RCall(rsp, call);
-
-    if (rsp.operation_case() == BERTBuffers::CallResponse::OperationCase::kResult) {
-        Convert::VariableToXLOPER(&rslt, rsp.result());
-    }
-	else {
-		rslt.xltype = xltypeErr;
-		rslt.val.err = xlerrValue;
-	}
+  if (response.operation_case() == BERTBuffers::CallResponse::OperationCase::kResult) {
+    Convert::VariableToXLOPER(&rslt, response.result());
+  }
+  else {
+    rslt.xltype = xltypeErr;
+    rslt.val.err = xlerrValue;
+  }
 
 	return &rslt;
 }
 
-LPXLOPER12 BERT_Call(LPXLOPER12 func, 
+LPXLOPER12 BERT_Exec_Generic(uint32_t language_key, LPXLOPER12 code) {
+ 
+  static XLOPER12 rslt; // TLS?
+
+  if (code->xltype != xltypeStr) {
+    rslt.xltype = xltypeErr;
+    rslt.val.err = xlerrValue;
+    return &rslt;
+  }
+
+  BERTBuffers::CallResponse call, response;
+  call.set_wait(true);
+  call.mutable_code()->add_line(Convert::XLOPERToString(code));
+
+  BERT::Instance()->CallLanguage(language_key, response, call);
+
+  if (response.operation_case() == BERTBuffers::CallResponse::OperationCase::kResult) {
+    Convert::VariableToXLOPER(&rslt, response.result());
+  }
+  else {
+    rslt.xltype = xltypeErr;
+    rslt.val.err = xlerrValue;
+  }
+
+  return &rslt;
+
+}
+
+LPXLOPER12 BERT_Exec_Julia(LPXLOPER12 code) {
+  return BERT_Exec_Generic(LANGUAGE_JULIA, code);
+}
+
+LPXLOPER12 BERT_Exec_R(LPXLOPER12 code) {
+  return BERT_Exec_Generic(LANGUAGE_R, code);
+}
+
+LPXLOPER12 BERT_Call_Generic(uint32_t language_key, LPXLOPER12 func,
+  LPXLOPER12 arg0, LPXLOPER12 arg1, LPXLOPER12 arg2, LPXLOPER12 arg3,
+  LPXLOPER12 arg4, LPXLOPER12 arg5, LPXLOPER12 arg6, LPXLOPER12 arg7,
+  LPXLOPER12 arg8, LPXLOPER12 arg9, LPXLOPER12 arg10, LPXLOPER12 arg11,
+  LPXLOPER12 arg12, LPXLOPER12 arg13, LPXLOPER12 arg14, LPXLOPER12 arg15) {
+
+  static XLOPER12 rslt; // TLS?
+
+  if (func->xltype != xltypeStr) {
+    rslt.xltype = xltypeErr;
+    rslt.val.err = xlerrValue;
+    return &rslt;
+  }
+
+  BERTBuffers::CallResponse call, response;
+  call.set_wait(true);
+  auto function_call = call.mutable_function_call();
+  function_call->set_function(Convert::XLOPERToString(func));
+
+  LPXLOPER12 arglist[16] = {
+    arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7,
+    arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15
+  };
+
+  int argcount = 16;
+  for (; argcount && arglist[argcount - 1]->xltype == xltypeMissing; argcount--);
+
+  for (int i = 0; i < argcount; i++) {
+    auto argument = function_call->add_arguments();
+    Convert::XLOPERToVariable(argument, arglist[i]);
+  }
+
+  BERT::Instance()->CallLanguage(language_key, response, call);
+
+  if (response.operation_case() == BERTBuffers::CallResponse::OperationCase::kResult) {
+    Convert::VariableToXLOPER(&rslt, response.result());
+  }
+  else {
+    rslt.xltype = xltypeErr;
+    rslt.val.err = xlerrValue;
+  }
+
+  return &rslt;
+
+}
+
+LPXLOPER12 BERT_Call_Julia(LPXLOPER12 func,
+  LPXLOPER12 arg0, LPXLOPER12 arg1, LPXLOPER12 arg2, LPXLOPER12 arg3,
+  LPXLOPER12 arg4, LPXLOPER12 arg5, LPXLOPER12 arg6, LPXLOPER12 arg7,
+  LPXLOPER12 arg8, LPXLOPER12 arg9, LPXLOPER12 arg10, LPXLOPER12 arg11,
+  LPXLOPER12 arg12, LPXLOPER12 arg13, LPXLOPER12 arg14, LPXLOPER12 arg15) {
+
+  return BERT_Call_Generic(LANGUAGE_JULIA, func,
+    arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7,
+    arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
+
+}
+
+LPXLOPER12 BERT_Call_R(LPXLOPER12 func, 
 	LPXLOPER12 arg0, LPXLOPER12 arg1, LPXLOPER12 arg2, LPXLOPER12 arg3, 
 	LPXLOPER12 arg4, LPXLOPER12 arg5, LPXLOPER12 arg6, LPXLOPER12 arg7,
 	LPXLOPER12 arg8, LPXLOPER12 arg9, LPXLOPER12 arg10, LPXLOPER12 arg11,
 	LPXLOPER12 arg12, LPXLOPER12 arg13, LPXLOPER12 arg14, LPXLOPER12 arg15 ) {
 
-	static XLOPER12 rslt; // TLS?
-
-	if (func->xltype != xltypeStr) {
-		rslt.xltype = xltypeErr;
-		rslt.val.err = xlerrValue;
-		return &rslt;
-	}
-
-	BERTBuffers::CallResponse call;
-	call.set_wait(true);
-	auto function_call = call.mutable_function_call();
-	function_call->set_function(Convert::XLOPERToString(func));
-
-	LPXLOPER12 arglist[16] = { 
-		arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, 
-		arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15
-	};
-
-	int argcount = 16;
-	for (; argcount && arglist[argcount-1]->xltype == xltypeMissing; argcount--);
-
-	for (int i = 0; i < argcount; i++) {
-		auto argument = function_call->add_arguments();
-		Convert::XLOPERToVariable(argument, arglist[i]);
-	}
-
-	BERTBuffers::CallResponse rsp;
-	BERT::Instance()->RCall(rsp, call);
-
-    if(rsp.operation_case() == BERTBuffers::CallResponse::OperationCase::kResult){
-		Convert::VariableToXLOPER(&rslt, rsp.result());
-	}
-	else {
-		rslt.xltype = xltypeErr;
-		rslt.val.err = xlerrValue;
-	}
-
-	return &rslt;
+  return BERT_Call_Generic(LANGUAGE_R, func,
+    arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7,
+    arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
 
 }
 
