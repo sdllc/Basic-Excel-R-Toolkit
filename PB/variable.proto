@@ -125,6 +125,11 @@ message Console {
  *
  * FIXME: let's revert "callback" to a separate field for clarity,
  * even though it has the same type as function_call; we have space.
+ *
+ * FIXME: we now have two errors -- one in here (top level) and one 
+ * in variable (via result). is that useful? it certainly is 
+ * confusing. I suppose it distinguishes between errors in the function
+ * call and results that are errors...
  */
 message CallResponse {
     
