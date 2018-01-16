@@ -296,6 +296,8 @@ export class LineInfo {
 
 }
 
+interface PrintLineFunction { (line: string, lastline: boolean): void }
+
 /**
  * implementation of the terminal on top of xtermjs.
  */
@@ -314,6 +316,8 @@ export class TerminalImplementation {
   // private prompt_stack_: string[] = [];
   private prompt_stack_:LineInfo[] = [];
 
+  private PrintLine:PrintLineFunction;
+
   constructor(private config_:TerminalConfig) {
     this.history_.Restore();
 
@@ -322,6 +326,22 @@ export class TerminalImplementation {
       TerminalImplementation.function_tip_node_.classList.add("terminal-tooltip");
       document.body.appendChild(TerminalImplementation.function_tip_node_);
     }
+
+    if( this.config_.formatter_ ){
+      this.PrintLine = (line:string, lastline = false) => {
+        let formatted = this.config_.formatter_.FormatString(line);
+        if (lastline) this.xterm_.write(formatted);
+        else this.xterm_.writeln(formatted);
+      };
+    }
+    else {
+      this.PrintLine = (line:string, lastline = false) => {
+        let formatted = line;
+        if (lastline) this.xterm_.write(formatted);
+        else this.xterm_.writeln(formatted);
+      };
+    }
+ 
 
   }
 
@@ -333,6 +353,7 @@ export class TerminalImplementation {
   }
 
   private RunAutocomplete() {
+    if(!this.config_.autocomplete_callback_) return;
     this.config_.autocomplete_callback_.call(this, this.line_info_.buffer, this.line_info_.cursor_position).then(x => {
       if (!x) return;
       this.autocomplete_.Update(x);
@@ -463,11 +484,13 @@ export class TerminalImplementation {
     this.xterm_.write(text);
   }
 
+  /*
   PrintLine = function (line: string, lastline = false) {
     let formatted = this.config_.formatter_.FormatString(line);
     if (lastline) this.xterm_.write(formatted);
     else this.xterm_.writeln(formatted);
   }
+  */
 
   PrintConsole(text: string, offset = false) {
 

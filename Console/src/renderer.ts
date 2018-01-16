@@ -19,8 +19,7 @@ import * as Rx from "rxjs";
 import * as path from 'path';
 import { prototype } from 'stream';
 
-const R = new Pipe();
-window['R'] = R;
+// properties
 
 let property_manager = new PropertyManager("bert2-console-settings", {
   terminal: {}, editor: {}, console: {}
@@ -29,8 +28,6 @@ let property_manager = new PropertyManager("bert2-console-settings", {
 let properties = property_manager.properties;
 window['properties'] = properties;
 
-const management_pipe = new Pipe2();
-
 // create splitter (main layout)
 
 let splitter = new Splitter(
@@ -38,57 +35,93 @@ let splitter = new Splitter(
   properties.terminal.orientation || SplitterOrientation.Horizontal, 
   properties.terminal.split || 50);
 
+// language connections
+
+let RInterface = {
+
+  label: "R",
+  pipe: new Pipe(),
+  management_pipe: new Pipe2(),
+
+  autocomplete_callback: function(buffer:string, position:number){
+    return new Promise<any>((resolve, reject) => {
+      buffer = buffer.replace( /\\/g, '\\\\').replace( '"', '\\"' );
+      RInterface.pipe.Internal(`BERTModule:::.Autocomplete("${buffer}",${position})`).then(x => resolve(x));
+    });
+  },
+  
+  /**
+   * response to a shell command is the next prompt. in some cases, 
+   * if the shell enters a (debug) browser, then there is no new 
+   * prompt at the end of execution, but we shift back up to the 
+   * previous prompt.
+   * @param buffer 
+   */
+  exec_callback: function(buffer:string) : Promise<any>{
+    return new Promise((resolve, reject) =>{
+      RInterface.pipe.ShellExec(buffer).then(result => {
+        if( result === -1 ){ resolve({ pop_stack: true }); }
+        else resolve({ text: result });
+      });
+    });
+  },
+
+  break_callback: function(){
+    RInterface.management_pipe.SendMessage("break");
+  }
+
+}
+window['R'] = RInterface;
+
+let JuliaInterface = {
+  label: "Julia",
+  pipe: new Pipe(),
+
+  exec_callback: function(buffer:string) : Promise<any>{
+    return new Promise((resolve, reject) => {
+      console.info("CC", buffer);
+      JuliaInterface.pipe.ShellExec(buffer).then(result => {
+        if( result === -1 ){ resolve({ pop_stack: true }); }
+        else resolve({ text: result });
+      });
+    });
+  }
+
+}
+window['Julia'] = JuliaInterface;
+
 // terminal tabs
 
 let terminal_tabs = new TabPanel("#terminal-tabs", TabJustify.left);
 terminal_tabs.AddTabs(
-  {label:"R Shell" } // , {label:"Other Shell" }
+  {label:"Shell" }
 );
 
 // create terminal
 
-let node = document.getElementById("terminal-container");
+let terminal_node = document.getElementById("terminal-container");
 
-let autocomplete_callback = function(buffer:string, position:number){
-  return new Promise<any>((resolve, reject) => {
-    buffer = buffer.replace( /\\/g, '\\\\').replace( '"', '\\"' );
-    R.Internal(`BERTModule:::.Autocomplete("${buffer}",${position})`).then(x => resolve(x));
-
-  });
-}
-
-/**
- * response to a shell command is the next prompt. in some cases, 
- * if the shell enters a (debug) browser, then there is no new 
- * prompt at the end of execution, but we shift back up to the 
- * previous prompt.
- * @param buffer 
- */
-let exec_callback = function(buffer:string) : Promise<any>{
-  return new Promise((resolve, reject) =>{
-    R.ShellExec(buffer).then(result => {
-      if( result === -1 ){ resolve({ pop_stack: true }); }
-      else resolve({ text: result });
-    });
-  });
-}
-
-let break_callback = function(){
-  management_pipe.SendMessage("break");
-}
-
-let terminal_config:TerminalConfig = {
-  node_: node,
-  autocomplete_callback_: autocomplete_callback,
-  exec_callback_: exec_callback,
-  break_callback_: break_callback,
+let terminal = new TerminalImplementation({
+  node_: terminal_node,
+  autocomplete_callback_: RInterface.autocomplete_callback,
+  exec_callback_: RInterface.exec_callback,
+  break_callback_: RInterface.break_callback,
   formatter_: new RTextFormatter()
-};
+});
 
-let terminal = new TerminalImplementation(terminal_config);
+/*
+let terminal = new TerminalImplementation({
+  node_: terminal_node,
+  autocomplete_callback_: null, // RInterface.autocomplete_callback,
+  exec_callback_: JuliaInterface.exec_callback,
+  break_callback_: null, // RInterface.break_callback,
+  formatter_: null, // formatter_: new RTextFormatter()
+});
+*/
+
 terminal.Init();
 
-node.addEventListener("contextmenu", e => {
+terminal_node.addEventListener("contextmenu", e => {
   Menu.buildFromTemplate([
     { label: "Copy", click: () => { terminal.Copy(); }},
     { label: "Paste", click: () => { terminal.Paste(); }},
@@ -118,21 +151,22 @@ export class BusyOverlay {
       if(state){
         if(timeout) return;
         timeout = setTimeout(() => {
-          node.classList.add(className);
+          terminal_node.classList.add(className);
         }, delay);
       }
       else {
         if(timeout) clearTimeout(timeout);
         timeout = 0;
-        node.classList.remove(className);
+        terminal_node.classList.remove(className);
       }
     });
   }
 }
 
-BusyOverlay.Create(R.busy_status_, node, "busy");
+//BusyOverlay.Create(RInterface.pipe.busy_status_, terminal_node, "busy");
+BusyOverlay.Create(JuliaInterface.pipe.busy_status_, terminal_node, "busy");
 
-R.console_messages.subscribe((console_message) => {
+RInterface.pipe.console_messages.subscribe((console_message) => {
   if( console_message.type === ConsoleMessageType.PROMPT ){
     console.info(`Prompt (${console_message.id})`, console_message.text);
     terminal.Prompt({
@@ -141,13 +175,26 @@ R.console_messages.subscribe((console_message) => {
     });
   }
   else {
-    terminal.PrintConsole(console_message.text, !R.busy);
+    terminal.PrintConsole(console_message.text, !RInterface.pipe.busy);
+  }
+});
+
+JuliaInterface.pipe.console_messages.subscribe((console_message) => {
+  if( console_message.type === ConsoleMessageType.PROMPT ){
+    console.info(`(J) Prompt (${console_message.id})`, console_message.text);
+    terminal.Prompt({
+      text: console_message.text,
+      push_stack: console_message.id !== 0 // true
+    });
+  }
+  else {
+    terminal.PrintConsole(console_message.text, !RInterface.pipe.busy);
   }
 });
 
 let allow_close = true; // dev // false;
 
-R.control_messages.subscribe(message => {
+RInterface.pipe.control_messages.subscribe(message => {
   console.info( "CM", message );
   if( message === "shutdown" ){
     terminal.CleanUp();
@@ -156,9 +203,19 @@ R.control_messages.subscribe(message => {
   } 
 });
 
+JuliaInterface.pipe.control_messages.subscribe(message => {
+  console.info( "CM (J)", message );
+  if( message === "shutdown" ){
+    terminal.CleanUp();
+    allow_close = true;
+    remote.getCurrentWindow().close();
+  } 
+});
+
+
 let Close = function(){
   terminal.CleanUp();
-  R.Close().then(() => {
+  RInterface.pipe.Close().then(() => {
     allow_close = true;
     remote.getCurrentWindow().close();
   }).catch(err => {
@@ -170,21 +227,31 @@ let Close = function(){
 // connect/init 
 
 console.info(process);
-let pipe_name = process.env['BERT_PIPE_NAME'] || "BERT2-PIPE-X";
+let pipe_name = process.env['BERT_PIPE_NAME'] || "BERT2-PIPE-R";
 
 setTimeout(() => {
-  R.Init({pipe_name}).then( x => {
+
+  RInterface.pipe.Init({pipe_name}).then( x => {
     window.addEventListener("beforeunload", event => {
       if(allow_close) return;
       event.returnValue = false;
       setImmediate(() => Close());
     });
 
-    management_pipe.Init({pipe_name: pipe_name + "-M"});
-    window['mp'] = management_pipe;
+    RInterface.management_pipe.Init({pipe_name: pipe_name + "-M"});
+    window['mp'] = RInterface.management_pipe;
 
   }).catch( e => console.info( "error", e ));
+
+  /*
+  JuliaInterface.pipe.Init({pipe_name: "BERT2-PIPE-J"}).then(() => {
+    console.info( "Pipe init OK?" );
+  }).catch(e => console.error(e));
+  */
+
 }, 1 );
+
+// construct editor
 
 let editor = new Editor("#editor", properties.editor);
 window['E'] = editor;
@@ -198,7 +265,7 @@ splitter.events.filter(x => (x === SplitterEvent.EndDrag||x === SplitterEvent.Up
   properties.terminal.orientation = splitter.orientation;
 });
 
-/////////////////////////////
+// construct menus
 
 MenuUtilities.Load(path.join(__dirname, "..", "data/menu.json")).catch( e => {
   console.info("menu load error: ", e);

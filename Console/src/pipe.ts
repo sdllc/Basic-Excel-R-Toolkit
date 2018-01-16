@@ -383,6 +383,7 @@ export class Pipe {
 
         // register for console messages
         setImmediate(() => {
+          console.info("calling console");
           this.System("console").then(() => {
             console.info("registered as console client");
             resolve();
