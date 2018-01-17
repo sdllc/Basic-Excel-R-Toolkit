@@ -1,0 +1,105 @@
+
+@import "./common.less";
+
+.dialog_overlay {
+
+  z-index: 2000;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, .1);
+  position: flex;
+  display: none;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+
+  .dialog_container {
+
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    position: relative;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    min-width: 400px;
+    height: 300px;
+    box-shadow: @terminal-box-shadow;
+    font-family: Segoe UI;
+
+    color: #444;
+
+    .dialog_header {
+
+      .dialog_title {
+        padding: .25em .25em;
+        font-weight: 300;
+        font-size: 20px;
+      }
+
+      position: relative;
+      min-height: 4em;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+
+      .dialog_close_x {
+
+        position: absolute;
+        right: 3px;
+        top: 2px;
+        cursor: default;
+        color: #999;
+        &:hover { color: #333; }
+
+        &::after {
+          font-size: 18px;
+          font-family: icomoon;
+          content: '\e904';
+        }
+      }
+
+    }
+
+    .dialog_footer {
+      min-height: 1em;
+    }
+
+    .dialog_body {
+      flex-grow: 1;
+      border-top: 1px solid #ddd;
+      border-bottom: 1px solid #ddd;
+      padding: .5em;
+    }
+
+    .dialog_footer {
+
+      padding: 6px;
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+
+      button {
+        color: #666;
+        display: none;
+        min-height: 27px;
+        min-width: 80px;
+        border: 1px solid #ccc;
+        border-radius: 2px;
+        background: inherit;
+        margin-right: .5em;
+        &:last-child { margin-right: 0; }
+      }
+
+      button:first-child {
+        display: inline-block;
+      }
+
+    }
+
+  }
+
+}
