@@ -9,7 +9,9 @@
 // excel refers to them by ID and not by name.
 //
 // HOWEVER: I'm fairly certain that Excel never does that, at least not in current
-// excel. perhaps in previous versions (going way back). 
+// excel. perhaps in previous versions (going way back). also (if it did cache numbers)
+// that would cause all sorts of problems with BERT that we haven't yet noticed, so I 
+// think we're safe in the assumption that these are not used anymore.
 
 static LPWSTR funcTemplates[][16] = {
 
@@ -48,14 +50,24 @@ static LPWSTR funcTemplates[][16] = {
 };
 
 /** exported function */
-LPXLOPER12 BERT_Call(LPXLOPER12 func,
+LPXLOPER12 BERT_Call_R(LPXLOPER12 func,
     LPXLOPER12 arg0, LPXLOPER12 arg1, LPXLOPER12 arg2, LPXLOPER12 arg3,
     LPXLOPER12 arg4, LPXLOPER12 arg5, LPXLOPER12 arg6, LPXLOPER12 arg7,
     LPXLOPER12 arg8, LPXLOPER12 arg9, LPXLOPER12 arg10, LPXLOPER12 arg11,
     LPXLOPER12 arg12, LPXLOPER12 arg13, LPXLOPER12 arg14, LPXLOPER12 arg15);
 
 /** exported function */
-LPXLOPER12 BERT_Exec(LPXLOPER12 code);
+LPXLOPER12 BERT_Call_Julia(LPXLOPER12 func,
+  LPXLOPER12 arg0, LPXLOPER12 arg1, LPXLOPER12 arg2, LPXLOPER12 arg3,
+  LPXLOPER12 arg4, LPXLOPER12 arg5, LPXLOPER12 arg6, LPXLOPER12 arg7,
+  LPXLOPER12 arg8, LPXLOPER12 arg9, LPXLOPER12 arg10, LPXLOPER12 arg11,
+  LPXLOPER12 arg12, LPXLOPER12 arg13, LPXLOPER12 arg14, LPXLOPER12 arg15);
+
+/** exported function */
+LPXLOPER12 BERT_Exec_R(LPXLOPER12 code);
+
+/** exported function */
+LPXLOPER12 BERT_Exec_Julia(LPXLOPER12 code);
 
 /** exported function */
 int BERT_SetPointers(ULONG_PTR excel_pointer, ULONG_PTR ribbon_pointer);

@@ -79,6 +79,9 @@
     <ClInclude Include="include\language_service_r.h">
       <Filter>language-services</Filter>
     </ClInclude>
+    <ClInclude Include="include\file_change_watcher.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="R\startup.R">
@@ -122,6 +125,9 @@
     </ClCompile>
     <ClCompile Include="src\language_service.cc">
       <Filter>language-services</Filter>
+    </ClCompile>
+    <ClCompile Include="src\file_change_watcher.cc">
+      <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

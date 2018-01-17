@@ -12,6 +12,8 @@
 #include "language_service.h"
 #include "callback_info.h"
 
+#include "file_change_watcher.h"
+
 class BERT {
 
 private:
@@ -42,6 +44,9 @@ private:
 
   /** some dev flags that get passed around */
   DWORD dev_flags_;
+
+  /** watch file changes */
+  FileChangeWatcher file_watcher_;
 
   std::unordered_map <uint32_t, std::shared_ptr<LanguageService>> language_services_;
 
