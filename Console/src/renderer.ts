@@ -97,13 +97,14 @@ window['Julia'] = JuliaInterface;
 
 let terminal_tabs = new TabPanel("#terminal-tabs", TabJustify.left);
 terminal_tabs.AddTabs(
-  {label:"Shell" }
+  {label:"Julia"}, {label:"R"}
 );
 
 // create terminal
 
 let terminal_node = document.getElementById("terminal-container");
 
+/*
 let terminal = new TerminalImplementation({
   node_: terminal_node,
   autocomplete_callback_: RInterface.autocomplete_callback,
@@ -111,8 +112,8 @@ let terminal = new TerminalImplementation({
   break_callback_: RInterface.break_callback,
   formatter_: new RTextFormatter()
 });
+*/
 
-/*
 let terminal = new TerminalImplementation({
   node_: terminal_node,
   autocomplete_callback_: null, // RInterface.autocomplete_callback,
@@ -120,7 +121,6 @@ let terminal = new TerminalImplementation({
   break_callback_: null, // RInterface.break_callback,
   formatter_: null, // formatter_: new RTextFormatter()
 });
-*/
 
 terminal.Init();
 
@@ -144,24 +144,31 @@ terminal_node.addEventListener("contextmenu", e => {
  */
 export class BusyOverlay {
   static Create(
-    subject:Rx.Subject<boolean>,
+    subject:Rx.Subject<boolean>|Rx.Subject<boolean>[],
     node_:HTMLElement,
     className:string,
     delay = 250
     ){
       let timeout:any = 0;
-      subject.subscribe(state => {
-      if(state){
-        if(timeout) return;
-        timeout = setTimeout(() => {
-          terminal_node.classList.add(className);
-        }, delay);
-      }
-      else {
-        if(timeout) clearTimeout(timeout);
-        timeout = 0;
-        terminal_node.classList.remove(className);
-      }
+      let count = 0;
+
+      Rx.Observable.merge(subject).subscribe(state => {
+      //subject.subscribe(state => {
+
+        if(state) count++;
+        else count--;
+
+        if(count > 0){
+          if(timeout) return;
+          timeout = setTimeout(() => {
+            terminal_node.classList.add(className);
+          }, delay);
+        }
+        else {
+          if(timeout) clearTimeout(timeout);
+          timeout = 0;
+          terminal_node.classList.remove(className);
+        }
     });
   }
 }
@@ -234,6 +241,7 @@ let pipe_name = process.env['BERT_PIPE_NAME'] || "BERT2-PIPE-R";
 
 setTimeout(() => {
 
+  /*
   RInterface.pipe.Init({pipe_name}).then( x => {
     window.addEventListener("beforeunload", event => {
       if(allow_close) return;
@@ -251,12 +259,11 @@ setTimeout(() => {
     });
 
   }).catch( e => console.info( "error", e ));
+  */
 
-  /*
   JuliaInterface.pipe.Init({pipe_name: "BERT2-PIPE-J"}).then(() => {
     console.info( "Pipe init OK?" );
   }).catch(e => console.error(e));
-  */
 
 }, 1 );
 
