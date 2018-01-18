@@ -4,6 +4,7 @@
 #include "variable.pb.h"
 #include "bert.h"
 #include "language_service.h"
+#include "string_utilities.h"
 
 // by convention we don't use transaction 0. 
 // this may cause a problem if it rolls over.
@@ -211,6 +212,50 @@ void LanguageService::Connect(HANDLE job_handle) {
     }
   }
 
+}
+
+void LanguageService::ReadSourceFile(const std::string &file) {
+
+  BERTBuffers::CallResponse call, response;
+
+  auto function_call = call.mutable_function_call();
+  function_call->set_function("read-source-file");
+  function_call->set_target(BERTBuffers::CallTarget::system);
+  function_call->add_arguments()->set_str(file);
+
+  Call(response, call);
+}
+
+bool LanguageService::ValidFile(const std::string &file) {
+
+  // path functions can't operate on const strings
+
+  static char path[MAX_PATH];
+
+  int len = file.length();
+  if (len > MAX_PATH - 2) len = MAX_PATH - 2;
+  memcpy(path, file.c_str(), len);
+  path[len] = 0;
+
+  // FIXME: lc extension then casecompare
+
+  // this just returns a pointer to the original string.
+  // also it includes the period. docs:
+  //
+  // "or the address of the terminating null character otherwise."
+  // so check that case.
+
+  char *extension = PathFindExtensionA(path);
+  if (extension && *extension) {
+    extension++;
+    for (auto compare : file_extensions_) {
+      if (!StringUtilities::ICaseCompare(compare, extension)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 void LanguageService::Shutdown() {

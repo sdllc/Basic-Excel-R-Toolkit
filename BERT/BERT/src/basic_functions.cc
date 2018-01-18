@@ -188,8 +188,19 @@ int BERT_Console() {
     return 0;
 }
 
+/**
+ * switch contexts (get on the main thread) 
+ */
 int BERT_ContextSwitch() {
-    return BERT::Instance()->HandleCallbackOnThread();
+  return BERT::Instance()->HandleCallbackOnThread();
+}
+
+/**
+ * update functions (flush then reload); this is called via com to get on the main thread 
+ */
+int BERT_UpdateFunctions() {
+  auto bert = BERT::Instance();
+  return bert->UpdateFunctions();
 }
 
 // placeholder functions follow

@@ -13,7 +13,8 @@ public:
     : LanguageService(LANGUAGE_JULIA, callback_info, object_map, dev_flags, pipe_name, child_path, "Jl", "Julia")
     , julia_home_(julia_home)
   {
-    // ...
+    // set extensions we want to handle
+    file_extensions_ = { "jl", "julia" };
   }
 
 public:

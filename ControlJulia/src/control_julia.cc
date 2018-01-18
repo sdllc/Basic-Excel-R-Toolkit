@@ -136,6 +136,45 @@ void ConsolePrompt(const char *prompt, uint32_t id) {
   SetEvent(prompt_event_handle);
 }
 
+/**
+ * in an effort to make the core language agnostic, all actual functions are moved
+ * here. this should cover things like initialization and setting the COM pointers.
+ *
+ * the caller uses symbolic constants that call these functions in the appropriate
+ * language.
+ */
+void SystemCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallResponse &call) {
+  std::string function = call.function_call().function();
+
+  /*
+  BERTBuffers::CallResponse translated_call;
+  translated_call.CopyFrom(call);
+
+  if (!function.compare("install-application-pointer")) {
+    translated_call.mutable_function_call()->set_target(BERTBuffers::CallTarget::language);
+    translated_call.mutable_function_call()->set_function("BERT$install.application.pointer");
+    RCall(response, translated_call);
+  }
+  else */
+  if (!function.compare("get-language")) {
+    response.mutable_result()->set_str("Julia");
+  }
+  else if (!function.compare("read-source-file")) {
+    std::string file = call.function_call().arguments(0).str();
+    bool success = false;
+    if (file.length()) {
+      std::cout << "read source: " << file << std::endl;
+      success = ReadSourceFile(file);
+    }
+    response.mutable_result()->set_boolean(success);
+  }
+  else {
+    std::cout << "ENOTIMPL (system): " << function << std::endl;
+    response.mutable_result()->set_boolean(false);
+  }
+
+}
+
 void pipe_loop() {
 
   char prompt[] = "julia> ";
@@ -186,11 +225,10 @@ void pipe_loop() {
 
             case BERTBuffers::CallResponse::kFunctionCall:
 
-              std::cout << "function call" << std::endl;
-
+              //std::cout << "function call" << std::endl;
               switch (call.function_call().target()) {
               case BERTBuffers::CallTarget::system:
-                //SystemCall(response, call);
+                SystemCall(response, call);
                 break;
               default:
                 JuliaCall(response, call);

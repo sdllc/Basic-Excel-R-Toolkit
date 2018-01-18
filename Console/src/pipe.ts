@@ -7,6 +7,7 @@ import * as Rx from "rxjs";
 enum Channel {
   INTERNAL,
   CALL,
+  SYSCALL, 
   SHELL,
   SYSTEM
 }
@@ -146,8 +147,12 @@ export class Pipe {
     return this.Queue(command, Channel.SHELL);
   }
 
-  System(command) {
+  Control(command) {
     return this.Queue(command, Channel.SYSTEM);
+  }
+
+  SysCall(command){
+    return this.Queue(command, Channel.SYSCALL);
   }
 
   private Queue(command, channel) {
@@ -191,6 +196,12 @@ export class Pipe {
         break;
       case Channel.SYSTEM:
         call.setControlMessage(message.command);
+        break;
+      case Channel.SYSCALL:
+        let function_call = new messages.CompositeFunctionCall;
+        function_call.setTarget(messages.CallTarget.SYSTEM);
+        function_call.setFunction("get-language");
+        call.setFunctionCall(function_call);
         break;
       case Channel.CALL:
         break;
@@ -365,7 +376,7 @@ export class Pipe {
     this.queue_ = [];
 
     // push
-    return this.System("close");
+    return this.Control("close");
 
   }
 
@@ -384,7 +395,7 @@ export class Pipe {
         // register for console messages
         setImmediate(() => {
           console.info("calling console");
-          this.System("console").then(() => {
+          this.Control("console").then(() => {
             console.info("registered as console client");
             resolve();
           });

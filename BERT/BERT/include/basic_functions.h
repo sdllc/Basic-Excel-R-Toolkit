@@ -23,6 +23,7 @@ static LPWSTR funcTemplates[][16] = {
   
   { L"BERT_Console", L"J", L"BERT.Console", L"", L"2", L"BERT", L"", L"95", L"", L"", L"", L"", L"", L"", L"", L"" },
   { L"BERT_ContextSwitch", L"J", L"BERT.ContextSwitch", L"", L"2", L"BERT", L"", L"94", L"", L"", L"", L"", L"", L"", L"", L"" },
+  { L"BERT_UpdateFunctions", L"J", L"BERT.UpdateFunctions", L"", L"2", L"BERT", L"", L"93", L"", L"", L"", L"", L"", L"", L"", L"" },
 
 	/*
 	// type 2 functions

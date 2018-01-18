@@ -45,6 +45,9 @@ protected:
   /** key for indexing */
   uint32_t language_key_;
 
+  /** file extensions (lowercase) */
+  std::vector< std::string > file_extensions_;
+
   /** prefix for function names */
   std::string language_prefix_;
 
@@ -113,6 +116,19 @@ protected:
   int LaunchProcess(HANDLE job_handle, char *command_line);
 
 public:
+
+  /**
+   * read/load the file. FIXME: move functionality to service?
+   *
+   * UPDATE: we now export this to the services, there's a generic
+   * implementation (you can still override if desired)
+   */
+  virtual void ReadSourceFile(const std::string &file);
+
+  /** 
+   * can we process this file (via extension)?
+   */
+  bool ValidFile(const std::string &path);
 
   /** 
    * starts child process. assigns child process to job to control shutdown. 

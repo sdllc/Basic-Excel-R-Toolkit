@@ -27,6 +27,18 @@ public:
   }
 
   /**
+   * icase string comparison, ignoring locale issues (this is for windows paths)
+   */
+  static int ICaseCompare(const std::string &a, const std::string &b) {
+    int len = a.length();
+    if (len != b.length()) return 1;
+    for (int i = 0; i < len; i++) {
+      if (toupper(a[i]) != toupper(b[i])) return 2;
+    }
+    return 0;
+  }
+  
+  /**
    * escape backslashes. returns a new string.
    */
   static std::string EscapeBackslashes(const std::string &str) {

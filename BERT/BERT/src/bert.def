@@ -24,6 +24,7 @@ BERT_Exec_Julia
 BERT_Console
 BERT_SetPointers
 BERT_ContextSwitch
+BERT_UpdateFunctions
 
 ;-------------------------------------------------------
 ;

@@ -201,6 +201,12 @@ SEXP RCallSEXP(const BERTBuffers::CompositeFunctionCall &fc, bool wait, int &err
     
 }
 
+bool ReadSourceFile(const std::string &file) {
+  int err = 0;
+  R_tryEval(Rf_lang2(Rf_install("source"), Rf_mkString(file.c_str())), R_GlobalEnv, &err);
+  return !err;
+}
+
 BERTBuffers::CallResponse& RCall(BERTBuffers::CallResponse &rsp, const BERTBuffers::CallResponse &call) {
 
     int err = 0;

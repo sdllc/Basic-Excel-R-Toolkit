@@ -12,7 +12,9 @@ public:
                     const std::string &pipe_name, const std::string &child_path, const std::string &r_home)
     : LanguageService( LANGUAGE_R, callback_info, object_map, dev_flags, pipe_name, child_path, "R", "R" ) 
     , r_home_(r_home) {
-    // ...
+
+    // set extensions we want to handle
+    file_extensions_ = { "r", "rscript", "rsrc" };
   }
 
 public:

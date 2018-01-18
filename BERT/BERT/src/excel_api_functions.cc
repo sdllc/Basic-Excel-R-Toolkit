@@ -40,11 +40,15 @@ void resetXlOper(LPXLOPER12 x)
 void UnregisterFunctions() {
 
   XLOPER12 register_id;
+  int err;
   BERT *bert = BERT::Instance();
   for (auto entry : bert->function_list_) {
     register_id.xltype = xltypeNum;
     register_id.val.num = entry->register_id;
-    Excel12(xlfUnregister, 0, 1, &register_id);
+    err = Excel12(xlfUnregister, 0, 1, &register_id);
+    if (err) {
+      DebugOut("Err unregistering function: %d\n", err);
+    }
     entry->register_id = 0;
   }
 }
@@ -61,7 +65,15 @@ void RegisterFunctions() {
     xlParm[i]->xltype = xltypeMissing;
   }
 
-  Excel12(xlGetName, xlParm[0], 0);
+  err = Excel12(xlGetName, xlParm[0], 0);
+  if (err) {
+    DebugOut("ERR getting dll name\n");
+
+    // the rest of the calls will also fail, so you should bail out now 
+    // (and clean up). OTOH this indicates a significant problem so we 
+    // should just never reach this point.
+
+  }
   int index = 1000;
 
   for (auto entry : bert->function_list_) {
@@ -107,7 +119,10 @@ void RegisterFunctions() {
 
     xlRegisterID.xltype = xltypeMissing;
     err = Excel12v(xlfRegister, &xlRegisterID, 16, xlParm);
-    entry->register_id = (int32_t)xlRegisterID.val.num;
+    if (!err) {
+      if( xlRegisterID.xltype == xltypeNum ) entry->register_id = (int32_t)xlRegisterID.val.num;
+      else if( xlRegisterID.xltype == xltypeInt ) entry->register_id = (int32_t)xlRegisterID.val.w;
+    }
     Excel12(xlFree, 0, 1, &xlRegisterID);
 
     for (int i = 1; i < 32; i++) {

@@ -66,6 +66,16 @@ private:
 
 private:
 
+  /** 
+   * static callback function for function argument 
+   * FIXME: can we use a lambda for this?
+   */
+  static void FileWatcherCallback(void *argument, const std::vector<std::string> &files);
+
+  void FileWatchUpdate(const std::vector<std::string> &files);
+
+private:
+
   /** starts the console process. this can be delayed until needed. */
   int StartConsoleProcess();
 
@@ -75,6 +85,9 @@ public:
 
   /** dispatch call */
   void CallLanguage(uint32_t language_key, BERTBuffers::CallResponse &response, BERTBuffers::CallResponse &call);
+
+  /** update (rebuild) function list; this must be done on the main thread */
+  int UpdateFunctions();
 
 public:
 

@@ -1,6 +1,4 @@
 
-print("ZERP\n");
-
 x = 100;
 
 zed = function(a)
@@ -9,16 +7,19 @@ zed = function(a)
 
 twoargs(arg1, arg2) = arg1 + arg2
 
-goon() = 12
-
+# =============================================================================
+#
+# create a module for scoped functions
+#
+# =============================================================================
 module BERT
 
-  # 
+  #---------------------------------------------------------------------------- 
   # this function gets a list of all functions in Main,
   # returning function name and list of argument names.
   # note that (at least for now) we don't support named
   # arguments; only ordinal arguments.
-  #
+  #---------------------------------------------------------------------------- 
   ListFunctions = function()
     function_list = []
     for name in names(Main) # these are symbols
@@ -35,6 +36,25 @@ module BERT
       end
     end
     function_list
+  end
+
+  #
+  # testing
+  #
+  RunSocketREPL = function()
+	  server = listen(9999)
+	  client = TCPSocket()
+	  while isopen(server)
+		  err = Base.accept_nonblock(server, client)
+		  if err == 0
+			  Base.REPL.run_repl(client)
+			  client = TCPSocket()
+		  elseif err != Base.UV_EAGAIN
+			  uv_error("accept", err)
+		  else
+			  Base.stream_wait(server, server.connectnotify)
+		  end
+	  end
   end
 
 end

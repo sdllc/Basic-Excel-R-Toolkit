@@ -7,9 +7,6 @@
     <Filter Include="include">
       <UniqueIdentifier>{6839659f-062b-40ca-acbd-14d0e71b613a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="R">
-      <UniqueIdentifier>{d0318f18-87ac-4f4a-8c25-85db8c49c5e6}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ExcelLib">
       <UniqueIdentifier>{e89b11b5-95b2-4c71-af28-3347bcfcc847}</UniqueIdentifier>
     </Filter>
@@ -18,6 +15,9 @@
     </Filter>
     <Filter Include="language-services">
       <UniqueIdentifier>{1842e8ea-b1af-4f61-84ac-231b63ca436b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="StartupCode">
+      <UniqueIdentifier>{d0318f18-87ac-4f4a-8c25-85db8c49c5e6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -85,7 +85,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="R\startup.R">
-      <Filter>R</Filter>
+      <Filter>StartupCode</Filter>
     </None>
     <None Include="..\..\PB\variable.proto">
       <Filter>PB</Filter>
@@ -93,7 +93,9 @@
     <None Include="src\bert.def">
       <Filter>source</Filter>
     </None>
-    <None Include="Startup.jl" />
+    <None Include="Startup.jl">
+      <Filter>StartupCode</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\dllmain.cpp">

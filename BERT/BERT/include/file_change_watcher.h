@@ -7,10 +7,12 @@
 // because we receive duplicate notifications on file changes.
 // we can use separate timeouts for debouncing...
 
-#define FILE_WATCH_LOOP_DEBOUNCE_TIMEOUT 200
+#define FILE_WATCH_LOOP_DEBOUNCE_TIMEOUT 150
 #define FILE_WATCH_LOOP_NORMAL_TIMEOUT 500
 
 #define FILE_WATCH_EVENT_MASK (FILE_NOTIFY_CHANGE_LAST_WRITE|FILE_NOTIFY_CHANGE_FILE_NAME)
+
+typedef void (*FileWatchCallback)(void*, const std::vector<std::string>&);
 
 /**
  * utility for watching directory changes (and implicitly file changes).
@@ -24,10 +26,15 @@ private:
   HANDLE update_watch_list_handle_;
   CRITICAL_SECTION critical_section_;
 
+  void *callback_argument_;
+  FileWatchCallback callback_function_;
+
 private:
 
   /** thread start routine */
   static uint32_t __stdcall StartThread(void *data);
+
+  void NotifyDirectoryChanges(const std::vector<std::string> &directory_list, FILETIME update_time);
 
   /** instance thread routine */
   uint32_t InstanceStartThread();
@@ -36,7 +43,7 @@ private:
   bool running_;
 
 public:
-  FileChangeWatcher();
+  FileChangeWatcher(FileWatchCallback callback = 0, void *argument = 0);
   ~FileChangeWatcher();
 
 public:

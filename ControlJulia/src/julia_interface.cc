@@ -109,7 +109,7 @@ void JlValueToVariable(BERTBuffers::Variable *variable, jl_value_t *value) {
     int nrows = jl_array->nrows;
     int len = jl_array->length;
 
-    std::cout << "arr: " << ncols << ", " << nrows << ", " << len << "; p? " << (jl_array->flags.ptrarray != 0) << std::endl;
+    // std::cout << "arr: " << ncols << ", " << nrows << ", " << len << "; p? " << (jl_array->flags.ptrarray != 0) << std::endl;
 
     if (jl_array->flags.ptrarray) {
       jl_value_t** data = (jl_value_t**)(jl_array_data(jl_array));
@@ -195,6 +195,36 @@ void JuliaShutdown() {
 
 }
 
+bool ReadSourceFile(const std::string &file) {
+
+  jl_function_t *function_pointer = jl_get_function(jl_main_module, "include");
+  if (!function_pointer || jl_is_nothing(function_pointer)) return false;
+
+  jl_value_t *function_result;
+  jl_value_t *argument = jl_pchar_to_string(file.c_str(), file.length());
+
+  JL_TRY{
+    function_result = jl_call1(function_pointer, argument);
+    if (jl_exception_occurred()) {
+      std::cout << "* EXCEPTION" << std::endl;
+      jl_printf(JL_STDERR, "error during run:\n");
+      jl_static_show(JL_STDERR, ptls->exception_in_transit);
+      jl_exception_clear();
+    }
+    else return true; // success
+  }
+  JL_CATCH{
+    std::cout << "* CATCH" << std::endl;
+    jl_printf(JL_STDERR, "\nparser error:\n");
+    jl_static_show(JL_STDERR, ptls->exception_in_transit);
+    jl_printf(JL_STDERR, "\n");
+    jlbacktrace();
+  }
+
+  return false;
+}
+
+
 /**
  * shell exec: response is printed to output stream
  */
@@ -246,22 +276,61 @@ void JuliaCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallRespo
   jl_function_t *function_pointer = jl_get_function(jl_main_module, function.c_str());
   
   if (!function_pointer || jl_is_nothing(function_pointer)) return;
-  
   jl_value_t *function_result;
 
-  int len = call.function_call().arguments().size();
-  if (len > 0) {
-    std::vector<jl_value_t*> arguments_vector;
-    for (auto argument : call.function_call().arguments()) {
-      arguments_vector.push_back(VariableToJlValue(&argument));
+  JL_TRY {
+
+    // call here, with or without arguments
+    int len = call.function_call().arguments().size();
+    if (len > 0) {
+      std::vector<jl_value_t*> arguments_vector;
+      for (auto argument : call.function_call().arguments()) {
+        arguments_vector.push_back(VariableToJlValue(&argument));
+      }
+      function_result = jl_call(function_pointer, &(arguments_vector[0]), len);
     }
-    function_result = jl_call(function_pointer, &(arguments_vector[0]), len);
+    else {
+      function_result = jl_call0(function_pointer);
+    }
+
+    // check for a julia exception (handled)
+    if (jl_exception_occurred()) {
+      std::cout << "* EXCEPTION" << std::endl;
+      jl_printf(JL_STDERR, "error during run:\n");
+      jl_static_show(JL_STDERR, ptls->exception_in_transit);
+      jl_exception_clear();
+      jl_printf(JL_STDOUT, "\n");
+
+      // set err
+      response.set_err("julia exception");
+    }
+    else 
+    {
+      // success: return result or nil as an empty success value
+      if (function_result) {
+        JlValueToVariable(response.mutable_result(), function_result);
+      }
+      else {
+        response.mutable_result()->set_nil(true);
+      }
+    }
+
   }
-  else {
-    function_result = jl_call0(function_pointer);
+  JL_CATCH {
+
+    // external exception; return error
+
+    std::cout << "* CATCH" << std::endl;
+    jl_printf(JL_STDERR, "\nparser error:\n");
+    jl_static_show(JL_STDERR, ptls->exception_in_transit);
+    jl_printf(JL_STDERR, "\n");
+    jlbacktrace();
+
+    response.set_err("external exception");
+
   }
 
-  JlValueToVariable(response.mutable_result(), function_result);
+  // JlValueToVariable(response.mutable_result(), function_result);
 
 }
 

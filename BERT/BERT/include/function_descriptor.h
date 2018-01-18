@@ -48,8 +48,9 @@ public:
   /**
    * this ID is assigned when we call xlfRegister, and we need to keep
    * it around to call xlfUnregister if we are rebuilding the functions.
+   * (excel uses num (i.e. double) for this)
    */
-  int32_t register_id;
+  double register_id;
 
 public:
   FunctionDescriptor(const std::string &name, uint32_t language_key, const std::string &category = "", const std::string &description = "", const ARGUMENT_LIST &args = {})
