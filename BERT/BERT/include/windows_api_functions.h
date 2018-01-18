@@ -2,6 +2,7 @@
 
 #include <Windows.h>
 #include <string>
+#include <vector>
 
 #define DEFAULT_BASE_KEY        HKEY_CURRENT_USER
 #define DEFAULT_REGISTRY_KEY    "Software\\BERT"
@@ -10,6 +11,14 @@
 
 class APIFunctions {
 public:
+
+  /** 
+   * list directory. returns a tuple of filename, last write. lists files only, 
+   * not directories. the return value is the _full_path_, including the directory.
+   *
+   * TODO: options?
+   */
+  static std::vector<std::pair<std::string, FILETIME>> ListDirectory(const std::string &directory);
 
   /** reads resource in this dll */
   static std::string ReadResource(LPTSTR resource_id);

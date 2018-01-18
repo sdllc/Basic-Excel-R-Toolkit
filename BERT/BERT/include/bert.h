@@ -74,6 +74,16 @@ private:
 
   void FileWatchUpdate(const std::vector<std::string> &files);
 
+  /** 
+   * reads/loads a file, if we have a language that supports it. returns true if we 
+   * have a language that supports it (not the success of the read/load operation).
+   *
+   * FIXME: wouldn't it be useful to return success of the read operation? we still
+   * want the other result (have a language) in order to stop additional comparisons, 
+   * but it's certainly useful to know if the read failed.
+   */
+  bool LoadLanguageFile(const std::string &file);
+
 private:
 
   /** starts the console process. this can be delayed until needed. */

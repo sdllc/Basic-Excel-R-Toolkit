@@ -3,6 +3,31 @@
 
 extern HMODULE global_module_handle;
 
+std::vector<std::pair<std::string, FILETIME>> APIFunctions::ListDirectory(const std::string &directory){
+  
+  char path[MAX_PATH];
+  WIN32_FIND_DATAA find_data_info;
+
+  std::vector<std::pair<std::string, FILETIME>> directory_entries;
+
+  strcpy_s(path, directory.c_str());
+  strcat_s(path, "\\*");
+
+  HANDLE find_handle = FindFirstFileA(path, &find_data_info);
+  if (find_handle && find_handle != INVALID_HANDLE_VALUE) {
+    do {
+      if (!(find_data_info.dwFileAttributes & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_DEVICE))) {
+        std::string match = directory;
+        match += "\\";
+        match += find_data_info.cFileName;
+        directory_entries.push_back({ match, find_data_info.ftLastWriteTime });
+       }
+    } while (FindNextFileA(find_handle, &find_data_info));
+  }
+
+  return directory_entries;
+}
+
 std::string APIFunctions::ReadResource(LPTSTR resource_id) {
 
   HRSRC resource_handle;

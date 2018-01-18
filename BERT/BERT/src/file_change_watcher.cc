@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "file_change_watcher.h"
 #include "string_utilities.h"
+#include "windows_api_functions.h"
 
 // on windows, we need to compare directories icase
 
@@ -85,26 +86,13 @@ void FileChangeWatcher::NotifyDirectoryChanges(const std::vector<std::string> &d
   // the update time as a comparison against last modify time
 
   std::vector<std::string> files;
-  char path[MAX_PATH];
-  WIN32_FIND_DATAA find_data_info;
-
   for (auto directory : directory_list) {
-    strcpy_s(path, directory.c_str());
-    strcat_s(path, "\\*");
-
-    HANDLE find_handle = FindFirstFileA(path, &find_data_info);
-    if (find_handle && find_handle != INVALID_HANDLE_VALUE) {
-      do {
-        if (!(find_data_info.dwFileAttributes & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_DEVICE))
-            && (1 == CompareFileTime(&(find_data_info.ftLastWriteTime), &update_time))){
-            std::string match = directory;
-            match += "\\";
-            match += find_data_info.cFileName;
-            files.push_back(match);
-        }
-      } while (FindNextFileA(find_handle, &find_data_info));
+    std::vector< std::pair< std::string, FILETIME >> directory_entries = APIFunctions::ListDirectory(directory);
+    for (auto file_info : directory_entries) {
+      if (1 == CompareFileTime(&file_info.second, &update_time)) {
+        files.push_back(file_info.first);
+      }
     }
-
   }
 
   // temp
