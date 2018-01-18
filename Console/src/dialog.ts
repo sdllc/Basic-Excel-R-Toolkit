@@ -12,17 +12,17 @@ const DialogTemplate = `
     <div class='dialog_body'>
     </div>
     <div class='dialog_footer'>
-      <button class='button'></button>
-      <button class='button'></button>
-      <button class='button'></button>
-      <button class='button'></button>
+      <button class='button' data-index='0'></button>
+      <button class='button' data-index='1'></button>
+      <button class='button' data-index='2'></button>
+      <button class='button' data-index='3'></button>
     </div>
   </div>
 `;
 
 export interface DialogButton {
   text:string;
-  data:any;
+  data?:any;
 }
 
 export interface DialogSpec {
@@ -166,9 +166,17 @@ export class DialogManager {
 
       this.click_listener_ = {
         handleEvent: (event) => {
-          console.info("CLICK", event);
-          if((event.target as HTMLElement).className === "dialog_close_x"){
+          let target = event.target as HTMLElement;
+          if(target.className === "dialog_close_x"){
             this.DelayResolution(resolve, {reason: "x", data: null});
+          }
+          else if(/button/i.test(target.tagName||"")){
+            let index = Number(target.getAttribute("data-index")||0);
+            let button = spec.buttons[index];
+            let data:any = null;
+            if( typeof button === "string" ) data = button;
+            else data = button.data;
+            this.DelayResolution(resolve, {reason: "button", data });
           }
         }
       };

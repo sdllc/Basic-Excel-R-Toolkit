@@ -8,7 +8,7 @@ import {PromptMessage, TerminalImplementation, TerminalConfig} from './terminal-
 import {RTextFormatter} from './text-formatter';
 import {Splitter, SplitterOrientation, SplitterEvent} from './splitter';
 import {TabPanel, TabJustify, TabEventType} from './tab-panel';
-import { DialogManager, DialogSpec } from './dialog';
+import { DialogManager, DialogSpec, DialogButton } from './dialog';
 import {PropertyManager} from './properties';
 import {MenuUtilities} from './menu_utilities';
 
@@ -37,18 +37,6 @@ let splitter = new Splitter(
 // dialog
 
 let dialog_manager = new DialogManager();
-/*
-setTimeout(() => {
-  dialog_manager.Show({
-    title: "Are you experienced?",
-    body: "Or have you ever been experienced?",
-    buttons: ["I Have"],
-    escape: true
-  }).then(x => {
-    console.info("DIALOG CLOSED", x);
-  });
-}, 1000);
-*/
 
 // language connections
 
