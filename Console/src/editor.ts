@@ -3,8 +3,8 @@
 import {remote} from 'electron';
 
 import { MenuUtilities } from './menu_utilities';
-import * as JuliaLanguage from './julia-language';
-import { TabPanel, TabJustify, TabEventType, TabSpec } from './tab-panel';
+import * as JuliaLanguage from './julia_language';
+import { TabPanel, TabJustify, TabEventType, TabSpec } from './tab_panel';
 
 const Constants = require( "../data/constants.json");
 

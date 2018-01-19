@@ -1,9 +1,6 @@
 {
   "files":[
-    "src/renderer.ts",
-    "src/pipe.ts",
-    "src/terminal-implementation.ts",
-    "src/text-formatter.ts"
+    "src/renderer.ts"
   ],
   "compilerOptions": {
     "outDir": "build",

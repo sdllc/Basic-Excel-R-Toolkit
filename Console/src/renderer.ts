@@ -4,19 +4,23 @@ import {Pipe2} from './pipe2';
 import {clipboard, remote} from 'electron';
 const {Menu, MenuItem} = remote;
 
-import {PromptMessage, TerminalImplementation, TerminalConfig} from './terminal-implementation';
-import {RTextFormatter} from './text-formatter';
+import {PromptMessage, TerminalImplementation, AutocompleteCallbackType, ExecCallbackType} from './terminal_implementation';
+import {RTextFormatter} from './text_formatter';
+import { LanguageInterface, RInterface, JuliaInterface } from './language_interface';
+
 import {Splitter, SplitterOrientation, SplitterEvent} from './splitter';
-import {TabPanel, TabJustify, TabEventType} from './tab-panel';
-import { DialogManager, DialogSpec, DialogButton } from './dialog';
+import {TabPanel, TabJustify, TabEventType} from './tab_panel';
+import {DialogManager, DialogSpec, DialogButton} from './dialog';
 import {PropertyManager} from './properties';
 import {MenuUtilities} from './menu_utilities';
+import {MuliplexedTerminal} from './multiplexed_terminal';
 
 import {Editor} from './editor';
 
 import * as Rx from "rxjs";
 import * as path from 'path';
 import { prototype } from 'stream';
+import { language } from './julia_language';
 
 // properties
 
@@ -34,104 +38,22 @@ let splitter = new Splitter(
   properties.terminal.orientation || SplitterOrientation.Horizontal, 
   properties.terminal.split || 50);
 
-// dialog
+// dialogs
 
 let dialog_manager = new DialogManager();
 
-// language connections
+// terminals and tabs
 
-let RInterface = {
+let terminals = new MuliplexedTerminal("#terminal-container", "#terminal-tabs");
 
-  label: "R",
-  pipe: new Pipe(),
-  management_pipe: new Pipe2(),
+// language connections. 
+// FIXME: parameterize, or make these dynamic. in fact, do that (make them dynamic).
 
-  autocomplete_callback: function(buffer:string, position:number){
-    return new Promise<any>((resolve, reject) => {
-      buffer = buffer.replace( /\\/g, '\\\\').replace( '"', '\\"' );
-      RInterface.pipe.Internal(`BERTModule:::.Autocomplete("${buffer}",${position})`).then(x => resolve(x));
-    });
-  },
-  
-  /**
-   * response to a shell command is the next prompt. in some cases, 
-   * if the shell enters a (debug) browser, then there is no new 
-   * prompt at the end of execution, but we shift back up to the 
-   * previous prompt.
-   * @param buffer 
-   */
-  exec_callback: function(buffer:string) : Promise<any>{
-    return new Promise((resolve, reject) =>{
-      RInterface.pipe.ShellExec(buffer).then(result => {
-        if( result === -1 ){ resolve({ pop_stack: true }); }
-        else resolve({ text: result });
-      });
-    });
-  },
+let language_interface_types = [
+  RInterface, JuliaInterface
+];
 
-  break_callback: function(){
-    RInterface.management_pipe.SendMessage("break");
-  }
-
-}
-window['R'] = RInterface;
-
-let JuliaInterface = {
-  label: "Julia",
-  pipe: new Pipe(),
-
-  exec_callback: function(buffer:string) : Promise<any>{
-    return new Promise((resolve, reject) => {
-      console.info("CC", buffer);
-      JuliaInterface.pipe.ShellExec(buffer).then(result => {
-        if( result === -1 ){ resolve({ pop_stack: true }); }
-        else resolve({ text: result });
-      });
-    });
-  }
-
-}
-window['Julia'] = JuliaInterface;
-
-// terminal tabs
-
-let terminal_tabs = new TabPanel("#terminal-tabs", TabJustify.left);
-terminal_tabs.AddTabs(
-  {label:"Julia"}, {label:"R"}
-);
-
-// create terminal
-
-let terminal_node = document.getElementById("terminal-container");
-
-/*
-let terminal = new TerminalImplementation({
-  node_: terminal_node,
-  autocomplete_callback_: RInterface.autocomplete_callback,
-  exec_callback_: RInterface.exec_callback,
-  break_callback_: RInterface.break_callback,
-  formatter_: new RTextFormatter()
-});
-*/
-
-let terminal = new TerminalImplementation({
-  node_: terminal_node,
-  autocomplete_callback_: null, // RInterface.autocomplete_callback,
-  exec_callback_: JuliaInterface.exec_callback,
-  break_callback_: null, // RInterface.break_callback,
-  formatter_: null, // formatter_: new RTextFormatter()
-});
-
-terminal.Init();
-
-terminal_node.addEventListener("contextmenu", e => {
-  Menu.buildFromTemplate([
-    { label: "Copy", click: () => { terminal.Copy(); }},
-    { label: "Paste", click: () => { terminal.Paste(); }},
-    { type: "separator" },
-    { label: "Clear Shell", click: () => { terminal.ClearShell(); }}
-  ]).popup();
-});
+let language_interfaces = [];
 
 // bind events
 
@@ -139,131 +61,75 @@ terminal_node.addEventListener("contextmenu", e => {
 // update: don't do this. it causes stray errors as the tooltip
 // is looking for it. might be better to hide it at the CSS layer.
 
-/**
- * "busy" overlay implemented as factory class
- */
-export class BusyOverlay {
-  static Create(
-    subject:Rx.Subject<boolean>|Rx.Subject<boolean>[],
-    node_:HTMLElement,
-    className:string,
-    delay = 250
-    ){
-      let timeout:any = 0;
-      let count = 0;
 
-      Rx.Observable.merge(subject).subscribe(state => {
-      //subject.subscribe(state => {
-
-        if(state) count++;
-        else count--;
-
-        if(count > 0){
-          if(timeout) return;
-          timeout = setTimeout(() => {
-            terminal_node.classList.add(className);
-          }, delay);
-        }
-        else {
-          if(timeout) clearTimeout(timeout);
-          timeout = 0;
-          terminal_node.classList.remove(className);
-        }
-    });
-  }
-}
-
-//BusyOverlay.Create(RInterface.pipe.busy_status_, terminal_node, "busy");
-BusyOverlay.Create(JuliaInterface.pipe.busy_status_, terminal_node, "busy");
-
-RInterface.pipe.console_messages.subscribe((console_message) => {
-  if( console_message.type === ConsoleMessageType.PROMPT ){
-    console.info(`Prompt (${console_message.id})`, console_message.text);
-    terminal.Prompt({
-      text: console_message.text,
-      push_stack: console_message.id !== 0 // true
-    });
-  }
-  else {
-    terminal.PrintConsole(console_message.text, !RInterface.pipe.busy);
-  }
-});
-
-JuliaInterface.pipe.console_messages.subscribe((console_message) => {
-  if( console_message.type === ConsoleMessageType.PROMPT ){
-    console.info(`(J) Prompt (${console_message.id})`, console_message.text);
-    terminal.Prompt({
-      text: console_message.text,
-      push_stack: console_message.id !== 0 // true
-    });
-  }
-  else {
-    terminal.PrintConsole(console_message.text, !RInterface.pipe.busy);
-  }
-});
+// these have to be done after pipes are initialized...
 
 let allow_close = true; // dev // false;
 
-RInterface.pipe.control_messages.subscribe(message => {
-  console.info( "CM", message );
-  if( message === "shutdown" ){
-    terminal.CleanUp();
-    allow_close = true;
-    remote.getCurrentWindow().close();
-  } 
-});
-
-JuliaInterface.pipe.control_messages.subscribe(message => {
-  console.info( "CM (J)", message );
-  if( message === "shutdown" ){
-    terminal.CleanUp();
-    allow_close = true;
-    remote.getCurrentWindow().close();
-  } 
-});
-
+/*
+//BusyOverlay.Create(RInterface.pipe.busy_status_, terminal_node, "busy");
+BusyOverlay.Create(JuliaInterface.pipe.busy_status_, terminal_node, "busy");
+*/
 
 let Close = function(){
-  terminal.CleanUp();
-  RInterface.pipe.Close().then(() => {
+  Promise.all(language_interfaces.map(language_interface => 
+    language_interface.Shutdown())).then(() => {
+    
     allow_close = true;
     remote.getCurrentWindow().close();
-  }).catch(err => {
-    allow_close = true;
-    remote.getCurrentWindow().close();
-  })
+  });
 };
 
 // connect/init 
 
-console.info(process);
-let pipe_name = process.env['BERT_PIPE_NAME'] || "BERT2-PIPE-R";
+let pipe_list = (process.env['BERT_PIPE_NAME']||"").split(";;");
 
 setTimeout(() => {
+  
+  // FIXME: after languages/tabs are initialized, select tab
+  // based on stored preferences (is this going to be a long
+  // delay? UX)
 
-  /*
-  RInterface.pipe.Init({pipe_name}).then( x => {
-    window.addEventListener("beforeunload", event => {
-      if(allow_close) return;
-      event.returnValue = false;
-      setImmediate(() => Close());
-    });
+  // FIXME: also create single busy overlay, attach to terminals?
 
-    RInterface.management_pipe.Init({pipe_name: pipe_name + "-M"});
-    window['mp'] = RInterface.management_pipe;
-    
-    // ...
-    console.info("Querying language...");
-    RInterface.pipe.SysCall("get-language").then(x => {
-      console.info( "Language response:", x );
-    });
+  Promise.all(pipe_list.map(pipe_name => {
+      return new Promise((resolve, reject) => {
+        if(pipe_name){
+          let pipe = new Pipe();
+          let language = "unknown"; // just for reporting
+          pipe.Init({pipe_name}).then(() => {
+            pipe.SysCall("get-language").then(response => {
+              if( response ){
+                console.info( "Pipe", pipe_name, "language response:", response );
+                language = response.toString();
 
-  }).catch( e => console.info( "error", e ));
-  */
+                language_interface_types.some(interface_class => {
+                  if(interface_class.language_name_ === response ){
 
-  JuliaInterface.pipe.Init({pipe_name: "BERT2-PIPE-J"}).then(() => {
-    console.info( "Pipe init OK?" );
-  }).catch(e => console.error(e));
+                    let instance = new interface_class();
+                    instance.label_ = language;
+                    language_interfaces.push(instance);
+                    instance.InitPipe(pipe, pipe_name);
+                    terminals.Add(instance);
+                    return true;
+                  }
+                  return false;
+                });
+              }
+              console.info( "resolving", language)
+              resolve();
+            });
+          }).catch(e => {
+            console.error(e);
+            resolve();
+          });
+        }
+        else return resolve();
+      });
+    })
+  ).then(() => {
+    console.info( "languages complete");
+  })
 
 }, 1 );
 
@@ -275,7 +141,7 @@ window['E'] = editor;
 // deal with splitter change on drag end 
 
 splitter.events.filter(x => (x === SplitterEvent.EndDrag||x === SplitterEvent.UpdateLayout)).subscribe(x => {
-  terminal.Resize();
+  terminals.UpdateLayout();
   editor.UpdateLayout();
   properties.terminal.split = splitter.split;
   properties.terminal.orientation = splitter.orientation;
@@ -313,3 +179,17 @@ MenuUtilities.events.subscribe(event => {
   }
 
 });
+
+let resize_timeout_id = 0;
+window.addEventListener("resize", event => {
+
+  if(resize_timeout_id) window.clearTimeout(resize_timeout_id);
+  resize_timeout_id = window.setTimeout(() => {
+    terminals.UpdateLayout();
+    editor.UpdateLayout();
+    resize_timeout_id = 0;
+  }, 100);
+
+  // console.info("RS", event);
+
+})

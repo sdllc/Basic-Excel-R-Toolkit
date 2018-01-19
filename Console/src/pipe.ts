@@ -108,7 +108,10 @@ export class Pipe {
    * just reflects whether _we_ (the console client) are running 
    * a command.
    */
-  public busy_status_ = new Rx.BehaviorSubject<boolean>(false);
+  private busy_status_ = new Rx.BehaviorSubject<boolean>(false);
+
+  /** accessor */
+  public get busy_status(){ return this.busy_status_; }
 
   /**
    * observable for console messages

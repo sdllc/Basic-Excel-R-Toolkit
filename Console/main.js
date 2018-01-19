@@ -11,16 +11,27 @@ const WindowState = require('electron-window-state');
 require('electron-reload')(path.join(__dirname,"build"));
 
 let dev_flags = 0;
+let pipe_list = [];
+
+// we might have (in fact we expect to have) multiple pipes,
+// and we need to keep track of all of them. they're not 
+// specifically identified, we ask the pipe what language
+// it uses.
 
 for( let i = 0; i< process.argv.length; i++ ){
   if( process.argv[i] === "-p" && i< process.argv.length-1 ){
-    let pipe_name = process.argv[++i];
-    process.env['BERT_PIPE_NAME'] = pipe_name;
+    // let pipe_name = process.argv[++i];
+    // process.env['BERT_PIPE_NAME'] = pipe_name;
+    pipe_list.push(process.argv[++i]);
   }
   else if( process.argv[i] === "-d" ){
     dev_flags = Number(process.argv[++i]||1);
     process.env['BERT_DEV_FLAGS'] = dev_flags;
   }
+}
+
+if(pipe_list.length){
+  process.env['BERT_PIPE_NAME'] = pipe_list.join(";;");
 }
 
 // Keep a global reference of the window object, if you don't, the window will

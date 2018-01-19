@@ -157,6 +157,10 @@ export class TabPanel {
     
   }
   
+  AppendChildNode(node:HTMLElement){
+    this.tab_content_.appendChild(node);
+  }
+
   /** selects the next tab (w/ rollover) */
   Next(){
     if(!this.tabs_||!this.tabs_.length) return;

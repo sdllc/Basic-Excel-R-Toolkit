@@ -2,8 +2,10 @@
 import * as XTerm from 'xterm';
 const fitAddon = XTerm.loadAddon('fit');
 
-import { TextFormatter, VTESC } from './text-formatter';
+import { TextFormatter, VTESC } from './text_formatter';
 import { clipboard } from 'electron';
+import { LanguageInterface } from './language_interface';
+import {Pipe, ConsoleMessage, ConsoleMessageType} from './pipe';
 
 /**
  * 
@@ -202,12 +204,14 @@ export interface AutocompleteCallbackType { (buffer: string, position: number): 
 
 export interface ExecCallbackType { (buffer: string): Promise<any> }
 
+/*
 export interface TerminalConfig {
 
   // nodes
 
   node_: HTMLElement;
 
+  / *
   // callbacks
 
   autocomplete_callback_: AutocompleteCallbackType;
@@ -217,8 +221,12 @@ export interface TerminalConfig {
   // objects
 
   formatter_: TextFormatter;
+  * /
+
+  language_interface_:LanguageInterface;
 
 }
+*/
 
 export interface PromptMessage {
   text?:string;
@@ -318,7 +326,8 @@ export class TerminalImplementation {
 
   private PrintLine:PrintLineFunction;
 
-  constructor(private config_:TerminalConfig) {
+  constructor(private language_interface_:LanguageInterface, private node_:HTMLElement){
+
     this.history_.Restore();
 
     if( !TerminalImplementation.function_tip_node_ ){
@@ -327,9 +336,9 @@ export class TerminalImplementation {
       document.body.appendChild(TerminalImplementation.function_tip_node_);
     }
 
-    if( this.config_.formatter_ ){
+    if( this.language_interface_.formatter_ ){
       this.PrintLine = (line:string, lastline = false) => {
-        let formatted = this.config_.formatter_.FormatString(line);
+        let formatted = this.language_interface_.formatter_.FormatString(line);
         if (lastline) this.xterm_.write(formatted);
         else this.xterm_.writeln(formatted);
       };
@@ -353,13 +362,20 @@ export class TerminalImplementation {
   }
 
   private RunAutocomplete() {
-    if(!this.config_.autocomplete_callback_) return;
-    this.config_.autocomplete_callback_.call(this, this.line_info_.buffer, this.line_info_.cursor_position).then(x => {
-      if (!x) return;
-      this.autocomplete_.Update(x);
-      if (this.autocomplete_.visible_) this.autocomplete_.Show(false);
-      else this.FunctionTip(x['function.signature'], x.fguess);
+    
+    let thennable = this.language_interface_.AutocompleteCallback(this.line_info_.buffer, this.line_info_.cursor_position);
+
+    if(thennable) thennable.then(autocomplete_response => {
+      if (!autocomplete_response) return;
+      this.autocomplete_.Update(autocomplete_response);
+      if (this.autocomplete_.visible_) {
+        this.autocomplete_.Show(false);
+      }
+      else {
+        this.FunctionTip(autocomplete_response['function.signature'], autocomplete_response.fguess);
+      }
     });
+
   }
 
   DismissTooltip() {
@@ -367,18 +383,19 @@ export class TerminalImplementation {
   }
 
   FunctionTip(message?: string, function_guess?: string) {
+    
     if (!message) TerminalImplementation.function_tip_node_.style.opacity = "0";
     else {
 
       if (message === this.dismissed_tip_) return;
-      let cursorNode = document.querySelector(".terminal-cursor") as HTMLElement
+      let cursor_node = this.node_.querySelector(".terminal-cursor") as HTMLElement
 
       // FIXME: generalize this into finding position of a character, 
       // we can probably use it again
 
       let m = this.line_info_.buffer.match(new RegExp(function_guess + "\\s*\\(", "i"));
       let range = document.createRange();
-      let node = cursorNode.previousSibling.firstChild as HTMLElement;
+      let node = cursor_node.previousSibling.firstChild as HTMLElement;
 
       range.selectNodeContents(node);
       range.setEnd(node, m.index + this.line_info_.prompt.length);
@@ -392,7 +409,9 @@ export class TerminalImplementation {
 
       node.style.left = `${rect.right}px`;
       
-      let top = cursorNode.offsetTop - node.offsetHeight;
+      let client_rect = cursor_node.getBoundingClientRect();
+      let top = client_rect.top - node.offsetHeight;
+
       if (top < 0) { top = rect.bottom + 2; }
 
       node.style.top = `${top}px`;
@@ -568,7 +587,7 @@ export class TerminalImplementation {
             if (!index) line = this.line_info_.buffer + line;
             this.line_info_.set("");
             this.history_.Push(line);
-            this.config_.exec_callback_.call(this, line).then(x => {
+            this.language_interface_.ExecCallback(line).then(x => {
               this.Prompt(x);
               resolve(x);
             });
@@ -593,7 +612,7 @@ export class TerminalImplementation {
       console.info("ctrl", event);
       switch (event.key) {
         case "c":
-          this.config_.break_callback_();
+          this.language_interface_.BreakCallback();
           break;
       }
       this.FunctionTip(); // hide
@@ -671,7 +690,7 @@ export class TerminalImplementation {
             if (this.autocomplete_.visible_) { this.autocomplete_.Accept(); return; }
             this.xterm_.write('\r\n');
             this.history_.Push(this.line_info_.buffer);
-            this.config_.exec_callback_.call(this, this.line_info_.buffer).then(x => this.Prompt(x));
+            this.language_interface_.ExecCallback(this.line_info_.buffer).then(x => this.Prompt(x));
             this.dismissed_tip_ = null;
             break;
 
@@ -696,7 +715,7 @@ export class TerminalImplementation {
       cols: 80, cursorBlink: true
     });
 
-    this.xterm_.open(this.config_.node_, { focus: true });
+    this.xterm_.open(this.node_, { focus: true });
     this.xterm_.fit();
     this.xterm_.write(`\x1b[\x35 q`);
 
@@ -715,6 +734,19 @@ export class TerminalImplementation {
 
     this.xterm_.on("title", title => {
       console.info( "title change:", title ); // ??
+    });
+
+    this.language_interface_.pipe_.console_messages.subscribe((console_message) => {
+      if( console_message.type === ConsoleMessageType.PROMPT ){
+        console.info(`(${this.language_interface_.label_}) Prompt (${console_message.id})`, console_message.text);
+        this.Prompt({
+          text: console_message.text,
+          push_stack: console_message.id !== 0 // true
+        });
+      }
+      else {
+        this.PrintConsole(console_message.text, !this.language_interface_.pipe_.busy);
+      }
     });
 
   }

@@ -1,6 +1,6 @@
 
 import * as Rx from 'rxjs';
-import { ObservedProxy } from './observed-proxy';
+import { ObservedProxy } from './observed_proxy';
 
 export interface PropertyNotifcation {
   property: string;
