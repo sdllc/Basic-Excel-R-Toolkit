@@ -10,29 +10,39 @@ const {Menu, MenuItem} = remote;
 
 import * as Rx from "rxjs";
 
+/** data for managing tabbed terminals */
 interface TerminalInstance {
   child:HTMLElement;
   terminal:TerminalImplementation;
   layout?:number;
 }
 
+/**
+ * tabbed interface for multiple shells, supporting different languages.
+ * the actual tab component only handles tabs, not content, so we manage
+ * displaying/hiding content on tab changes.
+ */
 export class MuliplexedTerminal {
-
+  
   private terminal_instances_:{[index:string]:TerminalInstance} = {};
+
+  /** currently active instance for context menu, layout */
   private active_instance_:TerminalInstance;
 
   private tabs_:TabPanel;
-  private node_:HTMLElement;
 
+  private container_node_:HTMLElement;
+
+  /** layout index increments on update */
   private layout_ = -1;
 
   constructor(node:string|HTMLElement, tab_node_selector:string){
 
     if( typeof node === "string" ){
-      this.node_ = document.querySelector(node);
+      this.container_node_ = document.querySelector(node);
     }
     else {
-      this.node_ = node;
+      this.container_node_ = node;
     }
 
     this.tabs_ = new TabPanel(tab_node_selector, TabJustify.left);
@@ -77,6 +87,7 @@ export class MuliplexedTerminal {
     this.layout_++;
     if(!this.active_instance_) return;
     
+    // update current/active
     this.active_instance_.terminal.Resize();
     this.active_instance_.layout = this.layout_;
   }

@@ -53,44 +53,36 @@ let language_interface_types = [
   RInterface, JuliaInterface
 ];
 
-let language_interfaces = [];
+// active languages, set by pipe connections
 
-// bind events
+let language_interfaces = [];
 
 // hide cursor when busy.
 // update: don't do this. it causes stray errors as the tooltip
 // is looking for it. might be better to hide it at the CSS layer.
 
-
-// these have to be done after pipes are initialized...
+// handle closing
 
 let allow_close = true; // dev // false;
-
-/*
-//BusyOverlay.Create(RInterface.pipe.busy_status_, terminal_node, "busy");
-BusyOverlay.Create(JuliaInterface.pipe.busy_status_, terminal_node, "busy");
-*/
 
 let Close = function(){
   Promise.all(language_interfaces.map(language_interface => 
     language_interface.Shutdown())).then(() => {
-    
+  
     allow_close = true;
     remote.getCurrentWindow().close();
   });
 };
 
-// connect/init 
+// connect/init pipes, languages
 
-let pipe_list = (process.env['BERT_PIPE_NAME']||"").split(";;");
+let pipe_list = (process.env['BERT_PIPE_NAME']||"").split(";;"); // separator?
 
 setTimeout(() => {
   
   // FIXME: after languages/tabs are initialized, select tab
   // based on stored preferences (is this going to be a long
   // delay? UX)
-
-  // FIXME: also create single busy overlay, attach to terminals?
 
   Promise.all(pipe_list.map(pipe_name => {
       return new Promise((resolve, reject) => {
@@ -136,7 +128,6 @@ setTimeout(() => {
 // construct editor
 
 let editor = new Editor("#editor", properties.editor);
-window['E'] = editor;
 
 // deal with splitter change on drag end 
 
