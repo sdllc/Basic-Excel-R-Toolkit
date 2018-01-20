@@ -1,12 +1,4 @@
 
-x = 100;
-
-zed = function(a)
-	a*a+a
-	end
-
-twoargs(arg1, arg2) = arg1 + arg2
-
 # =============================================================================
 #
 # create a module for scoped functions
@@ -38,9 +30,10 @@ module BERT
     function_list
   end
 
-  #
-  # testing
-  #
+  #---------------------------------------------------------------------------- 
+  # testing. this is a patched-up version of the socket repl
+  # function from julia base
+  #---------------------------------------------------------------------------- 
   RunSocketREPL = function()
 	  server = listen(9999)
 	  client = TCPSocket()
@@ -58,3 +51,4 @@ module BERT
   end
 
 end
+

@@ -383,6 +383,17 @@ export class Pipe {
 
   }
 
+  RegisterConsoleMessages(){
+    return new Promise((resolve, reject) => {
+      // register for console messages
+      console.info("calling console");
+      this.Control("console").then(() => {
+        console.info("registered as console client");
+        resolve();
+      });
+    });
+  }
+
   /** initialize and connect to service */
   Init(opts: any = {}) {
 
@@ -394,15 +405,7 @@ export class Pipe {
 
       let client = net.createConnection({ path: "\\\\.\\pipe\\" + this.pipe_name_ }, () => {
         console.log('connected to service');
-
-        // register for console messages
-        setImmediate(() => {
-          console.info("calling console");
-          this.Control("console").then(() => {
-            console.info("registered as console client");
-            resolve();
-          });
-        });
+        resolve();
       });
 
       client.on("data", data => this.HandleData(data));

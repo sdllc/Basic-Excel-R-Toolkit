@@ -1,10 +1,4 @@
 
-Cholesky <- function(mat){ chol(mat) }
-attr( Cholesky, "category" ) <- "Linear Algebra";
-attr( Cholesky, "description" ) <- list( "Cholesky Decomposition", mat="Input matrix (must be positive-definite)" );
-fx2 <- function(...){ sum(202,...) }
-zeb <- function(a, b=2, c=3){ a+b+c }
-
 BERT <- new.env();
 with( BERT, {
 
@@ -47,55 +41,3 @@ with( BERT, {
     }
 
 });
-#BERT$
-#list.functions();
-
-pb.test <- function(){
-    p <- txtProgressBar(min=0, max=100, style=3);
-    for( i in 1:100){
-        setTxtProgressBar(p, i);
-        Sys.sleep(.1);
-    }
-    close(p);
-}
-
-print.mat <- function(mat){
-	print(mat);
-	print("\n");
-	T;
-} 
-
-check.t <- function(mat){
-	print(t(mat));
-	print("\n");
-	T;
-}
-
-test.beep <- function(){
-
-    BERTModule:::.Callback("excel", list(0x8000));
-
-}
-
-SB.Test <- function(){
-    BERTModule:::.Callback("status", "fish");
-}
-
-How.Big <- function(){
-
-  # use the Excel API function to get a reference to the
-  # caller.  for a range, that will include the top-left
-  # and bottom-right cells
-
-#  ref <- BERT$.Excel(89); # xlfCaller
-   ref <- BERTModule:::.Callback("excel", list(89));
-
-  # use our functions to get the size of the range, and then
-  # paste together a string
-
-  n.rows <- nrow(ref);
-  n.cols <- ncol(ref);
-
-  return(paste(n.rows, "x", n.cols));
-
-}

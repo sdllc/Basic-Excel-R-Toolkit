@@ -94,8 +94,7 @@ setTimeout(() => {
               if( response ){
                 console.info( "Pipe", pipe_name, "language response:", response );
                 language = response.toString();
-
-                language_interface_types.some(interface_class => {
+                let found = language_interface_types.some(interface_class => {
                   if(interface_class.language_name_ === response ){
 
                     let instance = new interface_class();
@@ -103,10 +102,14 @@ setTimeout(() => {
                     language_interfaces.push(instance);
                     instance.InitPipe(pipe, pipe_name);
                     terminals.Add(instance);
+
                     return true;
                   }
                   return false;
                 });
+                if(found){
+                  pipe.RegisterConsoleMessages();
+                }
               }
               console.info( "resolving", language)
               resolve();
