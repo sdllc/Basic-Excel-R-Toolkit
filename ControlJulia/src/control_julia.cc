@@ -151,9 +151,10 @@ void QueueConsoleWrites() {
 bool SystemCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallResponse &call, int pipe_index) {
   std::string function = call.function_call().function();
 
-  /*
   BERTBuffers::CallResponse translated_call;
   translated_call.CopyFrom(call);
+
+  /*
 
   if (!function.compare("install-application-pointer")) {
     translated_call.mutable_function_call()->set_target(BERTBuffers::CallTarget::language);
@@ -173,7 +174,19 @@ bool SystemCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallResp
     }
     response.mutable_result()->set_boolean(success);
   }
+  else if (!function.compare("list-functions")) {
+
+    // we're using exec for the moment because we don't support scoping (i.e. Bert.X) in call
+
+    translated_call.mutable_code()->add_line("BERT.ListFunctions()");
+    JuliaExec(response, translated_call);
+
+    //translated_call.mutable_function_call()->set_target(BERTBuffers::CallTarget::language);
+    //translated_call.mutable_function_call()->set_function("BERT.ListFunctions");
+    //JuliaCall(response, translated_call);
+  }
   else if (!function.compare("shutdown")) {
+
   }
   else if (!function.compare("console")) {
     if (console_client < 0) {

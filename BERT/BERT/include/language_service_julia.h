@@ -65,7 +65,10 @@ public:
     BERTBuffers::CallResponse response;
 
     //call.mutable_function_call()->set_function("BERT.ListFunctions");
-    call.mutable_code()->add_line("BERT.ListFunctions()");
+    //call.mutable_code()->add_line("BERT.ListFunctions()");
+
+    call.mutable_function_call()->set_function("list-functions");
+    call.mutable_function_call()->set_target(BERTBuffers::CallTarget::system);
     call.set_wait(true);
 
     Call(response, call);
