@@ -3,4 +3,5 @@
 # this top-level folder is just for R module build artifacts
 
 BERTModule_*.gz
+notes.md
 
