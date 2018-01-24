@@ -82,6 +82,9 @@
     <ClInclude Include="include\file_change_watcher.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\debug_functions.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="R\startup.R">
