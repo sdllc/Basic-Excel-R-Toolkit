@@ -136,6 +136,11 @@ void ConsolePrompt(const char *prompt, uint32_t id) {
   SetEvent(prompt_event_handle);
 }
 
+void QueueConsoleWrites() {
+  pipes[console_client]->QueueWrites(console_buffer);
+  console_buffer.clear();
+}
+
 /**
  * in an effort to make the core language agnostic, all actual functions are moved
  * here. this should cover things like initialization and setting the COM pointers.
@@ -143,7 +148,7 @@ void ConsolePrompt(const char *prompt, uint32_t id) {
  * the caller uses symbolic constants that call these functions in the appropriate
  * language.
  */
-void SystemCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallResponse &call) {
+bool SystemCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallResponse &call, int pipe_index) {
   std::string function = call.function_call().function();
 
   /*
@@ -168,11 +173,27 @@ void SystemCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallResp
     }
     response.mutable_result()->set_boolean(success);
   }
+  else if (!function.compare("shutdown")) {
+  }
+  else if (!function.compare("console")) {
+    if (console_client < 0) {
+      console_client = pipe_index;
+      std::cout << "set console client -> " << pipe_index << std::endl;
+      //pipe->QueueWrites(console_buffer);
+      //console_buffer.clear();
+      QueueConsoleWrites();
+    }
+  }
+  else if (!function.compare("close")) {
+    CloseClient(pipe_index);
+    return false;
+  }
   else {
     std::cout << "ENOTIMPL (system): " << function << std::endl;
     response.mutable_result()->set_boolean(false);
   }
 
+  return true;
 }
 
 void pipe_loop() {
@@ -228,7 +249,7 @@ void pipe_loop() {
               //std::cout << "function call" << std::endl;
               switch (call.function_call().target()) {
               case BERTBuffers::CallTarget::system:
-                SystemCall(response, call);
+                SystemCall(response, call, index);
                 break;
               default:
                 JuliaCall(response, call);
@@ -250,7 +271,7 @@ void pipe_loop() {
               console_prompt_id = call.id();
               ConsolePrompt(prompt, console_prompt_id);
               break;
-
+            /*
             case BERTBuffers::CallResponse::kControlMessage:
             {
               std::string command = call.control_message();
@@ -285,6 +306,7 @@ void pipe_loop() {
               else pipe->NextWrite();
             }
             break;
+            */
 
             default:
               // ...

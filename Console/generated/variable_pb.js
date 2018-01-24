@@ -2276,7 +2276,7 @@ if (goog.DEBUG && !COMPILED) {
  * @private {!Array<!Array<number>>}
  * @const
  */
-proto.BERTBuffers.CallResponse.oneofGroups_ = [[3,4,5,6,7,8,9]];
+proto.BERTBuffers.CallResponse.oneofGroups_ = [[3,4,5,6,7,8]];
 
 /**
  * @enum {number}
@@ -2288,8 +2288,7 @@ proto.BERTBuffers.CallResponse.OperationCase = {
   CONSOLE: 5,
   CODE: 6,
   SHELL_COMMAND: 7,
-  CONTROL_MESSAGE: 8,
-  FUNCTION_CALL: 9
+  FUNCTION_CALL: 8
 };
 
 /**
@@ -2335,7 +2334,6 @@ proto.BERTBuffers.CallResponse.toObject = function(includeInstance, msg) {
     console: (f = msg.getConsole()) && proto.BERTBuffers.Console.toObject(includeInstance, f),
     code: (f = msg.getCode()) && proto.BERTBuffers.Code.toObject(includeInstance, f),
     shellCommand: jspb.Message.getFieldWithDefault(msg, 7, ""),
-    controlMessage: jspb.Message.getFieldWithDefault(msg, 8, ""),
     functionCall: (f = msg.getFunctionCall()) && proto.BERTBuffers.CompositeFunctionCall.toObject(includeInstance, f)
   };
 
@@ -2405,10 +2403,6 @@ proto.BERTBuffers.CallResponse.deserializeBinaryFromReader = function(msg, reade
       msg.setShellCommand(value);
       break;
     case 8:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setControlMessage(value);
-      break;
-    case 9:
       var value = new proto.BERTBuffers.CompositeFunctionCall;
       reader.readMessage(value,proto.BERTBuffers.CompositeFunctionCall.deserializeBinaryFromReader);
       msg.setFunctionCall(value);
@@ -2494,17 +2488,10 @@ proto.BERTBuffers.CallResponse.serializeBinaryToWriter = function(message, write
       f
     );
   }
-  f = /** @type {string} */ (jspb.Message.getField(message, 8));
-  if (f != null) {
-    writer.writeString(
-      8,
-      f
-    );
-  }
   f = message.getFunctionCall();
   if (f != null) {
     writer.writeMessage(
-      9,
+      8,
       f,
       proto.BERTBuffers.CompositeFunctionCall.serializeBinaryToWriter
     );
@@ -2693,47 +2680,18 @@ proto.BERTBuffers.CallResponse.prototype.hasShellCommand = function() {
 
 
 /**
- * optional string control_message = 8;
- * @return {string}
- */
-proto.BERTBuffers.CallResponse.prototype.getControlMessage = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 8, ""));
-};
-
-
-/** @param {string} value */
-proto.BERTBuffers.CallResponse.prototype.setControlMessage = function(value) {
-  jspb.Message.setOneofField(this, 8, proto.BERTBuffers.CallResponse.oneofGroups_[0], value);
-};
-
-
-proto.BERTBuffers.CallResponse.prototype.clearControlMessage = function() {
-  jspb.Message.setOneofField(this, 8, proto.BERTBuffers.CallResponse.oneofGroups_[0], undefined);
-};
-
-
-/**
- * Returns whether this field is set.
- * @return {!boolean}
- */
-proto.BERTBuffers.CallResponse.prototype.hasControlMessage = function() {
-  return jspb.Message.getField(this, 8) != null;
-};
-
-
-/**
- * optional CompositeFunctionCall function_call = 9;
+ * optional CompositeFunctionCall function_call = 8;
  * @return {?proto.BERTBuffers.CompositeFunctionCall}
  */
 proto.BERTBuffers.CallResponse.prototype.getFunctionCall = function() {
   return /** @type{?proto.BERTBuffers.CompositeFunctionCall} */ (
-    jspb.Message.getWrapperField(this, proto.BERTBuffers.CompositeFunctionCall, 9));
+    jspb.Message.getWrapperField(this, proto.BERTBuffers.CompositeFunctionCall, 8));
 };
 
 
 /** @param {?proto.BERTBuffers.CompositeFunctionCall|undefined} value */
 proto.BERTBuffers.CallResponse.prototype.setFunctionCall = function(value) {
-  jspb.Message.setOneofWrapperField(this, 9, proto.BERTBuffers.CallResponse.oneofGroups_[0], value);
+  jspb.Message.setOneofWrapperField(this, 8, proto.BERTBuffers.CallResponse.oneofGroups_[0], value);
 };
 
 
@@ -2747,7 +2705,7 @@ proto.BERTBuffers.CallResponse.prototype.clearFunctionCall = function() {
  * @return {!boolean}
  */
 proto.BERTBuffers.CallResponse.prototype.hasFunctionCall = function() {
-  return jspb.Message.getField(this, 9) != null;
+  return jspb.Message.getField(this, 8) != null;
 };
 
 

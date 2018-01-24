@@ -1,8 +1,9 @@
 /**
- * this is intended to be an interchange format for variables
- * in excel (XLOPER12), R (SEXP), and javascript (JSON), and potentially
- * other languages in the future. we have slightly different support 
- * requirements depending on the platforms.
+ * this is intended to be an interchange format for variables in different 
+ * languages/contexts: currently excel (XLOPER12), COM (Variant), R (SEXP), 
+ * javascript (JSON), julia (jl_value), and potentially other languages in 
+ * the future. we have slightly different support requirements depending on 
+ * the platforms.
  */
 
 syntax = "proto3";
@@ -145,14 +146,19 @@ message CallResponse {
 
     // push / notification
 
-    Console console = 5;
+    Console console = 5;        // console maybe should be a separate root message, it doesn't need a response
 
-    // call types and callbacks
+    // call types and callbacks. what's the difference between shell 
+    // command and code? context. shell command executes like it's typed
+    // at the console, code is executed via parse/eval calls. 
 
     Code code = 6;
     string shell_command = 7;
-    string control_message = 8;         // fka "system_command" // FIXME: merge with function call
-    CompositeFunctionCall function_call = 9;
+
+    // function call represents generic function calls, system
+    // commands, and callbacks (including COM function calls).
+   
+    CompositeFunctionCall function_call = 8;
 
   }
 }

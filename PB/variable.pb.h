@@ -1398,8 +1398,7 @@ class CallResponse : public ::google::protobuf::Message /* @@protoc_insertion_po
     kConsole = 5,
     kCode = 6,
     kShellCommand = 7,
-    kControlMessage = 8,
-    kFunctionCall = 9,
+    kFunctionCall = 8,
     OPERATION_NOT_SET = 0,
   };
 
@@ -1529,27 +1528,10 @@ class CallResponse : public ::google::protobuf::Message /* @@protoc_insertion_po
   ::std::string* release_shell_command();
   void set_allocated_shell_command(::std::string* shell_command);
 
-  // string control_message = 8;
-  private:
-  bool has_control_message() const;
-  public:
-  void clear_control_message();
-  static const int kControlMessageFieldNumber = 8;
-  const ::std::string& control_message() const;
-  void set_control_message(const ::std::string& value);
-  #if LANG_CXX11
-  void set_control_message(::std::string&& value);
-  #endif
-  void set_control_message(const char* value);
-  void set_control_message(const char* value, size_t size);
-  ::std::string* mutable_control_message();
-  ::std::string* release_control_message();
-  void set_allocated_control_message(::std::string* control_message);
-
-  // .BERTBuffers.CompositeFunctionCall function_call = 9;
+  // .BERTBuffers.CompositeFunctionCall function_call = 8;
   bool has_function_call() const;
   void clear_function_call();
-  static const int kFunctionCallFieldNumber = 9;
+  static const int kFunctionCallFieldNumber = 8;
   const ::BERTBuffers::CompositeFunctionCall& function_call() const;
   ::BERTBuffers::CompositeFunctionCall* release_function_call();
   ::BERTBuffers::CompositeFunctionCall* mutable_function_call();
@@ -1563,7 +1545,6 @@ class CallResponse : public ::google::protobuf::Message /* @@protoc_insertion_po
   void set_has_console();
   void set_has_code();
   void set_has_shell_command();
-  void set_has_control_message();
   void set_has_function_call();
 
   inline bool has_operation() const;
@@ -1580,7 +1561,6 @@ class CallResponse : public ::google::protobuf::Message /* @@protoc_insertion_po
     ::BERTBuffers::Console* console_;
     ::BERTBuffers::Code* code_;
     ::google::protobuf::internal::ArenaStringPtr shell_command_;
-    ::google::protobuf::internal::ArenaStringPtr control_message_;
     ::BERTBuffers::CompositeFunctionCall* function_call_;
   } operation_;
   mutable int _cached_size_;
@@ -3295,102 +3275,7 @@ inline void CallResponse::set_allocated_shell_command(::std::string* shell_comma
   // @@protoc_insertion_point(field_set_allocated:BERTBuffers.CallResponse.shell_command)
 }
 
-// string control_message = 8;
-inline bool CallResponse::has_control_message() const {
-  return operation_case() == kControlMessage;
-}
-inline void CallResponse::set_has_control_message() {
-  _oneof_case_[0] = kControlMessage;
-}
-inline void CallResponse::clear_control_message() {
-  if (has_control_message()) {
-    operation_.control_message_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-    clear_has_operation();
-  }
-}
-inline const ::std::string& CallResponse::control_message() const {
-  // @@protoc_insertion_point(field_get:BERTBuffers.CallResponse.control_message)
-  if (has_control_message()) {
-    return operation_.control_message_.GetNoArena();
-  }
-  return *&::google::protobuf::internal::GetEmptyStringAlreadyInited();
-}
-inline void CallResponse::set_control_message(const ::std::string& value) {
-  // @@protoc_insertion_point(field_set:BERTBuffers.CallResponse.control_message)
-  if (!has_control_message()) {
-    clear_operation();
-    set_has_control_message();
-    operation_.control_message_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  }
-  operation_.control_message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:BERTBuffers.CallResponse.control_message)
-}
-#if LANG_CXX11
-inline void CallResponse::set_control_message(::std::string&& value) {
-  // @@protoc_insertion_point(field_set:BERTBuffers.CallResponse.control_message)
-  if (!has_control_message()) {
-    clear_operation();
-    set_has_control_message();
-    operation_.control_message_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  }
-  operation_.control_message_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:BERTBuffers.CallResponse.control_message)
-}
-#endif
-inline void CallResponse::set_control_message(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  if (!has_control_message()) {
-    clear_operation();
-    set_has_control_message();
-    operation_.control_message_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  }
-  operation_.control_message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:BERTBuffers.CallResponse.control_message)
-}
-inline void CallResponse::set_control_message(const char* value, size_t size) {
-  if (!has_control_message()) {
-    clear_operation();
-    set_has_control_message();
-    operation_.control_message_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  }
-  operation_.control_message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(
-      reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:BERTBuffers.CallResponse.control_message)
-}
-inline ::std::string* CallResponse::mutable_control_message() {
-  if (!has_control_message()) {
-    clear_operation();
-    set_has_control_message();
-    operation_.control_message_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  }
-  // @@protoc_insertion_point(field_mutable:BERTBuffers.CallResponse.control_message)
-  return operation_.control_message_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline ::std::string* CallResponse::release_control_message() {
-  // @@protoc_insertion_point(field_release:BERTBuffers.CallResponse.control_message)
-  if (has_control_message()) {
-    clear_has_operation();
-    return operation_.control_message_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  } else {
-    return NULL;
-  }
-}
-inline void CallResponse::set_allocated_control_message(::std::string* control_message) {
-  if (!has_control_message()) {
-    operation_.control_message_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  }
-  clear_operation();
-  if (control_message != NULL) {
-    set_has_control_message();
-    operation_.control_message_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-        control_message);
-  }
-  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.CallResponse.control_message)
-}
-
-// .BERTBuffers.CompositeFunctionCall function_call = 9;
+// .BERTBuffers.CompositeFunctionCall function_call = 8;
 inline bool CallResponse::has_function_call() const {
   return operation_case() == kFunctionCall;
 }

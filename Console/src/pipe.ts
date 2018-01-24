@@ -191,6 +191,8 @@ export class Pipe {
     call.setId(message.id);
     call.setWait(true);
 
+    let function_call;
+
     switch (message.channel) {
       case Channel.INTERNAL:
         let code = new messages.Code();
@@ -198,10 +200,13 @@ export class Pipe {
         call.setCode(code);
         break;
       case Channel.SYSTEM:
-        call.setControlMessage(message.command);
+        function_call = new messages.CompositeFunctionCall;
+        function_call.setTarget(messages.CallTarget.SYSTEM);
+        function_call.setFunction(message.command);
+        call.setFunctionCall(function_call);
         break;
       case Channel.SYSCALL:
-        let function_call = new messages.CompositeFunctionCall;
+        function_call = new messages.CompositeFunctionCall;
         function_call.setTarget(messages.CallTarget.SYSTEM);
         function_call.setFunction("get-language");
         call.setFunctionCall(function_call);
@@ -244,9 +249,6 @@ export class Pipe {
   private ConsoleCallback(response) {
     let obj = response.getConsole();
     switch (obj.getMessageCase()) {
-      //case messages.Console.MessageCase.CONTROL_MESSAGE:
-      //  this.console_messages_.next({ id:response.getId(), type: ConsoleMessageType.CONTROL_MESSAGE, text: obj.getControlMessage() });
-      //  break;
       case messages.Console.MessageCase.PROMPT:
         this.console_messages_.next({ id:response.getId(), type: ConsoleMessageType.PROMPT, text: obj.getPrompt() });
         break;
@@ -314,6 +316,16 @@ export class Pipe {
         // [FIXME: need to do this at each level]
 
         switch (response.getOperationCase()) {
+
+          case messages.CallResponse.OperationCase.FUNCTION_CALL:
+            let system_command = response.getFunctionCall().getFunction();
+            if( system_command === "reset-prompt" && pending ){
+              this.Resolve(pending, -1);
+              resolve = true;
+            }
+            else setImmediate(() => this.ControlMessageCallback(system_command));
+            break;
+
           case messages.CallResponse.OperationCase.CONTROL_MESSAGE:
             let control_message = response.getControlMessage();
             if( control_message === "reset-prompt" && pending ){
@@ -330,10 +342,6 @@ export class Pipe {
               this.Resolve(pending, response.getConsole().getPrompt());
               resolve = true;
             }
-            //else if(pending && (message_case === messages.Console.MessageCase.CONTROL_MESSAGE && response.getConsole().getControlMessage() === "reset-prompt")){
-            //  this.Resolve(pending, -1);
-            //  resolve = true;
-            //}
             else setImmediate(() => this.ConsoleCallback(response));
             break;
 

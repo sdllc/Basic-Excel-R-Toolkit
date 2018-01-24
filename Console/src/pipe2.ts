@@ -30,7 +30,11 @@ export class Pipe2 {
     let call = new messages.CallResponse();
     call.setId(this.transaction_id_++);
     call.setWait(false);
-    call.setControlMessage(message);
+    //call.setControlMessage(message);
+    let function_call = new messages.CompositeFunctionCall;
+    function_call.setTarget(messages.CallTarget.SYSTEM);
+    function_call.setFunction(message);
+    call.setFunctionCall(function_call);
 
     console.info(JSON.stringify(call.toObject(), undefined, 2));
 

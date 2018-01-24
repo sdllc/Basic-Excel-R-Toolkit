@@ -63,7 +63,9 @@ public:
     BERTBuffers::CallResponse call;
     BERTBuffers::CallResponse rsp;
 
-    call.mutable_function_call()->set_function("BERT$list.functions");
+    //call.mutable_function_call()->set_function("BERT$list.functions");
+    call.mutable_function_call()->set_function("list-functions");
+    call.mutable_function_call()->set_target(BERTBuffers::CallTarget::system);
     call.set_wait(true);
 
     Call(rsp, call);

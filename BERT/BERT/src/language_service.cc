@@ -265,7 +265,9 @@ void LanguageService::Shutdown() {
     BERTBuffers::CallResponse rsp;
 
     call.set_wait(false);
-    call.set_control_message("shutdown");
+    //call.set_control_message("shutdown");
+    call.mutable_function_call()->set_function("shutdown");
+    call.mutable_function_call()->set_target(BERTBuffers::CallTarget::system);
     Call(rsp, call);
 
     connected_ = false;
