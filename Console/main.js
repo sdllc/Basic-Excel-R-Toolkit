@@ -13,6 +13,8 @@ require('electron-reload')(path.join(__dirname,"build"));
 let dev_flags = 0;
 let pipe_list = [];
 
+process.env['BERT_CONSOLE_ROOT'] = __dirname;
+
 // we might have (in fact we expect to have) multiple pipes,
 // and we need to keep track of all of them. they're not 
 // specifically identified, we ask the pipe what language
@@ -20,8 +22,6 @@ let pipe_list = [];
 
 for( let i = 0; i< process.argv.length; i++ ){
   if( process.argv[i] === "-p" && i< process.argv.length-1 ){
-    // let pipe_name = process.argv[++i];
-    // process.env['BERT_PIPE_NAME'] = pipe_name;
     pipe_list.push(process.argv[++i]);
   }
   else if( process.argv[i] === "-d" ){

@@ -1,0 +1,14 @@
+{
+  "editor": {
+      "minimap": {
+          "enabled": false
+      },
+      "theme": "vs",
+      "lineNumbers": true,
+      "statusBar": true,
+      "tabSize": 2,
+      "insertSpaces": true,
+      "roundedSelection": true,
+      "scrollBeyondLastLine": false
+  }
+}

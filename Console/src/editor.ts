@@ -15,9 +15,17 @@ import * as Rx from 'rxjs';
 // ambient, declared in html
 declare const amd_require: any;
 
+const PREFERENCES_KEY = "preferences"
+const PREFERENCES_URI = "localStorage://" + PREFERENCES_KEY;
+
 interface UncloseRecord {
   id:number;
   position:number;
+}
+
+enum DocumentType {
+  File = 0,
+  LocalStorage
 }
 
 /**
@@ -46,6 +54,12 @@ class Document {
   /** local ID */
   id_: number;
 
+  /** type */
+  type_ =  DocumentType.File;
+
+  /** override language (optional) */
+  overrideLanguage_:string;
+
   /** serialize */
   toJSON(){
     return {
@@ -53,6 +67,8 @@ class Document {
       file_path: this.file_path_,
       view_state: this.view_state_,
       dirty: this.dirty_,
+      overrideLanguage: this.overrideLanguage_,
+      type: this.type_,
       saved_version: this.saved_version_,
       alternative_version_id: this.model_.getAlternativeVersionId(),
       text: this.model_.getValue()
@@ -145,7 +161,7 @@ export class Editor {
   /**
    * finish loading monaco
    */
-  static Load() : Promise<void> {
+  static LoadMonaco() : Promise<void> {
 
     if(this.loaded_) return Promise.resolve();
     return new Promise((resolve, reject) => {
@@ -202,6 +218,13 @@ export class Editor {
 
   /** reference */
   private active_tab_:TabSpec;
+
+  /** 
+   * editor options. this also includes options passed to models, 
+   * on create. we rely on the API functions to ignore fields they
+   * don't use so we can consolidate in a single block.
+   */
+  private editor_options_:any = {};
 
   /** 
    * monotonically increment "Untitled-X" documents. by convention starts at 1.
@@ -269,19 +292,18 @@ export class Editor {
     // if it's already been loaded once this will return immediately
     // via Promise.resolve().
 
-    // FIXME: options
+    this.ReadPreferences().then(result => {
+      this.editor_options_ = result ? result['editor'] || {} : {};
+      return Editor.LoadMonaco();
+    }).then(() => {
 
-    Editor.Load().then(() => {
-      this.editor_ = monaco.editor.create(editor, {
-        model: null, // don't create an empty model
-        lineNumbers: "on",
-        roundedSelection: true,
-        scrollBeyondLastLine: false,
-        readOnly: false,
-        minimap: { enabled: false },
-        // theme: "vs-dark",
-      });
+      // sanity check
+      this.editor_options_.model = null;
+      this.editor_options_.readOnly = false;
+      this.editor_options_.contextmenu = false;
 
+      this.editor_ = monaco.editor.create(editor, this.editor_options_);
+     
       // cursor position -> status bar
       this.editor_.onDidChangeCursorPosition(event => {
         this.status_bar_.position = [event.position.lineNumber, event.position.column];
@@ -306,7 +328,7 @@ export class Editor {
       this.RestoreOpenFiles();
 
     });
-
+    
     MenuUtilities.events.subscribe(event => {
       switch(event.id){
       case "main.file.open-file":
@@ -333,6 +355,13 @@ export class Editor {
       case "main.file.open-recent.open-recent-file":
         this.OpenFile(event.item.data);
         break;
+
+      // prefs
+
+      case "main.view.preferences":
+        this.OpenPreferences();
+        break;        
+
       }
     });
 
@@ -410,24 +439,30 @@ export class Editor {
     let tab:TabSpec;
 
     if( text ){
-      try {
+      try { 
 
         let unserialized = JSON.parse(text);
+        
         document = new Document();
         document.label_ = unserialized.label;
         document.file_path_ = unserialized.file_path;
+        document.type_ = unserialized.type_;
+        document.overrideLanguage_ = unserialized.overrideLanguage;
 
         if(unserialized.file_path){
-          document.model_ = monaco.editor.createModel(unserialized.text, undefined, 
-            monaco.Uri.parse(Editor.UriFromPath(unserialized.file_path)));
+          if(unserialized.overrideLanguage){
+            document.model_ = monaco.editor.createModel(unserialized.text, 
+              unserialized.overrideLanguage);
+          }
+          else {
+            document.model_ = monaco.editor.createModel(unserialized.text, undefined, 
+              monaco.Uri.parse(Editor.UriFromPath(unserialized.file_path)));
+          }
         }
         else {
-          //let match = document.label_.match(untitled_regex);
-          //if( match ){
-          //  this.untitled_id_generator_ = Math.max(this.untitled_id_generator_, Number(match[1]) + 1);
-          //}
           document.model_ = monaco.editor.createModel(unserialized.text, "plaintext"); 
         }
+        document.model_.updateOptions(this.editor_options_);
 
         document.saved_version_ = document.model_.getAlternativeVersionId()
         document.id_ = entry; 
@@ -532,6 +567,56 @@ export class Editor {
 
   }
 
+  private ReadPreferences(){
+
+    return new Promise((resolve, reject) => {
+
+      let data = {};
+      
+      // if prefs does not exist, create from defaults and save first.
+      let json = localStorage.getItem(PREFERENCES_KEY);
+      
+      if(json) {
+        try {
+          data = JSON.parse(json);
+        }
+        catch(e){
+
+          // FIXME: notify user, set defaults
+          console.error(e);
+        }
+        return resolve(data);
+      }
+
+      fs.readFile(path.join(__dirname, "..", "data/default-preferences.json"), 
+        "utf8", (err, json) => {
+
+        if(err) {
+          console.error(err);
+          return resolve({});
+        }
+        else {
+          try {
+            data = JSON.parse(json);
+            localStorage.setItem(PREFERENCES_KEY, json);
+          }
+          catch(e){
+  
+            // FIXME: notify user, set defaults
+            console.error(e);
+          }
+          return resolve(data);
+          }
+      });
+
+    });
+
+  }
+
+  public OpenPreferences(){
+    this.OpenFile(PREFERENCES_URI);
+  }
+
   /** close tab (called on button click) */
   private CloseTab(tab:TabSpec){
 
@@ -587,13 +672,30 @@ export class Editor {
         if( document.view_state_) 
           this.editor_.restoreViewState(document.view_state_);
         let language = document.model_['_languageIdentifier'].language;
-        language = language.substr(0,1).toUpperCase() + language.substr(1);
+        switch(language.toLowerCase()){
+        case "json":
+        case "js":
+          language = language.toUpperCase();
+          break;
+        default:
+          language = language.substr(0,1).toUpperCase() + language.substr(1);
+        }
         this.status_bar_.language = language;
       }
       this.properties_.active_tab = document.id_;
       MenuUtilities.SetEnabled("main.file.revert-file", document.dirty_ && !!document.file_path_);
     }
 
+  }
+
+  /** switches tab. intended for keybinding. */
+  public NextTab(){
+    this.tabs_.Next();
+  }
+
+  /** switches tab. intended for keybinding. */
+  public PreviousTab(){
+    this.tabs_.Previous();
   }
 
   /**
@@ -613,15 +715,63 @@ export class Editor {
 
     if(file_path){
       let contents = document.model_.getValue();
-      fs.writeFile( file_path, contents, "utf8", err => {
-        if(err) console.error(err);
-        else {
-          tab.dirty = document.dirty_ = false;
-          document.saved_version_ = document.model_.getAlternativeVersionId();
-          this.CacheDocument(document);
-          this.tabs_.UpdateTab(tab);
+      let match = file_path.match(/^localStorage:\/\/(.*)$/);
+      if( match){
+        let key = match[1];
+        localStorage.setItem(key, contents);
+
+        // special case
+        if( document.file_path_ === PREFERENCES_URI ){
+          try {
+            let data = JSON.parse(contents);
+            let editor_options = data.editor || {};
+
+            // theme can't be set at runtime using updateOptions.
+            // hello asymmetry?
+            if(editor_options.theme !== this.editor_options_.theme){
+              monaco.editor.setTheme(editor_options.theme||"");
+            }
+
+            // sanity check 
+            editor_options.model = null;
+            editor_options.readOnly = false;
+            editor_options.contextmenu = false;
+
+            // hold
+            this.editor_options_ = editor_options;
+
+            // set
+            this.editor_.updateOptions(editor_options);
+
+            // this.active_document_.model_.updateOptions(editor_options);
+            this.tabs_.data.forEach(document => {
+              if( document.model_ ){
+                document.model_.updateOptions(editor_options);
+              }
+            })
+            
+          }
+          catch(e){
+            console.error(e);
+          }
         }
-      });
+
+        tab.dirty = document.dirty_ = false;
+        document.saved_version_ = document.model_.getAlternativeVersionId();
+        this.CacheDocument(document);
+        this.tabs_.UpdateTab(tab);
+      }
+      else {
+        fs.writeFile( file_path, contents, "utf8", err => {
+          if(err) console.error(err);
+          else {
+            tab.dirty = document.dirty_ = false;
+            document.saved_version_ = document.model_.getAlternativeVersionId();
+            this.CacheDocument(document);
+            this.tabs_.UpdateTab(tab);
+          }
+        });
+      }
     }
     
   }
@@ -636,6 +786,7 @@ export class Editor {
       let document = new Document();
       document.label_ = `${Constants.files.untitled}-${this.untitled_id_generator_++}`;
       document.model_ = monaco.editor.createModel("", "plaintext");
+      document.model_.updateOptions(this.editor_options_);
       document.saved_version_ = document.model_.getAlternativeVersionId()
       document.id_ = this.document_id_generator++;
 
@@ -655,7 +806,6 @@ export class Editor {
     });
   }
 
-
   /** load a file from a given path */
   private OpenFileInternal(file_path:string){
 
@@ -673,19 +823,25 @@ export class Editor {
     // not found, open
 
     return new Promise((resolve, reject) => {
-      fs.readFile(file_path, "utf8", (err, data) => {
-        if(err) return reject(err);
 
-        let recent_files = (this.properties_.recent_files||[]).slice(0).filter( x => x !== file_path );
-        recent_files.unshift(file_path);
-        this.properties_.recent_files = recent_files;
-        this.UpdateRecentFilesList();
+      let match = file_path.match(/^localStorage:\/\/(.*)$/);
+      if(match) {
+        let key = match[1];
+        let data = localStorage.getItem(key) || "";
+
+        // FIXME: do we want this in recent files? (...)
+        // ...
 
         let document = new Document();
-        document.label_ = path.basename(file_path),
+
+        if( key === PREFERENCES_KEY ) document.label_ = Constants.files.preferences;
+        else document.label_ = key;
+
         document.file_path_ = file_path;
-        document.model_ = monaco.editor.createModel(data, undefined, 
-          monaco.Uri.parse(Editor.UriFromPath(file_path)));
+        document.type_ = DocumentType.LocalStorage;
+        document.overrideLanguage_ = "json";
+        document.model_ = monaco.editor.createModel(data, "json");
+        document.model_.updateOptions(this.editor_options_);
 
         document.saved_version_ = document.model_.getAlternativeVersionId()
         document.id_ = this.document_id_generator++;
@@ -702,6 +858,42 @@ export class Editor {
         this.tabs_.AddTabs(tab);
         this.tabs_.ActivateTab(tab);
         this.UpdateOpenFiles();
+       
+        return resolve();
+      }
+
+      fs.readFile(file_path, "utf8", (err, data) => {
+        if(err) return reject(err);
+
+        let recent_files = (this.properties_.recent_files||[]).slice(0).filter( x => x !== file_path );
+        recent_files.unshift(file_path);
+        this.properties_.recent_files = recent_files;
+        this.UpdateRecentFilesList();
+
+        let document = new Document();
+        document.label_ = path.basename(file_path),
+        document.file_path_ = file_path;
+        document.model_ = monaco.editor.createModel(data, undefined, 
+          monaco.Uri.parse(Editor.UriFromPath(file_path)));
+        document.model_.updateOptions(this.editor_options_);
+
+        document.saved_version_ = document.model_.getAlternativeVersionId()
+        document.id_ = this.document_id_generator++;
+      
+        let tab:TabSpec = {
+          label: document.label_,
+          tooltip: file_path,
+          closeable: true,
+          button: true,
+          dirty: false,
+          data: document
+        };
+
+        this.tabs_.AddTabs(tab);
+        this.tabs_.ActivateTab(tab);
+        this.UpdateOpenFiles();
+
+        resolve();
 
       });
     });

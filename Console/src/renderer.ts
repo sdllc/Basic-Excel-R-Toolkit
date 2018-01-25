@@ -22,9 +22,7 @@ import * as path from 'path';
 import { prototype } from 'stream';
 import { language } from './julia_language';
 
-// properties
-
-let property_manager = new PropertyManager("bert2-console-settings", {
+let property_manager = new PropertyManager("console-settings", {
   terminal: {}, editor: {}, console: {}
 });
 
@@ -168,6 +166,14 @@ MenuUtilities.events.subscribe(event => {
   case "main.view.layout.layout-vertical":
     splitter.orientation = SplitterOrientation.Vertical;
     break;
+
+  // prefs is now handled by editor (just loads)
+
+  case "main.view.preferences":
+    break;
+
+  // ...
+
   default:
     console.info(event.id);
   }
@@ -186,4 +192,27 @@ window.addEventListener("resize", event => {
 
   // console.info("RS", event);
 
-})
+});
+
+window.addEventListener("keydown", event => {
+  if(event.ctrlKey){
+    switch(event.key){
+    case 'PageUp':
+      editor.PreviousTab();
+      break;
+    case 'PageDown':
+      editor.NextTab();
+      break;
+    default:
+      return;
+    }
+  }
+  else return;
+  
+  event.stopPropagation();
+  event.preventDefault();
+
+});
+
+
+
