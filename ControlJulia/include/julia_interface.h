@@ -4,7 +4,14 @@ void JuliaInit();
 void JuliaShutdown();
 // void julia_exec();
 
-void julia_exec_command(const std::string &command);
+typedef enum {
+  Error = 0,
+  Success,
+  Incomplete
+} 
+ExecResult;
+
+ExecResult julia_exec_command(const std::string &command, const std::vector<std::string> &shell_buffer);
 
 void JuliaExec(BERTBuffers::CallResponse &response, const BERTBuffers::CallResponse &call);
 void JuliaCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallResponse &call);

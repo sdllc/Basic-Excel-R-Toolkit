@@ -132,8 +132,9 @@ void ConsolePrompt(const char *prompt, uint32_t id) {
   BERTBuffers::CallResponse message;
   message.set_id(id);
   message.mutable_console()->set_prompt(prompt);
-  prompt_string = MessageUtilities::Frame(message);
-  SetEvent(prompt_event_handle);
+  //prompt_string = MessageUtilities::Frame(message);
+  //SetEvent(prompt_event_handle);
+  PushConsoleMessage(message);
 }
 
 void QueueConsoleWrites() {
@@ -209,15 +210,18 @@ bool SystemCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallResp
   return true;
 }
 
+std::vector< std::string > shell_buffer;
+
 void pipe_loop() {
 
-  char prompt[] = "julia> ";
+  char default_prompt[] = "> ";
+  char continuation_prompt[] = "+ ";
 
   DWORD result, len;
   uint32_t console_prompt_id = 1;
   std::string message;
 
-  ConsolePrompt(prompt, console_prompt_id++);
+  ConsolePrompt(default_prompt, console_prompt_id++);
 
   while (true) {
 
@@ -278,12 +282,21 @@ void pipe_loop() {
               break;
 
             case BERTBuffers::CallResponse::kShellCommand:
+            {
               std::cout << "shell command" << std::endl;
-              julia_exec_command(call.shell_command());
+              ExecResult exec_result = julia_exec_command(call.shell_command(), shell_buffer);
               // if (call.wait()) pipe->PushWrite(MessageUtilities::Frame(response));
               console_prompt_id = call.id();
-              ConsolePrompt(prompt, console_prompt_id);
+              if (exec_result == ExecResult::Incomplete) {
+                shell_buffer.push_back(call.shell_command());
+                ConsolePrompt(continuation_prompt, console_prompt_id);
+              }
+              else {
+                shell_buffer.clear();
+                ConsolePrompt(default_prompt, console_prompt_id);
+              }
               break;
+            }
             /*
             case BERTBuffers::CallResponse::kControlMessage:
             {
@@ -462,7 +475,6 @@ int main(int argc, char **argv) {
   stdio_pipes[1]->Start("stderr", false);
   HANDLE stderr_write_handle = CreateFile(stdio_pipes[1]->full_name().c_str(), FILE_ALL_ACCESS, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
   
-  uintptr_t thread_handle = _beginthreadex(0, 0, StdioThreadFunction, stdio_pipes, 0, 0);
 
   _dup2(_open_osfhandle((intptr_t)stdio_write_handle, _O_TEXT), 1); // 1 is stdout
   _dup2(_open_osfhandle((intptr_t)stderr_write_handle, _O_TEXT), 2);
@@ -474,6 +486,8 @@ int main(int argc, char **argv) {
 //  DWORD bytes;
 //  WriteFile(write_handle, buffer, strlen(buffer), &bytes, 0);
   */
+
+//  uintptr_t thread_handle = _beginthreadex(0, 0, StdioThreadFunction, stdio_pipes, 0, 0);
 
   NextPipeInstance(true, pipename);
 

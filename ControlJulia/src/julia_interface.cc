@@ -228,20 +228,77 @@ bool ReadSourceFile(const std::string &file) {
 /**
  * shell exec: response is printed to output stream
  */
-void julia_exec_command(const std::string &command) {
+ExecResult julia_exec_command(const std::string &command, const std::vector<std::string> &shell_buffer) {
+
+  static char filename[] = "shell";
+  static int filename_len = strlen(filename);
+
+  // FIXME: why not just store this as a string?
+
+  std::string tmp;
+  for (auto line : shell_buffer) {
+    tmp += line;
+    tmp += "\n";
+  }
+  tmp += command;
+  tmp += "\n";
+
+  ExecResult result = ExecResult::Success;
 
   JL_TRY{
-    jl_value_t *val = (jl_value_t*)jl_eval_string(command.c_str());
+    // jl_value_t *val = (jl_value_t*)jl_eval_string(command.c_str());
+    //jl_value_t *val = (jl_value_t*)jl_load_file_string(command.c_str(), command.length(), "shell");
+
+    jl_value_t *val = jl_parse_input_line(tmp.c_str(), tmp.length(), filename, filename_len);
+
     if (jl_exception_occurred()) {
       std::cout << "* EXCEPTION" << std::endl;
 
       jl_printf(JL_STDERR, "error during run:\n");
       jl_static_show(JL_STDERR, ptls->exception_in_transit);
       jl_exception_clear();
+      result = ExecResult::Error;
     }
     else if (val) {
-      jl_static_show(JL_STDOUT, val);
+
+      if (jl_is_expr(val)) {
+        //std::cout << "is expr" << std::endl;
+        jl_expr_t *expr = (jl_expr_t*)val;
+        jl_sym_t *head = expr->head;
+
+        if (head == jl_incomplete_sym) {
+          //std::cout << " == incomplete " << std::endl;
+          result = ExecResult::Incomplete;
+        }
+        else {
+          std::cout << "sym name? " << jl_symbol_name(head) << std::endl;
+          //result = ExecResult::Error;
+        }
+      }
+      
+      if(result == ExecResult::Success) {
+        // std::cout << "NOT expr" << std::endl;
+        result = ExecResult::Success;
+
+        //// from jl_eval_string
+
+        JL_GC_PUSH1(&val);
+        size_t last_age = jl_get_ptls_states()->world_age;
+        jl_get_ptls_states()->world_age = jl_get_world_counter();
+        jl_value_t *r = jl_toplevel_eval_in(jl_main_module, val);
+        jl_get_ptls_states()->world_age = last_age;
+        JL_GC_POP();
+        jl_exception_clear();
+
+
+        //// end
+        val = r;
+
+      }
+
     }
+    jl_printf(JL_STDOUT, "...");
+    jl_static_show(JL_STDOUT, val);
     jl_printf(JL_STDOUT, "\n");
   }
     JL_CATCH{
@@ -251,6 +308,7 @@ void julia_exec_command(const std::string &command) {
       jl_static_show(JL_STDERR, ptls->exception_in_transit);
       jl_printf(JL_STDERR, "\n");
       jlbacktrace();
+      result = ExecResult::Error;
   }
 
   int remaining_handles = uv_run(jl_global_event_loop(), UV_RUN_NOWAIT);
@@ -260,6 +318,8 @@ void julia_exec_command(const std::string &command) {
 
   // note this does not expect a newline/cr
 //  jl_eval_string(command.c_str());
+
+  return result;
 
 }
 

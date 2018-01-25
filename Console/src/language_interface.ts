@@ -121,7 +121,9 @@ export class JuliaInterface extends LanguageInterface {
       this.pipe_.ShellExec(buffer).then(result => {
         if( result === -1 ){ resolve({ pop_stack: true }); }
         else resolve({ text: result });
-      });
+      }).catch(e => {
+        console.error(e);
+      })
     });
   }
     

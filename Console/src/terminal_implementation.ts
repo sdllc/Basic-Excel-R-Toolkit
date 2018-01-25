@@ -736,7 +736,7 @@ export class TerminalImplementation {
       console.info( "title change:", title ); // ??
     });
 
-    this.language_interface_.pipe_.console_messages.subscribe((console_message) => {
+    this.language_interface_.pipe_.console_messages.subscribe(console_message => {
       if( console_message.type === ConsoleMessageType.PROMPT ){
         console.info(`(${this.language_interface_.label_}) Prompt (${console_message.id})`, console_message.text);
         this.Prompt({
