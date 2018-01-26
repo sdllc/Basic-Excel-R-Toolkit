@@ -309,15 +309,19 @@ ExecResult JuliaShellExec(const std::string &command, const std::string &shell_b
 
 
         //// end
-        val = r;
+        //val = r;
+        if (!jl_is_nothing(r)) {
+          jl_static_show(JL_STDOUT, r);
+        }
+        jl_printf(JL_STDOUT, "\n");
 
       }
 
     }
-    if (!jl_is_nothing(val)) {
-      jl_static_show(JL_STDOUT, val);
-      jl_printf(JL_STDOUT, "\n");
-    }
+    //if (!jl_is_nothing(val)) {
+    //  jl_static_show(JL_STDOUT, val);
+    //  jl_printf(JL_STDOUT, "\n");
+    //}
   }
     JL_CATCH{
       std::cout << "* CATCH" << std::endl;

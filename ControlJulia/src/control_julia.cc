@@ -460,7 +460,6 @@ int main(int argc, char **argv) {
 
   // FIXME: is it necessary to duplicate this handle? 
 
-  /*
   int console_stdout = 0;
   _dup2(1, console_stdout);
   std::ofstream console_out(_fdopen(console_stdout, "w")); // NOTE this is nonstandard
@@ -479,7 +478,6 @@ int main(int argc, char **argv) {
   stdio_pipes[1]->Start("stderr", false);
   HANDLE stderr_write_handle = CreateFile(stdio_pipes[1]->full_name().c_str(), FILE_ALL_ACCESS, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
   
-
   _dup2(_open_osfhandle((intptr_t)stdio_write_handle, _O_TEXT), 1); // 1 is stdout
   _dup2(_open_osfhandle((intptr_t)stderr_write_handle, _O_TEXT), 2);
 
@@ -489,9 +487,9 @@ int main(int argc, char **argv) {
 //  char buffer[] = "ZRRBT\n";
 //  DWORD bytes;
 //  WriteFile(write_handle, buffer, strlen(buffer), &bytes, 0);
-  */
 
-//  uintptr_t thread_handle = _beginthreadex(0, 0, StdioThreadFunction, stdio_pipes, 0, 0);
+
+  uintptr_t thread_handle = _beginthreadex(0, 0, StdioThreadFunction, stdio_pipes, 0, 0);
 
   NextPipeInstance(true, pipename);
 
