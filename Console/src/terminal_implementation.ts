@@ -65,7 +65,7 @@ class Autocomplete {
   /**
    * 
    */
-  constructor(private accept_: Function) {
+  constructor(private accept_: Function, private parent_:HTMLElement) {
 
     this.node_ = document.createElement("ul");
     this.node_.classList.add("terminal-completion-list");
@@ -126,7 +126,7 @@ class Autocomplete {
       this.node_.appendChild(li);
     });
 
-    let cursorNode = document.querySelector(".terminal-cursor") as HTMLElement;
+    let cursorNode = this.parent_.querySelector(".terminal-cursor") as HTMLElement;
     this.node_.scrollTop = 0;
     let cursor_bounds = cursorNode.getBoundingClientRect();
 
@@ -188,6 +188,8 @@ class Autocomplete {
       }
     }
     this.Dismiss();
+
+console.info("tl?", this.last_);
 
     let addition = accepted.substr(this.last_.token.length);
     this.accept_(addition);
@@ -724,7 +726,7 @@ export class TerminalImplementation {
         this.xterm_.write(addition);
         this.line_info_.append_or_insert(addition);      
         this.RunAutocomplete();
-      });
+      }, this.node_);
 
     window.addEventListener("resize", event => {
       this.xterm_.fit(); // fixme: debounce?

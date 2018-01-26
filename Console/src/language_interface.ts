@@ -115,6 +115,21 @@ export class JuliaInterface extends LanguageInterface {
 
   static language_name_ = "Julia";
   
+  AutocompleteCallback(buffer:string, position:number) : Promise<any> {
+
+    // FIXME: need to normalize ac data structure
+
+    return new Promise<any>((resolve, reject) => {
+      buffer = buffer.replace( /\\/g, '\\\\').replace( '"', '\\"' );
+      this.pipe_.Internal(`Base.REPLCompletions.completions("${buffer}",${position})[1]`).then(x => {
+        //console.info("AC", x);
+        //resolve(x);
+        let arr:Array<any> = (Array.isArray(x) ? x as Array<any> : [])
+        resolve({ comps: arr.join("\n"), token: buffer });
+      });
+    });
+  }
+
   ExecCallback(buffer:string) : Promise<any> {
     return new Promise((resolve, reject) => {
       console.info("CC", buffer, this.pipe_.busy);

@@ -62,7 +62,7 @@ export class Pipe {
         return object;
 
       default:
-        console.info("UNTRANSLATED\n", x);
+        console.info(`UNTRANSLATED (${x.getValueCase()})\n`, x.toObject());
         return null;
     }
   }
