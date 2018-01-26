@@ -210,7 +210,8 @@ bool SystemCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallResp
   return true;
 }
 
-std::vector< std::string > shell_buffer;
+//std::vector< std::string > shell_buffer;
+std::string shell_buffer;
 
 void pipe_loop() {
 
@@ -284,15 +285,18 @@ void pipe_loop() {
             case BERTBuffers::CallResponse::kShellCommand:
             {
               std::cout << "shell command" << std::endl;
-              ExecResult exec_result = julia_exec_command(call.shell_command(), shell_buffer);
+              ExecResult exec_result = JuliaShellExec(call.shell_command(), shell_buffer);
               // if (call.wait()) pipe->PushWrite(MessageUtilities::Frame(response));
               console_prompt_id = call.id();
               if (exec_result == ExecResult::Incomplete) {
-                shell_buffer.push_back(call.shell_command());
+                //shell_buffer.push_back(call.shell_command());
+                shell_buffer += call.shell_command();
+                shell_buffer += "\n";
                 ConsolePrompt(continuation_prompt, console_prompt_id);
               }
               else {
-                shell_buffer.clear();
+                //shell_buffer.clear();
+                shell_buffer = "";
                 ConsolePrompt(default_prompt, console_prompt_id);
               }
               break;

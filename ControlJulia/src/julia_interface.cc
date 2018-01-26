@@ -21,6 +21,8 @@
 #include <ctype.h>
 #include <inttypes.h>
 
+#include "string_utilities.h"
+
 #define JULIA_ENABLE_THREADING 1
 
 #include "julia.h"
@@ -97,6 +99,8 @@ void JlValueToVariable(BERTBuffers::Variable *variable, jl_value_t *value) {
 
   // complex
 
+  // tuple!
+
   // array
 
   if (jl_is_array(value)) {
@@ -154,6 +158,11 @@ void JlValueToVariable(BERTBuffers::Variable *variable, jl_value_t *value) {
 
 
   }
+
+  jl_value_t *value_type = jl_typeof(value);
+  jl_printf(JL_STDOUT, "unexpected type: ");
+  jl_static_show(JL_STDOUT, value_type);
+  jl_printf(JL_STDOUT, "\n");
 
 
   // ?
@@ -226,23 +235,31 @@ bool ReadSourceFile(const std::string &file) {
 
 
 /**
- * shell exec: response is printed to output stream
+ * shell exec: response is printed to output stream. 
+ * 
+ * shell supports multi-line entry, which may be incomplete as of
+ * any given line. previous lines are stored in a buffer (now as a 
+ * concatenated string). Ctrl+C or other break should clear buffer.
+ *
+ * this function is not responsible for maintaining or appending
+ * the buffer. caller can do that (if desired) when response is 
+ * "incomplete".
  */
-ExecResult julia_exec_command(const std::string &command, const std::vector<std::string> &shell_buffer) {
+ExecResult JuliaShellExec(const std::string &command, const std::string &shell_buffer) {
 
   static char filename[] = "shell";
   static int filename_len = strlen(filename);
 
-  // FIXME: why not just store this as a string?
-
-  std::string tmp;
-  for (auto line : shell_buffer) {
-    tmp += line;
-    tmp += "\n";
-  }
+  std::string tmp = shell_buffer;
   tmp += command;
-  tmp += "\n";
+  
+  // this is a little hacky, but we are trying to emulate the 
+  // stock julia parser to the extent that's reasonable
 
+  if (StringUtilities::EndsWith(StringUtilities::Trim(tmp), ";")) {
+    tmp = tmp + "nothing";
+  }
+  
   ExecResult result = ExecResult::Success;
 
   JL_TRY{
@@ -297,9 +314,10 @@ ExecResult julia_exec_command(const std::string &command, const std::vector<std:
       }
 
     }
-    jl_printf(JL_STDOUT, "...");
-    jl_static_show(JL_STDOUT, val);
-    jl_printf(JL_STDOUT, "\n");
+    if (!jl_is_nothing(val)) {
+      jl_static_show(JL_STDOUT, val);
+      jl_printf(JL_STDOUT, "\n");
+    }
   }
     JL_CATCH{
       std::cout << "* CATCH" << std::endl;

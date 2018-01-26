@@ -159,7 +159,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;BERT_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>E:\BERT2\protobuf-3.5.0\src;ExcelLib;..\..\PB;include;PB;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\BERT2\protobuf-3.5.0\src;ExcelLib;..\..\PB;..\..\common;include;PB;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <DisableSpecificWarnings>4146</DisableSpecificWarnings>
     </ClCompile>

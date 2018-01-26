@@ -11,7 +11,7 @@ typedef enum {
 } 
 ExecResult;
 
-ExecResult julia_exec_command(const std::string &command, const std::vector<std::string> &shell_buffer);
+ExecResult JuliaShellExec(const std::string &command, const std::string &shell_buffer);
 
 void JuliaExec(BERTBuffers::CallResponse &response, const BERTBuffers::CallResponse &call);
 void JuliaCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallResponse &call);
