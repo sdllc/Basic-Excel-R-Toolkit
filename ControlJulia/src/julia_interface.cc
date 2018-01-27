@@ -313,7 +313,7 @@ ExecResult JuliaShellExec(const std::string &command, const std::string &shell_b
         if (!jl_is_nothing(r)) {
           jl_static_show(JL_STDOUT, r);
         }
-        jl_printf(JL_STDOUT, "\n");
+          jl_printf(JL_STDOUT, "\n");
 
       }
 

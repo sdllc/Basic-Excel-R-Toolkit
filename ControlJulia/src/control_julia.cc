@@ -438,6 +438,9 @@ unsigned __stdcall StdioThreadFunction(void *data) {
 
 void SetBreak() {
   std::cout << "SET BREAK" << std::endl;
+
+  shell_buffer.clear();
+
   GenerateConsoleCtrlEvent(CTRL_C_EVENT, 0);
 }
 
