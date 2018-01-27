@@ -36,6 +36,12 @@ export class MuliplexedTerminal {
   /** layout index increments on update */
   private layout_ = -1;
 
+  /** observable for active tab (by label) */
+  private active_tab_ = new Rx.BehaviorSubject<string>(null);
+
+  /** accessor for active tab */
+  public get active_tab() { return this.active_tab_; }
+
   constructor(node:string|HTMLElement, tab_node_selector:string){
 
     if( typeof node === "string" ){
@@ -56,6 +62,9 @@ export class MuliplexedTerminal {
 
       switch(event.type){
       case "activate":
+
+        this.active_tab_.next(label);
+
         terminal_instance.child.style.display = "block";
         this.active_instance_ = terminal_instance;
         if( terminal_instance.layout !== this.layout_ ) {
@@ -74,6 +83,10 @@ export class MuliplexedTerminal {
       }
     });
 
+  }
+
+  Activate(label:string){
+    this.tabs_.ActivateTab(label);
   }
 
   /**

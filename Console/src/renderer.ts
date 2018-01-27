@@ -122,6 +122,13 @@ setTimeout(() => {
     })
   ).then(() => {
     console.info( "languages complete");
+    if( properties.active_tab ){
+      console.info( "Activate:", properties.active_tab);
+      terminals.Activate(properties.active_tab);
+    }
+    terminals.active_tab.subscribe(active => {
+      if(properties.active_tab !== active) properties.active_tab = active;
+    })
   })
 
 }, 1 );

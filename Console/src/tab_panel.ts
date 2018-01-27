@@ -224,7 +224,18 @@ export class TabPanel {
 
   }
 
-  ActivateTab(index:number|HTMLElement|TabSpec){
+  ActivateTab(index:number|HTMLElement|TabSpec|string){
+
+    if( typeof index === "string"){
+      let s:string = index; // type guards have limited effect
+      this.tabs_.some((spec, i) => {
+        if( spec.label === s){
+          index = i;
+          return true;
+        }
+        return false;
+      });
+    }
 
     let active = -1;
     Array.prototype.forEach.call(this.tab_container_.children, (child, i) => {
