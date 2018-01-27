@@ -436,6 +436,73 @@ unsigned __stdcall StdioThreadFunction(void *data) {
   return 0;
 }
 
+void SetBreak() {
+  std::cout << "SET BREAK" << std::endl;
+  GenerateConsoleCtrlEvent(CTRL_C_EVENT, 0);
+}
+
+unsigned __stdcall ManagementThreadFunction(void *data) {
+
+  DWORD result;
+  Pipe pipe;
+  char *name = reinterpret_cast<char*>(data);
+
+  std::cout << "start management pipe on " << name << std::endl;
+
+  int rslt = pipe.Start(name, false);
+  std::string message;
+
+  while (true) {
+    result = WaitForSingleObject(pipe.wait_handle_read(), 1000);
+    if (result == WAIT_OBJECT_0) {
+      ResetEvent(pipe.wait_handle_read());
+      if (!pipe.connected()) {
+        std::cout << "connect management pipe" << std::endl;
+        pipe.Connect(); // this will start reading
+      }
+      else {
+        result = pipe.Read(message);
+        if (!result) {
+          BERTBuffers::CallResponse call;
+          bool success = MessageUtilities::Unframe(call, message);
+          if (success) {
+            //std::string command = call.control_message();
+            std::string command = call.function_call().function();
+            if (command.length()) {
+              if (!command.compare("break")) {
+
+                SetBreak();
+
+                //user_break_flag = true;
+                // RSetUserBreak();
+              }
+              else {
+                std::cerr << "unexpected system command (management pipe): " << command << std::endl;
+              }
+            }
+          }
+          else {
+            std::cerr << "error parsing management message" << std::endl;
+          }
+          pipe.StartRead();
+        }
+        else {
+          if (result == ERROR_BROKEN_PIPE) {
+            std::cerr << "broken pipe in management thread" << std::endl;
+            pipe.Reset();
+          }
+        }
+      }
+    }
+    else if (result != WAIT_TIMEOUT) {
+      std::cerr << "error in management thread: " << GetLastError() << std::endl;
+      pipe.Reset();
+      break;
+    }
+  }
+  return 0;
+}
+
 int main(int argc, char **argv) {
 
   for (int i = 0; i < argc; i++) {
@@ -468,8 +535,13 @@ int main(int argc, char **argv) {
   _dup2(2, console_stderr);
   std::ofstream console_err(_fdopen(console_stderr, "w")); 
 
-  prompt_event_handle = CreateEvent(0, TRUE, FALSE, 0);
+  //
+  char buffer[MAX_PATH];
+  sprintf_s(buffer, "%s-M", pipename.c_str());
+  uintptr_t management_thread_handle = _beginthreadex(0, 0, ManagementThreadFunction, buffer, 0, 0);
+  //
 
+  prompt_event_handle = CreateEvent(0, TRUE, FALSE, 0);
   Pipe *stdio_pipes[] = { new Pipe, new Pipe };
 
   stdio_pipes[0]->Start("stdout", false);
@@ -489,7 +561,7 @@ int main(int argc, char **argv) {
 //  WriteFile(write_handle, buffer, strlen(buffer), &bytes, 0);
 
 
-  uintptr_t thread_handle = _beginthreadex(0, 0, StdioThreadFunction, stdio_pipes, 0, 0);
+  uintptr_t io_thread_handle = _beginthreadex(0, 0, StdioThreadFunction, stdio_pipes, 0, 0);
 
   NextPipeInstance(true, pipename);
 

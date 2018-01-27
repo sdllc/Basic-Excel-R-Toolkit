@@ -115,6 +115,12 @@ export class JuliaInterface extends LanguageInterface {
 
   static language_name_ = "Julia";
   
+  InitPipe(pipe:Pipe, name:string){
+    super.InitPipe(pipe, name);
+    this.management_pipe_ = new Pipe2();
+    this.management_pipe_.Init({pipe_name: name + "-M"});
+  }
+
   AutocompleteCallback(buffer:string, position:number) : Promise<any> {
 
     // FIXME: need to normalize ac data structure
@@ -132,7 +138,6 @@ export class JuliaInterface extends LanguageInterface {
 
   ExecCallback(buffer:string) : Promise<any> {
     return new Promise((resolve, reject) => {
-      console.info("CC", buffer, this.pipe_.busy);
       this.pipe_.ShellExec(buffer).then(result => {
         if( result === -1 ){ resolve({ pop_stack: true }); }
         else resolve({ text: result });
@@ -141,5 +146,9 @@ export class JuliaInterface extends LanguageInterface {
       })
     });
   }
-    
+   
+  BreakCallback(){
+    this.management_pipe_.SendMessage("break");
+  }
+
 }
