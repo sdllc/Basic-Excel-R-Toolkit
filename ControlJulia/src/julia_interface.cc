@@ -272,7 +272,7 @@ void JuliaInit() {
   // push out on the pipes (or cache)
 
   /* ... */
-  jl_eval_string("Base.banner()");
+  // jl_eval_string("Base.banner()");
 
 }
 
@@ -397,6 +397,7 @@ ExecResult JuliaShellExec(const std::string &command, const std::string &shell_b
         //val = r;
         if (!jl_is_nothing(r)) {
           jl_static_show(JL_STDOUT, r);
+          jl_printf(JL_STDOUT, "\n");
         }
           jl_printf(JL_STDOUT, "\n");
 
@@ -411,10 +412,10 @@ ExecResult JuliaShellExec(const std::string &command, const std::string &shell_b
     JL_CATCH{
       std::cout << "* CATCH" << std::endl;
 
-      jl_printf(JL_STDERR, "\nparser error:\n");
+      //jl_printf(JL_STDERR, "\nparser error:\n");
       jl_static_show(JL_STDERR, ptls->exception_in_transit);
-      jl_printf(JL_STDERR, "\n");
-      jlbacktrace();
+      jl_printf(JL_STDERR, "\n\n"); // matches julia repl
+      //jlbacktrace();
       result = ExecResult::Error;
       jl_exception_clear();
   }
