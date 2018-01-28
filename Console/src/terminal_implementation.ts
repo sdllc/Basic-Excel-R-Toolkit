@@ -189,7 +189,7 @@ class Autocomplete {
     }
     this.Dismiss();
 
-console.info("tl?", this.last_);
+console.info("tl?", this.last_, accepted );
 
     let addition = accepted.substr(this.last_.token.length);
     this.accept_(addition);

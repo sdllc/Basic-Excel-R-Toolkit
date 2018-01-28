@@ -95,7 +95,7 @@ export class RInterface extends LanguageInterface {
 
   AutocompleteCallback(buffer:string, position:number) : Promise<any> {
     return new Promise<any>((resolve, reject) => {
-      buffer = buffer.replace( /\\/g, '\\\\').replace( '"', '\\"' );
+      buffer = buffer.replace( /\\/g, '\\\\').replace( /"/g, '\\"' );
       this.pipe_.Internal(`BERTModule:::.Autocomplete("${buffer}",${position})`).then(x => resolve(x));
     });
   }
@@ -140,12 +140,14 @@ export class JuliaInterface extends LanguageInterface {
     // FIXME: need to normalize ac data structure
 
     return new Promise<any>((resolve, reject) => {
-      buffer = buffer.replace( /\\/g, '\\\\').replace( '"', '\\"' );
+      buffer = buffer.replace( /\\/g, '\\\\').replace( /"/g, '\\"' );
       this.pipe_.Internal(`Base.REPLCompletions.completions("${buffer}",${position})[1]`).then(x => {
-        //console.info("AC", x);
-        //resolve(x);
         let arr:Array<any> = (Array.isArray(x) ? x as Array<any> : [])
-        resolve({ comps: arr.join("\n"), token: buffer });
+
+        // slightly different breaks (+.)
+        let token = buffer.replace(/^.*[\.\W]/, "");
+
+        resolve({ comps: arr.join("\n"), token });
       });
     });
   }
