@@ -141,6 +141,8 @@ export class JuliaInterface extends LanguageInterface {
 
     return new Promise<any>((resolve, reject) => {
       buffer = buffer.replace( /\\/g, '\\\\').replace( /"/g, '\\"' );
+      buffer = buffer.replace( /\$/g, "\\$"); // julia string interpolations
+      
       this.pipe_.Internal(`Base.REPLCompletions.completions("${buffer}",${position})[1]`).then(x => {
         let arr:Array<any> = (Array.isArray(x) ? x as Array<any> : [])
 
