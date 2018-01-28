@@ -29,23 +29,98 @@
 
 jl_ptls_t ptls;
 
-jl_value_t * VariableToJlValue(BERTBuffers::Variable *variable) {
+jl_value_t * VariableToJlValue(const BERTBuffers::Variable *variable) {
+
+  jl_value_t* value = jl_nothing;
 
   switch (variable->value_case()) {
   case BERTBuffers::Variable::kBoolean:
-    return jl_box_bool(variable->boolean());
+    value = jl_box_bool(variable->boolean());
+    break;
 
   case BERTBuffers::Variable::kNum:
-    return jl_box_float64(variable->num());
+    value = jl_box_float64(variable->num());
+    break;
 
   case BERTBuffers::Variable::kStr:
-    return jl_pchar_to_string(variable->str().c_str(), variable->str().length());
+    value = jl_pchar_to_string(variable->str().c_str(), variable->str().length());
+    break;
+
+  case BERTBuffers::Variable::kExternalPointer:
+
+    // FIXME: we should construct a wrapper type for this. the below is sufficient
+    // for preserving value (unlike R, which can't accept the value), but might lead
+    // it to being treated differently. also we need to register a finalizer...
+
+    value = jl_box_uint64(variable->external_pointer());
+    break;
+
+  case BERTBuffers::Variable::kArr:
+  {
+    const BERTBuffers::Array &arr = variable->arr();
+
+    int nrows = arr.rows();
+    int ncols = arr.cols();
+    int len = arr.data_size();
+
+    if (!nrows || !ncols || len != (nrows * ncols)) {
+      ncols = 1;
+      nrows = len;
+    }
+
+    // FIXME: names?
+
+    // FIXME: types? we should either determine (here or at array creation time)
+    // if the array is a single type (we already do this somewhat for R); then we
+    // can use more efficient julia arrays and use a data pointer rather than the 
+    // set() syntax
+
+    jl_array_t *julia_array = 0; //  jl_nothing;
+    if (ncols == 1) 
+    {
+      jl_value_t* array_type = jl_apply_array_type((jl_value_t*)jl_any_type, 1);
+      julia_array = jl_alloc_array_1d(array_type, nrows);
+
+      for (size_t i = 0; i < nrows; i++) {
+        jl_value_t *element = VariableToJlValue(&(arr.data(i)));
+        jl_arrayset(julia_array, element, i);
+      }
+
+    }
+    else {
+
+      jl_value_t* array_type = jl_apply_array_type((jl_value_t*)jl_any_type, 2);
+      julia_array = jl_alloc_array_2d(array_type, nrows, ncols);
+
+      for (size_t i = 0; i < ncols; i++) {
+        for (size_t j = 0; j < nrows; j++) {
+          jl_value_t *element = VariableToJlValue(&(arr.data(i)));
+          jl_arrayset(julia_array, element, j + nrows * i);
+        }
+      }
+
+    }
+    
+    value = (jl_value_t*)julia_array;
+    break;
+  }
 
   default:
     std::cout << "Unhandled type in variable to jlvalue: " << variable->value_case() << std::endl;
+    break;
   }
 
-  return jl_nothing;
+  if (variable->name().length()) {
+
+    // create tuple with name, value. the below creates a "DataType" type.
+    // I'd prefer this to be a typed tuple, but one thing at a time.
+
+    jl_value_t* jl_name = jl_pchar_to_string(variable->name().c_str(), variable->name().length());
+    jl_value_t* tuple[] = { jl_name, value };
+    return (jl_value_t*)jl_apply_tuple_type_v(tuple, 2);
+  }
+
+  return value;
   
 }
 
@@ -355,8 +430,17 @@ void JuliaCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallRespo
   // is attached is some fashion. can we dereference pacakges? [A: no, probably 
   // need to do that manually].
 
-  jl_function_t *function_pointer = jl_get_function(jl_main_module, function.c_str());
-  
+  jl_function_t *function_pointer = jl_nothing;
+
+  std::vector<std::string> elements;
+  StringUtilities::Split(function, '.', 1, elements);
+
+  if( elements.size() == 1 ) function_pointer = jl_get_function(jl_main_module, function.c_str());
+  else {
+    function_pointer = jl_get_global(jl_main_module, jl_symbol(elements[0].c_str()));
+    for( int i = 1; i< elements.size(); i++ ) function_pointer = jl_get_global((jl_module_t*)function_pointer, jl_symbol(elements[i].c_str()));
+  }
+
   if (!function_pointer || jl_is_nothing(function_pointer)) return;
   jl_value_t *function_result;
 

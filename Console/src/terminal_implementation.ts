@@ -306,7 +306,12 @@ export class LineInfo {
 
 }
 
-interface PrintLineFunction { (line: string, lastline: boolean): void }
+enum ConsolePrintFlags {
+  None = 0, 
+  Error = 1
+}
+
+interface PrintLineFunction { (line: string, lastline: boolean, flags: ConsolePrintFlags ): void }
 
 /**
  * implementation of the terminal on top of xtermjs.
@@ -339,14 +344,17 @@ export class TerminalImplementation {
     }
 
     if( this.language_interface_.formatter_ ){
-      this.PrintLine = (line:string, lastline = false) => {
+      this.PrintLine = (line:string, lastline = false, flags = ConsolePrintFlags.None) => {
         let formatted = this.language_interface_.formatter_.FormatString(line);
         if (lastline) this.xterm_.write(formatted);
         else this.xterm_.writeln(formatted);
       };
     }
     else {
-      this.PrintLine = (line:string, lastline = false) => {
+      this.PrintLine = (line:string, lastline = false, flags = ConsolePrintFlags.None) => {
+        if( flags & ConsolePrintFlags.Error ){
+          line = `${VTESC}91m` + line + `${VTESC}0m`;
+        }
         let formatted = line;
         if (lastline) this.xterm_.write(formatted);
         else this.xterm_.writeln(formatted);
@@ -513,7 +521,7 @@ export class TerminalImplementation {
   }
   */
 
-  PrintConsole(text: string, offset = false) {
+  PrintConsole(text: string, offset = false, flags = ConsolePrintFlags.None ) {
 
     // if not busy, meaning we're waiting at a prompt, we want any
     // stray console messages to appear above (to the left of) the 
@@ -528,12 +536,12 @@ export class TerminalImplementation {
     if (offset) {
       this.MoveCursor(-this.line_info_.full_text.length);
       this.ClearRight();
-      lines.forEach((line, index) => this.PrintLine(line, index === (lines.length - 1)));
+      lines.forEach((line, index) => this.PrintLine(line, index === (lines.length - 1), flags));
       this.xterm_.write(this.line_info_.full_text);
       if(this.line_info_.offset_from_end) this.MoveCursor(-this.line_info_.offset_from_end);
     }
     else {
-      lines.forEach((line, index) => this.PrintLine(line, index === (lines.length - 1)));
+      lines.forEach((line, index) => this.PrintLine(line, index === (lines.length - 1), flags));
     }
   }
 
@@ -738,6 +746,18 @@ export class TerminalImplementation {
       console.info( "title change:", title ); // ??
     });
 
+    if(this.language_interface_.stdout_pipe_){
+      this.language_interface_.stdout_pipe_.data.subscribe( text => {
+        this.PrintConsole(text, !this.language_interface_.pipe_.busy);
+      });
+    }
+
+    if(this.language_interface_.stderr_pipe_){
+      this.language_interface_.stderr_pipe_.data.subscribe( text => {
+        this.PrintConsole(text, !this.language_interface_.pipe_.busy, ConsolePrintFlags.Error);
+      });
+    }
+    
     this.language_interface_.pipe_.console_messages.subscribe(console_message => {
       if( console_message.type === ConsoleMessageType.PROMPT ){
         console.info(`(${this.language_interface_.label_}) Prompt (${console_message.id})`, console_message.text);

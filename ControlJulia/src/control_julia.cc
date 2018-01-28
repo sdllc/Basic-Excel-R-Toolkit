@@ -21,6 +21,8 @@ int console_client = -1;
 
 HANDLE prompt_event_handle;
 
+Pipe stdout_pipe, stderr_pipe;
+
 //std::ofstream console_out;
 //std::ofstream console_err;
 
@@ -132,14 +134,14 @@ void ConsolePrompt(const char *prompt, uint32_t id) {
   BERTBuffers::CallResponse message;
   message.set_id(id);
   message.mutable_console()->set_prompt(prompt);
-  //prompt_string = MessageUtilities::Frame(message);
-  //SetEvent(prompt_event_handle);
+  prompt_string = MessageUtilities::Frame(message);
+  // SetEvent(prompt_event_handle);
   PushConsoleMessage(message);
 }
 
 void QueueConsoleWrites() {
-  pipes[console_client]->QueueWrites(console_buffer);
-  console_buffer.clear();
+  //pipes[console_client]->QueueWrites(console_buffer);
+  //console_buffer.clear();
 }
 
 /**
@@ -155,14 +157,6 @@ bool SystemCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallResp
   BERTBuffers::CallResponse translated_call;
   translated_call.CopyFrom(call);
 
-  /*
-
-  if (!function.compare("install-application-pointer")) {
-    translated_call.mutable_function_call()->set_target(BERTBuffers::CallTarget::language);
-    translated_call.mutable_function_call()->set_function("BERT$install.application.pointer");
-    RCall(response, translated_call);
-  }
-  else */
   if (!function.compare("get-language")) {
     response.mutable_result()->set_str("Julia");
   }
@@ -174,6 +168,13 @@ bool SystemCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallResp
       success = ReadSourceFile(file);
     }
     response.mutable_result()->set_boolean(success);
+  }
+  else if (!function.compare("install-application-pointer")) {
+
+    translated_call.mutable_function_call()->set_target(BERTBuffers::CallTarget::language);
+    translated_call.mutable_function_call()->set_function("BERT.InstallApplicationPointer");
+    JuliaCall(response, translated_call);
+
   }
   else if (!function.compare("list-functions")) {
 
@@ -392,6 +393,67 @@ unsigned __stdcall StdioThreadFunction(void *data) {
   Pipe **pipes = (Pipe**)data;
   std::string str;
 
+  std::string stdout_buffer;
+  std::string stderr_buffer;
+
+  HANDLE handles[] = { pipes[0]->wait_handle_read(), pipes[1]->wait_handle_read(), stdout_pipe.wait_handle_read(), stderr_pipe.wait_handle_read() };
+  while (true) {
+    DWORD wait_result = WaitForMultipleObjects(4, handles, FALSE, 1000);
+    int index = wait_result - WAIT_OBJECT_0;
+    if (index == 2) {
+      ResetEvent(stdout_pipe.wait_handle_read());
+      if (!stdout_pipe.connected()) {
+        stdout_pipe.Connect();
+        if(stdout_buffer.length()) stdout_pipe.PushWrite(stdout_buffer);
+        stdout_buffer.clear();
+      }
+      else {
+        int result = stdout_pipe.Read(str, false);
+        if (stdout_pipe.error()) stdout_pipe.Reset();
+      }
+    }
+    else if (index == 3) {
+      ResetEvent(stderr_pipe.wait_handle_read());
+      if (!stderr_pipe.connected()) {
+        stderr_pipe.Connect();
+        if(stderr_buffer.length()) stderr_pipe.PushWrite(stderr_buffer);
+        stderr_buffer.clear();
+      }
+      else {
+        int result = stderr_pipe.Read(str, false);
+        if (stderr_pipe.error()) stderr_pipe.Reset();
+      }
+    }
+    else  if (index >= 0 && index < 2) {
+      ResetEvent(pipes[index]->wait_handle_read());
+      if (!pipes[index]->connected()) {
+        pipes[index]->Connect();
+      }
+      else {
+        pipes[index]->Read(str, false);
+        pipes[index]->StartRead();
+
+        if (index) {
+          if (stderr_pipe.connected()) stderr_pipe.PushWrite(str);
+          else stderr_buffer += str;
+        }
+        else {
+          if (stdout_pipe.connected()) stdout_pipe.PushWrite(str);
+          else stdout_buffer += str;
+        }
+        //if (index) std::cerr << "** " << str << std::endl;
+        //else std::cout << "|| " << str << std::endl;
+      }
+    }
+    else if (wait_result == WAIT_TIMEOUT) {
+      // std::cerr << "timeout" << std::endl;
+    }
+    else {
+      std::cerr << "ERR in wait: " << GetLastError() << std::endl;
+    }
+  }
+
+  /*
   HANDLE handles[] = { prompt_event_handle, pipes[0]->wait_handle_read(), pipes[1]->wait_handle_read() };
 
   while (true) {
@@ -432,6 +494,7 @@ unsigned __stdcall StdioThreadFunction(void *data) {
       std::cerr << "ERR in wait: " << GetLastError() << std::endl;
     }
   }
+  */
 
   return 0;
 }
@@ -543,6 +606,15 @@ int main(int argc, char **argv) {
   sprintf_s(buffer, "%s-M", pipename.c_str());
   uintptr_t management_thread_handle = _beginthreadex(0, 0, ManagementThreadFunction, buffer, 0, 0);
   //
+
+  {
+    char buf2[MAX_PATH];
+    sprintf_s(buf2, "%s-STDOUT", pipename.c_str());
+    stdout_pipe.Start(buf2, false);
+
+    sprintf_s(buf2, "%s-STDERR", pipename.c_str());
+    stderr_pipe.Start(buf2, false);
+  }
 
   prompt_event_handle = CreateEvent(0, TRUE, FALSE, 0);
   Pipe *stdio_pipes[] = { new Pipe, new Pipe };

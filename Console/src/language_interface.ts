@@ -4,6 +4,7 @@
 import {RTextFormatter} from './text_formatter';
 import {Pipe, ConsoleMessage, ConsoleMessageType} from './pipe';
 import {Pipe2} from './pipe2';
+import {StdIOPipe} from './stdio_pipe';
 
 /** generic language interface */
 export class LanguageInterface {
@@ -20,6 +21,12 @@ export class LanguageInterface {
   // pipe for control, cancel
   management_pipe_: Pipe2;
 
+  // pipe for passthrough stdio
+  stdout_pipe_: StdIOPipe;
+
+  // pipe for passthrough stdio
+  stderr_pipe_: StdIOPipe;
+  
   // shell text colorizer/formatter
   formatter_:any = null;
 
@@ -119,6 +126,13 @@ export class JuliaInterface extends LanguageInterface {
     super.InitPipe(pipe, name);
     this.management_pipe_ = new Pipe2();
     this.management_pipe_.Init({pipe_name: name + "-M"});
+
+    this.stdout_pipe_ = new StdIOPipe();
+    this.stdout_pipe_.Init({pipe_name: name + "-STDOUT"});
+
+    this.stderr_pipe_ = new StdIOPipe();
+    this.stderr_pipe_.Init({pipe_name: name + "-STDERR"});
+    
   }
 
   AutocompleteCallback(buffer:string, position:number) : Promise<any> {
