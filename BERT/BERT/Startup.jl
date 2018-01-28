@@ -35,6 +35,19 @@ module BERT
   end
 
   InstallApplicationPointer = function(key, descriptor)
+    
+    len = length(descriptor)
+    for i = 1:len
+      if descriptor[i].parameters[1] == "interface"
+        print("iface: ", descriptor[i].parameters[2], "\n");
+      elseif descriptor[i].parameters[1] == "functions"
+        print(length(descriptor[i].parameters[2]), " functions in interface\n" )
+      elseif descriptor[i].parameters[1] == "enums"
+        print(length(descriptor[i].parameters[2]), " enums in interface\n" )
+      end
+
+    end
+
     print("key ", key)
     global PX = key
     global DX = descriptor

@@ -116,8 +116,16 @@ jl_value_t * VariableToJlValue(const BERTBuffers::Variable *variable) {
     // I'd prefer this to be a typed tuple, but one thing at a time.
 
     jl_value_t* jl_name = jl_pchar_to_string(variable->name().c_str(), variable->name().length());
-    jl_value_t* tuple[] = { jl_name, value };
-    return (jl_value_t*)jl_apply_tuple_type_v(tuple, 2);
+
+    jl_svec_t * svec = jl_svec2(jl_name, value);
+
+//    jl_value_t* tuple[] = { jl_name, value };
+//    return (jl_value_t*)jl_apply_tuple_type_v(tuple, 2);
+//    return jl_new_structv(jl_any_type, tuple, 2);
+
+    return (jl_value_t*) jl_apply_tuple_type(svec);
+
+
   }
 
   return value;
