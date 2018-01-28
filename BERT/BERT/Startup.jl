@@ -6,6 +6,10 @@
 # =============================================================================
 module BERT
 
+  EXCEL = 102.3
+  PX = nothing
+  DX = nothing
+
   #---------------------------------------------------------------------------- 
   # this function gets a list of all functions in Main,
   # returning function name and list of argument names.
@@ -30,6 +34,13 @@ module BERT
     function_list
   end
 
+  InstallApplicationPointer = function(key, descriptor)
+    print("key ", key)
+    global PX = key
+    global DX = descriptor
+    nothing
+  end
+
   #---------------------------------------------------------------------------- 
   # testing. this is a patched-up version of the socket repl
   # function from julia base
@@ -51,4 +62,10 @@ module BERT
   end
 
 end
+
+#
+# hoist into namespace
+#
+using BERT.EXCEL
+
 

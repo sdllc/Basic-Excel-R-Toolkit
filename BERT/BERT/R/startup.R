@@ -26,17 +26,13 @@ with( BERT, {
     }
 
     install.application.pointer <- function(key, descriptor){
-
         excel.env <- new.env();
-
         assign( "Application", install.com.pointer(key, descriptor), envir=excel.env);
-
         lapply( descriptor$enums, function(enum){
             enum.env <- new.env();
             lapply( names(enum$values), function( name ){ assign( name, enum$values[name], envir=enum.env ); });
             assign( enum$name, enum.env, envir=excel.env );
         })
-
         assign( "EXCEL", excel.env, envir=.GlobalEnv);
     }
 
