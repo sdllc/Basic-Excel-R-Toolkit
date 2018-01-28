@@ -396,7 +396,13 @@ ExecResult JuliaShellExec(const std::string &command, const std::string &shell_b
         //// end
         //val = r;
         if (!jl_is_nothing(r)) {
-          jl_static_show(JL_STDOUT, r);
+
+          // better for some, not for others. we need to figure out
+          // what repl is doing with output.
+
+          //jl_static_show(JL_STDOUT, r);
+          jl_call1(jl_get_function(jl_main_module, "print"), r);
+
           jl_printf(JL_STDOUT, "\n");
         }
           jl_printf(JL_STDOUT, "\n");
@@ -414,6 +420,7 @@ ExecResult JuliaShellExec(const std::string &command, const std::string &shell_b
 
       //jl_printf(JL_STDERR, "\nparser error:\n");
       jl_static_show(JL_STDERR, ptls->exception_in_transit);
+
       jl_printf(JL_STDERR, "\n\n"); // matches julia repl
       //jlbacktrace();
       result = ExecResult::Error;

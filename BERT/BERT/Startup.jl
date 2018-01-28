@@ -16,7 +16,6 @@ module BERT
 
   Banner = function()
 
-    # from julia base/repl
     const colors = Base.AnyDict(
       :black         => "\033[30m",
       :red           => "\033[31m",
@@ -51,9 +50,10 @@ module BERT
 
 BERT Julia shell version 0.1 BETA. $(colors[:reverse])This is not the default Julia shell$(colors[:normal]). Many
 things are similar, but some things are different. Please send feedback if you
-have questions or comments, and save your work often.
+have questions or comments, and save your work often. 
 
 """);
+
   end
 
   #---------------------------------------------------------------------------- 
