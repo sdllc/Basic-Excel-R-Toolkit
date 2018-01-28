@@ -11,6 +11,52 @@ module BERT
   DX = nothing
 
   #---------------------------------------------------------------------------- 
+  # banner under regular julia banner
+  #---------------------------------------------------------------------------- 
+
+  Banner = function()
+
+    # from julia base/repl
+    const colors = Base.AnyDict(
+      :black         => "\033[30m",
+      :red           => "\033[31m",
+      :green         => "\033[32m",
+      :yellow        => "\033[33m",
+      :blue          => "\033[34m",
+      :magenta       => "\033[35m",
+      :cyan          => "\033[36m",
+      :white         => "\033[37m",
+      :light_black   => "\033[90m", # gray
+      :light_red     => "\033[91m",
+      :light_green   => "\033[92m",
+      :light_yellow  => "\033[93m",
+      :light_blue    => "\033[94m",
+      :light_magenta => "\033[95m",
+      :light_cyan    => "\033[96m",
+      :red_bg        => "\033[41m",
+      :green_bg      => "\033[42m",
+      :yellow_bg     => "\033[43m",
+      :blue_bg       => "\033[44m",
+      :normal        => "\033[0m",
+      :default       => "\033[39m",
+      :bold          => "\033[1m",
+      :underline     => "\033[4m",
+      :blink         => "\033[5m",
+      :reverse       => "\033[7m",
+      :hidden        => "\033[8m",
+      :nothing       => "",
+    );
+
+    print("""
+
+BERT Julia shell version 0.1 BETA. $(colors[:reverse])This is not the default Julia shell$(colors[:normal]). Many
+things are similar, but some things are different. Please send feedback if you
+have questions or comments, and save your work often.
+
+""");
+  end
+
+  #---------------------------------------------------------------------------- 
   # this function gets a list of all functions in Main,
   # returning function name and list of argument names.
   # note that (at least for now) we don't support named
@@ -81,4 +127,8 @@ end
 #
 using BERT.EXCEL
 
-
+#
+# banners
+#
+Base.banner();
+BERT.Banner();
