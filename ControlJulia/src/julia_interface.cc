@@ -290,8 +290,8 @@ bool ReadSourceFile(const std::string &file) {
   JL_TRY{
     function_result = jl_call1(function_pointer, argument);
     if (jl_exception_occurred()) {
-      std::cout << "* EXCEPTION" << std::endl;
-      jl_printf(JL_STDERR, "error during run:\n");
+      std::cout << "* [RSF] EXCEPTION" << std::endl;
+      jl_printf(JL_STDERR, "[RSF] error during run:\n");
       jl_static_show(JL_STDERR, ptls->exception_in_transit);
       jl_exception_clear();
     }
@@ -303,6 +303,7 @@ bool ReadSourceFile(const std::string &file) {
     jl_static_show(JL_STDERR, ptls->exception_in_transit);
     jl_printf(JL_STDERR, "\n");
     jlbacktrace();
+    jl_exception_clear();
   }
 
   return false;
@@ -344,9 +345,10 @@ ExecResult JuliaShellExec(const std::string &command, const std::string &shell_b
     jl_value_t *val = jl_parse_input_line(tmp.c_str(), tmp.length(), filename, filename_len);
 
     if (jl_exception_occurred()) {
-      std::cout << "* EXCEPTION" << std::endl;
+      std::cout << "* [JSE] EXCEPTION" << std::endl;
+      std::cout << "command was: " << tmp << std::endl;
 
-      jl_printf(JL_STDERR, "error during run:\n");
+      jl_printf(JL_STDERR, "[JSE] error during run:\n");
       jl_static_show(JL_STDERR, ptls->exception_in_transit);
       jl_exception_clear();
       result = ExecResult::Error;
@@ -406,6 +408,7 @@ ExecResult JuliaShellExec(const std::string &command, const std::string &shell_b
       jl_printf(JL_STDERR, "\n");
       jlbacktrace();
       result = ExecResult::Error;
+      jl_exception_clear();
   }
 
   int remaining_handles = uv_run(jl_global_event_loop(), UV_RUN_NOWAIT);
@@ -461,8 +464,8 @@ void JuliaCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallRespo
 
     // check for a julia exception (handled)
     if (jl_exception_occurred()) {
-      std::cout << "* EXCEPTION" << std::endl;
-      jl_printf(JL_STDERR, "error during run:\n");
+      std::cout << "* [JC] EXCEPTION" << std::endl;
+      jl_printf(JL_STDERR, "[JC] error during run:\n");
       jl_static_show(JL_STDERR, ptls->exception_in_transit);
       jl_exception_clear();
       jl_printf(JL_STDOUT, "\n");
@@ -492,6 +495,8 @@ void JuliaCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallRespo
     jl_printf(JL_STDERR, "\n");
     jlbacktrace();
 
+    jl_exception_clear();
+
     response.set_err("external exception");
 
   }
@@ -515,8 +520,8 @@ void JuliaExec(BERTBuffers::CallResponse &response, const BERTBuffers::CallRespo
     jl_value_t *val = (jl_value_t*)jl_load_file_string(composite.c_str(), composite.length(), "inline");
 
     if (jl_exception_occurred()) {
-      std::cout << "* EXCEPTION" << std::endl;
-      jl_printf(JL_STDERR, "error during run:\n");
+      std::cout << "* [JE] EXCEPTION" << std::endl;
+      jl_printf(JL_STDERR, "[JE] error during run:\n");
       jl_static_show(JL_STDERR, ptls->exception_in_transit);
       jl_exception_clear();
     }
@@ -532,6 +537,7 @@ void JuliaExec(BERTBuffers::CallResponse &response, const BERTBuffers::CallRespo
     jl_static_show(JL_STDERR, ptls->exception_in_transit);
     jl_printf(JL_STDERR, "\n");
     jlbacktrace();
+    jl_exception_clear();
   }
 
 
