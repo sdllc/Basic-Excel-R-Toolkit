@@ -57,7 +57,19 @@ let process_content = function(text){
   let regex = /^"\\\\(.+?)"\s+=>\s+"(.+?)"/;
   text.split("\n").map(x => x.trim()).forEach(line => {
     let m = line.match(regex);
-    if(m) symbols[m[1]] = m[2];
+    if(m){
+
+      // some symbols are listed in the julia source as unicode escape
+      // sequences (e.g. \u221A), but if we add the escaped string, then
+      // it will itself be escaped. so we need to translate.
+
+      if( /^\\/.test(m[2])) {
+        symbols[m[1]] = String.fromCharCode(parseInt(m[2].substr(2), 16)); 
+      }
+      else {
+        symbols[m[1]] = m[2];
+      }
+    }
   });
 
   // we're adding some info. (at least for now, we know that
