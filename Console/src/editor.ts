@@ -393,6 +393,11 @@ export class Editor {
     localStorage.setItem(`cached-document-${document.id_}`, JSON.stringify(document));
   }
 
+  /** focus the editor, on the active tab */
+  public Focus(){
+    this.editor_.focus();
+  }
+
   /** 
    * ensure the list of open files is synced with open files. this 
    * can get called when a new file is opened or when a file is 

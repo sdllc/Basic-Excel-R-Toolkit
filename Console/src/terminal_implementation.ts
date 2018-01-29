@@ -7,6 +7,8 @@ import { clipboard } from 'electron';
 import { LanguageInterface } from './language_interface';
 import {Pipe, ConsoleMessage, ConsoleMessageType} from './pipe';
 
+import * as Rx from 'rxjs';
+
 // for julia, replacing backslash entities in the shell like Julia REPL. 
 
 const SymbolTable = require('../data/symbol_table.json');
@@ -331,6 +333,13 @@ enum ConsolePrintFlags {
 interface PrintLineFunction { (line: string, lastline: boolean, flags: ConsolePrintFlags ): void }
 
 /**
+ * FIXME: enumerated event types
+ */
+interface TerminalEvent {
+  type:string
+}
+
+/**
  * implementation of the terminal on top of xtermjs.
  */
 export class TerminalImplementation {
@@ -349,6 +358,15 @@ export class TerminalImplementation {
   private prompt_stack_:LineInfo[] = [];
 
   private PrintLine:PrintLineFunction;
+
+  /**
+   * we use a static event source for events that are application-global,
+   * which may arise out of any existing terminal.
+   */
+  private static events_:Rx.Subject<TerminalEvent> = new Rx.Subject<TerminalEvent>();
+
+  /** accessor */
+  public static get events() { return this.events_; }
 
   constructor(private language_interface_:LanguageInterface, private node_:HTMLElement){
 
@@ -380,6 +398,9 @@ export class TerminalImplementation {
  
 
   }
+
+  /** focus */
+  Focus(){ this.xterm_.focus(); }
 
   /**
    * any housekeeping before closing
@@ -636,11 +657,21 @@ export class TerminalImplementation {
   KeyDown(key: string, event: any) {
 
     if (event.ctrlKey) {
-      console.info("ctrl", event);
       switch (event.key) {
+        case "PageUp":
+          TerminalImplementation.events_.next({ type: "previous-tab" });
+          break;
+        case "PageDown":
+          TerminalImplementation.events_.next({ type: "next-tab" });
+          break;
+        case "e":
+          TerminalImplementation.events_.next({ type: "release-focus" });
+          break;
         case "c":
           this.language_interface_.BreakCallback();
           break;
+        default:
+          console.info("ctrl (unhandled):", event);
       }
       this.FunctionTip(); // hide
     }

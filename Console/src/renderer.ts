@@ -203,9 +203,17 @@ window.addEventListener("resize", event => {
 
 });
 
+TerminalImplementation.events.filter(x => (x.type === "release-focus")).subscribe(x => {
+  editor.Focus();
+});
+
 window.addEventListener("keydown", event => {
   if(event.ctrlKey){
     switch(event.key){
+    case 'e':
+      // console.info( "Ctrl+E in editor");
+      terminals.Focus();
+      break;
     case 'PageUp':
       editor.PreviousTab();
       break;

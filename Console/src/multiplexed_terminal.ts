@@ -73,6 +73,7 @@ export class MuliplexedTerminal {
           terminal_instance.terminal.Resize();
           terminal_instance.layout = this.layout_;
         }
+        terminal_instance.terminal.Focus();
         break;
       case "deactivate":
         terminal_instance.child.style.display = "none";
@@ -83,10 +84,29 @@ export class MuliplexedTerminal {
       }
     });
 
+    TerminalImplementation.events.subscribe(x => {
+      switch(x.type){
+      case "next-tab":
+        this.tabs_.Next();
+        this.active_instance_.terminal.Focus();
+        break;
+      case "previous-tab":
+        this.tabs_.Previous();
+        this.active_instance_.terminal.Focus();
+        break;
+      }
+    });
+
+  }
+
+  /** focus active terminal (pass through) */
+  Focus(){
+    this.active_instance_.terminal.Focus();
   }
 
   Activate(label:string){
     this.tabs_.ActivateTab(label);
+    this.active_instance_.terminal.Focus();
   }
 
   /**
