@@ -143,11 +143,14 @@ export class JuliaInterface extends LanguageInterface {
       buffer = buffer.replace( /\\/g, '\\\\').replace( /"/g, '\\"' );
       buffer = buffer.replace( /\$/g, "\\$"); // julia string interpolations
       
+      console.info( `bfr "${buffer}"`)
+      
       this.pipe_.Internal(`Base.REPLCompletions.completions("${buffer}",${position})[1]`).then(x => {
         let arr:Array<any> = (Array.isArray(x) ? x as Array<any> : [])
 
-        // slightly different breaks (+.)
-        let token = buffer.replace(/^.*[\.\W]/, "");
+        // slightly different breaks (+.). allow leading backslash (escape)
+        let token = buffer.replace(/\\\\/g, "\\").replace(/^.*[^\w\\]/, "");
+        // console.info( `tok "${token}"`)
 
         resolve({ comps: arr.join("\n"), token });
       });

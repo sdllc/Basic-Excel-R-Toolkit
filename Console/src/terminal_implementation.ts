@@ -7,6 +7,11 @@ import { clipboard } from 'electron';
 import { LanguageInterface } from './language_interface';
 import {Pipe, ConsoleMessage, ConsoleMessageType} from './pipe';
 
+// for julia, replacing backslash entities in the repl. not sure if it's 100% the 
+// same list, but good for now. FIXME: move to language support class
+
+import * as HE from 'he';
+
 /**
  * 
  */
@@ -112,7 +117,19 @@ class Autocomplete {
     if( comps.length === 1 && acceptSingleCompletion ){
       this.Dismiss();
       let addition = comps[0].substr(this.last_.token.length);
-      this.accept_(addition);
+
+      // FIXME: this needs to get parameterized to call back to the 
+      // language implementation. for now it's OK since R will never 
+      // have a symbol that looks like this...
+
+      let scrub = 0;
+      if( addition.length === 0 && /^\\/.test(this.last_.token)){
+        addition = HE.decode(`&${this.last_.token.substr(1)};`); 
+        scrub = this.last_.token.length;
+      }
+      
+      this.accept_(addition, scrub);
+      
       return;
     }
 
@@ -189,7 +206,7 @@ class Autocomplete {
     }
     this.Dismiss();
 
-console.info("tl?", this.last_, accepted );
+    // console.info("tl?", this.last_, accepted );
 
     let addition = accepted.substr(this.last_.token.length);
     this.accept_(addition);
@@ -432,12 +449,12 @@ export class TerminalImplementation {
 
   /**
    * left or right delete (by sign)
+   * FIXME: multiple? would be handy
    */
   DeleteText(dir: number) {
 
     if (dir > 0) { // delete right
       if (this.line_info_.cursor_position >= this.line_info_.buffer.length) return;
-      //let balance = this.line_info_.buffer.substr(this.line_info_.cursor_position + 1);
       let balance = this.line_info_.right.substr(1);
       this.ClearRight();
       this.xterm_.write(balance);
@@ -729,12 +746,18 @@ export class TerminalImplementation {
     this.xterm_.fit();
     this.xterm_.write(`\x1b[\x35 q`);
 
-    this.autocomplete_ = new Autocomplete(
-      (addition: string) => {
-        this.xterm_.write(addition);
-        this.line_info_.append_or_insert(addition);      
-        this.RunAutocomplete();
-      }, this.node_);
+    let ac_accept = (addition:string, scrub = 0) => {
+
+      if(scrub > 0){
+        for( let i = 0; i< scrub; i++ ) this.DeleteText(-1);
+      }
+      
+      this.xterm_.write(addition);
+      this.line_info_.append_or_insert(addition);      
+      this.RunAutocomplete();
+    };
+
+    this.autocomplete_ = new Autocomplete(ac_accept, this.node_);
 
     window.addEventListener("resize", event => {
       this.xterm_.fit(); // fixme: debounce?
