@@ -9,7 +9,7 @@ import {Pipe, ConsoleMessage, ConsoleMessageType} from './pipe';
 
 // for julia, replacing backslash entities in the shell like Julia REPL. 
 
-import * as SymbolTable from '../data/symbol_table.json';
+const SymbolTable = require('../data/symbol_table.json');
 
 /**
  * 
