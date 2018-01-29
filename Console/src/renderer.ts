@@ -12,6 +12,7 @@ import {TabPanel, TabJustify, TabEventType} from './tab_panel';
 import {DialogManager, DialogSpec, DialogButton} from './dialog';
 import {PropertyManager} from './properties';
 import {MenuUtilities} from './menu_utilities';
+
 import {MuliplexedTerminal} from './multiplexed_terminal';
 
 import {Editor} from './editor';
@@ -20,6 +21,8 @@ import * as Rx from "rxjs";
 import * as path from 'path';
 import { prototype } from 'stream';
 import { language } from './julia_language';
+
+const MenuTemplate = require("../data/menu.json");
 
 let property_manager = new PropertyManager("console-settings", {
   terminal: {}, editor: {}, console: {}
@@ -147,9 +150,7 @@ splitter.events.filter(x => (x === SplitterEvent.EndDrag||x === SplitterEvent.Up
 
 // construct menus
 
-MenuUtilities.Load(path.join(__dirname, "..", "data/menu.json")).catch( e => {
-  console.info("menu load error: ", e);
-});
+MenuUtilities.Load(MenuTemplate);
 
 MenuUtilities.events.subscribe(event => {
 

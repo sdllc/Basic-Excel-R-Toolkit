@@ -173,6 +173,11 @@ export class MenuUtilities {
     Menu.setApplicationMenu(this.menus_.main);
   }
 
+  static Load(menu_data){
+    if( menu_data['main-menu'] ) this.Install(menu_data['main-menu']);
+  }
+
+  /*
   static Load(menu_data_path){
     return new Promise((resolve, reject) => {
       fs.readFile( menu_data_path, "utf8", (err, data) => {
@@ -188,5 +193,6 @@ export class MenuUtilities {
       })
     });
   }
-  
+  */
+
 }

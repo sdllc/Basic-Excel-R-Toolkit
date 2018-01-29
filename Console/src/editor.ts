@@ -12,6 +12,8 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as Rx from 'rxjs';
 
+const DefaultPreferences = require("../data/default_preferences.json");
+
 // ambient, declared in html
 declare const amd_require: any;
 
@@ -292,10 +294,12 @@ export class Editor {
     // if it's already been loaded once this will return immediately
     // via Promise.resolve().
 
-    this.ReadPreferences().then(result => {
-      this.editor_options_ = result ? result['editor'] || {} : {};
-      return Editor.LoadMonaco();
-    }).then(() => {
+    // prefs is no longer async
+
+    let prefs = this.ReadPreferences();
+    this.editor_options_ = prefs ? prefs['editor'] || {} : {};
+
+    Editor.LoadMonaco().then(() => {
 
       // sanity check
       this.editor_options_.model = null;
@@ -569,47 +573,28 @@ export class Editor {
 
   private ReadPreferences(){
 
-    return new Promise((resolve, reject) => {
-
-      let data = {};
+    let data = {};
       
-      // if prefs does not exist, create from defaults and save first.
-      let json = localStorage.getItem(PREFERENCES_KEY);
-      
-      if(json) {
-        try {
-          data = JSON.parse(json);
-        }
-        catch(e){
+    // if prefs does not exist, create from defaults and save first.
+    // UPDATE: why save defaults? (...)
 
-          // FIXME: notify user, set defaults
-          console.error(e);
-        }
-        return resolve(data);
+    let json = localStorage.getItem(PREFERENCES_KEY);
+      
+    if(json) {
+      try {
+        data = JSON.parse(json);
       }
+      catch(e){
 
-      fs.readFile(path.join(__dirname, "..", "data/default-preferences.json"), 
-        "utf8", (err, json) => {
+        // FIXME: notify user, set defaults
+        console.error(e);
+      }
+      return data;
+    }
 
-        if(err) {
-          console.error(err);
-          return resolve({});
-        }
-        else {
-          try {
-            data = JSON.parse(json);
-            localStorage.setItem(PREFERENCES_KEY, json);
-          }
-          catch(e){
-  
-            // FIXME: notify user, set defaults
-            console.error(e);
-          }
-          return resolve(data);
-          }
-      });
-
-    });
+    data = DefaultPreferences;
+    // localStorage.setItem(PREFERENCES_KEY, JSON.stringify(data));
+    return data;
 
   }
 
