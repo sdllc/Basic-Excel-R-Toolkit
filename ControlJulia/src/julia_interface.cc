@@ -306,7 +306,7 @@ bool ReadSourceFile(const std::string &file) {
     else return true; // success
   }
   JL_CATCH{
-    std::cout << "* CATCH" << std::endl;
+    std::cout << "* CATCH [RSF]" << std::endl;
     jl_printf(JL_STDERR, "\nparser error:\n");
     jl_static_show(JL_STDERR, ptls->exception_in_transit);
     jl_printf(JL_STDERR, "\n");
@@ -428,10 +428,15 @@ ExecResult JuliaShellExec(const std::string &command, const std::string &shell_b
     //}
   }
     JL_CATCH{
-      std::cout << "* CATCH" << std::endl;
-
-      //jl_printf(JL_STDERR, "\nparser error:\n");
-      jl_static_show(JL_STDERR, ptls->exception_in_transit);
+      std::cout << "* CATCH [jse]" << std::endl;
+ 
+      jl_value_t *jl_stderr = jl_get_global(jl_main_module, jl_symbol("STDERR"));
+      if (jl_stderr == jl_nothing) {
+        jl_static_show(JL_STDERR, ptls->exception_in_transit);
+      }
+      else {
+        jl_call2(jl_get_function(jl_main_module, "showerror"), jl_stderr, ptls->exception_in_transit);
+      }
 
       jl_printf(JL_STDERR, "\n\n"); // matches julia repl
       //jlbacktrace();
@@ -517,8 +522,9 @@ void JuliaCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallRespo
 
     // external exception; return error
 
-    std::cout << "* CATCH" << std::endl;
+    std::cout << "* CATCH [JC]" << std::endl;
     jl_printf(JL_STDERR, "\nparser error:\n");
+
     jl_static_show(JL_STDERR, ptls->exception_in_transit);
     jl_printf(JL_STDERR, "\n");
     jlbacktrace();
@@ -560,7 +566,7 @@ void JuliaExec(BERTBuffers::CallResponse &response, const BERTBuffers::CallRespo
     //jl_printf(JL_STDOUT, "\n");
   }
   JL_CATCH {
-    std::cout << "* CATCH" << std::endl;
+    std::cout << "* CATCH [JE]" << std::endl;
     jl_printf(JL_STDERR, "\nparser error:\n");
     jl_static_show(JL_STDERR, ptls->exception_in_transit);
     jl_printf(JL_STDERR, "\n");
