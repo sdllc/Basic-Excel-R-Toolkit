@@ -67,6 +67,7 @@ let language_interfaces = [];
 
 let allow_close = true; // dev // false;
 
+/*
 let Close = function(){
   terminals.CleanUp();  
   Promise.all(language_interfaces.map(language_interface => 
@@ -83,6 +84,7 @@ window.addEventListener("beforeunload", event => {
     Close();
   }
 });
+*/
 
 // connect/init pipes, languages
 
