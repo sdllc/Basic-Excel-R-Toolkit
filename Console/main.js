@@ -31,7 +31,7 @@ for( let i = 0; i< process.argv.length; i++ ){
 }
 
 if(pipe_list.length){
-  process.env['BERT_PIPE_NAME'] = pipe_list.join(";;");
+  process.env['BERT_PIPE_NAME'] = pipe_list.join(";");
 }
 
 // Keep a global reference of the window object, if you don't, the window will

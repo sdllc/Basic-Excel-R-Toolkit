@@ -1,6 +1,7 @@
 
 import {Pipe, ConsoleMessage, ConsoleMessageType} from './pipe';
 import {clipboard, remote} from 'electron';
+
 const {Menu, MenuItem} = remote;
 
 import {PromptMessage, TerminalImplementation, AutocompleteCallbackType, ExecCallbackType} from './terminal_implementation';
@@ -22,6 +23,7 @@ import * as path from 'path';
 import { prototype } from 'stream';
 import { language } from './julia_language';
 
+// FIXME: l10n override?
 const MenuTemplate = require("../data/menu.json");
 
 let property_manager = new PropertyManager("console-settings", {
@@ -76,7 +78,7 @@ let Close = function(){
 
 // connect/init pipes, languages
 
-let pipe_list = (process.env['BERT_PIPE_NAME']||"").split(";;"); // separator?
+let pipe_list = (process.env['BERT_PIPE_NAME']||"").split(";"); // separator?
 
 setTimeout(() => {
   
