@@ -7,10 +7,9 @@ import { clipboard } from 'electron';
 import { LanguageInterface } from './language_interface';
 import {Pipe, ConsoleMessage, ConsoleMessageType} from './pipe';
 
-// for julia, replacing backslash entities in the repl. not sure if it's 100% the 
-// same list, but good for now. FIXME: move to language support class
+// for julia, replacing backslash entities in the shell like Julia REPL. 
 
-import * as HE from 'he';
+import * as SymbolTable from '../data/symbol_table.json';
 
 /**
  * 
@@ -124,7 +123,8 @@ class Autocomplete {
 
       let scrub = 0;
       if( addition.length === 0 && /^\\/.test(this.last_.token)){
-        addition = HE.decode(`&${this.last_.token.substr(1)};`); 
+        //addition = HE.decode(`&${this.last_.token.substr(1)};`); 
+        addition = SymbolTable.symbols[this.last_.token.substr(1)] || addition;
         scrub = this.last_.token.length;
       }
       
@@ -751,7 +751,7 @@ export class TerminalImplementation {
       if(scrub > 0){
         for( let i = 0; i< scrub; i++ ) this.DeleteText(-1);
       }
-      
+
       this.xterm_.write(addition);
       this.line_info_.append_or_insert(addition);      
       this.RunAutocomplete();

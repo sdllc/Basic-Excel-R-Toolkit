@@ -135,6 +135,25 @@ export class JuliaInterface extends LanguageInterface {
     
   }
 
+  async AutocompleteCallback(buffer:string, position:number) {
+
+    // FIXME: need to normalize AC data structure (output)
+
+    buffer = buffer.replace( /\\/g, '\\\\').replace( /"/g, '\\"' );
+    buffer = buffer.replace( /\$/g, "\\$"); // julia string interpolations
+
+    let x = await this.pipe_.Internal(`Base.REPLCompletions.completions("${buffer}",${position})[1]`);
+    let arr:Array<any> = (Array.isArray(x) ? x as Array<any> : [])
+
+    // slightly different breaks (+.). allow leading backslash (escape)
+    let token = buffer.replace(/\\\\/g, "\\").replace(/^.*[^\w\\]/, "");
+    // console.info( `tok "${token}"`)
+
+    return ({ comps: arr.join("\n"), token });
+
+  }
+
+  /*
   AutocompleteCallback(buffer:string, position:number) : Promise<any> {
 
     // FIXME: need to normalize ac data structure
@@ -143,7 +162,7 @@ export class JuliaInterface extends LanguageInterface {
       buffer = buffer.replace( /\\/g, '\\\\').replace( /"/g, '\\"' );
       buffer = buffer.replace( /\$/g, "\\$"); // julia string interpolations
       
-      console.info( `bfr "${buffer}"`)
+      //console.info( `bfr "${buffer}"`)
       
       this.pipe_.Internal(`Base.REPLCompletions.completions("${buffer}",${position})[1]`).then(x => {
         let arr:Array<any> = (Array.isArray(x) ? x as Array<any> : [])
@@ -156,7 +175,15 @@ export class JuliaInterface extends LanguageInterface {
       });
     });
   }
+  */
 
+  async ExecCallback(buffer:string){
+    let result = await this.pipe_.ShellExec(buffer);
+    if( result === -1 ) return { pop_stack: true };
+    return { text: result };
+  }
+
+  /*
   ExecCallback(buffer:string) : Promise<any> {
     return new Promise((resolve, reject) => {
       this.pipe_.ShellExec(buffer).then(result => {
@@ -167,7 +194,8 @@ export class JuliaInterface extends LanguageInterface {
       })
     });
   }
-   
+  */
+
   BreakCallback(){
     this.management_pipe_.SendMessage("break");
   }
