@@ -2,6 +2,8 @@
 
 import {remote} from 'electron';
 
+const {Menu, MenuItem, dialog} = remote;
+
 import { MenuUtilities } from './menu_utilities';
 import * as JuliaLanguage from './julia_language';
 import { TabPanel, TabJustify, TabEventType, TabSpec } from './tab_panel';
@@ -308,6 +310,32 @@ export class Editor {
 
       this.editor_ = monaco.editor.create(editor, this.editor_options_);
      
+      this.editor_.onContextMenu( e => {
+
+        let contribution = this.editor_.getContribution( "editor.contrib.contextmenu") as any;
+        let menu_actions = contribution._getMenuActions();
+        let menu = new Menu();
+
+        menu_actions.forEach( action => {
+          if( action.id === "vs.actions.separator" ){
+            menu.append(new MenuItem({type: "separator"}));
+          }
+          else {
+            let keybinding = contribution._keybindingFor( action );
+            let accelerator = keybinding ? keybinding.getLabel() : null;
+            menu.append(new MenuItem({
+              label: action.label,
+              enabled: action.enabled,
+              accelerator: accelerator,
+              click: () => action.run()
+            }));
+          }
+        });
+
+        menu.popup(remote.getCurrentWindow());
+
+      });
+
       // cursor position -> status bar
       this.editor_.onDidChangeCursorPosition(event => {
         this.status_bar_.position = [event.position.lineNumber, event.position.column];
