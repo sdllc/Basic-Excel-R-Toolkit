@@ -344,6 +344,18 @@ ExecResult JuliaShellExec(const std::string &command, const std::string &shell_b
     tmp = tmp + "nothing";
   }
   
+  // same: help commands start with ?
+
+  // FIXME: clean up strings that will break this?
+  // FIXME: handle this in shell, don't pass through
+
+  if (tmp.length() && tmp.c_str()[0] == '?') {
+    std::string help = "eval(Base.Docs.helpmode(\"";
+    help += tmp.substr(1);
+    help += "\"))";
+    tmp = help;
+  }
+
   ExecResult result = ExecResult::Success;
 
   JL_TRY{
