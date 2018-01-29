@@ -537,10 +537,11 @@ void JuliaExec(BERTBuffers::CallResponse &response, const BERTBuffers::CallRespo
   }
 
   JL_TRY{
+
     jl_value_t *val = (jl_value_t*)jl_load_file_string(composite.c_str(), composite.length(), "inline");
 
-    // ok so this gets called if there is an exception but we caught it; why does
-    // the catch not remove it entirely? (...)
+    // ok so this gets called if there is an exception but we caught it; 
+    // why does the catch not remove it entirely? (...)
 
     if (jl_exception_occurred()) {
       std::cout << "* [JE] EXCEPTION" << std::endl;
