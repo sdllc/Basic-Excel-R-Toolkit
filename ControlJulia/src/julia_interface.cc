@@ -287,6 +287,26 @@ void JuliaShutdown() {
 
 }
 
+void ReportJuliaException(const char *tag, bool backtrace = false) {
+
+  std::cout << " * CATCH [" << tag << "]" << std::endl;
+
+  if (backtrace) jlbacktrace();
+
+  jl_value_t *jl_stderr = jl_get_global(jl_main_module, jl_symbol("STDERR"));
+  if (jl_stderr == jl_nothing) {
+    jl_static_show(JL_STDERR, ptls->exception_in_transit);
+  }
+  else {
+    jl_call2(jl_get_function(jl_main_module, "showerror"), jl_stderr, ptls->exception_in_transit);
+  }
+
+  jl_printf(JL_STDERR, "\n\n"); // matches julia repl
+
+  jl_exception_clear();
+
+}
+
 bool ReadSourceFile(const std::string &file) {
 
   jl_function_t *function_pointer = jl_get_function(jl_main_module, "include");
@@ -359,10 +379,10 @@ ExecResult JuliaShellExec(const std::string &command, const std::string &shell_b
   ExecResult result = ExecResult::Success;
 
   JL_TRY{
-    // jl_value_t *val = (jl_value_t*)jl_eval_string(command.c_str());
-    //jl_value_t *val = (jl_value_t*)jl_load_file_string(command.c_str(), command.length(), "shell");
 
     jl_value_t *val = jl_parse_input_line(tmp.c_str(), tmp.length(), filename, filename_len);
+
+    // when does this get set, vs. throwing?
 
     if (jl_exception_occurred()) {
       std::cout << "* [JSE] EXCEPTION" << std::endl;
@@ -375,26 +395,12 @@ ExecResult JuliaShellExec(const std::string &command, const std::string &shell_b
     }
     else if (val) {
 
-      if (jl_is_expr(val)) {
-        //std::cout << "is expr" << std::endl;
-        jl_expr_t *expr = (jl_expr_t*)val;
-        jl_sym_t *head = expr->head;
-
-        if (head == jl_incomplete_sym) {
-          //std::cout << " == incomplete " << std::endl;
-          result = ExecResult::Incomplete;
-        }
-        else {
-          //std::cout << "sym name? " << jl_symbol_name(head) << std::endl;
-          //result = ExecResult::Error;
-        }
+      if (jl_is_expr(val) && (((jl_expr_t*)val)->head == jl_incomplete_sym)){
+        result = ExecResult::Incomplete;
       }
-      
-      if(result == ExecResult::Success) {
-        // std::cout << "NOT expr" << std::endl;
-        result = ExecResult::Success;
+      else if(result == ExecResult::Success) {
 
-        //// from jl_eval_string
+        // from jl_eval_string
 
         JL_GC_PUSH1(&val);
         size_t last_age = jl_get_ptls_states()->world_age;
@@ -404,9 +410,6 @@ ExecResult JuliaShellExec(const std::string &command, const std::string &shell_b
         JL_GC_POP();
         jl_exception_clear();
 
-
-        //// end
-        //val = r;
         if (!jl_is_nothing(r)) {
 
           // better for some, not for others. we need to figure out
@@ -417,40 +420,23 @@ ExecResult JuliaShellExec(const std::string &command, const std::string &shell_b
 
           jl_printf(JL_STDOUT, "\n");
         }
-          jl_printf(JL_STDOUT, "\n");
+
+        // to match julia REPL, always an extra newline
+        jl_printf(JL_STDOUT, "\n");
 
       }
-
     }
-    //if (!jl_is_nothing(val)) {
-    //  jl_static_show(JL_STDOUT, val);
-    //  jl_printf(JL_STDOUT, "\n");
-    //}
-  }
-    JL_CATCH{
-      std::cout << "* CATCH [jse]" << std::endl;
- 
-      jl_value_t *jl_stderr = jl_get_global(jl_main_module, jl_symbol("STDERR"));
-      if (jl_stderr == jl_nothing) {
-        jl_static_show(JL_STDERR, ptls->exception_in_transit);
-      }
-      else {
-        jl_call2(jl_get_function(jl_main_module, "showerror"), jl_stderr, ptls->exception_in_transit);
-      }
 
-      jl_printf(JL_STDERR, "\n\n"); // matches julia repl
-      //jlbacktrace();
-      result = ExecResult::Error;
-      jl_exception_clear();
+  }
+  JL_CATCH{
+    ReportJuliaException("JSE");
+    result = ExecResult::Error;
   }
 
-  int remaining_handles = uv_run(jl_global_event_loop(), UV_RUN_NOWAIT);
-  while (remaining_handles) {
-    remaining_handles = uv_run(jl_global_event_loop(), UV_RUN_ONCE);
+  while( true ){
+    int remaining_handles = uv_run(jl_global_event_loop(), UV_RUN_NOWAIT);
+    if (!remaining_handles) break;
   }
-
-  // note this does not expect a newline/cr
-//  jl_eval_string(command.c_str());
 
   return result;
 
@@ -553,13 +539,17 @@ void JuliaExec(BERTBuffers::CallResponse &response, const BERTBuffers::CallRespo
   JL_TRY{
     jl_value_t *val = (jl_value_t*)jl_load_file_string(composite.c_str(), composite.length(), "inline");
 
+    // ok so this gets called if there is an exception but we caught it; why does
+    // the catch not remove it entirely? (...)
+
     if (jl_exception_occurred()) {
       std::cout << "* [JE] EXCEPTION" << std::endl;
-      jl_printf(JL_STDERR, "[JE] error during run:\n");
-      jl_static_show(JL_STDERR, ptls->exception_in_transit);
+      //jl_printf(JL_STDERR, "[JE] error during run:\n");
+      //jl_static_show(JL_STDERR, ptls->exception_in_transit);
       jl_exception_clear();
     }
-    else if (val) {
+    
+    if (val) {
       JlValueToVariable(response.mutable_result(), val);
       //jl_static_show(JL_STDOUT, val);
     }

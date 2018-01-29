@@ -80,6 +80,16 @@ have questions or comments, and save your work often.
     function_list
   end
 
+  #---------------------------------------------------------------------------- 
+  #---------------------------------------------------------------------------- 
+  Autocomplete = function(buffer, position)
+    try
+      return Base.REPLCompletions.completions(buffer, position)[1];
+    catch
+    end
+    return nothing;
+  end
+
   InstallApplicationPointer = function(key, descriptor)
     
     len = length(descriptor)

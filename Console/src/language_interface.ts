@@ -142,7 +142,10 @@ export class JuliaInterface extends LanguageInterface {
     buffer = buffer.replace( /\\/g, '\\\\').replace( /"/g, '\\"' );
     buffer = buffer.replace( /\$/g, "\\$"); // julia string interpolations
 
-    let x = await this.pipe_.Internal(`Base.REPLCompletions.completions("${buffer}",${position})[1]`);
+    console.info( "Calling AC", buffer, position);
+
+    //let x = await this.pipe_.Internal(`Base.REPLCompletions.completions("${buffer}",${position})[1]`);
+    let x = await this.pipe_.Internal(`BERT.Autocomplete("${buffer}",${position})`);
     let arr:Array<any> = (Array.isArray(x) ? x as Array<any> : [])
 
     // slightly different breaks (+.). allow leading backslash (escape)
