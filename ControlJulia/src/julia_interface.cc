@@ -373,7 +373,7 @@ ExecResult JuliaShellExec(const std::string &command, const std::string &shell_b
           result = ExecResult::Incomplete;
         }
         else {
-          std::cout << "sym name? " << jl_symbol_name(head) << std::endl;
+          //std::cout << "sym name? " << jl_symbol_name(head) << std::endl;
           //result = ExecResult::Error;
         }
       }

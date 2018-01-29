@@ -285,7 +285,7 @@ void pipe_loop() {
 
             case BERTBuffers::CallResponse::kShellCommand:
             {
-              std::cout << "shell command" << std::endl;
+              // std::cout << "shell command" << std::endl;
               ExecResult exec_result = JuliaShellExec(call.shell_command(), shell_buffer);
               // if (call.wait()) pipe->PushWrite(MessageUtilities::Frame(response));
               console_prompt_id = call.id();
