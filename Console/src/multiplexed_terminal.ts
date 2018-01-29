@@ -151,6 +151,15 @@ export class MuliplexedTerminal {
   }
 
   /**
+   * clean up resources: call method on child terminal instances
+   */
+  CleanUp(){
+    Object.keys(this.terminal_instances_).forEach(key => {
+      this.terminal_instances_[key].terminal.CleanUp();
+    });
+  }
+
+  /**
    * add a terminal for the given language. this method handles creating 
    * a child node, assigning a tab, creating the terminal instance and 
    * attaching the language. 

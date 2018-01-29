@@ -8,6 +8,7 @@ import { LanguageInterface } from './language_interface';
 import {Pipe, ConsoleMessage, ConsoleMessageType} from './pipe';
 
 import * as Rx from 'rxjs';
+import { ConnectableObservable } from 'rxjs/observable/ConnectableObservable';
 
 // for julia, replacing backslash entities in the shell like Julia REPL. 
 
@@ -21,7 +22,13 @@ class ConsoleHistory {
   private history_: string[] = [];
   private copy_: string[] = [];
   private pointer_ = 0;
-  private zero = "";
+
+  /** language-specific storage key */
+  private key_:string;
+
+  constructor(language_label:string){
+    this.key_ = "console-history-" + language_label;
+  }
 
   Push(line: string) {
     if (line.length) this.history_.push(line);
@@ -32,14 +39,14 @@ class ConsoleHistory {
    */
   Store() {
     let json = JSON.stringify(this.history_.slice(0, 1024));
-    localStorage.setItem("console-history", json);
+    localStorage.setItem(this.key_, json);
   }
 
   /** 
    * restore from local storage 
    */
   Restore() {
-    let tmp = localStorage.getItem("console-history");
+    let tmp = localStorage.getItem(this.key_);
     if (tmp) this.history_ = JSON.parse(tmp);
   }
 
@@ -346,7 +353,7 @@ export class TerminalImplementation {
 
   private xterm_: XTerm = null;
   private line_info_ = new LineInfo();
-  private history_ = new ConsoleHistory();
+  private history_:ConsoleHistory; 
 
   private current_tip_: any;
   private dismissed_tip_: any;
@@ -362,6 +369,11 @@ export class TerminalImplementation {
   /**
    * we use a static event source for events that are application-global,
    * which may arise out of any existing terminal.
+   * 
+   * FIXME: I'm not sure about this being static. maybe better to have each
+   * instance broadcast events, then have the container (in our case, mux)
+   * consolidate, and have anyone else listen to that.
+   * 
    */
   private static events_:Rx.Subject<TerminalEvent> = new Rx.Subject<TerminalEvent>();
 
@@ -370,6 +382,7 @@ export class TerminalImplementation {
 
   constructor(private language_interface_:LanguageInterface, private node_:HTMLElement){
 
+    this.history_ = new ConsoleHistory((language_interface_.label_||"").toLocaleLowerCase());
     this.history_.Restore();
 
     if( !TerminalImplementation.function_tip_node_ ){

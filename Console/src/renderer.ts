@@ -68,6 +68,7 @@ let language_interfaces = [];
 let allow_close = true; // dev // false;
 
 let Close = function(){
+  terminals.CleanUp();  
   Promise.all(language_interfaces.map(language_interface => 
     language_interface.Shutdown())).then(() => {
   
@@ -75,6 +76,13 @@ let Close = function(){
     remote.getCurrentWindow().close();
   });
 };
+
+window.addEventListener("beforeunload", event => {
+  if(!allow_close) event.returnValue = false;
+  else {
+    Close();
+  }
+});
 
 // connect/init pipes, languages
 
