@@ -20,7 +20,8 @@
     "start": "electron .",
     "build": "./node_modules/.bin/less-watch-compiler --run-once && ./node_modules/.bin/tsc",
     "watch": "./node_modules/.bin/less-watch-compiler & ./node_modules/.bin/tsc --watch &",
-    "package": "./node_modules/.bin/electron-builder"
+    "package": "./node_modules/.bin/electron-builder",
+    "repackage": "./node_modules/.bin/less-watch-compiler --run-once && ./node_modules/.bin/tsc && ./node_modules/.bin/electron-builder"
   },
   "devDependencies": {
     "@types/node": "^8.5.2",
