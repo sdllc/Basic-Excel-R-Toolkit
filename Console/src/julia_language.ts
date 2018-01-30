@@ -139,30 +139,44 @@ export const language = <ILanguage>{
 
     comment: [
       [/[^=#]+/, 'comment' ],
-      [/#=/,    'comment', '@push' ],    // nested comment
+      [/#=/,    'comment', '@push' ],    // nested comment [is that legal?]
       ["=#",    'comment', '@pop'  ],
       [/[#=]/,   'comment' ]
     ],
 
+    // this is my attempt to do string interpolation, highlighting
+    // the outer $() set, and allowing inner parens for function calls.
+    // not super familiar with the syntax, but seems to function OK:
+
+    // for nested paren sections
+    interpolated_nested: [
+      [/\)/, {token: 'interpolated', bracket: '@close', next: '@pop' }],
+      { include: '@root' }
+    ],
+
+    // inside an interpolation block, until closing paren ")"
     interpolated: [
+      [/\(/, {token: 'interpolated', bracket: '@open', next: 'interpolated_nested' }],
       [/\)/, {token: 'keyword', bracket: '@close', next: '@pop' }],
       { include: '@root' }
     ],
 
+    // start of an interpolation block "$("
     interpolated_string: [
       [/\$\(/, {token: 'keyword', bracket: '@open', next: '@interpolated' }]
     ],
 
+    // multiline string; only ends on three quotes (""")
     mstring: [
       { include: '@interpolated_string' },
       [/"""/,        { token: 'string.quote', bracket: '@close', next: '@pop' } ],
       [/./, 'string']
     ],
     
+    // normal (single-line) string
     string: [
       { include: '@interpolated_string' }, // ?
-
-//      [/[^\\"]+/,  'string'],
+//      [/[^\\"]+/,  'string'], // ?
       [/@escapes/, 'string.escape'],
       [/\\./,      'string.escape.invalid'],
       [/"/,        { token: 'string.quote', bracket: '@close', next: '@pop' } ],
