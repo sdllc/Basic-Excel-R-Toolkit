@@ -154,6 +154,7 @@ export const language = <ILanguage>{
     // for nested paren sections
     interpolated_nested: [
       [/\)/, {token: 'interpolated', bracket: '@close', next: '@pop' }],
+      [/\(/, {token: 'interpolated', bracket: '@open', next: 'interpolated_nested' }],
       { include: '@root' }
     ],
 
