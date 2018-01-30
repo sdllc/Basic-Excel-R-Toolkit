@@ -728,7 +728,21 @@ export class Editor {
     if(force_dialog||!file_path){
     
       // dialog
-      
+      let dialog_result = remote.dialog.showSaveDialog({
+        title: "Save File",
+        filters: [
+          {name: 'R source files', extensions: ['r', 'rsrc', 'rscript']},
+          {name: 'Julia source files', extensions: ['jl', 'julia']},
+          {name: 'All Files', extensions: ['*']}
+        ]
+      });
+      if(dialog_result && dialog_result.length) file_path = dialog_result;
+
+      // FIXME: after changing file name, update document
+      // language and recent files list
+
+      // (...)
+
     }
 
     if(file_path){
@@ -927,6 +941,7 @@ export class Editor {
       properties: ["openFile"],
       filters: [
         {name: 'R source files', extensions: ['r', 'rsrc', 'rscript']},
+        {name: 'Julia source files', extensions: ['jl', 'julia']},
         {name: 'All Files', extensions: ['*']}
       ]
     });
