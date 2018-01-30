@@ -1,0 +1,12 @@
+{
+  "id": "test",
+  "base": "vs", 
+	"inherit": true, 
+	"rules": [
+		{ "token": "keyword.control", "foreground": "ff998c" },
+		{ "token": "comment", "foreground": "008800", "fontStyle": "italic" }
+  ],
+  "colors": {
+    "editor.background": "#def"
+  }
+}

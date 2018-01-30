@@ -41,19 +41,24 @@ export const language = <ILanguage>{
 
   // thanks to https://groups.google.com/forum/#!topic/julia-users/tisM_9sKPCc
 
+  control_flow: [
+    'for', 'if', 'elseif', 'else', 'end', 'while', 'break', 'do',
+    'try', 'catch', 'finally', 'throw'
+  ],
+
   keywords: [
-    'function', 'global', 'for', 'end', 'while', 'if', 'else', 'elseif', 'break',
+    'function', 'struct', 'global', 
     'switch', 'case', 'otherwise', 'try', 'catch', 'end', 'const', 'immutable',
     'import', 'importall', 'export', 'type', 'typealias', 'return', 'true', 
     'false', 'macro', 'quote', 'in', 'abstract', 'module', 'using', 'continue', 
-    'ifelse', 'do', 'eval', 'let', 'finally', 'throw'
+    'ifelse', 'eval', 'let', 'nothing'
   ],
 
   typeKeywords: [
     'Array', 'String', 'Bool', 'Number', 'Int', 'Integer', 'Real', 'Complex', 
     'FloatingPoint', 'Float64', 'Float32', 'Int8', 'Int16', 'Int32', 'Int64', 
-    'Rational', 'AbstractArray', 'Unsigned', 'Signed', 'Uint', 'Uint8', 'Uint16', 
-    'Uint32', 'Uint64', 'Vector', 'AbstractVector', 'Matrix', 'AbstractMatrix', 
+    'Rational', 'AbstractArray', 'Unsigned', 'Signed', 'UInt', 'UInt8', 'UInt16', 
+    'UInt32', 'UInt64', 'Vector', 'AbstractVector', 'Matrix', 'AbstractMatrix', 
     'Type', 'IO', 'Any', 'ASCIIString', 'Union', 'Dict', 'Function', 'SubArray', 
     'Range', 'Range1', 'Symbol', 'Expr'
   ],
@@ -93,17 +98,44 @@ export const language = <ILanguage>{
   // C# style strings
   escapes: /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,
 
+  namespaceFollows: [
+    'module', 'using', 'import', 'importall'
+  ],
+
+  labelFollows: [
+    'function',
+  ],
+
   // The main tokenizer for our languages
   tokenizer: {
     root: [
+
+      // [/[A-Z][\w]*(?=[\.\w]*(\s|\/\*!\*\/)+\w)/, 'type.identifier' ],
+
+      // type.idenfier for function definitions. also uses the
+      // @labelFollows block below.
+
+      // 1. name = function(...)
+      [/\w\w*(?=\s*=\s*function)/, { token: 'type.identifier'}],  
+
+      // 2. name() = 
+      [/\w\w*(?=\s*\(.*?\)\s*=)/, { token: 'type.identifier'}],  
+
+      // instead of that, highlight function calls. this appears to be 
+      // what the vs julia extension does. not in love with it.
+
+      // [ /[a-z_A-Z]\w*(?:\s*\()/, { token: 'type.identifier' }],
+
       // identifiers and keywords
-      [/[a-z_$][\w$]*/, { cases: { 
+      [/[a-z_A-Z$][\w$]*/, { cases: { 
+        '@namespaceFollows': { token: 'keyword', next: '@namespace' },
+        '@labelFollows': { token: 'keyword', next: '@label' },
+        '@control_flow': 'keyword.control', // this token is not defined by default; add to theme
         '@keywords': 'keyword',
         '@typeKeywords': 'type',
         '@default': 'identifier'
         } }],
-      [/[A-Z][\w\$]*/, 'type.identifier' ],  // to show class names nicely
-
+     
       // whitespace
       { include: '@whitespace' },
 
@@ -116,7 +148,7 @@ export const language = <ILanguage>{
       // @ annotations.
       // As an example, we emit a debugging log message on these tokens.
       // Note: message are supressed during the first load -- change some lines to see them.
-      [/@\s*[a-zA-Z_\$][\w\$]*/, { token: 'annotation', log: 'annotation token: $0' }],
+      // [/@\s*[a-zA-Z_\$][\w\$]*/, { token: 'annotation', log: 'annotation token: $0' }],
 
       // numbers
       [/\d*\.\d+([eE][\-+]?\d+)?/, 'number.float'],
@@ -142,6 +174,27 @@ export const language = <ILanguage>{
       [/#=/,    'comment', '@push' ],    // nested comment [is that legal?]
       ["=#",    'comment', '@pop'  ],
       [/[#=]/,   'comment' ]
+    ],
+    
+    label: [
+      [ /[ \t]+$/, {token: 'white', next: '@pop'}],
+      [ /[ \t]+/, {token: 'white'}],      
+      [/\w\w*/, {token: 'type.identifier', next: '@pop'}],
+      ['', {token: '', next: '@pop'}],
+    ],
+
+    // this is a little difficult because it can end 
+    // either on a newline or at the end of another token;
+    // we don't handle the (error?) case where the line ends
+    // on an operator. requires testing for eol in whitespace, token
+
+    namespace: [
+      [ /[ \t]+$/, {token: 'white', next: '@pop'}],
+      [ /[ \t]+/, 'white' ],      
+      [ /[\:\.=,]/, '' ],
+      [/\w\w*$/, {token: 'type.identifier', next: '@pop'}],
+      [/\w\w*/, {token: 'type.identifier'}],
+      ['','','@pop'],
     ],
 
     // this is my attempt to do string interpolation, highlighting
