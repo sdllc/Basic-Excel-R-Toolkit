@@ -121,12 +121,14 @@ void PushConsoleString(const std::string &str) {
   }
 }
 
+/*
 void ConsoleMessage(const char *buf, int len, int flag) {
   BERTBuffers::CallResponse message;
   if (flag) message.mutable_console()->set_err(buf, len);
   else message.mutable_console()->set_text(buf, len);
   PushConsoleMessage(message);
 }
+*/
 
 std::string prompt_string;
 
@@ -140,8 +142,8 @@ void ConsolePrompt(const char *prompt, uint32_t id) {
 }
 
 void QueueConsoleWrites() {
-  //pipes[console_client]->QueueWrites(console_buffer);
-  //console_buffer.clear();
+  pipes[console_client]->QueueWrites(console_buffer);
+  console_buffer.clear();
 }
 
 /**
@@ -194,9 +196,7 @@ bool SystemCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallResp
     if (console_client < 0) {
       console_client = pipe_index;
       std::cout << "set console client -> " << pipe_index << std::endl;
-      //pipe->QueueWrites(console_buffer);
-      //console_buffer.clear();
-      QueueConsoleWrites();
+      QueueConsoleWrites(); // just prompts
     }
   }
   else if (!function.compare("close")) {

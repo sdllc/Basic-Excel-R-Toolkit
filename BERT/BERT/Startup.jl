@@ -6,7 +6,7 @@
 # =============================================================================
 module BERT
 
-  EXCEL = 102.3
+  EXCEL = nothing
   PX = nothing
   DX = nothing
 
@@ -90,6 +90,25 @@ have questions or comments, and save your work often.
     return nothing;
   end
 
+#  CreateCOMObject1 = function(descriptor)
+#    struct_definition = """
+#      struct ___com_type_$(name)
+#        pointer::Uint64
+#    """
+#    for func in functions
+#      struct_definition *= """
+#        $(func)::Function
+#      """
+#    end
+#    struct_definition *= """
+#      end
+#    """
+#    eval(parse(struct_definition))
+#  end
+#  
+#  CreateCOMObject2 = function(key, descriptor)
+#  end
+
   InstallApplicationPointer = function(key, descriptor)
     
     len = length(descriptor)
@@ -101,10 +120,9 @@ have questions or comments, and save your work often.
       elseif descriptor[i].parameters[1] == "enums"
         print(length(descriptor[i].parameters[2]), " enums in interface\n" )
       end
-
     end
 
-    print("key ", key)
+    print("key ", key, "\n\n")
     global PX = key
     global DX = descriptor
     nothing
@@ -138,7 +156,7 @@ end
 using BERT.EXCEL
 
 #
-# banners
+# banners: print julia banner from the REPL, then our banner
 #
 Base.banner();
 BERT.Banner();

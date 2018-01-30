@@ -28,7 +28,7 @@ int LanguageService::StartChildProcess(HANDLE job_handle) {
 
   DWORD creation_flags = CREATE_NO_WINDOW;
 
-  if (dev_flags_) creation_flags = 0;
+  if (dev_flags_ & 0x01) creation_flags = 0;
 
   if (!CreateProcessA(0, args, 0, 0, FALSE, creation_flags, 0, 0, &si, &pi))
   {
@@ -161,7 +161,7 @@ int LanguageService::LaunchProcess(HANDLE job_handle, char *command_line) {
   int result = 0;
 
   DWORD creation_flags = CREATE_NO_WINDOW;
-  if (dev_flags_) creation_flags = 0;
+  if (dev_flags_ & 0x01) creation_flags = 0;
 
   if (!CreateProcessA(0, command_line, 0, 0, FALSE, creation_flags, 0, 0, &si, &pi))
   {
