@@ -148,6 +148,9 @@ export const language = <ILanguage>{
     // the outer $() set, and allowing inner parens for function calls.
     // not super familiar with the syntax, but seems to function OK:
 
+    // there's probably a better way to do this with cases, if we can
+    // somehow query the stack or use state vars
+
     // for nested paren sections
     interpolated_nested: [
       [/\)/, {token: 'interpolated', bracket: '@close', next: '@pop' }],
