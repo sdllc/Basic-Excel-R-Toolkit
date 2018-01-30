@@ -128,6 +128,7 @@ export const language = <ILanguage>{
 
       // strings
       [/"([^"\\]|\\.)*$/, 'string.invalid' ],  // non-teminated string
+      [/"""/, { token: 'string.quote', bracket: '@open', next: '@mstring' }],
       [/"/,  { token: 'string.quote', bracket: '@open', next: '@string' } ],
 
       // characters
@@ -143,11 +144,30 @@ export const language = <ILanguage>{
       [/[#=]/,   'comment' ]
     ],
 
+    interpolated: [
+      [/\)/, {token: 'keyword', bracket: '@close', next: '@pop' }],
+      { include: '@root' }
+    ],
+
+    interpolated_string: [
+      [/\$\(/, {token: 'keyword', bracket: '@open', next: '@interpolated' }]
+    ],
+
+    mstring: [
+      { include: '@interpolated_string' },
+      [/"""/,        { token: 'string.quote', bracket: '@close', next: '@pop' } ],
+      [/./, 'string']
+    ],
+    
     string: [
-      [/[^\\"]+/,  'string'],
+      { include: '@interpolated_string' }, // ?
+
+//      [/[^\\"]+/,  'string'],
       [/@escapes/, 'string.escape'],
       [/\\./,      'string.escape.invalid'],
-      [/"/,        { token: 'string.quote', bracket: '@close', next: '@pop' } ]
+      [/"/,        { token: 'string.quote', bracket: '@close', next: '@pop' } ],
+      [/./, 'string']
+
     ],
 
     whitespace: [
