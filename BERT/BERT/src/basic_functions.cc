@@ -98,16 +98,6 @@ LPXLOPER12 BERT_Exec_Generic(uint32_t language_key, LPXLOPER12 code) {
 
 }
 
-/*
-LPXLOPER12 BERT_Exec_Julia(LPXLOPER12 code) {
-  return BERT_Exec_Generic(LANGUAGE_JULIA, code);
-}
-
-LPXLOPER12 BERT_Exec_R(LPXLOPER12 code) {
-  return BERT_Exec_Generic(LANGUAGE_R, code);
-}
-*/
-
 LPXLOPER12 BERT_Call_Generic(uint32_t language_key, LPXLOPER12 func,
   LPXLOPER12 arg0, LPXLOPER12 arg1, LPXLOPER12 arg2, LPXLOPER12 arg3,
   LPXLOPER12 arg4, LPXLOPER12 arg5, LPXLOPER12 arg6, LPXLOPER12 arg7,
@@ -153,32 +143,6 @@ LPXLOPER12 BERT_Call_Generic(uint32_t language_key, LPXLOPER12 func,
   return &rslt;
 
 }
-
-/*
-LPXLOPER12 BERT_Call_Julia(LPXLOPER12 func,
-  LPXLOPER12 arg0, LPXLOPER12 arg1, LPXLOPER12 arg2, LPXLOPER12 arg3,
-  LPXLOPER12 arg4, LPXLOPER12 arg5, LPXLOPER12 arg6, LPXLOPER12 arg7,
-  LPXLOPER12 arg8, LPXLOPER12 arg9, LPXLOPER12 arg10, LPXLOPER12 arg11,
-  LPXLOPER12 arg12, LPXLOPER12 arg13, LPXLOPER12 arg14, LPXLOPER12 arg15) {
-
-  return BERT_Call_Generic(LANGUAGE_JULIA, func,
-    arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7,
-    arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
-
-}
-
-LPXLOPER12 BERT_Call_R(LPXLOPER12 func, 
-	LPXLOPER12 arg0, LPXLOPER12 arg1, LPXLOPER12 arg2, LPXLOPER12 arg3, 
-	LPXLOPER12 arg4, LPXLOPER12 arg5, LPXLOPER12 arg6, LPXLOPER12 arg7,
-	LPXLOPER12 arg8, LPXLOPER12 arg9, LPXLOPER12 arg10, LPXLOPER12 arg11,
-	LPXLOPER12 arg12, LPXLOPER12 arg13, LPXLOPER12 arg14, LPXLOPER12 arg15 ) {
-
-  return BERT_Call_Generic(LANGUAGE_R, func,
-    arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7,
-    arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
-
-}
-*/
 
 int BERT_SetPointers(ULONG_PTR excel_pointer, ULONG_PTR ribbon_pointer) {
     BERT::Instance()->SetPointers(excel_pointer, ribbon_pointer);
