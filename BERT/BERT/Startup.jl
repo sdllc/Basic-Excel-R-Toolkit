@@ -52,6 +52,7 @@ BERT Julia shell version 0.1 BETA. $(colors[:reverse])This is not the default Ju
 things are similar, but some things are different. Please send feedback if you
 have questions or comments, and save your work often. 
 
+
 """);
 
   end

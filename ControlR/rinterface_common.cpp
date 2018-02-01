@@ -35,9 +35,27 @@ extern unsigned long long GetTimeMs64();
 #undef clear
 #undef length
 
-using std::cout;
-using std::cerr;
-using std::endl;
+/*
+#include <google\protobuf\util\json_util.h>
+
+/ ** debug/util function * /
+void DumpJSON(const google::protobuf::Message &message, const char *path = 0) {
+  std::string str;
+  google::protobuf::util::JsonOptions opts;
+  opts.add_whitespace = true;
+  google::protobuf::util::MessageToJsonString(message, &str, opts);
+  if (path) {
+    FILE *f;
+    fopen_s(&f, path, "w");
+    if (f) {
+      fwrite(str.c_str(), sizeof(char), str.length(), f);
+      fflush(f);
+    }
+    fclose(f);
+  }
+  else std::cout << str << std::endl;
+}
+*/
 
 extern bool Callback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response);
 
@@ -147,7 +165,7 @@ SEXP VariableToSEXP(const BERTBuffers::Variable &var) {
     }
     case BERTBuffers::Variable::ValueCase::kExternalPointer:
         {
-            cout << "installing external pointer: " << std::hex << var.external_pointer() << endl;
+            std::cout << "installing external pointer: " << std::hex << var.external_pointer() << std::endl;
             SEXP pointer = R_MakeExternalPtr((void*)(var.external_pointer()), install("COM dispatch pointer"), R_NilValue);
             R_RegisterCFinalizerEx(pointer, (R_CFinalizer_t)ReleaseExternalPointer, TRUE);
             return pointer;
@@ -206,6 +224,77 @@ bool ReadSourceFile(const std::string &file) {
   R_tryEval(Rf_lang2(Rf_install("source"), Rf_mkString(file.c_str())), R_GlobalEnv, &err);
   return !err;
 }
+
+BERTBuffers::CallResponse& ListScriptFunctions(BERTBuffers::CallResponse &response, const BERTBuffers::CallResponse &call) {
+
+  response.set_id(call.id());
+
+  ParseStatus ps;
+
+  SEXP cmds = PROTECT(Rf_allocVector(STRSXP, 1));
+  SET_STRING_ELT(cmds, 0, Rf_mkChar("BERT$list.functions()"));
+
+  SEXP parsed = PROTECT(R_ParseVector(cmds, -1, &ps, R_NilValue));
+
+  if (ps != PARSE_OK) {
+    response.set_err("R parse error");
+  }
+  else {
+    SEXP result = R_NilValue;
+    int err = 0, len = Rf_length(parsed);
+    for (int i = 0; !err && i < Rf_length(parsed); i++) {
+      SEXP cmd = VECTOR_ELT(parsed, i);
+      result = R_tryEval(cmd, R_GlobalEnv, &err);
+    }
+    if (err) response.set_err("R error");
+    else {
+
+      auto function_list = response.mutable_function_list();
+
+      // we have a kind of complex structure here, which could maybe be simplified 
+      // on the R side. it might actually be easier to translate to PBs...
+
+      BERTBuffers::Variable var;
+      SEXPToVariable(&var, result);
+
+      // ok so var should now have a list, should be easier to walk
+
+      for (auto function_entry : var.arr().data()) {
+
+        auto descriptor = function_list->add_functions();
+
+        for (auto element : function_entry.arr().data()) {
+          const std::string &name = element.name();
+          if (!name.compare("name")) {
+            descriptor->mutable_function()->set_name(element.str());
+          }
+          else if (!name.compare("arguments")) {
+            for (auto argument : element.arr().data()) {
+              auto argument_entry = descriptor->add_arguments();
+              for (auto entry : argument.arr().data()) {
+                const std::string &entry_name = entry.name();
+                if (!entry_name.compare("name")) argument_entry->set_name(entry.str());
+                else if(!entry_name.compare("default")){
+                  argument_entry->mutable_default_value()->CopyFrom(entry);
+                }
+              }
+            }
+          }
+          else if (!name.compare("attributes")) {
+            // ...
+          }
+
+        }
+      }
+
+    }
+  }
+
+  UNPROTECT(2);
+
+  return response;
+}
+
 
 BERTBuffers::CallResponse& RCall(BERTBuffers::CallResponse &rsp, const BERTBuffers::CallResponse &call) {
 
@@ -288,7 +377,7 @@ void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector < SEXP > 
         // not handling it at all; which would result in nil/NULL (the default 
         // variable value case)
 
-        if (len > 1) std::cerr << "WARNING: SYMSXP len > 1" << endl;
+        if (len > 1) std::cerr << "WARNING: SYMSXP len > 1" << std::endl;
 
         var->set_missing(true);
         return;
@@ -356,7 +445,7 @@ void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector < SEXP > 
 		}
         else if (rtype == EXTPTRSXP) {
             var->set_external_pointer(reinterpret_cast<uint64_t>(R_ExternalPtrAddr(sexp)));
-            cout << "read external pointer: " << std::hex << var->external_pointer() << endl;
+            std::cout << "read external pointer: " << std::hex << var->external_pointer() << std::endl;
         }
 		else if (rtype == VECSXP) {
 			for (int i = 0; i< len; i++) {

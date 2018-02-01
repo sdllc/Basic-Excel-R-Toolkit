@@ -166,9 +166,9 @@ public:
   void SetApplicationPointer(LPDISPATCH application_pointer);
 
   /** 
-   * generate function descriptions. this one is pure virtual.
+   * generate function descriptions. generic.
    */
-  virtual FUNCTION_LIST MapLanguageFunctions() = 0;
+  FUNCTION_LIST MapLanguageFunctions();
 
   /** 
    * make a function call (or other type of call). note that call is not const; we are going 

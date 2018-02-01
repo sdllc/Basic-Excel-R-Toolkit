@@ -54,6 +54,7 @@ public:
 
   }
 
+  /*
   FUNCTION_LIST MapLanguageFunctions() {
 
     FUNCTION_LIST function_list;
@@ -70,60 +71,86 @@ public:
 
     Call(rsp, call);
 
-    //function_list_.clear();
     if (rsp.operation_case() == BERTBuffers::CallResponse::OperationCase::kErr) return function_list; // error: no functions
-    int count = 0;
+    else if (rsp.operation_case() == BERTBuffers::CallResponse::OperationCase::kFunctionList) {
 
-    // shoehorning functions into our very simple variable syntax results 
-    // in a lot of nesting. it's not clear that order is guaranteed here,
-    // although that has more to do with R than protobuf.
+      for (auto descriptor : rsp.function_list().functions()) {
+        ARGUMENT_LIST arglist;
+        for (auto argument : descriptor.arguments()) {
+          std::stringstream value;
+          auto default_value = argument.default_value();
+          switch (default_value.value_case()) {
+          case BERTBuffers::Variable::ValueCase::kBoolean:
+            value << default_value.boolean() ? "TRUE" : "FALSE";
+            break;
+          case BERTBuffers::Variable::ValueCase::kNum:
+            value << default_value.num();
+            break;
+          case BERTBuffers::Variable::ValueCase::kStr:
+            value << '"' << default_value.str() << '"';
+            break;
+          }
+          arglist.push_back(std::make_shared<ArgumentDescriptor>(argument.name(), value.str()));
+        }
+        function_list.push_back(std::make_shared<FunctionDescriptor>(descriptor.function().name(), language_key_, "", "", arglist));
+      }
 
-    // this is a mess. should create a dedicated message for this (...)
+    }
+    else {
+      int count = 0;
 
-    auto ParseArguments = [](BERTBuffers::Variable &args) {
-      ARGUMENT_LIST arglist;
-      for (auto arg : args.arr().data()) {
-        std::string name;
-        std::string defaultValue;
-        for (auto field : arg.arr().data()) {
-          if (!field.name().compare("name")) name = field.str();
-          if (!field.name().compare("default")) {
-            std::stringstream ss;
-            switch (field.value_case()) {
-            case BERTBuffers::Variable::ValueCase::kBoolean:
-              ss << field.boolean() ? "TRUE" : "FALSE";
-              break;
-            case BERTBuffers::Variable::ValueCase::kNum:
-              ss << field.num();
-              break;
-            case BERTBuffers::Variable::ValueCase::kStr:
-              ss << '"' << field.str() << '"';
-              break;
+      // shoehorning functions into our very simple variable syntax results 
+      // in a lot of nesting. it's not clear that order is guaranteed here,
+      // although that has more to do with R than protobuf.
+
+      // this is a mess. should create a dedicated message for this (...)
+
+      auto ParseArguments = [](BERTBuffers::Variable &args) {
+        ARGUMENT_LIST arglist;
+        for (auto arg : args.arr().data()) {
+          std::string name;
+          std::string defaultValue;
+          for (auto field : arg.arr().data()) {
+            if (!field.name().compare("name")) name = field.str();
+            if (!field.name().compare("default")) {
+              std::stringstream ss;
+              switch (field.value_case()) {
+              case BERTBuffers::Variable::ValueCase::kBoolean:
+                ss << field.boolean() ? "TRUE" : "FALSE";
+                break;
+              case BERTBuffers::Variable::ValueCase::kNum:
+                ss << field.num();
+                break;
+              case BERTBuffers::Variable::ValueCase::kStr:
+                ss << '"' << field.str() << '"';
+                break;
+              }
+              defaultValue = ss.str();
             }
-            defaultValue = ss.str();
+          }
+          if (name.length()) {
+            arglist.push_back(std::make_shared<ArgumentDescriptor>(name, defaultValue));
           }
         }
-        if (name.length()) {
-          arglist.push_back(std::make_shared<ArgumentDescriptor>(name, defaultValue));
-        }
-      }
-      return arglist;
-    };
+        return arglist;
+      };
 
-    for (auto descriptor : rsp.result().arr().data()) {
-      std::string function;
-      ARGUMENT_LIST arglist;
-      for (auto entry : descriptor.arr().data()) {
-        if (!entry.name().compare("name")) function = entry.str();
-        else if (!entry.name().compare("arguments")) arglist = ParseArguments(entry);
-      }
-      if (function.length()) {
-        function_list.push_back(std::make_shared<FunctionDescriptor>(function, language_key_, "", "", arglist));
+      for (auto descriptor : rsp.result().arr().data()) {
+        std::string function;
+        ARGUMENT_LIST arglist;
+        for (auto entry : descriptor.arr().data()) {
+          if (!entry.name().compare("name")) function = entry.str();
+          else if (!entry.name().compare("arguments")) arglist = ParseArguments(entry);
+        }
+        if (function.length()) {
+          function_list.push_back(std::make_shared<FunctionDescriptor>(function, language_key_, "", "", arglist));
+        }
       }
     }
 
     return function_list;
   }
+  */
 
   int StartChildProcess(HANDLE job_handle){
 

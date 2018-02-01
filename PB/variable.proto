@@ -119,6 +119,38 @@ message Console {
   }
 }
 
+
+/**
+ * to date, we've been constructing function descriptions by packing them
+ * in normal variables. for R, we can use the "name" attribute to identify
+ * them. that's not available in Julia (and wouldn't be in some other 
+ * languages either). this results in inconsitent data arriving at Excel,
+ * which requires language-specific handling.
+ *
+ * in an effort to normalize this data, and recognizing that this message
+ * scheme is application-specific, we'll define specific types for function
+ * descriptors (AND com calls, below).
+ *
+ * this type can be used for both the function itself and arguments.
+ */
+message FunctionElement {
+  string name = 1;
+  string type_name = 2;         // not used atm
+  Variable default_value = 3;
+  string description = 4;
+}
+
+/** this type describes a function */
+message FunctionDescriptor {
+  FunctionElement function = 1;
+  repeated FunctionElement arguments = 2;
+}
+
+/** list of functions for union */
+message FunctionList {
+  repeated FunctionDescriptor functions = 1;
+}
+
 /** 
  * unifying call and response, since there are some fuzzy cases,
  * callbacks, and so on. it makes sense for this to be a single 
@@ -159,6 +191,8 @@ message CallResponse {
     // commands, and callbacks (including COM function calls).
    
     CompositeFunctionCall function_call = 8;
+
+    FunctionList function_list = 9; // can we just include a "repeated" element as a union member? [A: no]
 
   }
 }

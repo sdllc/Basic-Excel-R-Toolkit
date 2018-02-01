@@ -37,7 +37,7 @@ namespace protobuf_variable_2eproto {
 struct TableStruct {
   static const ::google::protobuf::internal::ParseTableField entries[];
   static const ::google::protobuf::internal::AuxillaryParseTableField aux[];
-  static const ::google::protobuf::internal::ParseTable schema[9];
+  static const ::google::protobuf::internal::ParseTable schema[12];
   static const ::google::protobuf::internal::FieldMetadata field_metadata[];
   static const ::google::protobuf::internal::SerializationTable serialization_table[];
   static const ::google::protobuf::uint32 offsets[];
@@ -57,6 +57,12 @@ void InitDefaultsCompositeFunctionCallImpl();
 void InitDefaultsCompositeFunctionCall();
 void InitDefaultsConsoleImpl();
 void InitDefaultsConsole();
+void InitDefaultsFunctionElementImpl();
+void InitDefaultsFunctionElement();
+void InitDefaultsFunctionDescriptorImpl();
+void InitDefaultsFunctionDescriptor();
+void InitDefaultsFunctionListImpl();
+void InitDefaultsFunctionList();
 void InitDefaultsCallResponseImpl();
 void InitDefaultsCallResponse();
 inline void InitDefaults() {
@@ -67,6 +73,9 @@ inline void InitDefaults() {
   InitDefaultsCode();
   InitDefaultsCompositeFunctionCall();
   InitDefaultsConsole();
+  InitDefaultsFunctionElement();
+  InitDefaultsFunctionDescriptor();
+  InitDefaultsFunctionList();
   InitDefaultsCallResponse();
 }
 }  // namespace protobuf_variable_2eproto
@@ -92,6 +101,15 @@ extern ConsoleDefaultTypeInternal _Console_default_instance_;
 class Error;
 class ErrorDefaultTypeInternal;
 extern ErrorDefaultTypeInternal _Error_default_instance_;
+class FunctionDescriptor;
+class FunctionDescriptorDefaultTypeInternal;
+extern FunctionDescriptorDefaultTypeInternal _FunctionDescriptor_default_instance_;
+class FunctionElement;
+class FunctionElementDefaultTypeInternal;
+extern FunctionElementDefaultTypeInternal _FunctionElement_default_instance_;
+class FunctionList;
+class FunctionListDefaultTypeInternal;
+extern FunctionListDefaultTypeInternal _FunctionList_default_instance_;
 class SheetReference;
 class SheetReferenceDefaultTypeInternal;
 extern SheetReferenceDefaultTypeInternal _SheetReference_default_instance_;
@@ -1363,6 +1381,373 @@ class Console : public ::google::protobuf::Message /* @@protoc_insertion_point(c
 };
 // -------------------------------------------------------------------
 
+class FunctionElement : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:BERTBuffers.FunctionElement) */ {
+ public:
+  FunctionElement();
+  virtual ~FunctionElement();
+
+  FunctionElement(const FunctionElement& from);
+
+  inline FunctionElement& operator=(const FunctionElement& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  FunctionElement(FunctionElement&& from) noexcept
+    : FunctionElement() {
+    *this = ::std::move(from);
+  }
+
+  inline FunctionElement& operator=(FunctionElement&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const FunctionElement& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const FunctionElement* internal_default_instance() {
+    return reinterpret_cast<const FunctionElement*>(
+               &_FunctionElement_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    8;
+
+  void Swap(FunctionElement* other);
+  friend void swap(FunctionElement& a, FunctionElement& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline FunctionElement* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  FunctionElement* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CopyFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void MergeFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void CopyFrom(const FunctionElement& from);
+  void MergeFrom(const FunctionElement& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const PROTOBUF_FINAL;
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const PROTOBUF_FINAL;
+  void InternalSwap(FunctionElement* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // string name = 1;
+  void clear_name();
+  static const int kNameFieldNumber = 1;
+  const ::std::string& name() const;
+  void set_name(const ::std::string& value);
+  #if LANG_CXX11
+  void set_name(::std::string&& value);
+  #endif
+  void set_name(const char* value);
+  void set_name(const char* value, size_t size);
+  ::std::string* mutable_name();
+  ::std::string* release_name();
+  void set_allocated_name(::std::string* name);
+
+  // string type_name = 2;
+  void clear_type_name();
+  static const int kTypeNameFieldNumber = 2;
+  const ::std::string& type_name() const;
+  void set_type_name(const ::std::string& value);
+  #if LANG_CXX11
+  void set_type_name(::std::string&& value);
+  #endif
+  void set_type_name(const char* value);
+  void set_type_name(const char* value, size_t size);
+  ::std::string* mutable_type_name();
+  ::std::string* release_type_name();
+  void set_allocated_type_name(::std::string* type_name);
+
+  // string description = 4;
+  void clear_description();
+  static const int kDescriptionFieldNumber = 4;
+  const ::std::string& description() const;
+  void set_description(const ::std::string& value);
+  #if LANG_CXX11
+  void set_description(::std::string&& value);
+  #endif
+  void set_description(const char* value);
+  void set_description(const char* value, size_t size);
+  ::std::string* mutable_description();
+  ::std::string* release_description();
+  void set_allocated_description(::std::string* description);
+
+  // .BERTBuffers.Variable default_value = 3;
+  bool has_default_value() const;
+  void clear_default_value();
+  static const int kDefaultValueFieldNumber = 3;
+  const ::BERTBuffers::Variable& default_value() const;
+  ::BERTBuffers::Variable* release_default_value();
+  ::BERTBuffers::Variable* mutable_default_value();
+  void set_allocated_default_value(::BERTBuffers::Variable* default_value);
+
+  // @@protoc_insertion_point(class_scope:BERTBuffers.FunctionElement)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr name_;
+  ::google::protobuf::internal::ArenaStringPtr type_name_;
+  ::google::protobuf::internal::ArenaStringPtr description_;
+  ::BERTBuffers::Variable* default_value_;
+  mutable int _cached_size_;
+  friend struct ::protobuf_variable_2eproto::TableStruct;
+  friend void ::protobuf_variable_2eproto::InitDefaultsFunctionElementImpl();
+};
+// -------------------------------------------------------------------
+
+class FunctionDescriptor : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:BERTBuffers.FunctionDescriptor) */ {
+ public:
+  FunctionDescriptor();
+  virtual ~FunctionDescriptor();
+
+  FunctionDescriptor(const FunctionDescriptor& from);
+
+  inline FunctionDescriptor& operator=(const FunctionDescriptor& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  FunctionDescriptor(FunctionDescriptor&& from) noexcept
+    : FunctionDescriptor() {
+    *this = ::std::move(from);
+  }
+
+  inline FunctionDescriptor& operator=(FunctionDescriptor&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const FunctionDescriptor& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const FunctionDescriptor* internal_default_instance() {
+    return reinterpret_cast<const FunctionDescriptor*>(
+               &_FunctionDescriptor_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    9;
+
+  void Swap(FunctionDescriptor* other);
+  friend void swap(FunctionDescriptor& a, FunctionDescriptor& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline FunctionDescriptor* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  FunctionDescriptor* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CopyFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void MergeFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void CopyFrom(const FunctionDescriptor& from);
+  void MergeFrom(const FunctionDescriptor& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const PROTOBUF_FINAL;
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const PROTOBUF_FINAL;
+  void InternalSwap(FunctionDescriptor* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // repeated .BERTBuffers.FunctionElement arguments = 2;
+  int arguments_size() const;
+  void clear_arguments();
+  static const int kArgumentsFieldNumber = 2;
+  const ::BERTBuffers::FunctionElement& arguments(int index) const;
+  ::BERTBuffers::FunctionElement* mutable_arguments(int index);
+  ::BERTBuffers::FunctionElement* add_arguments();
+  ::google::protobuf::RepeatedPtrField< ::BERTBuffers::FunctionElement >*
+      mutable_arguments();
+  const ::google::protobuf::RepeatedPtrField< ::BERTBuffers::FunctionElement >&
+      arguments() const;
+
+  // .BERTBuffers.FunctionElement function = 1;
+  bool has_function() const;
+  void clear_function();
+  static const int kFunctionFieldNumber = 1;
+  const ::BERTBuffers::FunctionElement& function() const;
+  ::BERTBuffers::FunctionElement* release_function();
+  ::BERTBuffers::FunctionElement* mutable_function();
+  void set_allocated_function(::BERTBuffers::FunctionElement* function);
+
+  // @@protoc_insertion_point(class_scope:BERTBuffers.FunctionDescriptor)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::RepeatedPtrField< ::BERTBuffers::FunctionElement > arguments_;
+  ::BERTBuffers::FunctionElement* function_;
+  mutable int _cached_size_;
+  friend struct ::protobuf_variable_2eproto::TableStruct;
+  friend void ::protobuf_variable_2eproto::InitDefaultsFunctionDescriptorImpl();
+};
+// -------------------------------------------------------------------
+
+class FunctionList : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:BERTBuffers.FunctionList) */ {
+ public:
+  FunctionList();
+  virtual ~FunctionList();
+
+  FunctionList(const FunctionList& from);
+
+  inline FunctionList& operator=(const FunctionList& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  FunctionList(FunctionList&& from) noexcept
+    : FunctionList() {
+    *this = ::std::move(from);
+  }
+
+  inline FunctionList& operator=(FunctionList&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const FunctionList& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const FunctionList* internal_default_instance() {
+    return reinterpret_cast<const FunctionList*>(
+               &_FunctionList_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    10;
+
+  void Swap(FunctionList* other);
+  friend void swap(FunctionList& a, FunctionList& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline FunctionList* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  FunctionList* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CopyFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void MergeFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void CopyFrom(const FunctionList& from);
+  void MergeFrom(const FunctionList& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const PROTOBUF_FINAL;
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const PROTOBUF_FINAL;
+  void InternalSwap(FunctionList* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // repeated .BERTBuffers.FunctionDescriptor functions = 1;
+  int functions_size() const;
+  void clear_functions();
+  static const int kFunctionsFieldNumber = 1;
+  const ::BERTBuffers::FunctionDescriptor& functions(int index) const;
+  ::BERTBuffers::FunctionDescriptor* mutable_functions(int index);
+  ::BERTBuffers::FunctionDescriptor* add_functions();
+  ::google::protobuf::RepeatedPtrField< ::BERTBuffers::FunctionDescriptor >*
+      mutable_functions();
+  const ::google::protobuf::RepeatedPtrField< ::BERTBuffers::FunctionDescriptor >&
+      functions() const;
+
+  // @@protoc_insertion_point(class_scope:BERTBuffers.FunctionList)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::RepeatedPtrField< ::BERTBuffers::FunctionDescriptor > functions_;
+  mutable int _cached_size_;
+  friend struct ::protobuf_variable_2eproto::TableStruct;
+  friend void ::protobuf_variable_2eproto::InitDefaultsFunctionListImpl();
+};
+// -------------------------------------------------------------------
+
 class CallResponse : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:BERTBuffers.CallResponse) */ {
  public:
   CallResponse();
@@ -1399,6 +1784,7 @@ class CallResponse : public ::google::protobuf::Message /* @@protoc_insertion_po
     kCode = 6,
     kShellCommand = 7,
     kFunctionCall = 8,
+    kFunctionList = 9,
     OPERATION_NOT_SET = 0,
   };
 
@@ -1408,7 +1794,7 @@ class CallResponse : public ::google::protobuf::Message /* @@protoc_insertion_po
                &_CallResponse_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    8;
+    11;
 
   void Swap(CallResponse* other);
   friend void swap(CallResponse& a, CallResponse& b) {
@@ -1537,6 +1923,15 @@ class CallResponse : public ::google::protobuf::Message /* @@protoc_insertion_po
   ::BERTBuffers::CompositeFunctionCall* mutable_function_call();
   void set_allocated_function_call(::BERTBuffers::CompositeFunctionCall* function_call);
 
+  // .BERTBuffers.FunctionList function_list = 9;
+  bool has_function_list() const;
+  void clear_function_list();
+  static const int kFunctionListFieldNumber = 9;
+  const ::BERTBuffers::FunctionList& function_list() const;
+  ::BERTBuffers::FunctionList* release_function_list();
+  ::BERTBuffers::FunctionList* mutable_function_list();
+  void set_allocated_function_list(::BERTBuffers::FunctionList* function_list);
+
   OperationCase operation_case() const;
   // @@protoc_insertion_point(class_scope:BERTBuffers.CallResponse)
  private:
@@ -1546,6 +1941,7 @@ class CallResponse : public ::google::protobuf::Message /* @@protoc_insertion_po
   void set_has_code();
   void set_has_shell_command();
   void set_has_function_call();
+  void set_has_function_list();
 
   inline bool has_operation() const;
   void clear_operation();
@@ -1562,6 +1958,7 @@ class CallResponse : public ::google::protobuf::Message /* @@protoc_insertion_po
     ::BERTBuffers::Code* code_;
     ::google::protobuf::internal::ArenaStringPtr shell_command_;
     ::BERTBuffers::CompositeFunctionCall* function_call_;
+    ::BERTBuffers::FunctionList* function_list_;
   } operation_;
   mutable int _cached_size_;
   ::google::protobuf::uint32 _oneof_case_[1];
@@ -2935,6 +3332,337 @@ inline Console::MessageCase Console::message_case() const {
 }
 // -------------------------------------------------------------------
 
+// FunctionElement
+
+// string name = 1;
+inline void FunctionElement::clear_name() {
+  name_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& FunctionElement::name() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.FunctionElement.name)
+  return name_.GetNoArena();
+}
+inline void FunctionElement::set_name(const ::std::string& value) {
+  
+  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:BERTBuffers.FunctionElement.name)
+}
+#if LANG_CXX11
+inline void FunctionElement::set_name(::std::string&& value) {
+  
+  name_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:BERTBuffers.FunctionElement.name)
+}
+#endif
+inline void FunctionElement::set_name(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:BERTBuffers.FunctionElement.name)
+}
+inline void FunctionElement::set_name(const char* value, size_t size) {
+  
+  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:BERTBuffers.FunctionElement.name)
+}
+inline ::std::string* FunctionElement::mutable_name() {
+  
+  // @@protoc_insertion_point(field_mutable:BERTBuffers.FunctionElement.name)
+  return name_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* FunctionElement::release_name() {
+  // @@protoc_insertion_point(field_release:BERTBuffers.FunctionElement.name)
+  
+  return name_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void FunctionElement::set_allocated_name(::std::string* name) {
+  if (name != NULL) {
+    
+  } else {
+    
+  }
+  name_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), name);
+  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.FunctionElement.name)
+}
+
+// string type_name = 2;
+inline void FunctionElement::clear_type_name() {
+  type_name_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& FunctionElement::type_name() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.FunctionElement.type_name)
+  return type_name_.GetNoArena();
+}
+inline void FunctionElement::set_type_name(const ::std::string& value) {
+  
+  type_name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:BERTBuffers.FunctionElement.type_name)
+}
+#if LANG_CXX11
+inline void FunctionElement::set_type_name(::std::string&& value) {
+  
+  type_name_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:BERTBuffers.FunctionElement.type_name)
+}
+#endif
+inline void FunctionElement::set_type_name(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  type_name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:BERTBuffers.FunctionElement.type_name)
+}
+inline void FunctionElement::set_type_name(const char* value, size_t size) {
+  
+  type_name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:BERTBuffers.FunctionElement.type_name)
+}
+inline ::std::string* FunctionElement::mutable_type_name() {
+  
+  // @@protoc_insertion_point(field_mutable:BERTBuffers.FunctionElement.type_name)
+  return type_name_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* FunctionElement::release_type_name() {
+  // @@protoc_insertion_point(field_release:BERTBuffers.FunctionElement.type_name)
+  
+  return type_name_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void FunctionElement::set_allocated_type_name(::std::string* type_name) {
+  if (type_name != NULL) {
+    
+  } else {
+    
+  }
+  type_name_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), type_name);
+  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.FunctionElement.type_name)
+}
+
+// .BERTBuffers.Variable default_value = 3;
+inline bool FunctionElement::has_default_value() const {
+  return this != internal_default_instance() && default_value_ != NULL;
+}
+inline void FunctionElement::clear_default_value() {
+  if (GetArenaNoVirtual() == NULL && default_value_ != NULL) {
+    delete default_value_;
+  }
+  default_value_ = NULL;
+}
+inline const ::BERTBuffers::Variable& FunctionElement::default_value() const {
+  const ::BERTBuffers::Variable* p = default_value_;
+  // @@protoc_insertion_point(field_get:BERTBuffers.FunctionElement.default_value)
+  return p != NULL ? *p : *reinterpret_cast<const ::BERTBuffers::Variable*>(
+      &::BERTBuffers::_Variable_default_instance_);
+}
+inline ::BERTBuffers::Variable* FunctionElement::release_default_value() {
+  // @@protoc_insertion_point(field_release:BERTBuffers.FunctionElement.default_value)
+  
+  ::BERTBuffers::Variable* temp = default_value_;
+  default_value_ = NULL;
+  return temp;
+}
+inline ::BERTBuffers::Variable* FunctionElement::mutable_default_value() {
+  
+  if (default_value_ == NULL) {
+    default_value_ = new ::BERTBuffers::Variable;
+  }
+  // @@protoc_insertion_point(field_mutable:BERTBuffers.FunctionElement.default_value)
+  return default_value_;
+}
+inline void FunctionElement::set_allocated_default_value(::BERTBuffers::Variable* default_value) {
+  ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
+  if (message_arena == NULL) {
+    delete default_value_;
+  }
+  if (default_value) {
+    ::google::protobuf::Arena* submessage_arena = NULL;
+    if (message_arena != submessage_arena) {
+      default_value = ::google::protobuf::internal::GetOwnedMessage(
+          message_arena, default_value, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  default_value_ = default_value;
+  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.FunctionElement.default_value)
+}
+
+// string description = 4;
+inline void FunctionElement::clear_description() {
+  description_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& FunctionElement::description() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.FunctionElement.description)
+  return description_.GetNoArena();
+}
+inline void FunctionElement::set_description(const ::std::string& value) {
+  
+  description_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:BERTBuffers.FunctionElement.description)
+}
+#if LANG_CXX11
+inline void FunctionElement::set_description(::std::string&& value) {
+  
+  description_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:BERTBuffers.FunctionElement.description)
+}
+#endif
+inline void FunctionElement::set_description(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  description_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:BERTBuffers.FunctionElement.description)
+}
+inline void FunctionElement::set_description(const char* value, size_t size) {
+  
+  description_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:BERTBuffers.FunctionElement.description)
+}
+inline ::std::string* FunctionElement::mutable_description() {
+  
+  // @@protoc_insertion_point(field_mutable:BERTBuffers.FunctionElement.description)
+  return description_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* FunctionElement::release_description() {
+  // @@protoc_insertion_point(field_release:BERTBuffers.FunctionElement.description)
+  
+  return description_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void FunctionElement::set_allocated_description(::std::string* description) {
+  if (description != NULL) {
+    
+  } else {
+    
+  }
+  description_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), description);
+  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.FunctionElement.description)
+}
+
+// -------------------------------------------------------------------
+
+// FunctionDescriptor
+
+// .BERTBuffers.FunctionElement function = 1;
+inline bool FunctionDescriptor::has_function() const {
+  return this != internal_default_instance() && function_ != NULL;
+}
+inline void FunctionDescriptor::clear_function() {
+  if (GetArenaNoVirtual() == NULL && function_ != NULL) {
+    delete function_;
+  }
+  function_ = NULL;
+}
+inline const ::BERTBuffers::FunctionElement& FunctionDescriptor::function() const {
+  const ::BERTBuffers::FunctionElement* p = function_;
+  // @@protoc_insertion_point(field_get:BERTBuffers.FunctionDescriptor.function)
+  return p != NULL ? *p : *reinterpret_cast<const ::BERTBuffers::FunctionElement*>(
+      &::BERTBuffers::_FunctionElement_default_instance_);
+}
+inline ::BERTBuffers::FunctionElement* FunctionDescriptor::release_function() {
+  // @@protoc_insertion_point(field_release:BERTBuffers.FunctionDescriptor.function)
+  
+  ::BERTBuffers::FunctionElement* temp = function_;
+  function_ = NULL;
+  return temp;
+}
+inline ::BERTBuffers::FunctionElement* FunctionDescriptor::mutable_function() {
+  
+  if (function_ == NULL) {
+    function_ = new ::BERTBuffers::FunctionElement;
+  }
+  // @@protoc_insertion_point(field_mutable:BERTBuffers.FunctionDescriptor.function)
+  return function_;
+}
+inline void FunctionDescriptor::set_allocated_function(::BERTBuffers::FunctionElement* function) {
+  ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
+  if (message_arena == NULL) {
+    delete function_;
+  }
+  if (function) {
+    ::google::protobuf::Arena* submessage_arena = NULL;
+    if (message_arena != submessage_arena) {
+      function = ::google::protobuf::internal::GetOwnedMessage(
+          message_arena, function, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  function_ = function;
+  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.FunctionDescriptor.function)
+}
+
+// repeated .BERTBuffers.FunctionElement arguments = 2;
+inline int FunctionDescriptor::arguments_size() const {
+  return arguments_.size();
+}
+inline void FunctionDescriptor::clear_arguments() {
+  arguments_.Clear();
+}
+inline const ::BERTBuffers::FunctionElement& FunctionDescriptor::arguments(int index) const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.FunctionDescriptor.arguments)
+  return arguments_.Get(index);
+}
+inline ::BERTBuffers::FunctionElement* FunctionDescriptor::mutable_arguments(int index) {
+  // @@protoc_insertion_point(field_mutable:BERTBuffers.FunctionDescriptor.arguments)
+  return arguments_.Mutable(index);
+}
+inline ::BERTBuffers::FunctionElement* FunctionDescriptor::add_arguments() {
+  // @@protoc_insertion_point(field_add:BERTBuffers.FunctionDescriptor.arguments)
+  return arguments_.Add();
+}
+inline ::google::protobuf::RepeatedPtrField< ::BERTBuffers::FunctionElement >*
+FunctionDescriptor::mutable_arguments() {
+  // @@protoc_insertion_point(field_mutable_list:BERTBuffers.FunctionDescriptor.arguments)
+  return &arguments_;
+}
+inline const ::google::protobuf::RepeatedPtrField< ::BERTBuffers::FunctionElement >&
+FunctionDescriptor::arguments() const {
+  // @@protoc_insertion_point(field_list:BERTBuffers.FunctionDescriptor.arguments)
+  return arguments_;
+}
+
+// -------------------------------------------------------------------
+
+// FunctionList
+
+// repeated .BERTBuffers.FunctionDescriptor functions = 1;
+inline int FunctionList::functions_size() const {
+  return functions_.size();
+}
+inline void FunctionList::clear_functions() {
+  functions_.Clear();
+}
+inline const ::BERTBuffers::FunctionDescriptor& FunctionList::functions(int index) const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.FunctionList.functions)
+  return functions_.Get(index);
+}
+inline ::BERTBuffers::FunctionDescriptor* FunctionList::mutable_functions(int index) {
+  // @@protoc_insertion_point(field_mutable:BERTBuffers.FunctionList.functions)
+  return functions_.Mutable(index);
+}
+inline ::BERTBuffers::FunctionDescriptor* FunctionList::add_functions() {
+  // @@protoc_insertion_point(field_add:BERTBuffers.FunctionList.functions)
+  return functions_.Add();
+}
+inline ::google::protobuf::RepeatedPtrField< ::BERTBuffers::FunctionDescriptor >*
+FunctionList::mutable_functions() {
+  // @@protoc_insertion_point(field_mutable_list:BERTBuffers.FunctionList.functions)
+  return &functions_;
+}
+inline const ::google::protobuf::RepeatedPtrField< ::BERTBuffers::FunctionDescriptor >&
+FunctionList::functions() const {
+  // @@protoc_insertion_point(field_list:BERTBuffers.FunctionList.functions)
+  return functions_;
+}
+
+// -------------------------------------------------------------------
+
 // CallResponse
 
 // uint32 id = 1;
@@ -3315,6 +4043,46 @@ inline ::BERTBuffers::CompositeFunctionCall* CallResponse::mutable_function_call
   return operation_.function_call_;
 }
 
+// .BERTBuffers.FunctionList function_list = 9;
+inline bool CallResponse::has_function_list() const {
+  return operation_case() == kFunctionList;
+}
+inline void CallResponse::set_has_function_list() {
+  _oneof_case_[0] = kFunctionList;
+}
+inline void CallResponse::clear_function_list() {
+  if (has_function_list()) {
+    delete operation_.function_list_;
+    clear_has_operation();
+  }
+}
+inline ::BERTBuffers::FunctionList* CallResponse::release_function_list() {
+  // @@protoc_insertion_point(field_release:BERTBuffers.CallResponse.function_list)
+  if (has_function_list()) {
+    clear_has_operation();
+      ::BERTBuffers::FunctionList* temp = operation_.function_list_;
+    operation_.function_list_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline const ::BERTBuffers::FunctionList& CallResponse::function_list() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.CallResponse.function_list)
+  return has_function_list()
+      ? *operation_.function_list_
+      : *reinterpret_cast< ::BERTBuffers::FunctionList*>(&::BERTBuffers::_FunctionList_default_instance_);
+}
+inline ::BERTBuffers::FunctionList* CallResponse::mutable_function_list() {
+  if (!has_function_list()) {
+    clear_operation();
+    set_has_function_list();
+    operation_.function_list_ = new ::BERTBuffers::FunctionList;
+  }
+  // @@protoc_insertion_point(field_mutable:BERTBuffers.CallResponse.function_list)
+  return operation_.function_list_;
+}
+
 inline bool CallResponse::has_operation() const {
   return operation_case() != OPERATION_NOT_SET;
 }
@@ -3327,6 +4095,12 @@ inline CallResponse::OperationCase CallResponse::operation_case() const {
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

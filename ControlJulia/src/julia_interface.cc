@@ -525,6 +525,124 @@ void JuliaCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallRespo
 
 }
 
+inline std::string jl_string(jl_value_t *value){ return std::string(jl_string_ptr(value), jl_string_len(value)); }
+
+void ListScriptFunctions(BERTBuffers::CallResponse &response, const BERTBuffers::CallResponse &call) {
+  
+  bool success = false;
+  response.set_id(call.id());
+  
+  // FIXME: wrap in try-catch? might be easier to handle 
+
+  std::string command = "BERT.ListFunctions()"; // newline?
+
+  JL_TRY{
+
+    jl_value_t *val = (jl_value_t*)jl_load_file_string(command.c_str(), command.length(), "inline (list-functions)");
+
+    if (jl_exception_occurred()) {
+      std::cout << "* [LSF] EXCEPTION" << std::endl;
+      jl_exception_clear();
+    }
+    else {
+      success = true;
+      auto function_list = response.mutable_function_list();
+
+      auto ParseEntry = [function_list](jl_value_t * element){
+
+        // function descriptions are lists of function name, [arg name]
+        // FIXME/TODO: get (at least) docs in there
+
+        if (jl_is_array(element)) {
+
+          auto jl_array = (jl_array_t*)element;
+          auto eltype = jl_array_eltype(element);
+          auto array_length = jl_array->length;
+
+          // expect string[], don't handle other types...
+
+          if (array_length == 0) {
+            std::cout << "function list entry has length 0" << std::endl;
+          }
+          else if (eltype == jl_string_type) {
+            auto data = (jl_value_t**)(jl_array_data(jl_array));
+            auto function_descriptor = function_list->add_functions();
+
+            // FIXME: any other metadata
+
+            function_descriptor->mutable_function()->set_name(jl_string(data[0]));
+            for (int i = 1; i < array_length; i++) {
+              function_descriptor->add_arguments()->set_name(jl_string(data[i]));
+            }
+
+          }
+          else {
+            std::cout << "function list entry, unexpected type: " << eltype << " (array flag? " << (jl_array->flags.ptrarray ? "true" : "false") << ")" << std::endl;
+          }
+
+          /*
+          std::cout << "entry length: " << array_length << std::endl;
+
+          if (eltype == jl_string_type) {
+            std::cout << "\ttype is string" << std::endl;
+          }
+          else if (jl_array->flags.ptrarray) {
+            std::cout << "\tarray flag" << std::endl;
+          }
+          else {
+            std::cout << "\tother type? " << eltype << std::endl;
+          }
+          */
+
+        }
+      };
+
+      if (val) {
+
+        // return value is an array of function descriptions. 
+
+        if (jl_is_array(val)) {
+
+          auto jl_array = (jl_array_t*)val;
+          auto eltype = jl_array_eltype(val); 
+          auto array_length = jl_array->length;
+
+          if (jl_array->flags.ptrarray) {
+            auto data = (jl_value_t**)(jl_array_data(jl_array));
+            for (int i = 0; i < array_length; i++) {
+              // JlValueToVariable(results_array->add_data(), data[i]);
+              ParseEntry(data[i]);
+            }
+            return;
+          }
+
+        }
+
+      }
+      else {
+        // success, but list length is zero
+        // ...
+      }
+    }
+
+  }
+  JL_CATCH {
+
+    std::cout << "* CATCH [LSF]" << std::endl;
+    jl_printf(JL_STDERR, "\nparser error:\n");
+    jl_static_show(JL_STDERR, ptls->exception_in_transit);
+    jl_printf(JL_STDERR, "\n");
+    jlbacktrace();
+    jl_exception_clear();
+
+  }
+
+  if (!success) {
+    response.set_err("error listing functions");
+  }
+
+}
+
 void JuliaExec(BERTBuffers::CallResponse &response, const BERTBuffers::CallResponse &call) {
 
   response.set_id(call.id());

@@ -55,6 +55,7 @@ public:
           
   }
   
+  /*
   FUNCTION_LIST MapLanguageFunctions() {
 
     FUNCTION_LIST function_list;
@@ -64,9 +65,6 @@ public:
     BERTBuffers::CallResponse call;
     BERTBuffers::CallResponse response;
 
-    //call.mutable_function_call()->set_function("BERT.ListFunctions");
-    //call.mutable_code()->add_line("BERT.ListFunctions()");
-
     call.mutable_function_call()->set_function("list-functions");
     call.mutable_function_call()->set_target(BERTBuffers::CallTarget::system);
     call.set_wait(true);
@@ -74,23 +72,35 @@ public:
     Call(response, call);
 
     if (response.operation_case() == BERTBuffers::CallResponse::OperationCase::kErr) return function_list; // error: no functions
+    else if (response.operation_case() == BERTBuffers::CallResponse::OperationCase::kFunctionList) {
+      for (auto descriptor : response.function_list().functions()) {
 
-    for (auto descriptor : response.result().arr().data()) {
-      ARGUMENT_LIST arglist;
-
-      int len = descriptor.arr().data_size();
-      if (len > 0) {
-        std::string function = descriptor.arr().data(0).str();
-        for (int i = 1; i < len; i++) {
-          arglist.push_back(std::make_shared<ArgumentDescriptor>(descriptor.arr().data(i).str()));
+        ARGUMENT_LIST arglist;
+        for (auto argument : descriptor.arguments()) {
+          arglist.push_back(std::make_shared<ArgumentDescriptor>(argument.name()));
         }
-        function_list.push_back(std::make_shared<FunctionDescriptor>(function, language_key_, "", "", arglist));
-      }
+        function_list.push_back(std::make_shared<FunctionDescriptor>(descriptor.function().name(), language_key_, "", "", arglist));
 
+      }
     }
-  
+    else {
+      for (auto descriptor : response.result().arr().data()) {
+        ARGUMENT_LIST arglist;
+
+        int len = descriptor.arr().data_size();
+        if (len > 0) {
+          std::string function = descriptor.arr().data(0).str();
+          for (int i = 1; i < len; i++) {
+            arglist.push_back(std::make_shared<ArgumentDescriptor>(descriptor.arr().data(i).str()));
+          }
+          function_list.push_back(std::make_shared<FunctionDescriptor>(function, language_key_, "", "", arglist));
+        }
+
+      }
+    }
     return function_list;
   }
+  */
 
   int StartChildProcess(HANDLE job_handle) {
     

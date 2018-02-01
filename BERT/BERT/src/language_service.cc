@@ -364,4 +364,47 @@ void LanguageService::Call(BERTBuffers::CallResponse &response, BERTBuffers::Cal
 
 }
 
+FUNCTION_LIST LanguageService::MapLanguageFunctions() {
+
+  FUNCTION_LIST function_list;
+
+  if (!connected_) return function_list;
+
+  BERTBuffers::CallResponse call;
+  BERTBuffers::CallResponse rsp;
+
+  call.mutable_function_call()->set_function("list-functions");
+  call.mutable_function_call()->set_target(BERTBuffers::CallTarget::system);
+  call.set_wait(true);
+
+  Call(rsp, call);
+
+  if (rsp.operation_case() == BERTBuffers::CallResponse::OperationCase::kErr) return function_list; // error: no functions
+  else if (rsp.operation_case() == BERTBuffers::CallResponse::OperationCase::kFunctionList) {
+
+    for (auto descriptor : rsp.function_list().functions()) {
+      ARGUMENT_LIST arglist;
+      for (auto argument : descriptor.arguments()) {
+        std::stringstream value;
+        auto default_value = argument.default_value();
+        switch (default_value.value_case()) {
+        case BERTBuffers::Variable::ValueCase::kBoolean:
+          value << default_value.boolean() ? "TRUE" : "FALSE";
+          break;
+        case BERTBuffers::Variable::ValueCase::kNum:
+          value << default_value.num();
+          break;
+        case BERTBuffers::Variable::ValueCase::kStr:
+          value << '"' << default_value.str() << '"';
+          break;
+        }
+        arglist.push_back(std::make_shared<ArgumentDescriptor>(argument.name(), value.str()));
+      }
+      function_list.push_back(std::make_shared<FunctionDescriptor>(descriptor.function().name(), language_key_, "", "", arglist));
+    }
+  }
+
+  return function_list;
+}
+
 

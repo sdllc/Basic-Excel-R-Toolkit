@@ -182,8 +182,9 @@ bool SystemCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallResp
 
     // we're using exec for the moment because we don't support scoping (i.e. Bert.X) in call
 
-    translated_call.mutable_code()->add_line("BERT.ListFunctions()");
-    JuliaExec(response, translated_call);
+    //translated_call.mutable_code()->add_line("BERT.ListFunctions()");
+    //JuliaExec(response, translated_call);
+    ListScriptFunctions(response, call);
 
     //translated_call.mutable_function_call()->set_target(BERTBuffers::CallTarget::language);
     //translated_call.mutable_function_call()->set_function("BERT.ListFunctions");
