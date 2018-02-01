@@ -364,7 +364,7 @@ void LanguageService::Call(BERTBuffers::CallResponse &response, BERTBuffers::Cal
 
 }
 
-FUNCTION_LIST LanguageService::MapLanguageFunctions() {
+FUNCTION_LIST LanguageService::MapLanguageFunctions(uint32_t key) {
 
   FUNCTION_LIST function_list;
 
@@ -400,7 +400,7 @@ FUNCTION_LIST LanguageService::MapLanguageFunctions() {
         }
         arglist.push_back(std::make_shared<ArgumentDescriptor>(argument.name(), value.str()));
       }
-      function_list.push_back(std::make_shared<FunctionDescriptor>(descriptor.function().name(), language_key_, "", "", arglist));
+      function_list.push_back(std::make_shared<FunctionDescriptor>(descriptor.function().name(), key, "", "", arglist));
     }
   }
 

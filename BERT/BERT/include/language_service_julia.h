@@ -8,100 +8,64 @@ private:
   std::string julia_home_;
 
 public:
+  /*
   LanguageServiceJulia(CallbackInfo &callback_info, COMObjectMap &object_map, DWORD dev_flags,
     const std::string &pipe_name, const std::string &child_path, const std::string &julia_home)
     : LanguageService(LANGUAGE_JULIA, callback_info, object_map, dev_flags, pipe_name, child_path, "Jl", "Julia")
     , julia_home_(julia_home)
   {
+
     // set extensions we want to handle
     file_extensions_ = { "jl", "julia" };
+  }
+  */
+  LanguageServiceJulia(CallbackInfo &callback_info, COMObjectMap &object_map, DWORD dev_flags)
+    : LanguageService(callback_info, object_map, dev_flags)
+  {
+
+    std::string julia_home;
+    std::string child_path;
+    std::string pipe_name;
+
+    APIFunctions::GetRegistryString(julia_home, "BERT2.JuliaHome");
+    APIFunctions::GetRegistryString(child_path, "BERT2.ControlJuliaCommand");
+    APIFunctions::GetRegistryString(pipe_name, "BERT2.OverrideJuliaPipeName");
+
+    if (!pipe_name.length()) {
+      std::stringstream ss;
+      ss << "BERT2-PIPE-JL-" << _getpid();
+      pipe_name = ss.str();
+    }
+
+    pipe_name_ = pipe_name;
+    child_path_ = child_path;
+    julia_home_ = julia_home;
+
+    language_prefix_ = "Jl";
+    language_name_ = "Julia";
+    file_extensions_ = { "jl", "julia" };
+
   }
 
 public:
 
   void Initialize() {
 
-    /*
-      uintptr_t callback_thread_ptr = _beginthreadex(0, 0, BERT::CallbackThreadFunction, this, 0, 0);
-
-    std::string library_path;
-    APIFunctions::GetRegistryString(library_path, "BERT2.LibraryPath");
-    library_path = StringUtilities::EscapeBackslashes(library_path);
-
-    std::string library_command = "library(BERTModule, lib.loc = \"";
-    library_command += library_path;
-    library_command += "\")";
-
-    // get embedded startup code, split into lines
-    // FIXME: why do we require that this be in multiple lines?
-
-    */
-
+    // startup code
     std::string startup_code = APIFunctions::ReadResource(MAKEINTRESOURCE(IDR_RCDATA2));
     std::vector<std::string> lines;
     StringUtilities::Split(startup_code, '\n', 1, lines, true);
 
-    BERTBuffers::CallResponse call;
-
-    // should maybe wait on this, so we know it's complete before we do next steps?
-    // A: no, the R process will queue it anyway (implicitly), all this does is avoid wire traffic
+    BERTBuffers::CallResponse call, response;
 
     call.set_wait(false);
     auto code = call.mutable_code();
     for (auto line : lines) code->add_line(line);
 
-    BERTBuffers::CallResponse rsp;
-    Call(rsp, call);
-          
+    Call(response, call);
+         
   }
   
-  /*
-  FUNCTION_LIST MapLanguageFunctions() {
-
-    FUNCTION_LIST function_list;
-
-    if (!connected_) return function_list;
-
-    BERTBuffers::CallResponse call;
-    BERTBuffers::CallResponse response;
-
-    call.mutable_function_call()->set_function("list-functions");
-    call.mutable_function_call()->set_target(BERTBuffers::CallTarget::system);
-    call.set_wait(true);
-
-    Call(response, call);
-
-    if (response.operation_case() == BERTBuffers::CallResponse::OperationCase::kErr) return function_list; // error: no functions
-    else if (response.operation_case() == BERTBuffers::CallResponse::OperationCase::kFunctionList) {
-      for (auto descriptor : response.function_list().functions()) {
-
-        ARGUMENT_LIST arglist;
-        for (auto argument : descriptor.arguments()) {
-          arglist.push_back(std::make_shared<ArgumentDescriptor>(argument.name()));
-        }
-        function_list.push_back(std::make_shared<FunctionDescriptor>(descriptor.function().name(), language_key_, "", "", arglist));
-
-      }
-    }
-    else {
-      for (auto descriptor : response.result().arr().data()) {
-        ARGUMENT_LIST arglist;
-
-        int len = descriptor.arr().data_size();
-        if (len > 0) {
-          std::string function = descriptor.arr().data(0).str();
-          for (int i = 1; i < len; i++) {
-            arglist.push_back(std::make_shared<ArgumentDescriptor>(descriptor.arr().data(i).str()));
-          }
-          function_list.push_back(std::make_shared<FunctionDescriptor>(function, language_key_, "", "", arglist));
-        }
-
-      }
-    }
-    return function_list;
-  }
-  */
-
   int StartChildProcess(HANDLE job_handle) {
     
     // cache

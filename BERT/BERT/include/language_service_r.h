@@ -8,6 +8,7 @@ public:
   std::string r_home_;
 
 public:
+  /*
   LanguageServiceR( CallbackInfo &callback_info, COMObjectMap &object_map, DWORD dev_flags, 
                     const std::string &pipe_name, const std::string &child_path, const std::string &r_home)
     : LanguageService( LANGUAGE_R, callback_info, object_map, dev_flags, pipe_name, child_path, "R", "R" ) 
@@ -15,6 +16,33 @@ public:
 
     // set extensions we want to handle
     file_extensions_ = { "r", "rscript", "rsrc" };
+  }
+  */
+
+  LanguageServiceR(CallbackInfo &callback_info, COMObjectMap &object_map, DWORD dev_flags)
+    : LanguageService(callback_info, object_map, dev_flags)
+  {
+    std::string r_home;
+    std::string child_path;
+    std::string pipe_name;
+
+    APIFunctions::GetRegistryString(r_home, "BERT2.RHome");
+    APIFunctions::GetRegistryString(child_path, "BERT2.ControlRCommand");
+    APIFunctions::GetRegistryString(pipe_name, "BERT2.OverrideRPipeName");
+    
+    if (!pipe_name.length()) {
+      std::stringstream ss;
+      ss << "BERT2-PIPE-R-" << _getpid();
+      pipe_name = ss.str();
+    }
+
+    pipe_name_ = pipe_name;
+    child_path_ = child_path;
+    r_home_ = r_home;
+    
+    file_extensions_ = { "r", "rscript", "rsrc" };
+    language_prefix_ = "R";
+    language_name_ = "R";
   }
 
 public:
@@ -54,103 +82,6 @@ public:
 
   }
 
-  /*
-  FUNCTION_LIST MapLanguageFunctions() {
-
-    FUNCTION_LIST function_list;
-
-    if (!connected_) return function_list;
-
-    BERTBuffers::CallResponse call;
-    BERTBuffers::CallResponse rsp;
-
-    //call.mutable_function_call()->set_function("BERT$list.functions");
-    call.mutable_function_call()->set_function("list-functions");
-    call.mutable_function_call()->set_target(BERTBuffers::CallTarget::system);
-    call.set_wait(true);
-
-    Call(rsp, call);
-
-    if (rsp.operation_case() == BERTBuffers::CallResponse::OperationCase::kErr) return function_list; // error: no functions
-    else if (rsp.operation_case() == BERTBuffers::CallResponse::OperationCase::kFunctionList) {
-
-      for (auto descriptor : rsp.function_list().functions()) {
-        ARGUMENT_LIST arglist;
-        for (auto argument : descriptor.arguments()) {
-          std::stringstream value;
-          auto default_value = argument.default_value();
-          switch (default_value.value_case()) {
-          case BERTBuffers::Variable::ValueCase::kBoolean:
-            value << default_value.boolean() ? "TRUE" : "FALSE";
-            break;
-          case BERTBuffers::Variable::ValueCase::kNum:
-            value << default_value.num();
-            break;
-          case BERTBuffers::Variable::ValueCase::kStr:
-            value << '"' << default_value.str() << '"';
-            break;
-          }
-          arglist.push_back(std::make_shared<ArgumentDescriptor>(argument.name(), value.str()));
-        }
-        function_list.push_back(std::make_shared<FunctionDescriptor>(descriptor.function().name(), language_key_, "", "", arglist));
-      }
-
-    }
-    else {
-      int count = 0;
-
-      // shoehorning functions into our very simple variable syntax results 
-      // in a lot of nesting. it's not clear that order is guaranteed here,
-      // although that has more to do with R than protobuf.
-
-      // this is a mess. should create a dedicated message for this (...)
-
-      auto ParseArguments = [](BERTBuffers::Variable &args) {
-        ARGUMENT_LIST arglist;
-        for (auto arg : args.arr().data()) {
-          std::string name;
-          std::string defaultValue;
-          for (auto field : arg.arr().data()) {
-            if (!field.name().compare("name")) name = field.str();
-            if (!field.name().compare("default")) {
-              std::stringstream ss;
-              switch (field.value_case()) {
-              case BERTBuffers::Variable::ValueCase::kBoolean:
-                ss << field.boolean() ? "TRUE" : "FALSE";
-                break;
-              case BERTBuffers::Variable::ValueCase::kNum:
-                ss << field.num();
-                break;
-              case BERTBuffers::Variable::ValueCase::kStr:
-                ss << '"' << field.str() << '"';
-                break;
-              }
-              defaultValue = ss.str();
-            }
-          }
-          if (name.length()) {
-            arglist.push_back(std::make_shared<ArgumentDescriptor>(name, defaultValue));
-          }
-        }
-        return arglist;
-      };
-
-      for (auto descriptor : rsp.result().arr().data()) {
-        std::string function;
-        ARGUMENT_LIST arglist;
-        for (auto entry : descriptor.arr().data()) {
-          if (!entry.name().compare("name")) function = entry.str();
-          else if (!entry.name().compare("arguments")) arglist = ParseArguments(entry);
-        }
-        if (function.length()) {
-          function_list.push_back(std::make_shared<FunctionDescriptor>(function, language_key_, "", "", arglist));
-        }
-      }
-    }
-
-    return function_list;
-  }
-  */
 
   int StartChildProcess(HANDLE job_handle){
 

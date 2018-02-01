@@ -48,7 +48,8 @@ private:
   /** watch file changes */
   FileChangeWatcher file_watcher_;
 
-  std::unordered_map <uint32_t, std::shared_ptr<LanguageService>> language_services_;
+  // std::unordered_map <uint32_t, std::shared_ptr<LanguageService>> language_services_;
+  std::vector< std::shared_ptr<LanguageService>> language_services_;
 
 public:
   /** mapped functions */
@@ -91,13 +92,19 @@ private:
 
 public:
 
+  /** 
+   * get language by index. this used to be a hash key, it's now just an index
+   * into a vector. it's still useful to have this method to hide the raw vector.
+   */
   std::shared_ptr<LanguageService> GetLanguageService(uint32_t key);
 
-  /** dispatch call */
+  /** dispatch call, by language ID */
   void CallLanguage(uint32_t language_key, BERTBuffers::CallResponse &response, BERTBuffers::CallResponse &call);
 
   /** update (rebuild) function list; this must be done on the main thread */
   int UpdateFunctions();
+  
+  void RegisterLanguageCalls();
 
 public:
 

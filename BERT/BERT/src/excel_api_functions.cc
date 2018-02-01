@@ -136,6 +136,72 @@ void RegisterFunctions() {
   for (int i = 0; i < 32; i++) delete xlParm[i];
 }
 
+bool ExcelRegisterLanguageCalls(const char *language_name, uint32_t language_key) {
+
+  int err;
+  XLOPER12 register_id;
+  std::vector<LPXLOPER12> arguments;
+  XCHAR wide_string[128];
+
+  WCHAR wide_name[128];
+  int wide_name_length = MultiByteToWideChar(CP_UTF8, 0, language_name, strlen(language_name), wide_name, 128);
+  wide_name[wide_name_length] = 0;
+
+  // here we're assuming that all strings are < 255 characters.
+  // these are the static strings defined in the header, not 
+  // anything user-defined.
+
+  const int max_string_length = 256;
+
+  for (int i = 0; i < 16; i++) arguments.push_back(new XLOPER12);
+  for (int i = 1; i < 16; i++) {
+    arguments[i]->xltype = xltypeStr;
+    arguments[i]->val.str = new XCHAR[max_string_length];
+  }
+
+  // get the library; store as the first argument
+
+  Excel12(xlGetName, arguments[0], 0);
+
+  for (int i = 0; i< 2; i++)
+  {
+    for (int j = 0; j < 15; j++)
+    {
+      int len = (int)wcslen(callTemplates[i][j]);
+      assert(len < (max_string_length - 1));
+      wcscpy_s(&(arguments[j + 1]->val.str[1]), max_string_length - 1, callTemplates[i][j]);
+      arguments[j + 1]->val.str[0] = len;
+    }
+
+    // index 0: add numeric index (+1000)
+    wsprintf(wide_string, L"%s%d", callTemplates[i][0], language_key + 1000);
+    wcscpy_s(&(arguments[0 + 1]->val.str[1]), max_string_length - 1, wide_string);
+    arguments[0 + 1]->val.str[0] = wcslen(wide_string);
+
+    // index 2: add language name string
+    wsprintf(wide_string, L"%s%s", callTemplates[i][2], wide_name);
+    wcscpy_s(&(arguments[2 + 1]->val.str[1]), max_string_length - 1, wide_string);
+    arguments[2 + 1]->val.str[0] = wcslen(wide_string);
+
+    // ok
+    
+    register_id.xltype = xltypeMissing;
+    err = Excel12v(xlfRegister, &register_id, 16, &(arguments[0]));
+    Excel12(xlFree, 0, 1, &register_id);
+  }
+
+  Excel12(xlFree, 0, 1, arguments[0]);
+
+  for (int i = 1; i < 16; i++) {
+    delete[] arguments[i]->val.str;
+  }
+
+  for (auto argument : arguments) delete argument;
+
+  return true;
+
+}
+
 bool RegisterBasicFunctions()
 {
   int err;
@@ -191,6 +257,7 @@ BOOL WINAPI xlAutoOpen(void)
   RegisterBasicFunctions();
   BERT *bert = BERT::Instance();
   bert->Init();
+  bert->RegisterLanguageCalls();
   bert->MapFunctions();
   RegisterFunctions();
   return true;

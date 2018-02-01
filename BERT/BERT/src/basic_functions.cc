@@ -8,8 +8,6 @@
 #include "basic_functions.h"
 #include "type_conversions.h"
 
-#include "language_keys.h"
-
 LPXLOPER12 BERTFunctionCall(
 	int index
 	, LPXLOPER12 input_0
@@ -100,6 +98,7 @@ LPXLOPER12 BERT_Exec_Generic(uint32_t language_key, LPXLOPER12 code) {
 
 }
 
+/*
 LPXLOPER12 BERT_Exec_Julia(LPXLOPER12 code) {
   return BERT_Exec_Generic(LANGUAGE_JULIA, code);
 }
@@ -107,6 +106,7 @@ LPXLOPER12 BERT_Exec_Julia(LPXLOPER12 code) {
 LPXLOPER12 BERT_Exec_R(LPXLOPER12 code) {
   return BERT_Exec_Generic(LANGUAGE_R, code);
 }
+*/
 
 LPXLOPER12 BERT_Call_Generic(uint32_t language_key, LPXLOPER12 func,
   LPXLOPER12 arg0, LPXLOPER12 arg1, LPXLOPER12 arg2, LPXLOPER12 arg3,
@@ -154,6 +154,7 @@ LPXLOPER12 BERT_Call_Generic(uint32_t language_key, LPXLOPER12 func,
 
 }
 
+/*
 LPXLOPER12 BERT_Call_Julia(LPXLOPER12 func,
   LPXLOPER12 arg0, LPXLOPER12 arg1, LPXLOPER12 arg2, LPXLOPER12 arg3,
   LPXLOPER12 arg4, LPXLOPER12 arg5, LPXLOPER12 arg6, LPXLOPER12 arg7,
@@ -177,6 +178,7 @@ LPXLOPER12 BERT_Call_R(LPXLOPER12 func,
     arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
 
 }
+*/
 
 int BERT_SetPointers(ULONG_PTR excel_pointer, ULONG_PTR ribbon_pointer) {
     BERT::Instance()->SetPointers(excel_pointer, ribbon_pointer);
@@ -202,6 +204,22 @@ int BERT_UpdateFunctions() {
   auto bert = BERT::Instance();
   return bert->UpdateFunctions();
 }
+
+// more placeholders 
+
+BCALL(1000);
+BCALL(1001);
+BCALL(1002);
+BCALL(1003);
+BCALL(1004);
+BCALL(1005);
+
+BEXEC(1000);
+BEXEC(1001);
+BEXEC(1002);
+BEXEC(1003);
+BEXEC(1004);
+BEXEC(1005);
 
 // placeholder functions follow
 

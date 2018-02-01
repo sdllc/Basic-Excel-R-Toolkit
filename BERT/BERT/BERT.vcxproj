@@ -26,7 +26,6 @@
     <ClInclude Include="include\debug_functions.h" />
     <ClInclude Include="include\file_change_watcher.h" />
     <ClInclude Include="include\language_service_julia.h" />
-    <ClInclude Include="include\language_keys.h" />
     <ClInclude Include="include\language_service.h" />
     <ClInclude Include="include\message_utilities.h" />
     <ClInclude Include="include\language_service_r.h" />

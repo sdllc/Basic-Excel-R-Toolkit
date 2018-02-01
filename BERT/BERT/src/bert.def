@@ -17,10 +17,19 @@ xlAddInManagerInfo12
 ; Functions
 ;
 
-BERT_Call_R
-BERT_Exec_R
-BERT_Call_Julia
-BERT_Exec_Julia
+BERT_CallLanguage_1000
+BERT_CallLanguage_1001
+BERT_CallLanguage_1002
+BERT_CallLanguage_1003
+BERT_CallLanguage_1004
+BERT_CallLanguage_1005
+
+BERT_ExecLanguage_1000
+BERT_ExecLanguage_1001
+BERT_ExecLanguage_1002
+BERT_ExecLanguage_1003
+BERT_ExecLanguage_1004
+
 BERT_Console
 BERT_SetPointers
 BERT_ContextSwitch

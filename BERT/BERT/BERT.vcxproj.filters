@@ -70,9 +70,6 @@
     <ClInclude Include="include\language_service.h">
       <Filter>language-services</Filter>
     </ClInclude>
-    <ClInclude Include="include\language_keys.h">
-      <Filter>language-services</Filter>
-    </ClInclude>
     <ClInclude Include="include\language_service_julia.h">
       <Filter>language-services</Filter>
     </ClInclude>

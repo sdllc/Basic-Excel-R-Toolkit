@@ -7,7 +7,6 @@
 #include <vector>
 #include <string>
 
-#include "language_keys.h"
 #include "windows_api_functions.h"
 
 /**
@@ -42,9 +41,6 @@ protected:
   /** comms pipe */
   HANDLE pipe_handle_;
 
-  /** key for indexing */
-  uint32_t language_key_;
-
   /** file extensions (lowercase) */
   std::vector< std::string > file_extensions_;
 
@@ -78,17 +74,11 @@ protected:
   COMObjectMap &object_map_;
 
 public:
-  LanguageService(uint32_t language_key, CallbackInfo &callback_info, COMObjectMap &object_map, DWORD dev_flags,
-                    const std::string &pipe_name, const std::string &child_path, 
-                    const std::string &language_prefix, const std::string &language_name )
+
+  LanguageService(CallbackInfo &callback_info, COMObjectMap &object_map, DWORD dev_flags)
     : callback_info_(callback_info)
     , object_map_(object_map)
     , dev_flags_(dev_flags)
-    , language_key_(language_key)
-    , pipe_name_(pipe_name)
-    , child_path_(child_path)
-    , language_prefix_(language_prefix)
-    , language_name_(language_name)
   {
     memset(&io_, 0, sizeof(io_));
   }
@@ -97,9 +87,6 @@ public:
   ~LanguageService() {}
 
 public:
-
-  /** accessor */
-  uint32_t key() { return language_key_; }
 
   /** accessor */
   std::string prefix() { return language_prefix_;  }
@@ -168,7 +155,7 @@ public:
   /** 
    * generate function descriptions. generic.
    */
-  FUNCTION_LIST MapLanguageFunctions();
+  FUNCTION_LIST MapLanguageFunctions(uint32_t key);
 
   /** 
    * make a function call (or other type of call). note that call is not const; we are going 

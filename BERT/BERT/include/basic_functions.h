@@ -15,11 +15,7 @@
 
 static LPWSTR funcTemplates[][16] = {
 
-  { L"BERT_Call_R", L"UQQQQQQQQQQQQQQQQQ", L"BERT.Call.R", L"R Function, Argument", L"1", L"BERT", L"", L"99", L"", L"", L"", L"", L"", L"", L"", L"" },
-  { L"BERT_Call_Julia", L"UQQQQQQQQQQQQQQQQQ", L"BERT.Call.Julia", L"Julia Function, Argument", L"1", L"BERT", L"", L"98", L"", L"", L"", L"", L"", L"", L"", L"" },
-  
-  { L"BERT_Exec_R", L"UQ", L"BERT.Exec.R", L"R Code", L"1", L"BERT", L"", L"97", L"Exec R Code", L"", L"", L"", L"", L"", L"", L"" },
-  { L"BERT_Exec_Julia", L"UQ", L"BERT.Exec.Julia", L"Julia Code", L"1", L"BERT", L"", L"96", L"Exec Julia Code", L"", L"", L"", L"", L"", L"", L"" },
+  // these are constructed at runtime
   
   { L"BERT_Console", L"J", L"BERT.Console", L"", L"2", L"BERT", L"", L"95", L"", L"", L"", L"", L"", L"", L"", L"" },
   { L"BERT_ContextSwitch", L"J", L"BERT.ContextSwitch", L"", L"2", L"BERT", L"", L"94", L"", L"", L"", L"", L"", L"", L"", L"" },
@@ -50,25 +46,10 @@ static LPWSTR funcTemplates[][16] = {
 	{ 0 }
 };
 
-/** exported function */
-LPXLOPER12 BERT_Call_R(LPXLOPER12 func,
-    LPXLOPER12 arg0, LPXLOPER12 arg1, LPXLOPER12 arg2, LPXLOPER12 arg3,
-    LPXLOPER12 arg4, LPXLOPER12 arg5, LPXLOPER12 arg6, LPXLOPER12 arg7,
-    LPXLOPER12 arg8, LPXLOPER12 arg9, LPXLOPER12 arg10, LPXLOPER12 arg11,
-    LPXLOPER12 arg12, LPXLOPER12 arg13, LPXLOPER12 arg14, LPXLOPER12 arg15);
-
-/** exported function */
-LPXLOPER12 BERT_Call_Julia(LPXLOPER12 func,
-  LPXLOPER12 arg0, LPXLOPER12 arg1, LPXLOPER12 arg2, LPXLOPER12 arg3,
-  LPXLOPER12 arg4, LPXLOPER12 arg5, LPXLOPER12 arg6, LPXLOPER12 arg7,
-  LPXLOPER12 arg8, LPXLOPER12 arg9, LPXLOPER12 arg10, LPXLOPER12 arg11,
-  LPXLOPER12 arg12, LPXLOPER12 arg13, LPXLOPER12 arg14, LPXLOPER12 arg15);
-
-/** exported function */
-LPXLOPER12 BERT_Exec_R(LPXLOPER12 code);
-
-/** exported function */
-LPXLOPER12 BERT_Exec_Julia(LPXLOPER12 code);
+static LPWSTR callTemplates[][16] = {
+  { L"BERT_CallLanguage_", L"UQQQQQQQQQQQQQQQQQ", L"BERT.Call.", L"Function, Argument", L"1", L"BERT", L"", L"99", L"", L"", L"", L"", L"", L"", L"", L"" },
+  { L"BERT_ExecLanguage_", L"UQ", L"BERT.Exec.", L"Code", L"1", L"BERT", L"", L"97", L"Exec Language Code", L"", L"", L"", L"", L"", L"", L"" }
+};
 
 /** exported function */
 int BERT_SetPointers(ULONG_PTR excel_pointer, ULONG_PTR ribbon_pointer);
@@ -79,27 +60,61 @@ int BERT_Console();
 /** exported function */
 int BERT_ContextSwitch();
 
+__inline LPXLOPER12 BERT_Call_Generic(uint32_t language_index, LPXLOPER12 func,
+  LPXLOPER12 arg0, LPXLOPER12 arg1, LPXLOPER12 arg2, LPXLOPER12 arg3,
+  LPXLOPER12 arg4, LPXLOPER12 arg5, LPXLOPER12 arg6, LPXLOPER12 arg7,
+  LPXLOPER12 arg8, LPXLOPER12 arg9, LPXLOPER12 arg10, LPXLOPER12 arg11,
+  LPXLOPER12 arg12, LPXLOPER12 arg13, LPXLOPER12 arg14, LPXLOPER12 arg15);
+
+#define BCALL(num) \
+LPXLOPER12 BERT_CallLanguage_ ## num ( \
+  LPXLOPER12 func = 0 \
+  , LPXLOPER12 input_0 = 0 \
+	, LPXLOPER12 input_1 = 0 \
+	, LPXLOPER12 input_2 = 0 \
+	, LPXLOPER12 input_3 = 0 \
+	, LPXLOPER12 input_4 = 0 \
+	, LPXLOPER12 input_5 = 0 \
+	, LPXLOPER12 input_6 = 0 \
+	, LPXLOPER12 input_7 = 0 \
+	, LPXLOPER12 input_8 = 0 \
+	, LPXLOPER12 input_9 = 0 \
+	, LPXLOPER12 input_10 = 0 \
+	, LPXLOPER12 input_11 = 0 \
+	, LPXLOPER12 input_12 = 0 \
+	, LPXLOPER12 input_13 = 0 \
+	, LPXLOPER12 input_14 = 0 \
+	, LPXLOPER12 input_15 = 0 \
+){ return BERT_Call_Generic( num - 1000, func, input_0, input_1, input_2, input_3, input_4, input_5, input_6, input_7, input_8, input_9, input_10, input_11, input_12, input_13, input_14, input_15 ); }
+
+__inline LPXLOPER12 BERT_Exec_Generic(uint32_t language_index, LPXLOPER12 code);
+
+#define BEXEC(num) \
+LPXLOPER12 BERT_ExecLanguage_ ## num ( \
+  LPXLOPER12 code = 0 \
+){ return BERT_Exec_Generic( num - 1000, code ); }
+
 /**
-* generic call dispatcher function, exported from dll
-*/
+ * generic call dispatcher function, exported from dll
+ */
 __inline LPXLOPER12 BERTFunctionCall(
-	int findex,
-	LPXLOPER12 input_0 = 0
-	, LPXLOPER12 input_1 = 0
-	, LPXLOPER12 input_2 = 0
-	, LPXLOPER12 input_3 = 0
-	, LPXLOPER12 input_4 = 0
-	, LPXLOPER12 input_5 = 0
-	, LPXLOPER12 input_6 = 0
-	, LPXLOPER12 input_7 = 0
-	, LPXLOPER12 input_8 = 0
-	, LPXLOPER12 input_9 = 0
-	, LPXLOPER12 input_10 = 0
-	, LPXLOPER12 input_11 = 0
-	, LPXLOPER12 input_12 = 0
-	, LPXLOPER12 input_13 = 0
-	, LPXLOPER12 input_14 = 0
-	, LPXLOPER12 input_15 = 0
+  int findex,
+  LPXLOPER12 input_0 = 0
+  , LPXLOPER12 input_1 = 0
+  , LPXLOPER12 input_2 = 0
+  , LPXLOPER12 input_3 = 0
+  , LPXLOPER12 input_4 = 0
+  , LPXLOPER12 input_5 = 0
+  , LPXLOPER12 input_6 = 0
+  , LPXLOPER12 input_7 = 0
+  , LPXLOPER12 input_8 = 0
+  , LPXLOPER12 input_9 = 0
+  , LPXLOPER12 input_10 = 0
+  , LPXLOPER12 input_11 = 0
+  , LPXLOPER12 input_12 = 0
+  , LPXLOPER12 input_13 = 0
+  , LPXLOPER12 input_14 = 0
+  , LPXLOPER12 input_15 = 0
 );
 
 #define BFC(num) \
