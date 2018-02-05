@@ -55,8 +55,8 @@ void LanguageService::SetApplicationPointer(LPDISPATCH application_pointer) {
   auto function_call = call.mutable_function_call();
   function_call->set_function("install-application-pointer"); // generic
   function_call->set_target(BERTBuffers::CallTarget::system);
-  function_call->add_arguments()->set_external_pointer(reinterpret_cast<ULONG_PTR>(application_pointer));
 
+  //function_call->add_arguments()->set_external_pointer(reinterpret_cast<ULONG_PTR>(application_pointer));
   object_map_.DispatchToVariable(function_call->add_arguments(), application_pointer, true);
 
   Call(response, call);

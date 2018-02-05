@@ -66,7 +66,11 @@ message Variable {
     Complex cpx = 7;
     Array arr = 8;
     SheetReference ref = 9;
-    uint64 external_pointer = 10;
+    
+    //uint64 external_pointer = 10;
+
+    ExternalPointer com_pointer = 10; // taking over, maybe drop the other one
+
   }	
   string name = 15;
 }
@@ -78,10 +82,9 @@ message Code {
 
 /** distinction between calls and accessors (and accesor type) */
 enum CallType {
-  undefined = 0;
+  method = 0;
   get = 1;
   put = 2;
-  method = 3;
 }
 
 enum CallTarget {   
@@ -138,17 +141,51 @@ message FunctionElement {
   string type_name = 2;         // not used atm
   Variable default_value = 3;
   string description = 4;
+  uint32 index = 5;             // added for COM
 }
 
-/** this type describes a function */
+/** 
+ * this type describes a function. adding type so we can reuse this for COM
+ */
 message FunctionDescriptor {
   FunctionElement function = 1;
-  repeated FunctionElement arguments = 2;
+  CallType call_type = 2;
+  repeated FunctionElement arguments = 3;
 }
 
-/** list of functions for union */
+/** 
+ * list of functions. union type can't include arrays, so we need an array.
+ */
 message FunctionList {
   repeated FunctionDescriptor functions = 1;
+}
+
+/** for COM enums */
+message EnumValue {
+  string name = 1;
+  int32 value = 2;
+}
+
+message EnumType {
+  string name = 1;
+  repeated EnumValue values = 2;
+}
+
+
+/** now we're getting less and less general. not sure that's a good thing. */
+message ExternalPointer {
+
+  string interface_name = 1; // d'oh (don't use the name "interface")
+  uint64 pointer = 2;
+
+  // even though the list type is useless here, it still might be worth
+  // using it so we can standardize functions for walking the list. although 
+  // it's probably just 1 deref, so don't kill yourself overoptimizing.
+
+  //FunctionList functions = 3;
+  repeated FunctionDescriptor functions = 3;
+  repeated EnumType enums = 4;
+
 }
 
 /** 
@@ -183,6 +220,8 @@ message CallResponse {
     // call types and callbacks. what's the difference between shell 
     // command and code? context. shell command executes like it's typed
     // at the console, code is executed via parse/eval calls. 
+
+    // OK, so why not use a flag then? 
 
     Code code = 6;
     string shell_command = 7;

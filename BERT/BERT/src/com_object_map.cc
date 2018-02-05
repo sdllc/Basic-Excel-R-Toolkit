@@ -123,6 +123,19 @@ void COMObjectMap::MapInterface(std::string &name, std::vector< MemberFunction >
           function.arguments_.push_back(argument);
         }
 
+        if (com_function_descriptor->cParams > 0) {
+          if (name_count > 1) {
+            std::cout << "names and params" << std::endl;
+          }
+          else if(com_function_descriptor->cParams > 1){
+            std::cout << "no names, params > 1" << std::endl;
+          }
+          else { 
+            // no names, 1 param. add an RHS parameter. FIXME: optional?
+            function.arguments_.push_back("RHS");
+          }
+        }
+
         members.push_back(function);
 
       }
@@ -309,21 +322,8 @@ void COMObjectMap::DispatchResponse(BERTBuffers::CallResponse &response, const L
     response.mutable_result()->set_nil(true);
   }
   else {
-
-    //response.mutable_value()->set_nil(true);
-
-    //int32_t key = MapCOMPointer(reinterpret_cast<ULONG_PTR>(dispatch_pointer));
-
     dispatch_pointer->AddRef();
-
-    auto function_call = response.mutable_function_call();
-    function_call->set_function("BERT$install.com.pointer");
-    //function_call->add_arguments()->set_num(key);
-    function_call->add_arguments()->set_external_pointer(reinterpret_cast<ULONG_PTR>(dispatch_pointer));
-
-    auto function_descriptor = function_call->add_arguments();
-    DispatchToVariable(function_descriptor, dispatch_pointer);
-
+    DispatchToVariable(response.mutable_result(), dispatch_pointer);
   }
 }
 
@@ -338,6 +338,53 @@ void COMObjectMap::DispatchToVariable(BERTBuffers::Variable *variable, LPDISPATC
     if (enums) MapEnums(dispatch_pointer, enum_list);
   }
 
+  auto com_pointer = variable->mutable_com_pointer();
+
+  // FIXME: if there's no name, we should not be bothering with this thing. no?
+
+  if (!interface_name.Length()) interface_name = L"IDispatch";
+
+  com_pointer->set_interface_name(BSTRToString(interface_name));
+  com_pointer->set_pointer(reinterpret_cast<ULONG_PTR>(dispatch_pointer));
+
+  for (auto function : function_list) {
+    
+    auto element = com_pointer->add_functions();
+    auto descriptor = element->mutable_function();
+
+    descriptor->set_name(function.name_);
+    descriptor->set_index(function.function_description_index_);
+
+    if (function.call_type_ == MemberFunction::CallType::PropertyGet) {
+      element->set_call_type(BERTBuffers::CallType::get);
+    }
+    else if (function.call_type_ == MemberFunction::CallType::PropertyPut) {
+      element->set_call_type(BERTBuffers::CallType::put);
+    }
+    else {
+      // this is default, so can skip
+      // element->set_call_type(BERTBuffers::CallType::method);
+    }
+
+    for (auto argument : function.arguments_) {
+
+      // FIXME: default value, required/optional, &c.
+      element->add_arguments()->set_name(argument);
+    }
+
+  }
+
+  for (auto enum_entry : enum_list) {
+    auto enum_type = com_pointer->add_enums();
+    enum_type->set_name(enum_entry.first);
+    for (auto enum_value : enum_entry.second) {
+      auto value = enum_type->add_values();
+      value->set_name(enum_value.first);
+      value->set_value(enum_value.second);
+    }
+  }
+
+  /*
   auto top_level_array = variable->mutable_arr();
 
   if (interface_name.Length()) {
@@ -416,6 +463,8 @@ void COMObjectMap::DispatchToVariable(BERTBuffers::Variable *variable, LPDISPATC
     }
 
   }
+  */
+
 }
 
 void COMObjectMap::MapObject(IDispatch *dispatch_pointer, std::vector< MemberFunction > &member_list, CComBSTR &match_name)

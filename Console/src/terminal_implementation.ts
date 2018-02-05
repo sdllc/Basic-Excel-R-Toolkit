@@ -121,6 +121,7 @@ class Autocomplete {
     }
 
     let comps = this.last_.comps.split(/\n/);
+    if( comps && comps.length) comps.sort();
 
     if( comps.length === 1 && acceptSingleCompletion ){
       this.Dismiss();
@@ -454,12 +455,28 @@ export class TerminalImplementation {
       // FIXME: generalize this into finding position of a character, 
       // we can probably use it again
 
-      let m = this.line_info_.buffer.match(new RegExp(function_guess + "\\s*\\(", "i"));
+      // for R functions with environment or list scoping, there can be 
+      // dollar signs -- we need to make sure these are interpreted literally
+
+      let regex = new RegExp(function_guess.replace(/\$/g, "\\$") + "\\s*\\(", "i");
+
+      let m = this.line_info_.buffer.match(regex);
       let range = document.createRange();
       let node = cursor_node.previousSibling.firstChild as HTMLElement;
 
       range.selectNodeContents(node);
       range.setEnd(node, m.index + this.line_info_.prompt.length);
+
+      // also for scoping, the "message" field (tip) may contain an unscoped 
+      // name, in which case we need to advance it. assume that the range is 
+      // collapsed (one node), we're not handling uncollapsed atm
+
+      let test_text = message.replace( /\s*\(.*$/, "" );
+      let test_index = (range.startContainer.textContent||"").indexOf(test_text);
+      if(test_index > 0){
+        range.setStart(range.startContainer, test_index);
+      }
+
       let rect = range.getBoundingClientRect();
 
       this.current_tip_ = message;

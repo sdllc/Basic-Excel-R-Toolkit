@@ -14,26 +14,52 @@ with( BERT, {
         z;
     }
 
-    install.com.pointer <- function(key, descriptor){
-        env <- BERTModule:::.WrapDispatch3(key, descriptor$interface );
-        lapply( descriptor$functions, function(method){
-            name <- method$name;
-            if( method$type == "get" ){ name <- paste0( "get_", name ); }
-            if( method$type == "put" ){ name <- paste0( "put_", name ); }
-            BERTModule:::.DefineCOMFunc( name, method$name, func.type=method$type, func.index=method$index, func.args=unlist(method$arguments), target.env=env );
+    install.com.pointer <- function(descriptor){
+
+        # this way of doing it uses a closure for each method. that's probably fine, but it 
+        # seems awkward -- especially for the external pointer. it's also unecessary, since 
+        # we have the env, we can stick the pointer in there and refer to it. 
+
+        # these are also hard to read, since there's no identifying information in the 
+        # function body [What other information is there? the name is the same]
+
+        env <- new.env();
+        lapply( sort(names(descriptor$functions)), function(name){
+          ref <- descriptor$functions[name][[1]]
+          if(length(ref$arguments) == 0){
+            func <- eval(bquote(function(...){
+              .Call("COMCallback", .(ref$name), .(ref$call.type), 
+                .(ref$index), .(descriptor$pointer), list(...), PACKAGE="BERTModule" );
+            }));
+          }
+          else {
+            func <- eval(bquote(function(){
+			        .Call("COMCallback", .(ref$name), .(ref$call.type), 
+                .(ref$index), .(descriptor$pointer), c(as.list(environment())), 
+                PACKAGE="BERTModule" );
+            }));
+            arguments.expr <- paste( "alist(", paste( sapply( ref$arguments, function(x){ paste( x, "=", sep="" )}), collapse=", " ), ")" );
+            formals(func) <- eval(parse(text=arguments.expr));
+          }
+          assign(name, func, env=env);
         });
-        return(env);
+
+        class(env) <- c("IDispatch", descriptor$interface);
+        env;
+
     }
 
-    install.application.pointer <- function(key, descriptor){
-        excel.env <- new.env();
-        assign( "Application", install.com.pointer(key, descriptor), envir=excel.env);
-        lapply( descriptor$enums, function(enum){
-            enum.env <- new.env();
-            lapply( names(enum$values), function( name ){ assign( name, enum$values[name], envir=enum.env ); });
-            assign( enum$name, enum.env, envir=excel.env );
-        })
-        assign( "EXCEL", excel.env, envir=.GlobalEnv);
+    #
+    # when installing the base pointer, we include enums (and there are a lot of them)
+    #
+    install.application.pointer <- function(descriptor){
+      assign( "descriptor", descriptor, env=.GlobalEnv ); # dev
+      env <- new.env();
+      assign( "Application", install.com.pointer(descriptor), envir=env);
+      lapply(names(descriptor$enums), function(name){
+        assign( name, descriptor$enums[name], envir=env)
+      });
+      assign( "EXCEL", env, envir=.GlobalEnv);
     }
 
 });

@@ -9,6 +9,7 @@ import * as JuliaLanguage from './julia_language';
 import { TabPanel, TabJustify, TabEventType, TabSpec } from './tab_panel';
 
 const Constants = require("../data/constants.json");
+const PreferencesSchema = require("../data/schemas/preferences_schema.json");
 
 import * as path from 'path';
 import * as fs from 'fs';
@@ -72,6 +73,7 @@ class Document {
       view_state: this.view_state_,
       dirty: this.dirty_,
       overrideLanguage: this.overrideLanguage_,
+      uri: this.model_.uri,
       type: this.type_,
       saved_version: this.saved_version_,
       alternative_version_id: this.model_.getAlternativeVersionId(),
@@ -160,6 +162,15 @@ export class Editor {
       pathName = '/' + pathName;
     }
     return encodeURI('file://' + pathName);
+  }
+
+  /** 
+   * utility function: strip comments, c style and c++ style.
+   * for json w/ comments
+   */
+  static StripComments(text:string) : string {
+    return text.replace( /\/\*[\s\S]+\*\//g, "").split(/\n/).map( 
+      line => line.replace( /\/\/.*$/m, "" )).join("\n");
   }
 
   /**
@@ -343,23 +354,23 @@ export class Editor {
 
   }
 
-  private LoadThemes() : Promise<any> {
+  private LoadThemes(): Promise<any> {
     return new Promise((resolve, reject) => {
-      let dir = path.resolve( "data/themes" );
-      fs.readdir( dir, (err, files) => {
-        if(err) console.error(err);
+      let dir = path.resolve("data/themes");
+      fs.readdir(dir, (err, files) => {
+        if (err) console.error(err);
         else {
           let themes = files.filter(x => /\.json$/i.test(x)).map(x => {
             return require(path.join(dir, x));
           });
           themes.forEach(theme => {
-            if( theme.id ) {
+            if (theme.id) {
               console.info(theme);
               monaco.editor.defineTheme(theme.id, theme);
             }
           });
-        } 
-        resolve();     
+        }
+        resolve();
       });
     });
   }
@@ -375,6 +386,9 @@ export class Editor {
     this.editor_options_.contextmenu = false;
 
     this.editor_ = monaco.editor.create(node, this.editor_options_);
+
+    // TODO: add "execute" actions for execute selection, execute file
+    // ...
 
     this.editor_.onContextMenu(e => {
 
@@ -423,12 +437,50 @@ export class Editor {
 
     });
 
+    // FIXME: demand load
+
+    // schema for preferences. also it allows comments (we still 
+    // have to scrub these before parsing).
+
+    monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+      validate: true, allowComments: true,
+      schemas: [{
+        uri: "http://bert-toolkit.org/preferences-schema",
+        fileMatch: [PREFERENCES_URI],
+        schema: PreferencesSchema
+      }, {
+        uri: "http://bert-toolkit.org/generic-schema",
+        fileMatch: ['*.json'],
+        schema: {
+          type: "object",
+          properties: {}
+        }
+      }]
+    });
+
+    // TODO: come back to this for managing config/preferences.
+    // the demo does not work because it's missing the triggerCharacters
+    // field, add that (triggerCharacters: ['"']) and it works, although 
+    // it's adding extra quotes. wildcards? needs some investigation. ...
+
+    /*
+    monaco.languages.registerCompletionItemProvider('json', {
+      triggerCharacters: ['""'],
+      provideCompletionItems: function(model, position) {
+        console.info(position);
+        return [];
+      }
+    });
+    */
+
     this.RestoreOpenFiles();
 
   }
 
   /** 
    * utility for ~unique hashes (uses the java string algorithm). NOT SECURE! 
+   * 
+   * FIXME: who is using this? can we drop?
    */
   private static Hash(text) {
     let hash = 0;
@@ -505,7 +557,6 @@ export class Editor {
       try {
 
         let unserialized = JSON.parse(text);
-
         document = new Document();
         document.label_ = unserialized.label;
         document.file_path_ = unserialized.file_path;
@@ -515,7 +566,7 @@ export class Editor {
         if (unserialized.file_path) {
           if (unserialized.overrideLanguage) {
             document.model_ = monaco.editor.createModel(unserialized.text,
-              unserialized.overrideLanguage);
+              unserialized.overrideLanguage, unserialized.uri || null);
           }
           else {
             document.model_ = monaco.editor.createModel(unserialized.text, undefined,
@@ -641,7 +692,7 @@ export class Editor {
 
     if (json) {
       try {
-        data = JSON.parse(json);
+        data = JSON.parse(Editor.StripComments(json));
       }
       catch (e) {
 
@@ -781,6 +832,9 @@ export class Editor {
         // special case
         if (document.file_path_ === PREFERENCES_URI) {
           try {
+
+            contents = Editor.StripComments(contents);
+
             let data = JSON.parse(contents);
             let editor_options = data.editor || {};
 
@@ -898,7 +952,9 @@ export class Editor {
         document.file_path_ = file_path;
         document.type_ = DocumentType.LocalStorage;
         document.overrideLanguage_ = "json";
-        document.model_ = monaco.editor.createModel(data, "json");
+
+        // set the URI here so we can match it in json schema definitions
+        document.model_ = monaco.editor.createModel(data, "json", file_path as any);
         document.model_.updateOptions(this.editor_options_);
 
         document.saved_version_ = document.model_.getAlternativeVersionId()

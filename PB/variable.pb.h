@@ -37,7 +37,7 @@ namespace protobuf_variable_2eproto {
 struct TableStruct {
   static const ::google::protobuf::internal::ParseTableField entries[];
   static const ::google::protobuf::internal::AuxillaryParseTableField aux[];
-  static const ::google::protobuf::internal::ParseTable schema[12];
+  static const ::google::protobuf::internal::ParseTable schema[15];
   static const ::google::protobuf::internal::FieldMetadata field_metadata[];
   static const ::google::protobuf::internal::SerializationTable serialization_table[];
   static const ::google::protobuf::uint32 offsets[];
@@ -57,12 +57,12 @@ void InitDefaultsCompositeFunctionCallImpl();
 void InitDefaultsCompositeFunctionCall();
 void InitDefaultsConsoleImpl();
 void InitDefaultsConsole();
-void InitDefaultsFunctionElementImpl();
-void InitDefaultsFunctionElement();
-void InitDefaultsFunctionDescriptorImpl();
-void InitDefaultsFunctionDescriptor();
 void InitDefaultsFunctionListImpl();
 void InitDefaultsFunctionList();
+void InitDefaultsEnumValueImpl();
+void InitDefaultsEnumValue();
+void InitDefaultsEnumTypeImpl();
+void InitDefaultsEnumType();
 void InitDefaultsCallResponseImpl();
 void InitDefaultsCallResponse();
 inline void InitDefaults() {
@@ -73,9 +73,9 @@ inline void InitDefaults() {
   InitDefaultsCode();
   InitDefaultsCompositeFunctionCall();
   InitDefaultsConsole();
-  InitDefaultsFunctionElement();
-  InitDefaultsFunctionDescriptor();
   InitDefaultsFunctionList();
+  InitDefaultsEnumValue();
+  InitDefaultsEnumType();
   InitDefaultsCallResponse();
 }
 }  // namespace protobuf_variable_2eproto
@@ -98,9 +98,18 @@ extern CompositeFunctionCallDefaultTypeInternal _CompositeFunctionCall_default_i
 class Console;
 class ConsoleDefaultTypeInternal;
 extern ConsoleDefaultTypeInternal _Console_default_instance_;
+class EnumType;
+class EnumTypeDefaultTypeInternal;
+extern EnumTypeDefaultTypeInternal _EnumType_default_instance_;
+class EnumValue;
+class EnumValueDefaultTypeInternal;
+extern EnumValueDefaultTypeInternal _EnumValue_default_instance_;
 class Error;
 class ErrorDefaultTypeInternal;
 extern ErrorDefaultTypeInternal _Error_default_instance_;
+class ExternalPointer;
+class ExternalPointerDefaultTypeInternal;
+extern ExternalPointerDefaultTypeInternal _ExternalPointer_default_instance_;
 class FunctionDescriptor;
 class FunctionDescriptorDefaultTypeInternal;
 extern FunctionDescriptorDefaultTypeInternal _FunctionDescriptor_default_instance_;
@@ -145,16 +154,15 @@ inline bool ErrorType_Parse(
     ErrorType_descriptor(), name, value);
 }
 enum CallType {
-  undefined = 0,
+  method = 0,
   get = 1,
   put = 2,
-  method = 3,
   CallType_INT_MIN_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32min,
   CallType_INT_MAX_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32max
 };
 bool CallType_IsValid(int value);
-const CallType CallType_MIN = undefined;
-const CallType CallType_MAX = method;
+const CallType CallType_MIN = method;
+const CallType CallType_MAX = put;
 const int CallType_ARRAYSIZE = CallType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* CallType_descriptor();
@@ -742,7 +750,7 @@ class Variable : public ::google::protobuf::Message /* @@protoc_insertion_point(
     kCpx = 7,
     kArr = 8,
     kRef = 9,
-    kExternalPointer = 10,
+    kComPointer = 10,
     VALUE_NOT_SET = 0,
   };
 
@@ -902,14 +910,14 @@ class Variable : public ::google::protobuf::Message /* @@protoc_insertion_point(
   ::BERTBuffers::SheetReference* mutable_ref();
   void set_allocated_ref(::BERTBuffers::SheetReference* ref);
 
-  // uint64 external_pointer = 10;
-  private:
-  bool has_external_pointer() const;
-  public:
-  void clear_external_pointer();
-  static const int kExternalPointerFieldNumber = 10;
-  ::google::protobuf::uint64 external_pointer() const;
-  void set_external_pointer(::google::protobuf::uint64 value);
+  // .BERTBuffers.ExternalPointer com_pointer = 10;
+  bool has_com_pointer() const;
+  void clear_com_pointer();
+  static const int kComPointerFieldNumber = 10;
+  const ::BERTBuffers::ExternalPointer& com_pointer() const;
+  ::BERTBuffers::ExternalPointer* release_com_pointer();
+  ::BERTBuffers::ExternalPointer* mutable_com_pointer();
+  void set_allocated_com_pointer(::BERTBuffers::ExternalPointer* com_pointer);
 
   ValueCase value_case() const;
   // @@protoc_insertion_point(class_scope:BERTBuffers.Variable)
@@ -923,7 +931,7 @@ class Variable : public ::google::protobuf::Message /* @@protoc_insertion_point(
   void set_has_cpx();
   void set_has_arr();
   void set_has_ref();
-  void set_has_external_pointer();
+  void set_has_com_pointer();
 
   inline bool has_value() const;
   void clear_value();
@@ -942,7 +950,7 @@ class Variable : public ::google::protobuf::Message /* @@protoc_insertion_point(
     ::BERTBuffers::Complex* cpx_;
     ::BERTBuffers::Array* arr_;
     ::BERTBuffers::SheetReference* ref_;
-    ::google::protobuf::uint64 external_pointer_;
+    ::BERTBuffers::ExternalPointer* com_pointer_;
   } value_;
   mutable int _cached_size_;
   ::google::protobuf::uint32 _oneof_case_[1];
@@ -1514,6 +1522,12 @@ class FunctionElement : public ::google::protobuf::Message /* @@protoc_insertion
   ::BERTBuffers::Variable* mutable_default_value();
   void set_allocated_default_value(::BERTBuffers::Variable* default_value);
 
+  // uint32 index = 5;
+  void clear_index();
+  static const int kIndexFieldNumber = 5;
+  ::google::protobuf::uint32 index() const;
+  void set_index(::google::protobuf::uint32 value);
+
   // @@protoc_insertion_point(class_scope:BERTBuffers.FunctionElement)
  private:
 
@@ -1522,9 +1536,10 @@ class FunctionElement : public ::google::protobuf::Message /* @@protoc_insertion
   ::google::protobuf::internal::ArenaStringPtr type_name_;
   ::google::protobuf::internal::ArenaStringPtr description_;
   ::BERTBuffers::Variable* default_value_;
+  ::google::protobuf::uint32 index_;
   mutable int _cached_size_;
   friend struct ::protobuf_variable_2eproto::TableStruct;
-  friend void ::protobuf_variable_2eproto::InitDefaultsFunctionElementImpl();
+  friend void ::protobuf_variable_2eproto::InitDefaultsArrayImpl();
 };
 // -------------------------------------------------------------------
 
@@ -1610,10 +1625,10 @@ class FunctionDescriptor : public ::google::protobuf::Message /* @@protoc_insert
 
   // accessors -------------------------------------------------------
 
-  // repeated .BERTBuffers.FunctionElement arguments = 2;
+  // repeated .BERTBuffers.FunctionElement arguments = 3;
   int arguments_size() const;
   void clear_arguments();
-  static const int kArgumentsFieldNumber = 2;
+  static const int kArgumentsFieldNumber = 3;
   const ::BERTBuffers::FunctionElement& arguments(int index) const;
   ::BERTBuffers::FunctionElement* mutable_arguments(int index);
   ::BERTBuffers::FunctionElement* add_arguments();
@@ -1631,15 +1646,22 @@ class FunctionDescriptor : public ::google::protobuf::Message /* @@protoc_insert
   ::BERTBuffers::FunctionElement* mutable_function();
   void set_allocated_function(::BERTBuffers::FunctionElement* function);
 
+  // .BERTBuffers.CallType call_type = 2;
+  void clear_call_type();
+  static const int kCallTypeFieldNumber = 2;
+  ::BERTBuffers::CallType call_type() const;
+  void set_call_type(::BERTBuffers::CallType value);
+
   // @@protoc_insertion_point(class_scope:BERTBuffers.FunctionDescriptor)
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
   ::google::protobuf::RepeatedPtrField< ::BERTBuffers::FunctionElement > arguments_;
   ::BERTBuffers::FunctionElement* function_;
+  int call_type_;
   mutable int _cached_size_;
   friend struct ::protobuf_variable_2eproto::TableStruct;
-  friend void ::protobuf_variable_2eproto::InitDefaultsFunctionDescriptorImpl();
+  friend void ::protobuf_variable_2eproto::InitDefaultsArrayImpl();
 };
 // -------------------------------------------------------------------
 
@@ -1748,6 +1770,380 @@ class FunctionList : public ::google::protobuf::Message /* @@protoc_insertion_po
 };
 // -------------------------------------------------------------------
 
+class EnumValue : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:BERTBuffers.EnumValue) */ {
+ public:
+  EnumValue();
+  virtual ~EnumValue();
+
+  EnumValue(const EnumValue& from);
+
+  inline EnumValue& operator=(const EnumValue& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  EnumValue(EnumValue&& from) noexcept
+    : EnumValue() {
+    *this = ::std::move(from);
+  }
+
+  inline EnumValue& operator=(EnumValue&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const EnumValue& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const EnumValue* internal_default_instance() {
+    return reinterpret_cast<const EnumValue*>(
+               &_EnumValue_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    11;
+
+  void Swap(EnumValue* other);
+  friend void swap(EnumValue& a, EnumValue& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline EnumValue* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  EnumValue* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CopyFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void MergeFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void CopyFrom(const EnumValue& from);
+  void MergeFrom(const EnumValue& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const PROTOBUF_FINAL;
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const PROTOBUF_FINAL;
+  void InternalSwap(EnumValue* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // string name = 1;
+  void clear_name();
+  static const int kNameFieldNumber = 1;
+  const ::std::string& name() const;
+  void set_name(const ::std::string& value);
+  #if LANG_CXX11
+  void set_name(::std::string&& value);
+  #endif
+  void set_name(const char* value);
+  void set_name(const char* value, size_t size);
+  ::std::string* mutable_name();
+  ::std::string* release_name();
+  void set_allocated_name(::std::string* name);
+
+  // int32 value = 2;
+  void clear_value();
+  static const int kValueFieldNumber = 2;
+  ::google::protobuf::int32 value() const;
+  void set_value(::google::protobuf::int32 value);
+
+  // @@protoc_insertion_point(class_scope:BERTBuffers.EnumValue)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr name_;
+  ::google::protobuf::int32 value_;
+  mutable int _cached_size_;
+  friend struct ::protobuf_variable_2eproto::TableStruct;
+  friend void ::protobuf_variable_2eproto::InitDefaultsEnumValueImpl();
+};
+// -------------------------------------------------------------------
+
+class EnumType : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:BERTBuffers.EnumType) */ {
+ public:
+  EnumType();
+  virtual ~EnumType();
+
+  EnumType(const EnumType& from);
+
+  inline EnumType& operator=(const EnumType& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  EnumType(EnumType&& from) noexcept
+    : EnumType() {
+    *this = ::std::move(from);
+  }
+
+  inline EnumType& operator=(EnumType&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const EnumType& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const EnumType* internal_default_instance() {
+    return reinterpret_cast<const EnumType*>(
+               &_EnumType_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    12;
+
+  void Swap(EnumType* other);
+  friend void swap(EnumType& a, EnumType& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline EnumType* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  EnumType* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CopyFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void MergeFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void CopyFrom(const EnumType& from);
+  void MergeFrom(const EnumType& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const PROTOBUF_FINAL;
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const PROTOBUF_FINAL;
+  void InternalSwap(EnumType* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // repeated .BERTBuffers.EnumValue values = 2;
+  int values_size() const;
+  void clear_values();
+  static const int kValuesFieldNumber = 2;
+  const ::BERTBuffers::EnumValue& values(int index) const;
+  ::BERTBuffers::EnumValue* mutable_values(int index);
+  ::BERTBuffers::EnumValue* add_values();
+  ::google::protobuf::RepeatedPtrField< ::BERTBuffers::EnumValue >*
+      mutable_values();
+  const ::google::protobuf::RepeatedPtrField< ::BERTBuffers::EnumValue >&
+      values() const;
+
+  // string name = 1;
+  void clear_name();
+  static const int kNameFieldNumber = 1;
+  const ::std::string& name() const;
+  void set_name(const ::std::string& value);
+  #if LANG_CXX11
+  void set_name(::std::string&& value);
+  #endif
+  void set_name(const char* value);
+  void set_name(const char* value, size_t size);
+  ::std::string* mutable_name();
+  ::std::string* release_name();
+  void set_allocated_name(::std::string* name);
+
+  // @@protoc_insertion_point(class_scope:BERTBuffers.EnumType)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::RepeatedPtrField< ::BERTBuffers::EnumValue > values_;
+  ::google::protobuf::internal::ArenaStringPtr name_;
+  mutable int _cached_size_;
+  friend struct ::protobuf_variable_2eproto::TableStruct;
+  friend void ::protobuf_variable_2eproto::InitDefaultsEnumTypeImpl();
+};
+// -------------------------------------------------------------------
+
+class ExternalPointer : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:BERTBuffers.ExternalPointer) */ {
+ public:
+  ExternalPointer();
+  virtual ~ExternalPointer();
+
+  ExternalPointer(const ExternalPointer& from);
+
+  inline ExternalPointer& operator=(const ExternalPointer& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  ExternalPointer(ExternalPointer&& from) noexcept
+    : ExternalPointer() {
+    *this = ::std::move(from);
+  }
+
+  inline ExternalPointer& operator=(ExternalPointer&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const ExternalPointer& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const ExternalPointer* internal_default_instance() {
+    return reinterpret_cast<const ExternalPointer*>(
+               &_ExternalPointer_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    13;
+
+  void Swap(ExternalPointer* other);
+  friend void swap(ExternalPointer& a, ExternalPointer& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline ExternalPointer* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  ExternalPointer* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CopyFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void MergeFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void CopyFrom(const ExternalPointer& from);
+  void MergeFrom(const ExternalPointer& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const PROTOBUF_FINAL;
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const PROTOBUF_FINAL;
+  void InternalSwap(ExternalPointer* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // repeated .BERTBuffers.FunctionDescriptor functions = 3;
+  int functions_size() const;
+  void clear_functions();
+  static const int kFunctionsFieldNumber = 3;
+  const ::BERTBuffers::FunctionDescriptor& functions(int index) const;
+  ::BERTBuffers::FunctionDescriptor* mutable_functions(int index);
+  ::BERTBuffers::FunctionDescriptor* add_functions();
+  ::google::protobuf::RepeatedPtrField< ::BERTBuffers::FunctionDescriptor >*
+      mutable_functions();
+  const ::google::protobuf::RepeatedPtrField< ::BERTBuffers::FunctionDescriptor >&
+      functions() const;
+
+  // repeated .BERTBuffers.EnumType enums = 4;
+  int enums_size() const;
+  void clear_enums();
+  static const int kEnumsFieldNumber = 4;
+  const ::BERTBuffers::EnumType& enums(int index) const;
+  ::BERTBuffers::EnumType* mutable_enums(int index);
+  ::BERTBuffers::EnumType* add_enums();
+  ::google::protobuf::RepeatedPtrField< ::BERTBuffers::EnumType >*
+      mutable_enums();
+  const ::google::protobuf::RepeatedPtrField< ::BERTBuffers::EnumType >&
+      enums() const;
+
+  // string interface_name = 1;
+  void clear_interface_name();
+  static const int kInterfaceNameFieldNumber = 1;
+  const ::std::string& interface_name() const;
+  void set_interface_name(const ::std::string& value);
+  #if LANG_CXX11
+  void set_interface_name(::std::string&& value);
+  #endif
+  void set_interface_name(const char* value);
+  void set_interface_name(const char* value, size_t size);
+  ::std::string* mutable_interface_name();
+  ::std::string* release_interface_name();
+  void set_allocated_interface_name(::std::string* interface_name);
+
+  // uint64 pointer = 2;
+  void clear_pointer();
+  static const int kPointerFieldNumber = 2;
+  ::google::protobuf::uint64 pointer() const;
+  void set_pointer(::google::protobuf::uint64 value);
+
+  // @@protoc_insertion_point(class_scope:BERTBuffers.ExternalPointer)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::RepeatedPtrField< ::BERTBuffers::FunctionDescriptor > functions_;
+  ::google::protobuf::RepeatedPtrField< ::BERTBuffers::EnumType > enums_;
+  ::google::protobuf::internal::ArenaStringPtr interface_name_;
+  ::google::protobuf::uint64 pointer_;
+  mutable int _cached_size_;
+  friend struct ::protobuf_variable_2eproto::TableStruct;
+  friend void ::protobuf_variable_2eproto::InitDefaultsArrayImpl();
+};
+// -------------------------------------------------------------------
+
 class CallResponse : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:BERTBuffers.CallResponse) */ {
  public:
   CallResponse();
@@ -1794,7 +2190,7 @@ class CallResponse : public ::google::protobuf::Message /* @@protoc_insertion_po
                &_CallResponse_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    11;
+    14;
 
   void Swap(CallResponse* other);
   friend void swap(CallResponse& a, CallResponse& b) {
@@ -2725,33 +3121,44 @@ inline ::BERTBuffers::SheetReference* Variable::mutable_ref() {
   return value_.ref_;
 }
 
-// uint64 external_pointer = 10;
-inline bool Variable::has_external_pointer() const {
-  return value_case() == kExternalPointer;
+// .BERTBuffers.ExternalPointer com_pointer = 10;
+inline bool Variable::has_com_pointer() const {
+  return value_case() == kComPointer;
 }
-inline void Variable::set_has_external_pointer() {
-  _oneof_case_[0] = kExternalPointer;
+inline void Variable::set_has_com_pointer() {
+  _oneof_case_[0] = kComPointer;
 }
-inline void Variable::clear_external_pointer() {
-  if (has_external_pointer()) {
-    value_.external_pointer_ = GOOGLE_ULONGLONG(0);
+inline void Variable::clear_com_pointer() {
+  if (has_com_pointer()) {
+    delete value_.com_pointer_;
     clear_has_value();
   }
 }
-inline ::google::protobuf::uint64 Variable::external_pointer() const {
-  // @@protoc_insertion_point(field_get:BERTBuffers.Variable.external_pointer)
-  if (has_external_pointer()) {
-    return value_.external_pointer_;
+inline ::BERTBuffers::ExternalPointer* Variable::release_com_pointer() {
+  // @@protoc_insertion_point(field_release:BERTBuffers.Variable.com_pointer)
+  if (has_com_pointer()) {
+    clear_has_value();
+      ::BERTBuffers::ExternalPointer* temp = value_.com_pointer_;
+    value_.com_pointer_ = NULL;
+    return temp;
+  } else {
+    return NULL;
   }
-  return GOOGLE_ULONGLONG(0);
 }
-inline void Variable::set_external_pointer(::google::protobuf::uint64 value) {
-  if (!has_external_pointer()) {
+inline const ::BERTBuffers::ExternalPointer& Variable::com_pointer() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.Variable.com_pointer)
+  return has_com_pointer()
+      ? *value_.com_pointer_
+      : *reinterpret_cast< ::BERTBuffers::ExternalPointer*>(&::BERTBuffers::_ExternalPointer_default_instance_);
+}
+inline ::BERTBuffers::ExternalPointer* Variable::mutable_com_pointer() {
+  if (!has_com_pointer()) {
     clear_value();
-    set_has_external_pointer();
+    set_has_com_pointer();
+    value_.com_pointer_ = new ::BERTBuffers::ExternalPointer;
   }
-  value_.external_pointer_ = value;
-  // @@protoc_insertion_point(field_set:BERTBuffers.Variable.external_pointer)
+  // @@protoc_insertion_point(field_mutable:BERTBuffers.Variable.com_pointer)
+  return value_.com_pointer_;
 }
 
 // string name = 15;
@@ -3543,6 +3950,20 @@ inline void FunctionElement::set_allocated_description(::std::string* descriptio
   // @@protoc_insertion_point(field_set_allocated:BERTBuffers.FunctionElement.description)
 }
 
+// uint32 index = 5;
+inline void FunctionElement::clear_index() {
+  index_ = 0u;
+}
+inline ::google::protobuf::uint32 FunctionElement::index() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.FunctionElement.index)
+  return index_;
+}
+inline void FunctionElement::set_index(::google::protobuf::uint32 value) {
+  
+  index_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.FunctionElement.index)
+}
+
 // -------------------------------------------------------------------
 
 // FunctionDescriptor
@@ -3597,7 +4018,21 @@ inline void FunctionDescriptor::set_allocated_function(::BERTBuffers::FunctionEl
   // @@protoc_insertion_point(field_set_allocated:BERTBuffers.FunctionDescriptor.function)
 }
 
-// repeated .BERTBuffers.FunctionElement arguments = 2;
+// .BERTBuffers.CallType call_type = 2;
+inline void FunctionDescriptor::clear_call_type() {
+  call_type_ = 0;
+}
+inline ::BERTBuffers::CallType FunctionDescriptor::call_type() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.FunctionDescriptor.call_type)
+  return static_cast< ::BERTBuffers::CallType >(call_type_);
+}
+inline void FunctionDescriptor::set_call_type(::BERTBuffers::CallType value) {
+  
+  call_type_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.FunctionDescriptor.call_type)
+}
+
+// repeated .BERTBuffers.FunctionElement arguments = 3;
 inline int FunctionDescriptor::arguments_size() const {
   return arguments_.size();
 }
@@ -3659,6 +4094,295 @@ inline const ::google::protobuf::RepeatedPtrField< ::BERTBuffers::FunctionDescri
 FunctionList::functions() const {
   // @@protoc_insertion_point(field_list:BERTBuffers.FunctionList.functions)
   return functions_;
+}
+
+// -------------------------------------------------------------------
+
+// EnumValue
+
+// string name = 1;
+inline void EnumValue::clear_name() {
+  name_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& EnumValue::name() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.EnumValue.name)
+  return name_.GetNoArena();
+}
+inline void EnumValue::set_name(const ::std::string& value) {
+  
+  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:BERTBuffers.EnumValue.name)
+}
+#if LANG_CXX11
+inline void EnumValue::set_name(::std::string&& value) {
+  
+  name_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:BERTBuffers.EnumValue.name)
+}
+#endif
+inline void EnumValue::set_name(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:BERTBuffers.EnumValue.name)
+}
+inline void EnumValue::set_name(const char* value, size_t size) {
+  
+  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:BERTBuffers.EnumValue.name)
+}
+inline ::std::string* EnumValue::mutable_name() {
+  
+  // @@protoc_insertion_point(field_mutable:BERTBuffers.EnumValue.name)
+  return name_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* EnumValue::release_name() {
+  // @@protoc_insertion_point(field_release:BERTBuffers.EnumValue.name)
+  
+  return name_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void EnumValue::set_allocated_name(::std::string* name) {
+  if (name != NULL) {
+    
+  } else {
+    
+  }
+  name_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), name);
+  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.EnumValue.name)
+}
+
+// int32 value = 2;
+inline void EnumValue::clear_value() {
+  value_ = 0;
+}
+inline ::google::protobuf::int32 EnumValue::value() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.EnumValue.value)
+  return value_;
+}
+inline void EnumValue::set_value(::google::protobuf::int32 value) {
+  
+  value_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.EnumValue.value)
+}
+
+// -------------------------------------------------------------------
+
+// EnumType
+
+// string name = 1;
+inline void EnumType::clear_name() {
+  name_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& EnumType::name() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.EnumType.name)
+  return name_.GetNoArena();
+}
+inline void EnumType::set_name(const ::std::string& value) {
+  
+  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:BERTBuffers.EnumType.name)
+}
+#if LANG_CXX11
+inline void EnumType::set_name(::std::string&& value) {
+  
+  name_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:BERTBuffers.EnumType.name)
+}
+#endif
+inline void EnumType::set_name(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:BERTBuffers.EnumType.name)
+}
+inline void EnumType::set_name(const char* value, size_t size) {
+  
+  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:BERTBuffers.EnumType.name)
+}
+inline ::std::string* EnumType::mutable_name() {
+  
+  // @@protoc_insertion_point(field_mutable:BERTBuffers.EnumType.name)
+  return name_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* EnumType::release_name() {
+  // @@protoc_insertion_point(field_release:BERTBuffers.EnumType.name)
+  
+  return name_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void EnumType::set_allocated_name(::std::string* name) {
+  if (name != NULL) {
+    
+  } else {
+    
+  }
+  name_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), name);
+  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.EnumType.name)
+}
+
+// repeated .BERTBuffers.EnumValue values = 2;
+inline int EnumType::values_size() const {
+  return values_.size();
+}
+inline void EnumType::clear_values() {
+  values_.Clear();
+}
+inline const ::BERTBuffers::EnumValue& EnumType::values(int index) const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.EnumType.values)
+  return values_.Get(index);
+}
+inline ::BERTBuffers::EnumValue* EnumType::mutable_values(int index) {
+  // @@protoc_insertion_point(field_mutable:BERTBuffers.EnumType.values)
+  return values_.Mutable(index);
+}
+inline ::BERTBuffers::EnumValue* EnumType::add_values() {
+  // @@protoc_insertion_point(field_add:BERTBuffers.EnumType.values)
+  return values_.Add();
+}
+inline ::google::protobuf::RepeatedPtrField< ::BERTBuffers::EnumValue >*
+EnumType::mutable_values() {
+  // @@protoc_insertion_point(field_mutable_list:BERTBuffers.EnumType.values)
+  return &values_;
+}
+inline const ::google::protobuf::RepeatedPtrField< ::BERTBuffers::EnumValue >&
+EnumType::values() const {
+  // @@protoc_insertion_point(field_list:BERTBuffers.EnumType.values)
+  return values_;
+}
+
+// -------------------------------------------------------------------
+
+// ExternalPointer
+
+// string interface_name = 1;
+inline void ExternalPointer::clear_interface_name() {
+  interface_name_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& ExternalPointer::interface_name() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.ExternalPointer.interface_name)
+  return interface_name_.GetNoArena();
+}
+inline void ExternalPointer::set_interface_name(const ::std::string& value) {
+  
+  interface_name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:BERTBuffers.ExternalPointer.interface_name)
+}
+#if LANG_CXX11
+inline void ExternalPointer::set_interface_name(::std::string&& value) {
+  
+  interface_name_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:BERTBuffers.ExternalPointer.interface_name)
+}
+#endif
+inline void ExternalPointer::set_interface_name(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  interface_name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:BERTBuffers.ExternalPointer.interface_name)
+}
+inline void ExternalPointer::set_interface_name(const char* value, size_t size) {
+  
+  interface_name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:BERTBuffers.ExternalPointer.interface_name)
+}
+inline ::std::string* ExternalPointer::mutable_interface_name() {
+  
+  // @@protoc_insertion_point(field_mutable:BERTBuffers.ExternalPointer.interface_name)
+  return interface_name_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* ExternalPointer::release_interface_name() {
+  // @@protoc_insertion_point(field_release:BERTBuffers.ExternalPointer.interface_name)
+  
+  return interface_name_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void ExternalPointer::set_allocated_interface_name(::std::string* interface_name) {
+  if (interface_name != NULL) {
+    
+  } else {
+    
+  }
+  interface_name_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), interface_name);
+  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.ExternalPointer.interface_name)
+}
+
+// uint64 pointer = 2;
+inline void ExternalPointer::clear_pointer() {
+  pointer_ = GOOGLE_ULONGLONG(0);
+}
+inline ::google::protobuf::uint64 ExternalPointer::pointer() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.ExternalPointer.pointer)
+  return pointer_;
+}
+inline void ExternalPointer::set_pointer(::google::protobuf::uint64 value) {
+  
+  pointer_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.ExternalPointer.pointer)
+}
+
+// repeated .BERTBuffers.FunctionDescriptor functions = 3;
+inline int ExternalPointer::functions_size() const {
+  return functions_.size();
+}
+inline void ExternalPointer::clear_functions() {
+  functions_.Clear();
+}
+inline const ::BERTBuffers::FunctionDescriptor& ExternalPointer::functions(int index) const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.ExternalPointer.functions)
+  return functions_.Get(index);
+}
+inline ::BERTBuffers::FunctionDescriptor* ExternalPointer::mutable_functions(int index) {
+  // @@protoc_insertion_point(field_mutable:BERTBuffers.ExternalPointer.functions)
+  return functions_.Mutable(index);
+}
+inline ::BERTBuffers::FunctionDescriptor* ExternalPointer::add_functions() {
+  // @@protoc_insertion_point(field_add:BERTBuffers.ExternalPointer.functions)
+  return functions_.Add();
+}
+inline ::google::protobuf::RepeatedPtrField< ::BERTBuffers::FunctionDescriptor >*
+ExternalPointer::mutable_functions() {
+  // @@protoc_insertion_point(field_mutable_list:BERTBuffers.ExternalPointer.functions)
+  return &functions_;
+}
+inline const ::google::protobuf::RepeatedPtrField< ::BERTBuffers::FunctionDescriptor >&
+ExternalPointer::functions() const {
+  // @@protoc_insertion_point(field_list:BERTBuffers.ExternalPointer.functions)
+  return functions_;
+}
+
+// repeated .BERTBuffers.EnumType enums = 4;
+inline int ExternalPointer::enums_size() const {
+  return enums_.size();
+}
+inline void ExternalPointer::clear_enums() {
+  enums_.Clear();
+}
+inline const ::BERTBuffers::EnumType& ExternalPointer::enums(int index) const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.ExternalPointer.enums)
+  return enums_.Get(index);
+}
+inline ::BERTBuffers::EnumType* ExternalPointer::mutable_enums(int index) {
+  // @@protoc_insertion_point(field_mutable:BERTBuffers.ExternalPointer.enums)
+  return enums_.Mutable(index);
+}
+inline ::BERTBuffers::EnumType* ExternalPointer::add_enums() {
+  // @@protoc_insertion_point(field_add:BERTBuffers.ExternalPointer.enums)
+  return enums_.Add();
+}
+inline ::google::protobuf::RepeatedPtrField< ::BERTBuffers::EnumType >*
+ExternalPointer::mutable_enums() {
+  // @@protoc_insertion_point(field_mutable_list:BERTBuffers.ExternalPointer.enums)
+  return &enums_;
+}
+inline const ::google::protobuf::RepeatedPtrField< ::BERTBuffers::EnumType >&
+ExternalPointer::enums() const {
+  // @@protoc_insertion_point(field_list:BERTBuffers.ExternalPointer.enums)
+  return enums_;
 }
 
 // -------------------------------------------------------------------
@@ -4095,6 +4819,12 @@ inline CallResponse::OperationCase CallResponse::operation_case() const {
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

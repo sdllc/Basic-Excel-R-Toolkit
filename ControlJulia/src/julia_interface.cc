@@ -27,7 +27,7 @@
 
 #include "julia.h"
 
-jl_ptls_t ptls;
+jl_ptls_t ptls; 
 
 jl_value_t * VariableToJlValue(const BERTBuffers::Variable *variable) {
 
@@ -46,13 +46,16 @@ jl_value_t * VariableToJlValue(const BERTBuffers::Variable *variable) {
     value = jl_pchar_to_string(variable->str().c_str(), variable->str().length());
     break;
 
-  case BERTBuffers::Variable::kExternalPointer:
+  //case BERTBuffers::Variable::kExternalPointer:
+  case BERTBuffers::Variable::kComPointer:
 
     // FIXME: we should construct a wrapper type for this. the below is sufficient
     // for preserving value (unlike R, which can't accept the value), but might lead
     // it to being treated differently. also we need to register a finalizer...
 
-    value = jl_box_uint64(variable->external_pointer());
+    //value = jl_box_uint64(variable->external_pointer());
+    value = jl_box_uint64(variable->com_pointer().pointer());
+
     break;
 
   case BERTBuffers::Variable::kArr:
@@ -351,8 +354,10 @@ bool ReadSourceFile(const std::string &file) {
  */
 ExecResult JuliaShellExec(const std::string &command, const std::string &shell_buffer) {
 
+  // this is used for tagging
+
   static char filename[] = "shell";
-  static int filename_len = strlen(filename);
+  static int filename_len = (int)strlen(filename);
 
   std::string tmp = shell_buffer;
   tmp += command;
