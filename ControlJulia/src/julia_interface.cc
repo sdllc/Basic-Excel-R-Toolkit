@@ -27,6 +27,7 @@
 
 #include "julia.h"
 
+jl_value_t *JuliaCallJlValue(BERTBuffers::CompositeFunctionCall &call);
 
 jl_ptls_t ptls; 
 
@@ -636,18 +637,20 @@ jl_value_t * COMCallback(uint64_t pointer, const char *name, const char *calltyp
 
       jl_result = jl_box_int32(200);
 
-      /* todo...
       BERTBuffers::CompositeFunctionCall *function_call = new BERTBuffers::CompositeFunctionCall;
-      function_call->set_function("BERT$install.com.pointer");
+      function_call->set_function("BERT.CreateCOMType");
       auto argument = function_call->add_arguments();
 
       // I want to borrow this, not copy, can we do that?
       argument->mutable_com_pointer()->CopyFrom(response->result().com_pointer());
 
-      sexp_result = RCallSEXP(*function_call, true, err);
+      //sexp_result = RCallSEXP(*function_call, true, err);
       //argument->release_com_pointer();
+
+      jl_result = JuliaCallJlValue(*function_call);
+
       delete function_call;
-      */
+      //*/
     }
     else jl_result = VariableToJlValue(&(response->result()));
   }
@@ -671,6 +674,87 @@ void JuliaPostInit(BERTBuffers::CallResponse &response, BERTBuffers::CallRespons
   mutable_function_call->add_arguments()->set_u64((uint64_t)&Callback2);
   JuliaCall(response, translated_call);
 
+}
+
+jl_value_t *JuliaCallJlValue(BERTBuffers::CompositeFunctionCall &call) {
+
+  std::string function = call.function();
+
+  // lookup in main includes our defined functions plus (apparently) Base, which 
+  // is attached is some fashion. can we dereference pacakges? [A: no, probably 
+  // need to do that manually].
+
+  jl_function_t *function_pointer = jl_nothing;
+  jl_value_t *function_result = jl_nothing;
+
+  std::vector<std::string> elements;
+  StringUtilities::Split(function, '.', 1, elements);
+
+  if (elements.size() == 1) function_pointer = jl_get_function(jl_main_module, function.c_str());
+  else {
+    function_pointer = jl_get_global(jl_main_module, jl_symbol(elements[0].c_str()));
+    for (int i = 1; i< elements.size(); i++) function_pointer = jl_get_global((jl_module_t*)function_pointer, jl_symbol(elements[i].c_str()));
+  }
+
+  if (!function_pointer || jl_is_nothing(function_pointer)) return function_result;
+
+  JL_TRY{
+
+    // call here, with or without arguments
+    int len = call.arguments().size();
+    if (len > 0) {
+      std::vector<jl_value_t*> arguments_vector;
+      for (auto argument : call.arguments()) {
+        arguments_vector.push_back(VariableToJlValue(&argument));
+      }
+      function_result = jl_call(function_pointer, &(arguments_vector[0]), len);
+    }
+    else {
+      function_result = jl_call0(function_pointer);
+    }
+
+  // check for a julia exception (handled)
+  if (jl_exception_occurred()) {
+    std::cout << "* [JCJV] EXCEPTION" << std::endl;
+    jl_printf(JL_STDERR, "[JC] error during run:\n");
+    jl_static_show(JL_STDERR, ptls->exception_in_transit);
+    jl_exception_clear();
+    jl_printf(JL_STDOUT, "\n");
+
+    // set err
+    //response.set_err("julia exception");
+  }
+  else
+  {
+    /*
+    // success: return result or nil as an empty success value
+    if (function_result) {
+      JlValueToVariable(response.mutable_result(), function_result);
+    }
+    else {
+      response.mutable_result()->set_nil(true);
+    }
+    */
+  }
+
+  }
+    JL_CATCH{
+
+    // external exception; return error
+
+    std::cout << "* CATCH [JCJV]" << std::endl;
+  jl_printf(JL_STDERR, "\nparser error:\n");
+
+  jl_static_show(JL_STDERR, ptls->exception_in_transit);
+  jl_printf(JL_STDERR, "\n");
+  jlbacktrace();
+  jl_exception_clear();
+
+  //response.set_err("external exception");
+
+  }
+
+  return function_result;
 }
 
 void JuliaCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallResponse &call) {

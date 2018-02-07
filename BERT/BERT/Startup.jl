@@ -106,6 +106,7 @@ have questions or comments, and save your work often.
   end
 
   FinalizeCOMPointer = function(x)
+    println("release ", x)
     Callback("release-pointer", x)
   end
 
@@ -119,8 +120,8 @@ have questions or comments, and save your work often.
   end
 
   CallCOMFunction = function(p, name, call_type, index, args)
-    # ccall( BERT.__callback_pointer, Void, (Any,), [args...])
-    ccall(BERT.__com_callback_pointer, Any, (UInt64, Cstring, Cstring, UInt32, Any), 
+    ccall(BERT.__com_callback_pointer, 
+      Any, (UInt64, Cstring, Cstring, UInt32, Any), 
       p, name, call_type, index, args)
   end
 
@@ -150,9 +151,9 @@ have questions or comments, and save your work often.
 
     local struct_type = quote
       struct $struct_name 
-        _pointer::UInt64
+        _pointer
         $([Symbol(translate_name(x)) for x in descriptor_[3]]...)
-        $struct_name(p) = new(p, $(functions...))
+        $struct_name(p) = new(FinalizablePointer(p), $(functions...))
       end
     end
 
@@ -165,7 +166,7 @@ have questions or comments, and save your work often.
     sym = Symbol("com_interface_", descriptor[1])
     if(!isdefined(BERT, sym))
       eval(:(@CreateCOMTypeInternal($sym, $descriptor)))
-      eval(:(Base.show(io::IO, z::$(sym)) = print(string("COM interface ", $(descriptor[1]), " @", z._pointer))))
+      eval(:(Base.show(io::IO, z::$(sym)) = print(string("COM interface ", $(descriptor[1]), " ", z._pointer.p))))
     end
     return eval(:( $(sym)($(descriptor[2]))))
   end
