@@ -23,9 +23,6 @@ HANDLE prompt_event_handle;
 
 Pipe stdout_pipe, stderr_pipe;
 
-//std::ofstream console_out;
-//std::ofstream console_err;
-
 /** debug/util function */
 void DumpJSON(const google::protobuf::Message &message, const char *path = 0) {
   std::string str;
@@ -171,12 +168,14 @@ bool SystemCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallResp
     }
     response.mutable_result()->set_boolean(success);
   }
+  else if (!function.compare("post-init")) {
+    JuliaPostInit(response, translated_call);
+  }
   else if (!function.compare("install-application-pointer")) {
-
-    translated_call.mutable_function_call()->set_target(BERTBuffers::CallTarget::language);
-    translated_call.mutable_function_call()->set_function("BERT.InstallApplicationPointer");
+    auto mutable_function_call = translated_call.mutable_function_call();
+    mutable_function_call->set_target(BERTBuffers::CallTarget::language);
+    mutable_function_call->set_function("BERT.InstallApplicationPointer");
     JuliaCall(response, translated_call);
-
   }
   else if (!function.compare("list-functions")) {
 
@@ -387,12 +386,24 @@ void pipe_loop() {
 
 }
 
+void TruncateBuffer(std::string &buffer, uint32_t target_length = 1024 * 8) {
+
+  // let's not chop byte by byte here, be coarse
+
+  if (buffer.length() > (target_length + 1024)) {
+    buffer.erase(0, buffer.length() - target_length);
+  }
+
+}
 
 unsigned __stdcall StdioThreadFunction(void *data) {
 
   //Pipe *pipe = (Pipe*)data;
   Pipe **pipes = (Pipe**)data;
   std::string str;
+
+  // FIXME: we should cap these buffers, as they could potentially 
+  // grow very large.
 
   std::string stdout_buffer;
   std::string stderr_buffer;
@@ -405,6 +416,7 @@ unsigned __stdcall StdioThreadFunction(void *data) {
       ResetEvent(stdout_pipe.wait_handle_read());
       if (!stdout_pipe.connected()) {
         stdout_pipe.Connect();
+        //std::cout << "Connect stdout pipe, buffer: ``" << stdout_buffer << "''" << std::endl;
         if(stdout_buffer.length()) stdout_pipe.PushWrite(stdout_buffer);
         stdout_buffer.clear();
       }
@@ -417,6 +429,7 @@ unsigned __stdcall StdioThreadFunction(void *data) {
       ResetEvent(stderr_pipe.wait_handle_read());
       if (!stderr_pipe.connected()) {
         stderr_pipe.Connect();
+        //std::cout << "Connect stderr pipe, buffer: ``" << stderr_buffer << "''" << std::endl;
         if(stderr_buffer.length()) stderr_pipe.PushWrite(stderr_buffer);
         stderr_buffer.clear();
       }
@@ -429,18 +442,27 @@ unsigned __stdcall StdioThreadFunction(void *data) {
       ResetEvent(pipes[index]->wait_handle_read());
       if (!pipes[index]->connected()) {
         pipes[index]->Connect();
+        //std::cout << "connect stdio pipe " << index << std::endl;
       }
       else {
         pipes[index]->Read(str, false);
         pipes[index]->StartRead();
 
         if (index) {
-          if (stderr_pipe.connected()) stderr_pipe.PushWrite(str);
-          else stderr_buffer += str;
+          if (stderr_pipe.connected()) {
+            stderr_pipe.PushWrite(str);
+          }
+          else {
+            TruncateBuffer(stderr_buffer.append(str));
+          }
         }
         else {
-          if (stdout_pipe.connected()) stdout_pipe.PushWrite(str);
-          else stdout_buffer += str;
+          if (stdout_pipe.connected()) {
+            stdout_pipe.PushWrite(str);
+          }
+          else {
+            TruncateBuffer(stdout_buffer.append(str));
+          }
         }
         //if (index) std::cerr << "** " << str << std::endl;
         //else std::cout << "|| " << str << std::endl;
@@ -453,49 +475,6 @@ unsigned __stdcall StdioThreadFunction(void *data) {
       std::cerr << "ERR in wait: " << GetLastError() << std::endl;
     }
   }
-
-  /*
-  HANDLE handles[] = { prompt_event_handle, pipes[0]->wait_handle_read(), pipes[1]->wait_handle_read() };
-
-  while (true) {
-    //DWORD wait_result = WaitForSingleObjectEx(handle, 1000, 0);
-    DWORD wait_result = WaitForMultipleObjects(3, handles, FALSE, 1000);
-    if (wait_result == WAIT_OBJECT_0) {
-      ResetEvent(prompt_event_handle);
-      PushConsoleString(prompt_string);
-    }
-    else if(wait_result == WAIT_OBJECT_0 + 1){
-      ResetEvent(pipes[0]->wait_handle_read());
-      if (!pipes[0]->connected()) {
-        pipes[0]->Connect();
-      }
-      else {
-        pipes[0]->Read(str, false);
-        std::cout << "|| " << str << std::endl;
-        ConsoleMessage(str.c_str(), str.length(), 0);
-        pipes[0]->StartRead();
-      }
-    }
-    else if (wait_result == WAIT_OBJECT_0 + 2) {
-      ResetEvent(pipes[1]->wait_handle_read());
-      if (!pipes[1]->connected()) {
-        pipes[1]->Connect();
-      }
-      else {
-        pipes[1]->Read(str, false);
-        std::cerr << "|| " << str << std::endl;
-        ConsoleMessage(str.c_str(), str.length(), 1);
-        pipes[1]->StartRead();
-      }
-    }
-    else if (wait_result == WAIT_TIMEOUT) {
-      // std::cerr << "timeout" << std::endl;
-    }
-    else {
-      std::cerr << "ERR in wait: " << GetLastError() << std::endl;
-    }
-  }
-  */
 
   return 0;
 }
@@ -570,6 +549,43 @@ unsigned __stdcall ManagementThreadFunction(void *data) {
   return 0;
 }
 
+
+bool Callback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response) {
+
+  Pipe *pipe = 0;
+
+  /*
+  if (active_pipe.size()) {
+    int index = active_pipe.top();
+    pipe = pipes[index];
+
+    // dev
+    if (index != 1) cout << "WARN: callback, top of pipe is " << index << endl;
+  }
+  else {
+    cout << "using callback pipe" << endl;
+    pipe = pipes[CALLBACK_INDEX];
+  }
+  */
+  pipe = pipes[0];
+
+  if (!pipe->connected()) return false;
+
+  pipe->PushWrite(MessageUtilities::Frame(call));
+  pipe->StartRead(); // probably not necessary
+
+  std::string data;
+  DWORD result;
+  do {
+    result = pipe->Read(data, true);
+  } while (result == ERROR_MORE_DATA);
+
+  if (!result) MessageUtilities::Unframe(response, data);
+
+  pipe->StartRead(); // probably not necessary either
+  return (result == 0);
+}
+
 int main(int argc, char **argv) {
 
   for (int i = 0; i < argc; i++) {
@@ -594,13 +610,15 @@ int main(int argc, char **argv) {
 
   // FIXME: is it necessary to duplicate this handle? 
 
-  int console_stdout = 0;
-  _dup2(1, console_stdout);
-  std::ofstream console_out(_fdopen(console_stdout, "w")); // NOTE this is nonstandard
+  fflush(stdout);
+  int console_stdout_fd = _dup(1);
+  std::ofstream console_out(_fdopen(console_stdout_fd, "w")); // NOTE this is nonstandard
+  std::cout.rdbuf(console_out.rdbuf());
 
-  int console_stderr = 0;
-  _dup2(2, console_stderr);
-  std::ofstream console_err(_fdopen(console_stderr, "w")); 
+  fflush(stderr);
+  int console_stderr_fd = _dup(2);
+  std::ofstream console_err(_fdopen(console_stderr_fd, "w"));
+  std::cerr.rdbuf(console_err.rdbuf());
 
   //
   char buffer[MAX_PATH];
@@ -621,23 +639,23 @@ int main(int argc, char **argv) {
   Pipe *stdio_pipes[] = { new Pipe, new Pipe };
 
   stdio_pipes[0]->Start("stdout", false);
-  HANDLE stdio_write_handle = CreateFile(stdio_pipes[0]->full_name().c_str(), FILE_ALL_ACCESS, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-
+  HANDLE stdout_write_handle = CreateFile(stdio_pipes[0]->full_name().c_str(), FILE_ALL_ACCESS, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+  
   stdio_pipes[1]->Start("stderr", false);
   HANDLE stderr_write_handle = CreateFile(stdio_pipes[1]->full_name().c_str(), FILE_ALL_ACCESS, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
   
-  _dup2(_open_osfhandle((intptr_t)stdio_write_handle, _O_TEXT), 1); // 1 is stdout
+  _dup2(_open_osfhandle((intptr_t)stdout_write_handle, _O_TEXT), 1); // 1 is stdout
   _dup2(_open_osfhandle((intptr_t)stderr_write_handle, _O_TEXT), 2);
 
-  std::cout.rdbuf(console_out.rdbuf());
-  std::cerr.rdbuf(console_err.rdbuf());
-
-//  char buffer[] = "ZRRBT\n";
-//  DWORD bytes;
-//  WriteFile(write_handle, buffer, strlen(buffer), &bytes, 0);
-
-
   uintptr_t io_thread_handle = _beginthreadex(0, 0, StdioThreadFunction, stdio_pipes, 0, 0);
+
+  // start the callback pipe first. doesn't block.
+
+  std::string callback_pipe_name = pipename;
+  callback_pipe_name += "-CB";
+  NextPipeInstance(false, callback_pipe_name);
+
+  // ...
 
   NextPipeInstance(true, pipename);
 

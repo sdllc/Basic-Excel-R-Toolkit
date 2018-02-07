@@ -505,7 +505,7 @@ export class Editor {
   }
 
   /** 
-   * ensure the list of open files is synced with open files. this 
+   * ensures the list of open files is synced with open files. this 
    * can get called when a new file is opened or when a file is 
    * closed.
    */
@@ -542,7 +542,7 @@ export class Editor {
   }
 
   /**
-   * load a document from storage. this does not call update 
+   * loads a document from storage. this does not call update 
    * on the tab list, so be sure to do that.
    */
   private LoadStoredDocument(entry: number, position?: number): [Document, TabSpec] {
@@ -708,6 +708,9 @@ export class Editor {
 
   }
 
+  /**
+   * opens preferences in an editor tab. 
+   */
   public OpenPreferences() {
     this.OpenFile(PREFERENCES_URI);
   }
@@ -855,6 +858,8 @@ export class Editor {
             // set
             this.editor_.updateOptions(editor_options);
 
+            console.info("EO", editor_options );
+            
             // this.active_document_.model_.updateOptions(editor_options);
             this.tabs_.data.forEach(document => {
               if (document.model_) {

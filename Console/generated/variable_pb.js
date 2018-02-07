@@ -947,7 +947,7 @@ if (goog.DEBUG && !COMPILED) {
  * @private {!Array<!Array<number>>}
  * @const
  */
-proto.BERTBuffers.Variable.oneofGroups_ = [[1,2,3,4,5,6,7,8,9,10]];
+proto.BERTBuffers.Variable.oneofGroups_ = [[1,2,3,4,5,6,7,8,9,10,11]];
 
 /**
  * @enum {number}
@@ -963,7 +963,8 @@ proto.BERTBuffers.Variable.ValueCase = {
   CPX: 7,
   ARR: 8,
   REF: 9,
-  COM_POINTER: 10
+  COM_POINTER: 10,
+  U64: 11
 };
 
 /**
@@ -1012,6 +1013,7 @@ proto.BERTBuffers.Variable.toObject = function(includeInstance, msg) {
     arr: (f = msg.getArr()) && proto.BERTBuffers.Array.toObject(includeInstance, f),
     ref: (f = msg.getRef()) && proto.BERTBuffers.SheetReference.toObject(includeInstance, f),
     comPointer: (f = msg.getComPointer()) && proto.BERTBuffers.ExternalPointer.toObject(includeInstance, f),
+    u64: jspb.Message.getFieldWithDefault(msg, 11, 0),
     name: jspb.Message.getFieldWithDefault(msg, 15, "")
   };
 
@@ -1093,6 +1095,10 @@ proto.BERTBuffers.Variable.deserializeBinaryFromReader = function(msg, reader) {
       var value = new proto.BERTBuffers.ExternalPointer;
       reader.readMessage(value,proto.BERTBuffers.ExternalPointer.deserializeBinaryFromReader);
       msg.setComPointer(value);
+      break;
+    case 11:
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setU64(value);
       break;
     case 15:
       var value = /** @type {string} */ (reader.readString());
@@ -1200,6 +1206,13 @@ proto.BERTBuffers.Variable.serializeBinaryToWriter = function(message, writer) {
       10,
       f,
       proto.BERTBuffers.ExternalPointer.serializeBinaryToWriter
+    );
+  }
+  f = /** @type {number} */ (jspb.Message.getField(message, 11));
+  if (f != null) {
+    writer.writeUint64(
+      11,
+      f
     );
   }
   f = message.getName();
@@ -1510,6 +1523,35 @@ proto.BERTBuffers.Variable.prototype.clearComPointer = function() {
  */
 proto.BERTBuffers.Variable.prototype.hasComPointer = function() {
   return jspb.Message.getField(this, 10) != null;
+};
+
+
+/**
+ * optional uint64 u64 = 11;
+ * @return {number}
+ */
+proto.BERTBuffers.Variable.prototype.getU64 = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 11, 0));
+};
+
+
+/** @param {number} value */
+proto.BERTBuffers.Variable.prototype.setU64 = function(value) {
+  jspb.Message.setOneofField(this, 11, proto.BERTBuffers.Variable.oneofGroups_[0], value);
+};
+
+
+proto.BERTBuffers.Variable.prototype.clearU64 = function() {
+  jspb.Message.setOneofField(this, 11, proto.BERTBuffers.Variable.oneofGroups_[0], undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {!boolean}
+ */
+proto.BERTBuffers.Variable.prototype.hasU64 = function() {
+  return jspb.Message.getField(this, 11) != null;
 };
 
 

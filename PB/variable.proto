@@ -71,6 +71,9 @@ message Variable {
 
     ExternalPointer com_pointer = 10; // taking over, maybe drop the other one
 
+    // special
+    uint64 u64 = 11;
+
   }	
   string name = 15;
 }

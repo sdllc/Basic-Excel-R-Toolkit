@@ -6,6 +6,10 @@
 # =============================================================================
 module BERT
 
+  struct ExcelType
+    Application
+  end
+
   EXCEL = nothing
   PX = nothing
   DX = nothing
@@ -91,41 +95,85 @@ have questions or comments, and save your work often.
     return nothing;
   end
 
-#  CreateCOMObject1 = function(descriptor)
-#    struct_definition = """
-#      struct ___com_type_$(name)
-#        pointer::Uint64
-#    """
-#    for func in functions
-#      struct_definition *= """
-#        $(func)::Function
-#      """
-#    end
-#    struct_definition *= """
-#      end
-#    """
-#    eval(parse(struct_definition))
-#  end
-#  
-#  CreateCOMObject2 = function(key, descriptor)
-#  end
+  SetCallbacks = function(com_callback::UInt64, callback::UInt64)
+    global __callback_pointer = Ptr{UInt64}(callback)
+    global __com_callback_pointer = Ptr{UInt64}(com_callback)
+    nothing
+  end
 
-  InstallApplicationPointer = function(key, descriptor)
-    
-    len = length(descriptor)
-    for i = 1:len
-      if descriptor[i].parameters[1] == "interface"
-        print("iface: ", descriptor[i].parameters[2], "\n");
-      elseif descriptor[i].parameters[1] == "functions"
-        print(length(descriptor[i].parameters[2]), " functions in interface\n" )
-      elseif descriptor[i].parameters[1] == "enums"
-        print(length(descriptor[i].parameters[2]), " enums in interface\n" )
+  Callback = function(command::String, arguments::Any = nothing)
+    ccall(BERT.__callback_pointer, Void, (Cstring, Any), command, arguments)
+  end
+
+  FinalizeCOMPointer = function(x)
+    Callback("release-pointer", x)
+  end
+
+  mutable struct FinalizablePointer 
+    p::Ptr{UInt64}
+    function FinalizablePointer(p)
+      instance = new(p)
+      finalizer(instance, FinalizeCOMPointer)
+      return instance
+    end
+  end
+
+  CallCOMFunction = function(p, name, call_type, index, args)
+    # ccall( BERT.__callback_pointer, Void, (Any,), [args...])
+    ccall(BERT.__com_callback_pointer, Any, (UInt64, Cstring, Cstring, UInt32, Any), 
+      p, name, call_type, index, args)
+  end
+
+  #
+  # creates a type representing a COM interface. this _creates_
+  # types, it does not instantiate them; this should only be 
+  # called once per type. they can be instaniated directly.
+  # WIP
+  #
+  macro CreateCOMTypeInternal(struct_name, descriptor)
+ 
+    local descriptor_ = eval(descriptor)
+    local p = descriptor_[2]
+    local functions = map( x -> function(args...)
+      return CallCOMFunction(p, x[1], x[2], x[3], [args...])
+      end, descriptor_[3] )
+
+    local translate_name = function(x)
+      if x[2] == "get"
+        return string("get_", x[1])
+      elseif x[2] == "put"    
+        return string("put_", x[1])
+      else
+        return x[1]
       end
     end
 
-    print("key ", key, "\n\n")
-    global PX = key
+    local struct_type = quote
+      struct $struct_name 
+        _pointer::UInt64
+        $([Symbol(translate_name(x)) for x in descriptor_[3]]...)
+        $struct_name(p) = new(p, $(functions...))
+      end
+    end
+
+    ## print("Created type ", struct_name, "\n")
+    return struct_type
+
+  end
+
+  CreateCOMType = function(descriptor)
+    sym = Symbol("com_interface_", descriptor[1])
+    if(!isdefined(BERT, sym))
+      eval(:(@CreateCOMTypeInternal($sym, $descriptor)))
+      eval(:(Base.show(io::IO, z::$(sym)) = print(string("COM interface ", $(descriptor[1]), " @", z._pointer))))
+    end
+    return eval(:( $(sym)($(descriptor[2]))))
+  end
+
+  InstallApplicationPointer = function(descriptor)
     global DX = descriptor
+    application = CreateCOMType(descriptor)
+    global EXCEL = ExcelType(application)
     nothing
   end
 

@@ -751,6 +751,7 @@ class Variable : public ::google::protobuf::Message /* @@protoc_insertion_point(
     kArr = 8,
     kRef = 9,
     kComPointer = 10,
+    kU64 = 11,
     VALUE_NOT_SET = 0,
   };
 
@@ -919,6 +920,15 @@ class Variable : public ::google::protobuf::Message /* @@protoc_insertion_point(
   ::BERTBuffers::ExternalPointer* mutable_com_pointer();
   void set_allocated_com_pointer(::BERTBuffers::ExternalPointer* com_pointer);
 
+  // uint64 u64 = 11;
+  private:
+  bool has_u64() const;
+  public:
+  void clear_u64();
+  static const int kU64FieldNumber = 11;
+  ::google::protobuf::uint64 u64() const;
+  void set_u64(::google::protobuf::uint64 value);
+
   ValueCase value_case() const;
   // @@protoc_insertion_point(class_scope:BERTBuffers.Variable)
  private:
@@ -932,6 +942,7 @@ class Variable : public ::google::protobuf::Message /* @@protoc_insertion_point(
   void set_has_arr();
   void set_has_ref();
   void set_has_com_pointer();
+  void set_has_u64();
 
   inline bool has_value() const;
   void clear_value();
@@ -951,6 +962,7 @@ class Variable : public ::google::protobuf::Message /* @@protoc_insertion_point(
     ::BERTBuffers::Array* arr_;
     ::BERTBuffers::SheetReference* ref_;
     ::BERTBuffers::ExternalPointer* com_pointer_;
+    ::google::protobuf::uint64 u64_;
   } value_;
   mutable int _cached_size_;
   ::google::protobuf::uint32 _oneof_case_[1];
@@ -3159,6 +3171,35 @@ inline ::BERTBuffers::ExternalPointer* Variable::mutable_com_pointer() {
   }
   // @@protoc_insertion_point(field_mutable:BERTBuffers.Variable.com_pointer)
   return value_.com_pointer_;
+}
+
+// uint64 u64 = 11;
+inline bool Variable::has_u64() const {
+  return value_case() == kU64;
+}
+inline void Variable::set_has_u64() {
+  _oneof_case_[0] = kU64;
+}
+inline void Variable::clear_u64() {
+  if (has_u64()) {
+    value_.u64_ = GOOGLE_ULONGLONG(0);
+    clear_has_value();
+  }
+}
+inline ::google::protobuf::uint64 Variable::u64() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.Variable.u64)
+  if (has_u64()) {
+    return value_.u64_;
+  }
+  return GOOGLE_ULONGLONG(0);
+}
+inline void Variable::set_u64(::google::protobuf::uint64 value) {
+  if (!has_u64()) {
+    clear_value();
+    set_has_u64();
+  }
+  value_.u64_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.Variable.u64)
 }
 
 // string name = 15;

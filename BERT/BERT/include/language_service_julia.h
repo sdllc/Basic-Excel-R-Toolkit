@@ -50,20 +50,33 @@ public:
 public:
 
   void Initialize() {
+    if(connected_)
+      uintptr_t callback_thread_ptr = _beginthreadex(0, 0, CallbackThreadFunction, this, 0, 0);
 
     // startup code
     std::string startup_code = APIFunctions::ReadResource(MAKEINTRESOURCE(IDR_RCDATA2));
     std::vector<std::string> lines;
     StringUtilities::Split(startup_code, '\n', 1, lines, true);
 
-    BERTBuffers::CallResponse call, response;
+    {
+      BERTBuffers::CallResponse call, response;
+      call.set_wait(false);
+      auto code = call.mutable_code();
+      for (auto line : lines) code->add_line(line);
+      Call(response, call);
+    }
 
-    call.set_wait(false);
-    auto code = call.mutable_code();
-    for (auto line : lines) code->add_line(line);
+    // part two
+    {
+      BERTBuffers::CallResponse call, response;
+      auto function_call = call.mutable_function_call();
+      function_call->set_function("post-init"); 
+      function_call->set_target(BERTBuffers::CallTarget::system);
+      Call(response, call);
+    }
 
-    Call(response, call);
-         
+
+
   }
   
   int StartChildProcess(HANDLE job_handle) {

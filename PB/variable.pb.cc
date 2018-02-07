@@ -54,6 +54,7 @@ class VariableDefaultTypeInternal {
   const ::BERTBuffers::Array* arr_;
   const ::BERTBuffers::SheetReference* ref_;
   const ::BERTBuffers::ExternalPointer* com_pointer_;
+  ::google::protobuf::uint64 u64_;
 } _Variable_default_instance_;
 class CodeDefaultTypeInternal {
  public:
@@ -437,6 +438,7 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   offsetof(::BERTBuffers::VariableDefaultTypeInternal, arr_),
   offsetof(::BERTBuffers::VariableDefaultTypeInternal, ref_),
   offsetof(::BERTBuffers::VariableDefaultTypeInternal, com_pointer_),
+  offsetof(::BERTBuffers::VariableDefaultTypeInternal, u64_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::Variable, name_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::Variable, value_),
   ~0u,  // no _has_bits_
@@ -534,16 +536,16 @@ static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROT
   { 17, -1, sizeof(::BERTBuffers::Error)},
   { 24, -1, sizeof(::BERTBuffers::SheetReference)},
   { 34, -1, sizeof(::BERTBuffers::Variable)},
-  { 51, -1, sizeof(::BERTBuffers::Code)},
-  { 57, -1, sizeof(::BERTBuffers::CompositeFunctionCall)},
-  { 68, -1, sizeof(::BERTBuffers::Console)},
-  { 77, -1, sizeof(::BERTBuffers::FunctionElement)},
-  { 87, -1, sizeof(::BERTBuffers::FunctionDescriptor)},
-  { 95, -1, sizeof(::BERTBuffers::FunctionList)},
-  { 101, -1, sizeof(::BERTBuffers::EnumValue)},
-  { 108, -1, sizeof(::BERTBuffers::EnumType)},
-  { 115, -1, sizeof(::BERTBuffers::ExternalPointer)},
-  { 124, -1, sizeof(::BERTBuffers::CallResponse)},
+  { 52, -1, sizeof(::BERTBuffers::Code)},
+  { 58, -1, sizeof(::BERTBuffers::CompositeFunctionCall)},
+  { 69, -1, sizeof(::BERTBuffers::Console)},
+  { 78, -1, sizeof(::BERTBuffers::FunctionElement)},
+  { 88, -1, sizeof(::BERTBuffers::FunctionDescriptor)},
+  { 96, -1, sizeof(::BERTBuffers::FunctionList)},
+  { 102, -1, sizeof(::BERTBuffers::EnumValue)},
+  { 109, -1, sizeof(::BERTBuffers::EnumType)},
+  { 116, -1, sizeof(::BERTBuffers::ExternalPointer)},
+  { 125, -1, sizeof(::BERTBuffers::CallResponse)},
 };
 
 static ::google::protobuf::Message const * const file_default_instances[] = {
@@ -594,7 +596,7 @@ void AddDescriptorsImpl() {
       "RTBuffers.ErrorType\022\017\n\007message\030\002 \001(\t\"p\n\016"
       "SheetReference\022\021\n\tstart_row\030\001 \001(\r\022\024\n\014sta"
       "rt_column\030\002 \001(\r\022\017\n\007end_row\030\003 \001(\r\022\022\n\nend_"
-      "column\030\004 \001(\r\022\020\n\010sheet_id\030\005 \001(\004\"\300\002\n\010Varia"
+      "column\030\004 \001(\r\022\020\n\010sheet_id\030\005 \001(\004\"\317\002\n\010Varia"
       "ble\022\r\n\003nil\030\001 \001(\010H\000\022\021\n\007missing\030\002 \001(\010H\000\022!\n"
       "\003err\030\003 \001(\0132\022.BERTBuffers.ErrorH\000\022\r\n\003num\030"
       "\004 \001(\001H\000\022\r\n\003str\030\005 \001(\tH\000\022\021\n\007boolean\030\006 \001(\010H"
@@ -602,46 +604,46 @@ void AddDescriptorsImpl() {
       "\n\003arr\030\010 \001(\0132\022.BERTBuffers.ArrayH\000\022*\n\003ref"
       "\030\t \001(\0132\033.BERTBuffers.SheetReferenceH\000\0223\n"
       "\013com_pointer\030\n \001(\0132\034.BERTBuffers.Externa"
-      "lPointerH\000\022\014\n\004name\030\017 \001(\tB\007\n\005value\"\024\n\004Cod"
-      "e\022\014\n\004line\030\001 \003(\t\"\301\001\n\025CompositeFunctionCal"
-      "l\022\020\n\010function\030\001 \001(\t\022(\n\targuments\030\002 \003(\0132\025"
-      ".BERTBuffers.Variable\022\017\n\007pointer\030\003 \001(\004\022\r"
-      "\n\005index\030\004 \001(\r\022#\n\004type\030\005 \001(\0162\025.BERTBuffer"
-      "s.CallType\022\'\n\006target\030\006 \001(\0162\027.BERTBuffers"
-      ".CallTarget\"E\n\007Console\022\016\n\004text\030\001 \001(\tH\000\022\r"
-      "\n\003err\030\002 \001(\tH\000\022\020\n\006prompt\030\003 \001(\tH\000B\t\n\007messa"
-      "ge\"\204\001\n\017FunctionElement\022\014\n\004name\030\001 \001(\t\022\021\n\t"
-      "type_name\030\002 \001(\t\022,\n\rdefault_value\030\003 \001(\0132\025"
-      ".BERTBuffers.Variable\022\023\n\013description\030\004 \001"
-      "(\t\022\r\n\005index\030\005 \001(\r\"\237\001\n\022FunctionDescriptor"
-      "\022.\n\010function\030\001 \001(\0132\034.BERTBuffers.Functio"
-      "nElement\022(\n\tcall_type\030\002 \001(\0162\025.BERTBuffer"
-      "s.CallType\022/\n\targuments\030\003 \003(\0132\034.BERTBuff"
-      "ers.FunctionElement\"B\n\014FunctionList\0222\n\tf"
-      "unctions\030\001 \003(\0132\037.BERTBuffers.FunctionDes"
-      "criptor\"(\n\tEnumValue\022\014\n\004name\030\001 \001(\t\022\r\n\005va"
-      "lue\030\002 \001(\005\"@\n\010EnumType\022\014\n\004name\030\001 \001(\t\022&\n\006v"
-      "alues\030\002 \003(\0132\026.BERTBuffers.EnumValue\"\224\001\n\017"
-      "ExternalPointer\022\026\n\016interface_name\030\001 \001(\t\022"
-      "\017\n\007pointer\030\002 \001(\004\0222\n\tfunctions\030\003 \003(\0132\037.BE"
-      "RTBuffers.FunctionDescriptor\022$\n\005enums\030\004 "
-      "\003(\0132\025.BERTBuffers.EnumType\"\303\002\n\014CallRespo"
-      "nse\022\n\n\002id\030\001 \001(\r\022\014\n\004wait\030\002 \001(\010\022\r\n\003err\030\003 \001"
-      "(\tH\000\022\'\n\006result\030\004 \001(\0132\025.BERTBuffers.Varia"
-      "bleH\000\022\'\n\007console\030\005 \001(\0132\024.BERTBuffers.Con"
-      "soleH\000\022!\n\004code\030\006 \001(\0132\021.BERTBuffers.CodeH"
-      "\000\022\027\n\rshell_command\030\007 \001(\tH\000\022;\n\rfunction_c"
-      "all\030\010 \001(\0132\".BERTBuffers.CompositeFunctio"
-      "nCallH\000\0222\n\rfunction_list\030\t \001(\0132\031.BERTBuf"
-      "fers.FunctionListH\000B\013\n\toperation*N\n\tErro"
-      "rType\022\013\n\007GENERIC\020\000\022\006\n\002NA\020\001\022\007\n\003INF\020\002\022\t\n\005P"
-      "ARSE\020\003\022\r\n\tEXECUTION\020\004\022\t\n\005OTHER\020\017*(\n\010Call"
-      "Type\022\n\n\006method\020\000\022\007\n\003get\020\001\022\007\n\003put\020\002*/\n\nCa"
-      "llTarget\022\014\n\010language\020\000\022\007\n\003COM\020\001\022\n\n\006syste"
-      "m\020\002B\002H\001b\006proto3"
+      "lPointerH\000\022\r\n\003u64\030\013 \001(\004H\000\022\014\n\004name\030\017 \001(\tB"
+      "\007\n\005value\"\024\n\004Code\022\014\n\004line\030\001 \003(\t\"\301\001\n\025Compo"
+      "siteFunctionCall\022\020\n\010function\030\001 \001(\t\022(\n\tar"
+      "guments\030\002 \003(\0132\025.BERTBuffers.Variable\022\017\n\007"
+      "pointer\030\003 \001(\004\022\r\n\005index\030\004 \001(\r\022#\n\004type\030\005 \001"
+      "(\0162\025.BERTBuffers.CallType\022\'\n\006target\030\006 \001("
+      "\0162\027.BERTBuffers.CallTarget\"E\n\007Console\022\016\n"
+      "\004text\030\001 \001(\tH\000\022\r\n\003err\030\002 \001(\tH\000\022\020\n\006prompt\030\003"
+      " \001(\tH\000B\t\n\007message\"\204\001\n\017FunctionElement\022\014\n"
+      "\004name\030\001 \001(\t\022\021\n\ttype_name\030\002 \001(\t\022,\n\rdefaul"
+      "t_value\030\003 \001(\0132\025.BERTBuffers.Variable\022\023\n\013"
+      "description\030\004 \001(\t\022\r\n\005index\030\005 \001(\r\"\237\001\n\022Fun"
+      "ctionDescriptor\022.\n\010function\030\001 \001(\0132\034.BERT"
+      "Buffers.FunctionElement\022(\n\tcall_type\030\002 \001"
+      "(\0162\025.BERTBuffers.CallType\022/\n\targuments\030\003"
+      " \003(\0132\034.BERTBuffers.FunctionElement\"B\n\014Fu"
+      "nctionList\0222\n\tfunctions\030\001 \003(\0132\037.BERTBuff"
+      "ers.FunctionDescriptor\"(\n\tEnumValue\022\014\n\004n"
+      "ame\030\001 \001(\t\022\r\n\005value\030\002 \001(\005\"@\n\010EnumType\022\014\n\004"
+      "name\030\001 \001(\t\022&\n\006values\030\002 \003(\0132\026.BERTBuffers"
+      ".EnumValue\"\224\001\n\017ExternalPointer\022\026\n\016interf"
+      "ace_name\030\001 \001(\t\022\017\n\007pointer\030\002 \001(\004\0222\n\tfunct"
+      "ions\030\003 \003(\0132\037.BERTBuffers.FunctionDescrip"
+      "tor\022$\n\005enums\030\004 \003(\0132\025.BERTBuffers.EnumTyp"
+      "e\"\303\002\n\014CallResponse\022\n\n\002id\030\001 \001(\r\022\014\n\004wait\030\002"
+      " \001(\010\022\r\n\003err\030\003 \001(\tH\000\022\'\n\006result\030\004 \001(\0132\025.BE"
+      "RTBuffers.VariableH\000\022\'\n\007console\030\005 \001(\0132\024."
+      "BERTBuffers.ConsoleH\000\022!\n\004code\030\006 \001(\0132\021.BE"
+      "RTBuffers.CodeH\000\022\027\n\rshell_command\030\007 \001(\tH"
+      "\000\022;\n\rfunction_call\030\010 \001(\0132\".BERTBuffers.C"
+      "ompositeFunctionCallH\000\0222\n\rfunction_list\030"
+      "\t \001(\0132\031.BERTBuffers.FunctionListH\000B\013\n\top"
+      "eration*N\n\tErrorType\022\013\n\007GENERIC\020\000\022\006\n\002NA\020"
+      "\001\022\007\n\003INF\020\002\022\t\n\005PARSE\020\003\022\r\n\tEXECUTION\020\004\022\t\n\005"
+      "OTHER\020\017*(\n\010CallType\022\n\n\006method\020\000\022\007\n\003get\020\001"
+      "\022\007\n\003put\020\002*/\n\nCallTarget\022\014\n\010language\020\000\022\007\n"
+      "\003COM\020\001\022\n\n\006system\020\002B\002H\001b\006proto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 2095);
+      descriptor, 2110);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "variable.proto", &protobuf_RegisterTypes);
 }
@@ -2109,6 +2111,7 @@ void Variable::InitAsDefaultInstance() {
       ::BERTBuffers::SheetReference::internal_default_instance());
   ::BERTBuffers::_Variable_default_instance_.com_pointer_ = const_cast< ::BERTBuffers::ExternalPointer*>(
       ::BERTBuffers::ExternalPointer::internal_default_instance());
+  ::BERTBuffers::_Variable_default_instance_.u64_ = GOOGLE_ULONGLONG(0);
 }
 void Variable::set_allocated_err(::BERTBuffers::Error* err) {
   ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
@@ -2191,6 +2194,7 @@ const int Variable::kCpxFieldNumber;
 const int Variable::kArrFieldNumber;
 const int Variable::kRefFieldNumber;
 const int Variable::kComPointerFieldNumber;
+const int Variable::kU64FieldNumber;
 const int Variable::kNameFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
@@ -2251,6 +2255,10 @@ Variable::Variable(const Variable& from)
     }
     case kComPointer: {
       mutable_com_pointer()->::BERTBuffers::ExternalPointer::MergeFrom(from.com_pointer());
+      break;
+    }
+    case kU64: {
+      set_u64(from.u64());
       break;
     }
     case VALUE_NOT_SET: {
@@ -2342,6 +2350,10 @@ void Variable::clear_value() {
     }
     case kComPointer: {
       delete value_.com_pointer_;
+      break;
+    }
+    case kU64: {
+      // No need to clear
       break;
     }
     case VALUE_NOT_SET: {
@@ -2509,6 +2521,21 @@ bool Variable::MergePartialFromCodedStream(
         break;
       }
 
+      // uint64 u64 = 11;
+      case 11: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(88u /* 88 & 0xFF */)) {
+          clear_value();
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
+                 input, &value_.u64_)));
+          set_has_u64();
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       // string name = 15;
       case 15: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
@@ -2611,6 +2638,11 @@ void Variable::SerializeWithCachedSizes(
       10, *value_.com_pointer_, output);
   }
 
+  // uint64 u64 = 11;
+  if (has_u64()) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt64(11, this->u64(), output);
+  }
+
   // string name = 15;
   if (this->name().size() > 0) {
     ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
@@ -2699,6 +2731,11 @@ void Variable::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::
       InternalWriteMessageToArray(
         10, *value_.com_pointer_, deterministic, target);
+  }
+
+  // uint64 u64 = 11;
+  if (has_u64()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(11, this->u64(), target);
   }
 
   // string name = 15;
@@ -2799,6 +2836,13 @@ size_t Variable::ByteSizeLong() const {
           *value_.com_pointer_);
       break;
     }
+    // uint64 u64 = 11;
+    case kU64: {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::UInt64Size(
+          this->u64());
+      break;
+    }
     case VALUE_NOT_SET: {
       break;
     }
@@ -2875,6 +2919,10 @@ void Variable::MergeFrom(const Variable& from) {
     }
     case kComPointer: {
       mutable_com_pointer()->::BERTBuffers::ExternalPointer::MergeFrom(from.com_pointer());
+      break;
+    }
+    case kU64: {
+      set_u64(from.u64());
       break;
     }
     case VALUE_NOT_SET: {

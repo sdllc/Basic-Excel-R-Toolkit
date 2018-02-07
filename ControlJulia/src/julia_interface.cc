@@ -27,6 +27,7 @@
 
 #include "julia.h"
 
+
 jl_ptls_t ptls; 
 
 jl_value_t * VariableToJlValue(const BERTBuffers::Variable *variable) {
@@ -42,22 +43,92 @@ jl_value_t * VariableToJlValue(const BERTBuffers::Variable *variable) {
     value = jl_box_float64(variable->num());
     break;
 
+  case BERTBuffers::Variable::kU64:
+    value = jl_box_uint64(variable->u64());
+    break;
+
   case BERTBuffers::Variable::kStr:
     value = jl_pchar_to_string(variable->str().c_str(), variable->str().length());
     break;
 
   //case BERTBuffers::Variable::kExternalPointer:
   case BERTBuffers::Variable::kComPointer:
+  {
+    const auto &com_pointer = variable->com_pointer();
+    std::cout << "installing external pointer: " << com_pointer.interface_name() << " @ " << std::hex << com_pointer.pointer() << std::endl;
 
-    // FIXME: we should construct a wrapper type for this. the below is sufficient
-    // for preserving value (unlike R, which can't accept the value), but might lead
-    // it to being treated differently. also we need to register a finalizer...
+    jl_value_t* array_type = jl_apply_array_type((jl_value_t*)jl_any_type, 1);
+    jl_array_t* julia_array = jl_alloc_array_1d(array_type, 4);
 
-    //value = jl_box_uint64(variable->external_pointer());
-    value = jl_box_uint64(variable->com_pointer().pointer());
+    //jl_value_t *element = VariableToJlValue(&(arr.data(i)));
+    //jl_arrayset(julia_array, element, i);
+
+    // name
+    jl_arrayset(julia_array,
+      jl_pchar_to_string(com_pointer.interface_name().c_str(), com_pointer.interface_name().length()), 0);
+
+    // pointer (literal)
+    jl_arrayset(julia_array, jl_box_uint64(com_pointer.pointer()), 1);
+
+    // functions
+    if (com_pointer.functions_size()) {
+      jl_array_t *functions_array = jl_alloc_array_1d(array_type, com_pointer.functions_size());
+      for (int i = 0, len = com_pointer.functions_size(); i < len; i++) {
+        const auto &function_definition = com_pointer.functions(i);
+
+         // function definition should be name, type, index, [params]
+        jl_array_t *function_def_array = jl_alloc_array_1d(array_type, 4);
+
+        jl_arrayset(function_def_array, 
+          jl_pchar_to_string(function_definition.function().name().c_str(), function_definition.function().name().length()), 0);
+
+        std::string call_type = "method";
+        switch (function_definition.call_type()) {
+        case BERTBuffers::CallType::get: call_type = "get";
+          break;
+        case BERTBuffers::CallType::put: call_type = "put";
+          break;
+        }
+
+        jl_arrayset(function_def_array, jl_pchar_to_string(call_type.c_str(), call_type.length()), 1);
+        jl_arrayset(function_def_array, jl_box_uint32(function_definition.function().index()), 2);
+
+        int arguments_count = function_definition.arguments_size();
+        if (arguments_count > 0) {
+          jl_array_t *arguments_array = jl_alloc_array_1d(array_type, arguments_count);
+          for (int j = 0; j < arguments_count; j++) {
+            const auto &argument = function_definition.arguments(j);
+            jl_arrayset(arguments_array,
+              jl_pchar_to_string(argument.name().c_str(), argument.name().length()), j);
+          }
+          jl_arrayset(function_def_array, (jl_value_t*)arguments_array, 3);
+        }
+        else {
+          jl_arrayset(function_def_array, jl_nothing, 3);
+        }
+
+        jl_arrayset(functions_array, (jl_value_t*)function_def_array, i);
+      }
+      jl_arrayset(julia_array, (jl_value_t*)functions_array, 2);
+    }
+    else jl_arrayset(julia_array, jl_nothing, 2);
+
+    // enums
+    if (com_pointer.enums_size()) {
+      jl_array_t *enums_array = jl_alloc_array_1d(array_type, com_pointer.enums_size());
+      for (int i = 0, len = com_pointer.enums_size(); i < len; i++) {
+        const auto &enum_definition = com_pointer.enums(i);
+        jl_value_t *val = jl_pchar_to_string(enum_definition.name().c_str(), enum_definition.name().length());
+        jl_arrayset(enums_array, val, i);
+      }
+      jl_arrayset(julia_array, (jl_value_t*)enums_array, 3);
+    }
+    else jl_arrayset(julia_array, jl_nothing, 3);
+
+    value = (jl_value_t*)julia_array;
 
     break;
-
+  }
   case BERTBuffers::Variable::kArr:
   {
     const BERTBuffers::Array &arr = variable->arr();
@@ -135,7 +206,7 @@ jl_value_t * VariableToJlValue(const BERTBuffers::Variable *variable) {
   
 }
 
-void JlValueToVariable(BERTBuffers::Variable *variable, jl_value_t *value) {
+void JlValueToVariable(BERTBuffers::Variable *variable, jl_value_t *value, bool use_u64 = false) {
 
   // nothing/null/nil
   if (jl_is_nothing(value)) {
@@ -174,6 +245,15 @@ void JlValueToVariable(BERTBuffers::Variable *variable, jl_value_t *value) {
     variable->set_num(jl_unbox_int32(value));
     return;
   }
+  if (jl_typeis(value, jl_uint32_type)) {
+    variable->set_num(jl_unbox_uint32(value));
+    return;
+  }
+  if (jl_typeis(value, jl_uint64_type)) {
+    if( use_u64 ) variable->set_u64(jl_unbox_uint64(value));
+    else variable->set_num(jl_unbox_uint64(value));
+    return;
+  }
   if (jl_typeis(value, jl_int16_type)) {
     variable->set_num(jl_unbox_int16(value));
     return;
@@ -185,7 +265,15 @@ void JlValueToVariable(BERTBuffers::Variable *variable, jl_value_t *value) {
 
   // complex
 
+  // vector?
+  if (jl_is_svec(value)) {
+    // ...
+  }
+
   // tuple!
+  if (jl_is_tuple(value)) {
+    // ...
+  }
 
   // array
 
@@ -203,7 +291,7 @@ void JlValueToVariable(BERTBuffers::Variable *variable, jl_value_t *value) {
 
     if (jl_array->flags.ptrarray) {
       jl_value_t** data = (jl_value_t**)(jl_array_data(jl_array));
-      for (int i = 0; i < len; i++) JlValueToVariable(results_array->add_data(), data[i]);
+      for (int i = 0; i < len; i++) JlValueToVariable(results_array->add_data(), data[i], use_u64);
       return;
     }
     else if (eltype == jl_float64_type) {
@@ -216,9 +304,19 @@ void JlValueToVariable(BERTBuffers::Variable *variable, jl_value_t *value) {
       for (int i = 0; i < len; i++) results_array->add_data()->set_num(d[i]);
       return;
     }
-    else if (eltype == jl_int64_type ) {
+    else if (eltype == jl_int64_type) {
       int64_t *d = (int64_t*)jl_array_data(jl_array);
       for (int i = 0; i < len; i++) results_array->add_data()->set_num(d[i]);
+      return;
+    }
+    else if (eltype == jl_uint64_type) {
+      uint64_t *d = (uint64_t*)jl_array_data(jl_array);
+      if (use_u64) {
+        for (int i = 0; i < len; i++) results_array->add_data()->set_u64(d[i]);
+      }
+      else {
+        for (int i = 0; i < len; i++) results_array->add_data()->set_num(d[i]);
+      }
       return;
     }
     else if (eltype == jl_int32_type) {
@@ -276,6 +374,7 @@ void JuliaInit() {
 
   /* ... */
   // jl_eval_string("Base.banner()");
+
 
 }
 
@@ -444,6 +543,133 @@ ExecResult JuliaShellExec(const std::string &command, const std::string &shell_b
   }
 
   return result;
+
+}
+
+// testing
+extern void DumpJSON(const google::protobuf::Message &message, const char *path);
+
+void TestCallback(void *x) {
+  std::cout << "test callback: " << x << std::endl;
+  BERTBuffers::Variable var;
+  JlValueToVariable(&var, (jl_value_t*)x, true);
+  std::cout << "not dead" << std::endl;
+
+  DumpJSON(var, 0);
+
+  //return 0;
+}
+
+void Callback2(const char *command, void *data) {
+  std::cout << "CB2: " << command << std::endl;
+  if (data) {
+    BERTBuffers::Variable var;
+    JlValueToVariable(&var, reinterpret_cast<jl_value_t*>(data), true);
+    DumpJSON(var, 0);
+  }
+}
+
+extern bool Callback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response);
+
+jl_value_t * COMCallback(uint64_t pointer, const char *name, const char *calltype, uint32_t index, void *arguments_list) {
+
+  /*
+
+  std::cout << "CB1: " << pointer << ", " << name << ", " << calltype << ", " << index << std::endl;
+  if (arguments_list) {
+    BERTBuffers::Variable var;
+    JlValueToVariable(&var, (jl_value_t*)arguments_list, true);
+    DumpJSON(var, 0);
+  }
+  return jl_box_int32(44);
+//  return jl_nothing;
+
+  */
+  
+  static uint32_t callback_id = 1;
+  jl_value_t *jl_result = jl_nothing;
+
+  if (!name || !name[0]) return jl_result;
+
+  BERTBuffers::CallResponse *call = new BERTBuffers::CallResponse;
+  BERTBuffers::CallResponse *response = new BERTBuffers::CallResponse;
+
+  call->set_id(callback_id);
+  call->set_wait(true);
+
+  //auto callback = call->mutable_com_callback();
+  auto callback = call->mutable_function_call();
+  callback->set_target(BERTBuffers::CallTarget::COM);
+  callback->set_function(name);
+
+  callback->set_index(index);
+  callback->set_pointer(pointer);
+
+  callback->set_type(BERTBuffers::CallType::method);
+  if (calltype) {
+    if (!strcmp(calltype, "get")) callback->set_type(BERTBuffers::CallType::get);
+    else if (!strcmp(calltype, "put")) callback->set_type(BERTBuffers::CallType::put);
+  }
+
+  if (arguments_list) {
+    BERTBuffers::Variable var;
+    JlValueToVariable(&var, (jl_value_t*)arguments_list, true);
+    int len = var.arr().data_size();
+    for (int i = 0; i < len; i++) {
+      callback->add_arguments()->CopyFrom(var.arr().data(i)); // FIXME
+    }
+    DumpJSON(var, 0);
+  }
+
+  bool success = Callback(*call, *response);
+
+  if (success) {
+    int err = 0;
+    if (response->operation_case() == BERTBuffers::CallResponse::OperationCase::kFunctionCall) {
+      // sexp_result = RCallSEXP(response->function_call(), true, err); // ??
+
+      jl_result = jl_box_int32(100);
+
+    }
+    else if (response->operation_case() == BERTBuffers::CallResponse::OperationCase::kResult
+      && response->result().value_case() == BERTBuffers::Variable::ValueCase::kComPointer) {
+
+      jl_result = jl_box_int32(200);
+
+      /* todo...
+      BERTBuffers::CompositeFunctionCall *function_call = new BERTBuffers::CompositeFunctionCall;
+      function_call->set_function("BERT$install.com.pointer");
+      auto argument = function_call->add_arguments();
+
+      // I want to borrow this, not copy, can we do that?
+      argument->mutable_com_pointer()->CopyFrom(response->result().com_pointer());
+
+      sexp_result = RCallSEXP(*function_call, true, err);
+      //argument->release_com_pointer();
+      delete function_call;
+      */
+    }
+    else jl_result = VariableToJlValue(&(response->result()));
+  }
+
+  delete call;
+  delete response;
+
+  if (!success) {
+    jl_printf(JL_STDERR, "Error in COM call (...)\n");
+  }
+
+  return jl_result;
+}
+
+void JuliaPostInit(BERTBuffers::CallResponse &response, BERTBuffers::CallResponse &translated_call) {
+
+  auto mutable_function_call = translated_call.mutable_function_call();
+  mutable_function_call->set_target(BERTBuffers::CallTarget::language);
+  mutable_function_call->set_function("BERT.SetCallbacks");
+  mutable_function_call->add_arguments()->set_u64((uint64_t)&COMCallback);
+  mutable_function_call->add_arguments()->set_u64((uint64_t)&Callback2);
+  JuliaCall(response, translated_call);
 
 }
 
