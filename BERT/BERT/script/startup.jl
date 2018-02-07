@@ -6,13 +6,7 @@
 # =============================================================================
 module BERT
 
-  struct ExcelType
-    Application
-  end
-
   EXCEL = nothing
-  PX = nothing
-  DX = nothing
 
   #---------------------------------------------------------------------------- 
   # banner under regular julia banner
@@ -52,7 +46,7 @@ module BERT
 
     print("""
 
-BERT Julia shell version 0.1 BETA. $(colors[:reverse])This is not the default Julia shell$(colors[:normal]). Many
+$(colors[:green])BERT$(colors[:normal]) Julia shell version 0.1 BETA. $(colors[:reverse])This is not the default Julia shell$(colors[:normal]). Many
 things are similar, but some things are different. Please send feedback if you
 have questions or comments, and save your work often. 
 
@@ -61,12 +55,11 @@ have questions or comments, and save your work often.
 
   end
 
-  #---------------------------------------------------------------------------- 
-  # this function gets a list of all functions in Main,
-  # returning function name and list of argument names.
-  # note that (at least for now) we don't support named
-  # arguments; only ordinal arguments.
-  #---------------------------------------------------------------------------- 
+  #
+  # this function gets a list of all functions in Main, returning function 
+  # name and list of argument names. note that (at least for now) we don't
+  # support named arguments; only ordinal arguments.
+  #
   ListFunctions = function()
     function_list = []
     for name in names(Main) # these are symbols
@@ -85,8 +78,9 @@ have questions or comments, and save your work often.
     function_list
   end
 
-  #---------------------------------------------------------------------------- 
-  #---------------------------------------------------------------------------- 
+  #
+  #
+  #
   Autocomplete = function(buffer, position)
     try
       return Base.REPLCompletions.completions(buffer, position)[1];
@@ -95,21 +89,44 @@ have questions or comments, and save your work often.
     return nothing;
   end
 
-  SetCallbacks = function(com_callback::UInt64, callback::UInt64)
-    global __callback_pointer = Ptr{UInt64}(callback)
-    global __com_callback_pointer = Ptr{UInt64}(com_callback)
+  #
+  #
+  #
+  SetCallbacks = function(com_callback::Ptr{Void}, callback::Ptr{Void})
+
+    # clearly I don't understand how julia closures work
+
+    global __callback_pointer = callback
+    global __com_callback_pointer = com_callback
     nothing
   end
 
+  #
+  #
+  #
   Callback = function(command::String, arguments::Any = nothing)
-    ccall(BERT.__callback_pointer, Void, (Cstring, Any), command, arguments)
+    ccall(BERT.__callback_pointer, Any, (Cstring, Any), command, arguments)
   end
 
+  #
+  # calls release on a COM pointer. 
+  #
+  # FIXME: we are not really locking down these pointers, so they might 
+  # get copied (you can certainly do that expressly if you want). we might
+  # think about adding a callback in the ctor so we're aware of extra 
+  # copies (possibly calling addref, or maybe using a second-order refcount
+  # on top).
+  # 
+  # it's probably not possible to perfectly lock these, but we might do a 
+  # better job of hiding. 
+  #
   FinalizeCOMPointer = function(x)
-    println("release ", x)
-    Callback("release-pointer", x)
+    Callback("release-pointer", x.p)
   end
 
+  #
+  # NOTE: object with finalizer has to be mutable (?)
+  #
   mutable struct FinalizablePointer 
     p::Ptr{UInt64}
     function FinalizablePointer(p)
@@ -119,83 +136,79 @@ have questions or comments, and save your work often.
     end
   end
 
-  CallCOMFunction = function(p, name, call_type, index, args)
-    ccall(BERT.__com_callback_pointer, 
-      Any, (UInt64, Cstring, Cstring, UInt32, Any), 
-      p, name, call_type, index, args)
-  end
-
   #
   # creates a type representing a COM interface. this _creates_
   # types, it does not instantiate them; this should only be 
-  # called once per type. they can be instaniated directly.
-  # WIP
+  # called once per type. after that they can be instantiated 
+  # directly.
   #
   macro CreateCOMTypeInternal(struct_name, descriptor)
- 
+
     local descriptor_ = eval(descriptor)
-    local p = descriptor_[2]
-    local functions = map( x -> function(args...)
-      return CallCOMFunction(p, x[1], x[2], x[3], [args...])
-      end, descriptor_[3] )
+    local functions_list = descriptor_[3]
 
     local translate_name = function(x)
-      if x[2] == "get"
-        return string("get_", x[1])
-      elseif x[2] == "put"    
-        return string("put_", x[1])
+      name, call_type = x
+      if call_type == "get"
+        return Symbol("get_", name)
+      elseif call_type == "put"    
+        return Symbol("put_", name)
       else
-        return x[1]
+        return Symbol(name)
       end
     end
 
     local struct_type = quote
       struct $struct_name 
         _pointer
-        $([Symbol(translate_name(x)) for x in descriptor_[3]]...)
-        $struct_name(p) = new(FinalizablePointer(p), $(functions...))
+        $([translate_name(x) for x in functions_list]...)
       end
     end
 
-    ## print("Created type ", struct_name, "\n")
     return struct_type
 
   end
 
+  #
+  # creates wrappers for COM pointers. types are generated on the fly
+  # and stuffed into this namespace (glad that works, btw). subsequent
+  # calls return instances. 
+  #
   CreateCOMType = function(descriptor)
-    sym = Symbol("com_interface_", descriptor[1])
+
+    name, pointer, functions_list = descriptor
+    sym = Symbol("com_interface_", name)
     if(!isdefined(BERT, sym))
       eval(:(@CreateCOMTypeInternal($sym, $descriptor)))
-      eval(:(Base.show(io::IO, z::$(sym)) = print(string("COM interface ", $(descriptor[1]), " ", z._pointer.p))))
+      eval(:(Base.show(io::IO, object::$(sym)) = print(string("COM interface ", $(name), " ", object._pointer.p))))
     end
-    return eval(:( $(sym)($(descriptor[2]))))
+
+    local functions = map(x -> function(args...)
+      return eval(:( ccall(BERT.__com_callback_pointer, Any, (UInt64, Cstring, Cstring, UInt32, Any), 
+        $(pointer), $(x[1]), $(x[2]), $(x[3]), [$(args)...])))
+    end, functions_list)
+    
+    return eval(:( $(sym)(FinalizablePointer($(pointer)), $(functions...))))
+
   end
 
+  #
+  # type to match R 
+  #
+  struct ExcelType
+    Application
+  end
+
+  #
+  # installs the root "Application" pointer and creates the EXCEL 
+  # wrapper object. 
+  # 
+  # FIXME: enums
+  #
   InstallApplicationPointer = function(descriptor)
-    global DX = descriptor
-    application = CreateCOMType(descriptor)
-    global EXCEL = ExcelType(application)
+    global ApplicationDescriptor = descriptor # for dev/debug
+    global EXCEL = ExcelType(CreateCOMType(descriptor))
     nothing
-  end
-
-  #---------------------------------------------------------------------------- 
-  # testing. this is a patched-up version of the socket repl
-  # function from julia base
-  #---------------------------------------------------------------------------- 
-  RunSocketREPL = function()
-	  server = listen(9999)
-	  client = TCPSocket()
-	  while isopen(server)
-		  err = Base.accept_nonblock(server, client)
-		  if err == 0
-			  Base.REPL.run_repl(client)
-			  client = TCPSocket()
-		  elseif err != Base.UV_EAGAIN
-			  uv_error("accept", err)
-		  else
-			  Base.stream_wait(server, server.connectnotify)
-		  end
-	  end
   end
 
 end

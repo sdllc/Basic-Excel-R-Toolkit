@@ -957,14 +957,14 @@ proto.BERTBuffers.Variable.ValueCase = {
   NIL: 1,
   MISSING: 2,
   ERR: 3,
-  NUM: 4,
-  STR: 5,
-  BOOLEAN: 6,
-  CPX: 7,
-  ARR: 8,
-  REF: 9,
-  COM_POINTER: 10,
-  U64: 11
+  INTEGER: 4,
+  REAL: 5,
+  STR: 6,
+  BOOLEAN: 7,
+  CPX: 8,
+  ARR: 9,
+  REF: 10,
+  COM_POINTER: 11
 };
 
 /**
@@ -1006,14 +1006,14 @@ proto.BERTBuffers.Variable.toObject = function(includeInstance, msg) {
     nil: jspb.Message.getFieldWithDefault(msg, 1, false),
     missing: jspb.Message.getFieldWithDefault(msg, 2, false),
     err: (f = msg.getErr()) && proto.BERTBuffers.Error.toObject(includeInstance, f),
-    num: +jspb.Message.getFieldWithDefault(msg, 4, 0.0),
-    str: jspb.Message.getFieldWithDefault(msg, 5, ""),
-    pb_boolean: jspb.Message.getFieldWithDefault(msg, 6, false),
+    integer: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    real: +jspb.Message.getFieldWithDefault(msg, 5, 0.0),
+    str: jspb.Message.getFieldWithDefault(msg, 6, ""),
+    pb_boolean: jspb.Message.getFieldWithDefault(msg, 7, false),
     cpx: (f = msg.getCpx()) && proto.BERTBuffers.Complex.toObject(includeInstance, f),
     arr: (f = msg.getArr()) && proto.BERTBuffers.Array.toObject(includeInstance, f),
     ref: (f = msg.getRef()) && proto.BERTBuffers.SheetReference.toObject(includeInstance, f),
     comPointer: (f = msg.getComPointer()) && proto.BERTBuffers.ExternalPointer.toObject(includeInstance, f),
-    u64: jspb.Message.getFieldWithDefault(msg, 11, 0),
     name: jspb.Message.getFieldWithDefault(msg, 15, "")
   };
 
@@ -1065,40 +1065,40 @@ proto.BERTBuffers.Variable.deserializeBinaryFromReader = function(msg, reader) {
       msg.setErr(value);
       break;
     case 4:
-      var value = /** @type {number} */ (reader.readDouble());
-      msg.setNum(value);
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setInteger(value);
       break;
     case 5:
+      var value = /** @type {number} */ (reader.readDouble());
+      msg.setReal(value);
+      break;
+    case 6:
       var value = /** @type {string} */ (reader.readString());
       msg.setStr(value);
       break;
-    case 6:
+    case 7:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setBoolean(value);
       break;
-    case 7:
+    case 8:
       var value = new proto.BERTBuffers.Complex;
       reader.readMessage(value,proto.BERTBuffers.Complex.deserializeBinaryFromReader);
       msg.setCpx(value);
       break;
-    case 8:
+    case 9:
       var value = new proto.BERTBuffers.Array;
       reader.readMessage(value,proto.BERTBuffers.Array.deserializeBinaryFromReader);
       msg.setArr(value);
       break;
-    case 9:
+    case 10:
       var value = new proto.BERTBuffers.SheetReference;
       reader.readMessage(value,proto.BERTBuffers.SheetReference.deserializeBinaryFromReader);
       msg.setRef(value);
       break;
-    case 10:
+    case 11:
       var value = new proto.BERTBuffers.ExternalPointer;
       reader.readMessage(value,proto.BERTBuffers.ExternalPointer.deserializeBinaryFromReader);
       msg.setComPointer(value);
-      break;
-    case 11:
-      var value = /** @type {number} */ (reader.readUint64());
-      msg.setU64(value);
       break;
     case 15:
       var value = /** @type {string} */ (reader.readString());
@@ -1157,29 +1157,36 @@ proto.BERTBuffers.Variable.serializeBinaryToWriter = function(message, writer) {
   }
   f = /** @type {number} */ (jspb.Message.getField(message, 4));
   if (f != null) {
-    writer.writeDouble(
+    writer.writeInt32(
       4,
       f
     );
   }
-  f = /** @type {string} */ (jspb.Message.getField(message, 5));
+  f = /** @type {number} */ (jspb.Message.getField(message, 5));
   if (f != null) {
-    writer.writeString(
+    writer.writeDouble(
       5,
       f
     );
   }
-  f = /** @type {boolean} */ (jspb.Message.getField(message, 6));
+  f = /** @type {string} */ (jspb.Message.getField(message, 6));
+  if (f != null) {
+    writer.writeString(
+      6,
+      f
+    );
+  }
+  f = /** @type {boolean} */ (jspb.Message.getField(message, 7));
   if (f != null) {
     writer.writeBool(
-      6,
+      7,
       f
     );
   }
   f = message.getCpx();
   if (f != null) {
     writer.writeMessage(
-      7,
+      8,
       f,
       proto.BERTBuffers.Complex.serializeBinaryToWriter
     );
@@ -1187,7 +1194,7 @@ proto.BERTBuffers.Variable.serializeBinaryToWriter = function(message, writer) {
   f = message.getArr();
   if (f != null) {
     writer.writeMessage(
-      8,
+      9,
       f,
       proto.BERTBuffers.Array.serializeBinaryToWriter
     );
@@ -1195,7 +1202,7 @@ proto.BERTBuffers.Variable.serializeBinaryToWriter = function(message, writer) {
   f = message.getRef();
   if (f != null) {
     writer.writeMessage(
-      9,
+      10,
       f,
       proto.BERTBuffers.SheetReference.serializeBinaryToWriter
     );
@@ -1203,16 +1210,9 @@ proto.BERTBuffers.Variable.serializeBinaryToWriter = function(message, writer) {
   f = message.getComPointer();
   if (f != null) {
     writer.writeMessage(
-      10,
+      11,
       f,
       proto.BERTBuffers.ExternalPointer.serializeBinaryToWriter
-    );
-  }
-  f = /** @type {number} */ (jspb.Message.getField(message, 11));
-  if (f != null) {
-    writer.writeUint64(
-      11,
-      f
     );
   }
   f = message.getName();
@@ -1318,21 +1318,21 @@ proto.BERTBuffers.Variable.prototype.hasErr = function() {
 
 
 /**
- * optional double num = 4;
+ * optional int32 integer = 4;
  * @return {number}
  */
-proto.BERTBuffers.Variable.prototype.getNum = function() {
-  return /** @type {number} */ (+jspb.Message.getFieldWithDefault(this, 4, 0.0));
+proto.BERTBuffers.Variable.prototype.getInteger = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
 
 /** @param {number} value */
-proto.BERTBuffers.Variable.prototype.setNum = function(value) {
+proto.BERTBuffers.Variable.prototype.setInteger = function(value) {
   jspb.Message.setOneofField(this, 4, proto.BERTBuffers.Variable.oneofGroups_[0], value);
 };
 
 
-proto.BERTBuffers.Variable.prototype.clearNum = function() {
+proto.BERTBuffers.Variable.prototype.clearInteger = function() {
   jspb.Message.setOneofField(this, 4, proto.BERTBuffers.Variable.oneofGroups_[0], undefined);
 };
 
@@ -1341,27 +1341,27 @@ proto.BERTBuffers.Variable.prototype.clearNum = function() {
  * Returns whether this field is set.
  * @return {!boolean}
  */
-proto.BERTBuffers.Variable.prototype.hasNum = function() {
+proto.BERTBuffers.Variable.prototype.hasInteger = function() {
   return jspb.Message.getField(this, 4) != null;
 };
 
 
 /**
- * optional string str = 5;
- * @return {string}
+ * optional double real = 5;
+ * @return {number}
  */
-proto.BERTBuffers.Variable.prototype.getStr = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
+proto.BERTBuffers.Variable.prototype.getReal = function() {
+  return /** @type {number} */ (+jspb.Message.getFieldWithDefault(this, 5, 0.0));
 };
 
 
-/** @param {string} value */
-proto.BERTBuffers.Variable.prototype.setStr = function(value) {
+/** @param {number} value */
+proto.BERTBuffers.Variable.prototype.setReal = function(value) {
   jspb.Message.setOneofField(this, 5, proto.BERTBuffers.Variable.oneofGroups_[0], value);
 };
 
 
-proto.BERTBuffers.Variable.prototype.clearStr = function() {
+proto.BERTBuffers.Variable.prototype.clearReal = function() {
   jspb.Message.setOneofField(this, 5, proto.BERTBuffers.Variable.oneofGroups_[0], undefined);
 };
 
@@ -1370,29 +1370,27 @@ proto.BERTBuffers.Variable.prototype.clearStr = function() {
  * Returns whether this field is set.
  * @return {!boolean}
  */
-proto.BERTBuffers.Variable.prototype.hasStr = function() {
+proto.BERTBuffers.Variable.prototype.hasReal = function() {
   return jspb.Message.getField(this, 5) != null;
 };
 
 
 /**
- * optional bool boolean = 6;
- * Note that Boolean fields may be set to 0/1 when serialized from a Java server.
- * You should avoid comparisons like {@code val === true/false} in those cases.
- * @return {boolean}
+ * optional string str = 6;
+ * @return {string}
  */
-proto.BERTBuffers.Variable.prototype.getBoolean = function() {
-  return /** @type {boolean} */ (jspb.Message.getFieldWithDefault(this, 6, false));
+proto.BERTBuffers.Variable.prototype.getStr = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 6, ""));
 };
 
 
-/** @param {boolean} value */
-proto.BERTBuffers.Variable.prototype.setBoolean = function(value) {
+/** @param {string} value */
+proto.BERTBuffers.Variable.prototype.setStr = function(value) {
   jspb.Message.setOneofField(this, 6, proto.BERTBuffers.Variable.oneofGroups_[0], value);
 };
 
 
-proto.BERTBuffers.Variable.prototype.clearBoolean = function() {
+proto.BERTBuffers.Variable.prototype.clearStr = function() {
   jspb.Message.setOneofField(this, 6, proto.BERTBuffers.Variable.oneofGroups_[0], undefined);
 };
 
@@ -1401,24 +1399,55 @@ proto.BERTBuffers.Variable.prototype.clearBoolean = function() {
  * Returns whether this field is set.
  * @return {!boolean}
  */
-proto.BERTBuffers.Variable.prototype.hasBoolean = function() {
+proto.BERTBuffers.Variable.prototype.hasStr = function() {
   return jspb.Message.getField(this, 6) != null;
 };
 
 
 /**
- * optional Complex cpx = 7;
+ * optional bool boolean = 7;
+ * Note that Boolean fields may be set to 0/1 when serialized from a Java server.
+ * You should avoid comparisons like {@code val === true/false} in those cases.
+ * @return {boolean}
+ */
+proto.BERTBuffers.Variable.prototype.getBoolean = function() {
+  return /** @type {boolean} */ (jspb.Message.getFieldWithDefault(this, 7, false));
+};
+
+
+/** @param {boolean} value */
+proto.BERTBuffers.Variable.prototype.setBoolean = function(value) {
+  jspb.Message.setOneofField(this, 7, proto.BERTBuffers.Variable.oneofGroups_[0], value);
+};
+
+
+proto.BERTBuffers.Variable.prototype.clearBoolean = function() {
+  jspb.Message.setOneofField(this, 7, proto.BERTBuffers.Variable.oneofGroups_[0], undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {!boolean}
+ */
+proto.BERTBuffers.Variable.prototype.hasBoolean = function() {
+  return jspb.Message.getField(this, 7) != null;
+};
+
+
+/**
+ * optional Complex cpx = 8;
  * @return {?proto.BERTBuffers.Complex}
  */
 proto.BERTBuffers.Variable.prototype.getCpx = function() {
   return /** @type{?proto.BERTBuffers.Complex} */ (
-    jspb.Message.getWrapperField(this, proto.BERTBuffers.Complex, 7));
+    jspb.Message.getWrapperField(this, proto.BERTBuffers.Complex, 8));
 };
 
 
 /** @param {?proto.BERTBuffers.Complex|undefined} value */
 proto.BERTBuffers.Variable.prototype.setCpx = function(value) {
-  jspb.Message.setOneofWrapperField(this, 7, proto.BERTBuffers.Variable.oneofGroups_[0], value);
+  jspb.Message.setOneofWrapperField(this, 8, proto.BERTBuffers.Variable.oneofGroups_[0], value);
 };
 
 
@@ -1432,23 +1461,23 @@ proto.BERTBuffers.Variable.prototype.clearCpx = function() {
  * @return {!boolean}
  */
 proto.BERTBuffers.Variable.prototype.hasCpx = function() {
-  return jspb.Message.getField(this, 7) != null;
+  return jspb.Message.getField(this, 8) != null;
 };
 
 
 /**
- * optional Array arr = 8;
+ * optional Array arr = 9;
  * @return {?proto.BERTBuffers.Array}
  */
 proto.BERTBuffers.Variable.prototype.getArr = function() {
   return /** @type{?proto.BERTBuffers.Array} */ (
-    jspb.Message.getWrapperField(this, proto.BERTBuffers.Array, 8));
+    jspb.Message.getWrapperField(this, proto.BERTBuffers.Array, 9));
 };
 
 
 /** @param {?proto.BERTBuffers.Array|undefined} value */
 proto.BERTBuffers.Variable.prototype.setArr = function(value) {
-  jspb.Message.setOneofWrapperField(this, 8, proto.BERTBuffers.Variable.oneofGroups_[0], value);
+  jspb.Message.setOneofWrapperField(this, 9, proto.BERTBuffers.Variable.oneofGroups_[0], value);
 };
 
 
@@ -1462,23 +1491,23 @@ proto.BERTBuffers.Variable.prototype.clearArr = function() {
  * @return {!boolean}
  */
 proto.BERTBuffers.Variable.prototype.hasArr = function() {
-  return jspb.Message.getField(this, 8) != null;
+  return jspb.Message.getField(this, 9) != null;
 };
 
 
 /**
- * optional SheetReference ref = 9;
+ * optional SheetReference ref = 10;
  * @return {?proto.BERTBuffers.SheetReference}
  */
 proto.BERTBuffers.Variable.prototype.getRef = function() {
   return /** @type{?proto.BERTBuffers.SheetReference} */ (
-    jspb.Message.getWrapperField(this, proto.BERTBuffers.SheetReference, 9));
+    jspb.Message.getWrapperField(this, proto.BERTBuffers.SheetReference, 10));
 };
 
 
 /** @param {?proto.BERTBuffers.SheetReference|undefined} value */
 proto.BERTBuffers.Variable.prototype.setRef = function(value) {
-  jspb.Message.setOneofWrapperField(this, 9, proto.BERTBuffers.Variable.oneofGroups_[0], value);
+  jspb.Message.setOneofWrapperField(this, 10, proto.BERTBuffers.Variable.oneofGroups_[0], value);
 };
 
 
@@ -1492,23 +1521,23 @@ proto.BERTBuffers.Variable.prototype.clearRef = function() {
  * @return {!boolean}
  */
 proto.BERTBuffers.Variable.prototype.hasRef = function() {
-  return jspb.Message.getField(this, 9) != null;
+  return jspb.Message.getField(this, 10) != null;
 };
 
 
 /**
- * optional ExternalPointer com_pointer = 10;
+ * optional ExternalPointer com_pointer = 11;
  * @return {?proto.BERTBuffers.ExternalPointer}
  */
 proto.BERTBuffers.Variable.prototype.getComPointer = function() {
   return /** @type{?proto.BERTBuffers.ExternalPointer} */ (
-    jspb.Message.getWrapperField(this, proto.BERTBuffers.ExternalPointer, 10));
+    jspb.Message.getWrapperField(this, proto.BERTBuffers.ExternalPointer, 11));
 };
 
 
 /** @param {?proto.BERTBuffers.ExternalPointer|undefined} value */
 proto.BERTBuffers.Variable.prototype.setComPointer = function(value) {
-  jspb.Message.setOneofWrapperField(this, 10, proto.BERTBuffers.Variable.oneofGroups_[0], value);
+  jspb.Message.setOneofWrapperField(this, 11, proto.BERTBuffers.Variable.oneofGroups_[0], value);
 };
 
 
@@ -1522,35 +1551,6 @@ proto.BERTBuffers.Variable.prototype.clearComPointer = function() {
  * @return {!boolean}
  */
 proto.BERTBuffers.Variable.prototype.hasComPointer = function() {
-  return jspb.Message.getField(this, 10) != null;
-};
-
-
-/**
- * optional uint64 u64 = 11;
- * @return {number}
- */
-proto.BERTBuffers.Variable.prototype.getU64 = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 11, 0));
-};
-
-
-/** @param {number} value */
-proto.BERTBuffers.Variable.prototype.setU64 = function(value) {
-  jspb.Message.setOneofField(this, 11, proto.BERTBuffers.Variable.oneofGroups_[0], value);
-};
-
-
-proto.BERTBuffers.Variable.prototype.clearU64 = function() {
-  jspb.Message.setOneofField(this, 11, proto.BERTBuffers.Variable.oneofGroups_[0], undefined);
-};
-
-
-/**
- * Returns whether this field is set.
- * @return {!boolean}
- */
-proto.BERTBuffers.Variable.prototype.hasU64 = function() {
   return jspb.Message.getField(this, 11) != null;
 };
 

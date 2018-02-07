@@ -16,7 +16,7 @@
     <Filter Include="language-services">
       <UniqueIdentifier>{1842e8ea-b1af-4f61-84ac-231b63ca436b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="StartupCode">
+    <Filter Include="script">
       <UniqueIdentifier>{d0318f18-87ac-4f4a-8c25-85db8c49c5e6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -84,17 +84,17 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="R\startup.R">
-      <Filter>StartupCode</Filter>
-    </None>
     <None Include="..\..\PB\variable.proto">
       <Filter>PB</Filter>
     </None>
     <None Include="src\bert.def">
       <Filter>source</Filter>
     </None>
-    <None Include="Startup.jl">
-      <Filter>StartupCode</Filter>
+    <None Include="script\startup.jl">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\startup.R">
+      <Filter>script</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

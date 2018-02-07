@@ -744,14 +744,14 @@ class Variable : public ::google::protobuf::Message /* @@protoc_insertion_point(
     kNil = 1,
     kMissing = 2,
     kErr = 3,
-    kNum = 4,
-    kStr = 5,
-    kBoolean = 6,
-    kCpx = 7,
-    kArr = 8,
-    kRef = 9,
-    kComPointer = 10,
-    kU64 = 11,
+    kInteger = 4,
+    kReal = 5,
+    kStr = 6,
+    kBoolean = 7,
+    kCpx = 8,
+    kArr = 9,
+    kRef = 10,
+    kComPointer = 11,
     VALUE_NOT_SET = 0,
   };
 
@@ -849,21 +849,30 @@ class Variable : public ::google::protobuf::Message /* @@protoc_insertion_point(
   ::BERTBuffers::Error* mutable_err();
   void set_allocated_err(::BERTBuffers::Error* err);
 
-  // double num = 4;
+  // int32 integer = 4;
   private:
-  bool has_num() const;
+  bool has_integer() const;
   public:
-  void clear_num();
-  static const int kNumFieldNumber = 4;
-  double num() const;
-  void set_num(double value);
+  void clear_integer();
+  static const int kIntegerFieldNumber = 4;
+  ::google::protobuf::int32 integer() const;
+  void set_integer(::google::protobuf::int32 value);
 
-  // string str = 5;
+  // double real = 5;
+  private:
+  bool has_real() const;
+  public:
+  void clear_real();
+  static const int kRealFieldNumber = 5;
+  double real() const;
+  void set_real(double value);
+
+  // string str = 6;
   private:
   bool has_str() const;
   public:
   void clear_str();
-  static const int kStrFieldNumber = 5;
+  static const int kStrFieldNumber = 6;
   const ::std::string& str() const;
   void set_str(const ::std::string& value);
   #if LANG_CXX11
@@ -875,59 +884,50 @@ class Variable : public ::google::protobuf::Message /* @@protoc_insertion_point(
   ::std::string* release_str();
   void set_allocated_str(::std::string* str);
 
-  // bool boolean = 6;
+  // bool boolean = 7;
   private:
   bool has_boolean() const;
   public:
   void clear_boolean();
-  static const int kBooleanFieldNumber = 6;
+  static const int kBooleanFieldNumber = 7;
   bool boolean() const;
   void set_boolean(bool value);
 
-  // .BERTBuffers.Complex cpx = 7;
+  // .BERTBuffers.Complex cpx = 8;
   bool has_cpx() const;
   void clear_cpx();
-  static const int kCpxFieldNumber = 7;
+  static const int kCpxFieldNumber = 8;
   const ::BERTBuffers::Complex& cpx() const;
   ::BERTBuffers::Complex* release_cpx();
   ::BERTBuffers::Complex* mutable_cpx();
   void set_allocated_cpx(::BERTBuffers::Complex* cpx);
 
-  // .BERTBuffers.Array arr = 8;
+  // .BERTBuffers.Array arr = 9;
   bool has_arr() const;
   void clear_arr();
-  static const int kArrFieldNumber = 8;
+  static const int kArrFieldNumber = 9;
   const ::BERTBuffers::Array& arr() const;
   ::BERTBuffers::Array* release_arr();
   ::BERTBuffers::Array* mutable_arr();
   void set_allocated_arr(::BERTBuffers::Array* arr);
 
-  // .BERTBuffers.SheetReference ref = 9;
+  // .BERTBuffers.SheetReference ref = 10;
   bool has_ref() const;
   void clear_ref();
-  static const int kRefFieldNumber = 9;
+  static const int kRefFieldNumber = 10;
   const ::BERTBuffers::SheetReference& ref() const;
   ::BERTBuffers::SheetReference* release_ref();
   ::BERTBuffers::SheetReference* mutable_ref();
   void set_allocated_ref(::BERTBuffers::SheetReference* ref);
 
-  // .BERTBuffers.ExternalPointer com_pointer = 10;
+  // .BERTBuffers.ExternalPointer com_pointer = 11;
   bool has_com_pointer() const;
   void clear_com_pointer();
-  static const int kComPointerFieldNumber = 10;
+  static const int kComPointerFieldNumber = 11;
   const ::BERTBuffers::ExternalPointer& com_pointer() const;
   ::BERTBuffers::ExternalPointer* release_com_pointer();
   ::BERTBuffers::ExternalPointer* mutable_com_pointer();
   void set_allocated_com_pointer(::BERTBuffers::ExternalPointer* com_pointer);
-
-  // uint64 u64 = 11;
-  private:
-  bool has_u64() const;
-  public:
-  void clear_u64();
-  static const int kU64FieldNumber = 11;
-  ::google::protobuf::uint64 u64() const;
-  void set_u64(::google::protobuf::uint64 value);
 
   ValueCase value_case() const;
   // @@protoc_insertion_point(class_scope:BERTBuffers.Variable)
@@ -935,14 +935,14 @@ class Variable : public ::google::protobuf::Message /* @@protoc_insertion_point(
   void set_has_nil();
   void set_has_missing();
   void set_has_err();
-  void set_has_num();
+  void set_has_integer();
+  void set_has_real();
   void set_has_str();
   void set_has_boolean();
   void set_has_cpx();
   void set_has_arr();
   void set_has_ref();
   void set_has_com_pointer();
-  void set_has_u64();
 
   inline bool has_value() const;
   void clear_value();
@@ -955,14 +955,14 @@ class Variable : public ::google::protobuf::Message /* @@protoc_insertion_point(
     bool nil_;
     bool missing_;
     ::BERTBuffers::Error* err_;
-    double num_;
+    ::google::protobuf::int32 integer_;
+    double real_;
     ::google::protobuf::internal::ArenaStringPtr str_;
     bool boolean_;
     ::BERTBuffers::Complex* cpx_;
     ::BERTBuffers::Array* arr_;
     ::BERTBuffers::SheetReference* ref_;
     ::BERTBuffers::ExternalPointer* com_pointer_;
-    ::google::protobuf::uint64 u64_;
   } value_;
   mutable int _cached_size_;
   ::google::protobuf::uint32 _oneof_case_[1];
@@ -2860,36 +2860,65 @@ inline ::BERTBuffers::Error* Variable::mutable_err() {
   return value_.err_;
 }
 
-// double num = 4;
-inline bool Variable::has_num() const {
-  return value_case() == kNum;
+// int32 integer = 4;
+inline bool Variable::has_integer() const {
+  return value_case() == kInteger;
 }
-inline void Variable::set_has_num() {
-  _oneof_case_[0] = kNum;
+inline void Variable::set_has_integer() {
+  _oneof_case_[0] = kInteger;
 }
-inline void Variable::clear_num() {
-  if (has_num()) {
-    value_.num_ = 0;
+inline void Variable::clear_integer() {
+  if (has_integer()) {
+    value_.integer_ = 0;
     clear_has_value();
   }
 }
-inline double Variable::num() const {
-  // @@protoc_insertion_point(field_get:BERTBuffers.Variable.num)
-  if (has_num()) {
-    return value_.num_;
+inline ::google::protobuf::int32 Variable::integer() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.Variable.integer)
+  if (has_integer()) {
+    return value_.integer_;
   }
   return 0;
 }
-inline void Variable::set_num(double value) {
-  if (!has_num()) {
+inline void Variable::set_integer(::google::protobuf::int32 value) {
+  if (!has_integer()) {
     clear_value();
-    set_has_num();
+    set_has_integer();
   }
-  value_.num_ = value;
-  // @@protoc_insertion_point(field_set:BERTBuffers.Variable.num)
+  value_.integer_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.Variable.integer)
 }
 
-// string str = 5;
+// double real = 5;
+inline bool Variable::has_real() const {
+  return value_case() == kReal;
+}
+inline void Variable::set_has_real() {
+  _oneof_case_[0] = kReal;
+}
+inline void Variable::clear_real() {
+  if (has_real()) {
+    value_.real_ = 0;
+    clear_has_value();
+  }
+}
+inline double Variable::real() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.Variable.real)
+  if (has_real()) {
+    return value_.real_;
+  }
+  return 0;
+}
+inline void Variable::set_real(double value) {
+  if (!has_real()) {
+    clear_value();
+    set_has_real();
+  }
+  value_.real_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.Variable.real)
+}
+
+// string str = 6;
 inline bool Variable::has_str() const {
   return value_case() == kStr;
 }
@@ -2984,7 +3013,7 @@ inline void Variable::set_allocated_str(::std::string* str) {
   // @@protoc_insertion_point(field_set_allocated:BERTBuffers.Variable.str)
 }
 
-// bool boolean = 6;
+// bool boolean = 7;
 inline bool Variable::has_boolean() const {
   return value_case() == kBoolean;
 }
@@ -3013,7 +3042,7 @@ inline void Variable::set_boolean(bool value) {
   // @@protoc_insertion_point(field_set:BERTBuffers.Variable.boolean)
 }
 
-// .BERTBuffers.Complex cpx = 7;
+// .BERTBuffers.Complex cpx = 8;
 inline bool Variable::has_cpx() const {
   return value_case() == kCpx;
 }
@@ -3053,7 +3082,7 @@ inline ::BERTBuffers::Complex* Variable::mutable_cpx() {
   return value_.cpx_;
 }
 
-// .BERTBuffers.Array arr = 8;
+// .BERTBuffers.Array arr = 9;
 inline bool Variable::has_arr() const {
   return value_case() == kArr;
 }
@@ -3093,7 +3122,7 @@ inline ::BERTBuffers::Array* Variable::mutable_arr() {
   return value_.arr_;
 }
 
-// .BERTBuffers.SheetReference ref = 9;
+// .BERTBuffers.SheetReference ref = 10;
 inline bool Variable::has_ref() const {
   return value_case() == kRef;
 }
@@ -3133,7 +3162,7 @@ inline ::BERTBuffers::SheetReference* Variable::mutable_ref() {
   return value_.ref_;
 }
 
-// .BERTBuffers.ExternalPointer com_pointer = 10;
+// .BERTBuffers.ExternalPointer com_pointer = 11;
 inline bool Variable::has_com_pointer() const {
   return value_case() == kComPointer;
 }
@@ -3171,35 +3200,6 @@ inline ::BERTBuffers::ExternalPointer* Variable::mutable_com_pointer() {
   }
   // @@protoc_insertion_point(field_mutable:BERTBuffers.Variable.com_pointer)
   return value_.com_pointer_;
-}
-
-// uint64 u64 = 11;
-inline bool Variable::has_u64() const {
-  return value_case() == kU64;
-}
-inline void Variable::set_has_u64() {
-  _oneof_case_[0] = kU64;
-}
-inline void Variable::clear_u64() {
-  if (has_u64()) {
-    value_.u64_ = GOOGLE_ULONGLONG(0);
-    clear_has_value();
-  }
-}
-inline ::google::protobuf::uint64 Variable::u64() const {
-  // @@protoc_insertion_point(field_get:BERTBuffers.Variable.u64)
-  if (has_u64()) {
-    return value_.u64_;
-  }
-  return GOOGLE_ULONGLONG(0);
-}
-inline void Variable::set_u64(::google::protobuf::uint64 value) {
-  if (!has_u64()) {
-    clear_value();
-    set_has_u64();
-  }
-  value_.u64_ = value;
-  // @@protoc_insertion_point(field_set:BERTBuffers.Variable.u64)
 }
 
 // string name = 15;

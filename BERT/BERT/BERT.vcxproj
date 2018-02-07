@@ -43,9 +43,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\PB\variable.proto" />
-    <None Include="R\startup.R" />
+    <None Include="script\startup.jl" />
+    <None Include="script\startup.R" />
     <None Include="src\bert.def" />
-    <None Include="Startup.jl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\PB\variable.pb.cc" />

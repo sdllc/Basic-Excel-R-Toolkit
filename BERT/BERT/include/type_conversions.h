@@ -74,11 +74,11 @@ public:
     switch (variant.vt) {
     case VT_I4:
     case VT_I8:
-      variable->set_num(variant.intVal);
+      variable->set_integer(variant.intVal);
       break;
     case VT_R4:
     case VT_R8:
-      variable->set_num(variant.dblVal);
+      variable->set_real(variant.dblVal);
       break;
     case VT_BOOL:
       variable->set_boolean(variant.boolVal);
@@ -87,8 +87,9 @@ public:
     {
       CComBSTR string_value(variant.bstrVal);
       variable->set_str(WideStringToUtf8(string_value.m_str, string_value.Length()));
+      break;
     }
-    break;
+
     case VT_ERROR:
       if (variant.scode == DISP_E_PARAMNOTFOUND) {
         variable->set_missing(true);
@@ -97,13 +98,122 @@ public:
         variable->mutable_err()->set_message("COM error");
       }
       break;
-      //case VT_DISPATCH:
-      //    variable->set_external_pointer(reinterpret_cast<uint64_t>(variant.pdispVal));
-      //    break;
+   
+    //case VT_DISPATCH: // handled separately. FIXME: merge? (...maybe)
 
-      // FIXME: ARRAY
+    default:
+
+      if (variant.vt & VT_ARRAY) {
+        SafeArrayToVariable(variant, variable);
+      }
+      else {
+        if (variant.vt & VT_BYREF) std::cout << " ** unhandled VT (BYREF): " << (variant.vt&(~VT_BYREF)) << std::endl;
+        else std::cout << " ** unhandled VT: " << variant.vt << std::endl;
+        variable->set_missing(true);
+      }
+
     }
 
+  }
+
+  static void SafeArrayToVariable(const CComVariant &variant, BERTBuffers::Variable *variable) {
+
+    VARTYPE vartype = variant.vt & (~VT_ARRAY);
+    int rows = 1, cols = 1;
+
+    UINT dimensions = SafeArrayGetDim(variant.parray);
+    if (dimensions == 1) {
+
+      long lbound, ubound;
+      SafeArrayGetLBound(variant.parray, 1, &lbound);
+      SafeArrayGetUBound(variant.parray, 1, &ubound);
+      rows = ubound - lbound + 1;
+
+    }
+    else if (dimensions == 2) {
+
+      long lbound, ubound;
+      SafeArrayGetLBound(variant.parray, 1, &lbound);
+      SafeArrayGetUBound(variant.parray, 1, &ubound);
+      rows = ubound - lbound + 1;
+
+      SafeArrayGetLBound(variant.parray, 2, &lbound);
+      SafeArrayGetUBound(variant.parray, 2, &ubound);
+      cols = ubound - lbound + 1;
+
+    }
+    else { // >2 not handled
+      variable->mutable_err()->set_message("array of >2 dimensions not handled");
+      return;
+    }
+
+    auto array_data = variable->mutable_arr();
+    array_data->set_rows(rows);
+    array_data->set_cols(cols);
+
+    int length = rows*cols;
+
+    // access is typed
+
+    void *data_pointer;
+    SafeArrayAccessData(variant.parray, &data_pointer);
+
+    switch (vartype) {
+    case VT_BSTR:
+    {
+      BSTR *pv = reinterpret_cast<BSTR*>(data_pointer);
+      for (int i = 0; i < length; i++)
+      {
+        CComBSTR bstr(pv[i]);
+        array_data->add_data()->set_str(WideStringToUtf8(bstr.m_str, bstr.Length()));
+      }
+      break;
+    }
+    case VT_INT:
+    case VT_I4:
+    case VT_I8:
+    {
+      int *pv = reinterpret_cast<int*>(data_pointer);
+      for (int i = 0; i < length; i++)
+      {
+        array_data->add_data()->set_integer(pv[i]);
+      }
+      break;
+    }
+    case VT_R4:
+    case VT_R8:
+    {
+      double *pv = reinterpret_cast<double*>(data_pointer);
+      for (int i = 0; i < length; i++)
+      {
+        array_data->add_data()->set_real(pv[i]);
+      }
+      break;
+    }
+    case VT_BOOL:
+    {
+      VARIANT_BOOL *pv = reinterpret_cast<VARIANT_BOOL*>(data_pointer);
+      for (int i = 0; i < length; i++)
+      {
+        array_data->add_data()->set_boolean(pv[i]);
+      }
+      break;
+    }
+    case VT_VARIANT:
+    {
+      VARIANT *pv = reinterpret_cast<VARIANT*>(data_pointer);
+      for (int i = 0; i < length; i++)
+      {
+        VariantToVariable(array_data->add_data(), pv[i]);
+      }
+      break;
+    }
+    default:
+      std::cout << " ** unhandled array type: " << vartype << std::endl;
+    }
+    
+    SafeArrayUnaccessData(variant.parray);
+    
   }
 
   /** pb -> com */
@@ -117,8 +227,14 @@ public:
     case BERTBuffers::Variable::ValueCase::kBoolean:
       variant = var.boolean();
       break;
-    case BERTBuffers::Variable::ValueCase::kNum:
-      variant = var.num();
+    //case BERTBuffers::Variable::ValueCase::kNum:
+    //  variant = var.num();
+    //  break;
+    case BERTBuffers::Variable::ValueCase::kReal:
+      variant = var.real();
+      break;
+    case BERTBuffers::Variable::ValueCase::kInteger:
+      variant = var.integer();
       break;
     case BERTBuffers::Variable::ValueCase::kStr:
       variant = var.str().c_str();
@@ -191,9 +307,13 @@ public:
       x->xltype = xltypeBool;
       x->val.xbool = var.boolean();
       break;
-    case BERTBuffers::Variable::ValueCase::kNum:
+    case BERTBuffers::Variable::ValueCase::kInteger:
+      x->xltype = xltypeInt;
+      x->val.w = var.integer();
+      break;
+    case BERTBuffers::Variable::ValueCase::kReal:
       x->xltype = xltypeNum;
-      x->val.num = var.num();
+      x->val.num = var.real();
       break;
     case BERTBuffers::Variable::ValueCase::kStr:
       StringToXLOPER(x, var.str());
@@ -254,7 +374,10 @@ public:
       var->set_str(XLOPERToString(x));
     }
     else if (x->xltype & xltypeNum) {
-      var->set_num(x->val.num);
+      var->set_real(x->val.num);
+    }
+    else if (x->xltype & xltypeInt) {
+      var->set_integer(x->val.w);
     }
     else if (x->xltype & xltypeBool) {
       var->set_boolean(x->val.xbool ? true : false);

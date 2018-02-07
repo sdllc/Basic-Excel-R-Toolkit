@@ -57,22 +57,34 @@ message SheetReference {
 /** basic variable type, optionally named */
 message Variable {
   oneof value {
+
+    // could nil/missing roll into error type, or some other flagged 
+    // type? seems like a waste of numbers to have these and have 
+    // them separate. maybe leave unset as default, consider that 
+    // nil/null?
+
     bool nil = 1;
     bool missing = 2;
     Error err = 3;
-    double num = 4;
-    string str = 5;
-    bool boolean = 6;
-    Complex cpx = 7;
-    Array arr = 8;
-    SheetReference ref = 9;
-    
-    //uint64 external_pointer = 10;
 
-    ExternalPointer com_pointer = 10; // taking over, maybe drop the other one
+    // merging int and double types was dumb. let's reverse that ASAP.
+    // FIXME: should these default to 64 bits? why or why not? what is 
+    // the default "double" type? [A: 64]
 
-    // special
-    uint64 u64 = 11;
+    // R doesn't support 64-bit integers, so we need to figure out what
+    // to do with them. ATM we use 32-bit for everything, which seems 
+    // dumb also.
+
+    int32 integer = 5;
+    double real = 6;
+
+    string str = 7;
+    bool boolean = 8;
+    Complex cpx = 9;
+    Array arr = 10;
+    SheetReference ref = 11;
+
+    ExternalPointer com_pointer = 12; // taking over, maybe drop the other one
 
   }	
   string name = 15;

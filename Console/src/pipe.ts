@@ -40,8 +40,12 @@ export class Pipe {
     switch (x.getValueCase()) {
       case messages.Variable.ValueCase.NIL:
         return null;
-      case messages.Variable.ValueCase.NUM:
-        return x.getNum();
+      //case messages.Variable.ValueCase.NUM:
+      //  return x.getNum();
+      case messages.Variable.ValueCase.INTEGER:
+        return x.getInteger();
+      case messages.Variable.ValueCase.REAL:
+        return x.getReal();
       case messages.Variable.ValueCase.STR:
         return x.getStr();
       case messages.Variable.ValueCase.BOOLEAN:
@@ -75,7 +79,7 @@ export class Pipe {
     else {
       switch (type) {
         case "number":
-          v.setNum(x);
+          v.setReal(x);
           break;
         case "string":
           v.setStr(x);

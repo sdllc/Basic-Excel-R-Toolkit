@@ -89,8 +89,14 @@ SEXP VariableToSEXP(const BERTBuffers::Variable &var) {
   case BERTBuffers::Variable::ValueCase::kStr:
     return Rf_mkString(var.str().c_str());
 
-  case BERTBuffers::Variable::ValueCase::kNum:
-    return Rf_ScalarReal(var.num());
+//  case BERTBuffers::Variable::ValueCase::kNum:
+//    return Rf_ScalarReal(var.num());
+
+  case BERTBuffers::Variable::ValueCase::kInteger:
+    return Rf_ScalarInteger(var.integer());
+
+  case BERTBuffers::Variable::ValueCase::kReal:
+    return Rf_ScalarReal(var.real());
 
   case BERTBuffers::Variable::ValueCase::kBoolean:
     return Rf_ScalarLogical(var.boolean() ? 1 : 0);
@@ -136,11 +142,16 @@ SEXP VariableToSEXP(const BERTBuffers::Variable &var) {
     }
 
     bool is_numeric = true;
+    bool is_integer = true;
+
     for (int i = 0; i < count && is_numeric; i++) {
-      is_numeric = is_numeric && (arr.data(i).value_case() == BERTBuffers::Variable::ValueCase::kNum);
+      BERTBuffers::Variable::ValueCase value_case = arr.data(i).value_case();
+      is_integer = is_integer && (value_case == BERTBuffers::Variable::ValueCase::kInteger);
+      is_numeric = is_numeric && (value_case == BERTBuffers::Variable::ValueCase::kReal || value_case == BERTBuffers::Variable::ValueCase::kInteger);
     }
 
     bool has_names = false;
+
     for (int i = 0; i < count && !has_names; i++) {
       has_names = has_names || arr.data(i).name().length();
     }
@@ -149,10 +160,21 @@ SEXP VariableToSEXP(const BERTBuffers::Variable &var) {
 
     SEXP list;
     if (is_numeric) {
-      if (!cols) list = Rf_allocVector(REALSXP, count);
-      else list = Rf_allocMatrix(REALSXP, rows, cols);
-      double *p = REAL(list);
-      for (int i = 0; i < count; i++) p[i] = arr.data(i).num();
+      if (is_integer) {
+        if (!cols) list = Rf_allocVector(INTSXP, count);
+        else list = Rf_allocMatrix(INTSXP, rows, cols);
+        int *p = INTEGER(list);
+        for (int i = 0; i < count; i++) p[i] = arr.data(i).integer();
+      }
+      else {
+        if (!cols) list = Rf_allocVector(REALSXP, count);
+        else list = Rf_allocMatrix(REALSXP, rows, cols);
+        double *p = REAL(list);
+        for (int i = 0; i < count; i++) {
+          if( arr.data(i).value_case() == BERTBuffers::Variable::ValueCase::kInteger) p[i] = arr.data(i).integer();
+          else p[i] = arr.data(i).real();
+        }
+      }
     }
     else {
       if (!cols) list = Rf_allocVector(VECSXP, count);
@@ -414,7 +436,7 @@ BERTBuffers::CallResponse& RExec(BERTBuffers::CallResponse &rsp, const BERTBuffe
 
   if (count == 0) {
     auto val = rsp.mutable_result();
-    val->set_num(0);
+    val->set_integer(0);
     return rsp;
   }
 
@@ -514,14 +536,14 @@ void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector < SEXP > 
     {
       for (int i = 0; i < len; i++) {
         auto ptr = arr ? arr->add_data() : var;
-        ptr->set_num(INTEGER(sexp)[i]);
+        ptr->set_integer(INTEGER(sexp)[i]);
       }
     }
     else if (isReal(sexp) || Rf_isNumber(sexp))
     {
       for (int i = 0; i < len; i++) {
         auto ptr = arr ? arr->add_data() : var;
-        ptr->set_num(REAL(sexp)[i]);
+        ptr->set_real(REAL(sexp)[i]);
       }
     }
     else if (isString(sexp))

@@ -391,8 +391,11 @@ FUNCTION_LIST LanguageService::MapLanguageFunctions(uint32_t key) {
         case BERTBuffers::Variable::ValueCase::kBoolean:
           value << default_value.boolean() ? "TRUE" : "FALSE";
           break;
-        case BERTBuffers::Variable::ValueCase::kNum:
-          value << default_value.num();
+        case BERTBuffers::Variable::ValueCase::kReal:
+          value << default_value.real();
+          break;
+        case BERTBuffers::Variable::ValueCase::kInteger:
+          value << default_value.integer();
           break;
         case BERTBuffers::Variable::ValueCase::kStr:
           value << '"' << default_value.str() << '"';

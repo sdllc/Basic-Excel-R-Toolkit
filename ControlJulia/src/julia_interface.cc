@@ -27,7 +27,7 @@
 
 #include "julia.h"
 
-jl_value_t *JuliaCallJlValue(BERTBuffers::CompositeFunctionCall &call);
+jl_value_t *JuliaCallJlValue(const BERTBuffers::CompositeFunctionCall &call);
 
 jl_ptls_t ptls; 
 
@@ -40,23 +40,22 @@ jl_value_t * VariableToJlValue(const BERTBuffers::Variable *variable) {
     value = jl_box_bool(variable->boolean());
     break;
 
-  case BERTBuffers::Variable::kNum:
-    value = jl_box_float64(variable->num());
+  case BERTBuffers::Variable::kReal:
+    value = jl_box_float64(variable->real());
     break;
 
-  case BERTBuffers::Variable::kU64:
-    value = jl_box_uint64(variable->u64());
+  case BERTBuffers::Variable::kInteger:
+    value = jl_box_int64(variable->integer());
     break;
 
   case BERTBuffers::Variable::kStr:
     value = jl_pchar_to_string(variable->str().c_str(), variable->str().length());
     break;
 
-  //case BERTBuffers::Variable::kExternalPointer:
   case BERTBuffers::Variable::kComPointer:
   {
     const auto &com_pointer = variable->com_pointer();
-    std::cout << "installing external pointer: " << com_pointer.interface_name() << " @ " << std::hex << com_pointer.pointer() << std::endl;
+    // std::cout << "installing external pointer: " << com_pointer.interface_name() << " @ " << std::hex << com_pointer.pointer() << std::endl;
 
     jl_value_t* array_type = jl_apply_array_type((jl_value_t*)jl_any_type, 1);
     jl_array_t* julia_array = jl_alloc_array_1d(array_type, 4);
@@ -156,7 +155,7 @@ jl_value_t * VariableToJlValue(const BERTBuffers::Variable *variable) {
       jl_value_t* array_type = jl_apply_array_type((jl_value_t*)jl_any_type, 1);
       julia_array = jl_alloc_array_1d(array_type, nrows);
 
-      for (size_t i = 0; i < nrows; i++) {
+      for (int i = 0; i < nrows; i++) {
         jl_value_t *element = VariableToJlValue(&(arr.data(i)));
         jl_arrayset(julia_array, element, i);
       }
@@ -167,8 +166,8 @@ jl_value_t * VariableToJlValue(const BERTBuffers::Variable *variable) {
       jl_value_t* array_type = jl_apply_array_type((jl_value_t*)jl_any_type, 2);
       julia_array = jl_alloc_array_2d(array_type, nrows, ncols);
 
-      for (size_t i = 0; i < ncols; i++) {
-        for (size_t j = 0; j < nrows; j++) {
+      for (int i = 0; i < ncols; i++) {
+        for (int j = 0; j < nrows; j++) {
           jl_value_t *element = VariableToJlValue(&(arr.data(i)));
           jl_arrayset(julia_array, element, j + nrows * i);
         }
@@ -179,6 +178,10 @@ jl_value_t * VariableToJlValue(const BERTBuffers::Variable *variable) {
     value = (jl_value_t*)julia_array;
     break;
   }
+
+  case 0: // not set (should be missing?)
+    value = jl_nothing;
+    break;
 
   default:
     std::cout << "Unhandled type in variable to jlvalue: " << variable->value_case() << std::endl;
@@ -207,7 +210,7 @@ jl_value_t * VariableToJlValue(const BERTBuffers::Variable *variable) {
   
 }
 
-void JlValueToVariable(BERTBuffers::Variable *variable, jl_value_t *value, bool use_u64 = false) {
+void JlValueToVariable(BERTBuffers::Variable *variable, jl_value_t *value) {
 
   // nothing/null/nil
   if (jl_is_nothing(value)) {
@@ -229,52 +232,41 @@ void JlValueToVariable(BERTBuffers::Variable *variable, jl_value_t *value, bool 
 
   // floats
   if (jl_typeis(value, jl_float64_type)) {
-    variable->set_num(jl_unbox_float64(value));
+    variable->set_real(jl_unbox_float64(value));
     return;
   }
   if (jl_typeis(value, jl_float32_type)) {
-    variable->set_num(jl_unbox_float32(value));
+    variable->set_real(jl_unbox_float32(value));
     return;
   }
 
   // ints
   if (jl_typeis(value, jl_int64_type)) {
-    variable->set_num(jl_unbox_int64(value));
+    variable->set_integer(jl_unbox_int64(value));
     return;
   }
   if (jl_typeis(value, jl_int32_type)) {
-    variable->set_num(jl_unbox_int32(value));
+    variable->set_integer(jl_unbox_int32(value));
     return;
   }
   if (jl_typeis(value, jl_uint32_type)) {
-    variable->set_num(jl_unbox_uint32(value));
+    variable->set_integer(jl_unbox_uint32(value));
     return;
   }
   if (jl_typeis(value, jl_uint64_type)) {
-    if( use_u64 ) variable->set_u64(jl_unbox_uint64(value));
-    else variable->set_num(jl_unbox_uint64(value));
+    variable->set_integer(jl_unbox_uint64(value));
     return;
   }
   if (jl_typeis(value, jl_int16_type)) {
-    variable->set_num(jl_unbox_int16(value));
+    variable->set_integer(jl_unbox_int16(value));
     return;
   }
   if (jl_typeis(value, jl_int8_type)) {
-    variable->set_num(jl_unbox_int8(value));
+    variable->set_integer(jl_unbox_int8(value));
     return;
   }
 
-  // complex
-
-  // vector?
-  if (jl_is_svec(value)) {
-    // ...
-  }
-
-  // tuple!
-  if (jl_is_tuple(value)) {
-    // ...
-  }
+  // complex...
 
   // array
 
@@ -292,42 +284,37 @@ void JlValueToVariable(BERTBuffers::Variable *variable, jl_value_t *value, bool 
 
     if (jl_array->flags.ptrarray) {
       jl_value_t** data = (jl_value_t**)(jl_array_data(jl_array));
-      for (int i = 0; i < len; i++) JlValueToVariable(results_array->add_data(), data[i], use_u64);
+      for (int i = 0; i < len; i++) JlValueToVariable(results_array->add_data(), data[i]);
       return;
     }
     else if (eltype == jl_float64_type) {
       double *d = (double*)jl_array_data(jl_array);
-      for (int i = 0; i < len; i++) results_array->add_data()->set_num(d[i]);
+      for (int i = 0; i < len; i++) results_array->add_data()->set_real(d[i]);
       return;
     }
     else if (eltype == jl_float32_type) {
       float *d = (float*)jl_array_data(jl_array);
-      for (int i = 0; i < len; i++) results_array->add_data()->set_num(d[i]);
+      for (int i = 0; i < len; i++) results_array->add_data()->set_real(d[i]);
       return;
     }
     else if (eltype == jl_int64_type) {
       int64_t *d = (int64_t*)jl_array_data(jl_array);
-      for (int i = 0; i < len; i++) results_array->add_data()->set_num(d[i]);
+      for (int i = 0; i < len; i++) results_array->add_data()->set_integer(d[i]);
       return;
     }
     else if (eltype == jl_uint64_type) {
       uint64_t *d = (uint64_t*)jl_array_data(jl_array);
-      if (use_u64) {
-        for (int i = 0; i < len; i++) results_array->add_data()->set_u64(d[i]);
-      }
-      else {
-        for (int i = 0; i < len; i++) results_array->add_data()->set_num(d[i]);
-      }
+      for (int i = 0; i < len; i++) results_array->add_data()->set_integer(d[i]);
       return;
     }
     else if (eltype == jl_int32_type) {
       int32_t *d = (int32_t*)jl_array_data(jl_array);
-      for (int i = 0; i < len; i++) results_array->add_data()->set_num(d[i]);
+      for (int i = 0; i < len; i++) results_array->add_data()->set_integer(d[i]);
       return;
     }
     else if (eltype == jl_int8_type) {
       int8_t *d = (int8_t*)jl_array_data(jl_array);
-      for (int i = 0; i < len; i++) results_array->add_data()->set_num(d[i]);
+      for (int i = 0; i < len; i++) results_array->add_data()->set_integer(d[i]);
       return;
     }
     else if (eltype == jl_bool_type) {
@@ -339,13 +326,79 @@ void JlValueToVariable(BERTBuffers::Variable *variable, jl_value_t *value, bool 
     // string? 
 
     // pointer?
+    
+  }
 
+  /*
+  
+  if (jl_is_nothing(value)) { std::cout << "jl_is_nothing(value)" << std::endl; }
+  if (jl_is_tuple(value)) { std::cout << "jl_is_tuple(value)" << std::endl; }
+  if (jl_is_svec(value)) { std::cout << "jl_is_svec(value)" << std::endl; }
+  if (jl_is_simplevector(value)) { std::cout << "jl_is_simplevector(value)" << std::endl; }
+  if (jl_is_datatype(value)) { std::cout << "jl_is_datatype(value)" << std::endl; }
+  if (jl_is_mutable(value)) { std::cout << "jl_is_mutable(t)" << std::endl; }
+  if (jl_is_mutable_datatype(value)) { std::cout << "jl_is_mutable_datatype(t)" << std::endl; }
+  if (jl_is_immutable(value)) { std::cout << "jl_is_immutable(t)" << std::endl; }
+  if (jl_is_immutable_datatype(value)) { std::cout << "jl_is_immutable_datatype(t)" << std::endl; }
+  if (jl_is_uniontype(value)) { std::cout << "jl_is_uniontype(value)" << std::endl; }
+  if (jl_is_typevar(value)) { std::cout << "jl_is_typevar(value)" << std::endl; }
+  if (jl_is_unionall(value)) { std::cout << "jl_is_unionall(value)" << std::endl; }
+  if (jl_is_typename(value)) { std::cout << "jl_is_typename(value)" << std::endl; }
+  if (jl_is_int8(value)) { std::cout << "jl_is_int8(value)" << std::endl; }
+  if (jl_is_int16(value)) { std::cout << "jl_is_int16(value)" << std::endl; }
+  if (jl_is_int32(value)) { std::cout << "jl_is_int32(value)" << std::endl; }
+  if (jl_is_int64(value)) { std::cout << "jl_is_int64(value)" << std::endl; }
+  if (jl_is_uint8(value)) { std::cout << "jl_is_uint8(value)" << std::endl; }
+  if (jl_is_uint16(value)) { std::cout << "jl_is_uint16(value)" << std::endl; }
+  if (jl_is_uint32(value)) { std::cout << "jl_is_uint32(value)" << std::endl; }
+  if (jl_is_uint64(value)) { std::cout << "jl_is_uint64(value)" << std::endl; }
+  if (jl_is_bool(value)) { std::cout << "jl_is_bool(value)" << std::endl; }
+  if (jl_is_symbol(value)) { std::cout << "jl_is_symbol(value)" << std::endl; }
+  if (jl_is_ssavalue(value)) { std::cout << "jl_is_ssavalue(value)" << std::endl; }
+  if (jl_is_slot(value)) { std::cout << "jl_is_slot(value)" << std::endl; }
+  if (jl_is_expr(value)) { std::cout << "jl_is_expr(value)" << std::endl; }
+  if (jl_is_globalref(value)) { std::cout << "jl_is_globalref(value)" << std::endl; }
+  if (jl_is_labelnode(value)) { std::cout << "jl_is_labelnode(value)" << std::endl; }
+  if (jl_is_gotonode(value)) { std::cout << "jl_is_gotonode(value)" << std::endl; }
+  if (jl_is_quotenode(value)) { std::cout << "jl_is_quotenode(value)" << std::endl; }
+  if (jl_is_newvarnode(value)) { std::cout << "jl_is_newvarnode(value)" << std::endl; }
+  if (jl_is_linenode(value)) { std::cout << "jl_is_linenode(value)" << std::endl; }
+  if (jl_is_method_instance(value)) { std::cout << "jl_is_method_instance(value)" << std::endl; }
+  if (jl_is_code_info(value)) { std::cout << "jl_is_code_info(value)" << std::endl; }
+  if (jl_is_method(value)) { std::cout << "jl_is_method(value)" << std::endl; }
+  if (jl_is_module(value)) { std::cout << "jl_is_module(value)" << std::endl; }
+  if (jl_is_mtable(value)) { std::cout << "jl_is_mtable(value)" << std::endl; }
+  if (jl_is_task(value)) { std::cout << "jl_is_task(value)" << std::endl; }
+  if (jl_is_string(value)) { std::cout << "jl_is_string(value)" << std::endl; }
+  if (jl_is_cpointer(value)) { std::cout << "jl_is_cpointer(value)" << std::endl; }
+  if (jl_is_pointer(value)) { std::cout << "jl_is_pointer(value)" << std::endl; }
+  if (jl_is_intrinsic(value)) { std::cout << "jl_is_intrinsic(value)" << std::endl; }
 
+  */
+
+  if (jl_is_cpointer(value)) {
+
+    // where does it keep track of the underlying type? in my testing, all pointers 
+    // irrespective of julia size (e.g. Ptr{UInt32}) report size = 8; so we can treat 
+    // them as 64-bit pointers. but let's check anyway, just in case...
+
+    jl_datatype_t* value_type = (jl_datatype_t*)(jl_typeof(value));
+    if (value_type->size != 8) {
+      std::cerr << "warning: pointer size not == 8 (" << value_type->size << ")" << std::endl;
+    }
+    else {
+      auto com_pointer = variable->mutable_com_pointer();
+      com_pointer->set_pointer(reinterpret_cast<uint64_t>(jl_unbox_voidpointer(value)));
+      // std::cout << "read external pointer: " << std::hex << com_pointer->pointer() << std::endl;
+      return;
+    }
 
   }
 
+  //////////////
+
   jl_value_t *value_type = jl_typeof(value);
-  jl_printf(JL_STDOUT, "unexpected type: ");
+  jl_printf(JL_STDOUT, "unexpected type (0x%X): ", value_type);
   jl_static_show(JL_STDOUT, value_type);
   jl_printf(JL_STDOUT, "\n");
 
@@ -550,27 +603,53 @@ ExecResult JuliaShellExec(const std::string &command, const std::string &shell_b
 // testing
 extern void DumpJSON(const google::protobuf::Message &message, const char *path);
 
-void TestCallback(void *x) {
-  std::cout << "test callback: " << x << std::endl;
-  BERTBuffers::Variable var;
-  JlValueToVariable(&var, (jl_value_t*)x, true);
-  std::cout << "not dead" << std::endl;
+extern bool Callback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response);
 
-  DumpJSON(var, 0);
+jl_value_t* Callback2(const char *command, void *data) {
 
-  //return 0;
-}
+  // FIXME: unify callback functions
 
-void Callback2(const char *command, void *data) {
+  /*
   std::cout << "CB2: " << command << std::endl;
   if (data) {
     BERTBuffers::Variable var;
     JlValueToVariable(&var, reinterpret_cast<jl_value_t*>(data), true);
     DumpJSON(var, 0);
   }
-}
+  */
+  
+  static uint32_t callback_id = 1;
+  jl_value_t *jl_result = jl_nothing;
 
-extern bool Callback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response);
+  if (!command || !command[0]) return jl_result;
+
+  BERTBuffers::CallResponse *call = new BERTBuffers::CallResponse;
+  BERTBuffers::CallResponse *response = new BERTBuffers::CallResponse;
+
+  call->set_id(callback_id++);
+  call->set_wait(true);
+
+  auto callback = call->mutable_function_call();
+  callback->set_function(command);
+
+  if (data) //SEXPToVariable(callback->add_arguments(), reinterpret_cast<SEXP>(data));
+    JlValueToVariable(callback->add_arguments(), reinterpret_cast<jl_value_t*>(data));
+
+  bool success = Callback(*call, *response);
+  // cout << "callback (2) complete (" << success << ")" << endl;
+
+  if (success) jl_result = VariableToJlValue(&(response->result()));
+
+  delete call;
+  delete response;
+
+  if (!success) {
+    // error_return("internal method failed");
+  }
+  
+  return jl_result;
+
+}
 
 jl_value_t * COMCallback(uint64_t pointer, const char *name, const char *calltype, uint32_t index, void *arguments_list) {
 
@@ -595,7 +674,7 @@ jl_value_t * COMCallback(uint64_t pointer, const char *name, const char *calltyp
   BERTBuffers::CallResponse *call = new BERTBuffers::CallResponse;
   BERTBuffers::CallResponse *response = new BERTBuffers::CallResponse;
 
-  call->set_id(callback_id);
+  call->set_id(callback_id++);
   call->set_wait(true);
 
   //auto callback = call->mutable_com_callback();
@@ -614,12 +693,13 @@ jl_value_t * COMCallback(uint64_t pointer, const char *name, const char *calltyp
 
   if (arguments_list) {
     BERTBuffers::Variable var;
-    JlValueToVariable(&var, (jl_value_t*)arguments_list, true);
+    JlValueToVariable(&var, (jl_value_t*)arguments_list);
     int len = var.arr().data_size();
     for (int i = 0; i < len; i++) {
       callback->add_arguments()->CopyFrom(var.arr().data(i)); // FIXME
     }
-    DumpJSON(var, 0);
+    //std::cout << "arguments list:" << std::endl;
+    //DumpJSON(var, 0);
   }
 
   bool success = Callback(*call, *response);
@@ -627,10 +707,9 @@ jl_value_t * COMCallback(uint64_t pointer, const char *name, const char *calltyp
   if (success) {
     int err = 0;
     if (response->operation_case() == BERTBuffers::CallResponse::OperationCase::kFunctionCall) {
+
       // sexp_result = RCallSEXP(response->function_call(), true, err); // ??
-
       jl_result = jl_box_int32(100);
-
     }
     else if (response->operation_case() == BERTBuffers::CallResponse::OperationCase::kResult
       && response->result().value_case() == BERTBuffers::Variable::ValueCase::kComPointer) {
@@ -665,28 +744,12 @@ jl_value_t * COMCallback(uint64_t pointer, const char *name, const char *calltyp
   return jl_result;
 }
 
-void JuliaPostInit(BERTBuffers::CallResponse &response, BERTBuffers::CallResponse &translated_call) {
 
-  auto mutable_function_call = translated_call.mutable_function_call();
-  mutable_function_call->set_target(BERTBuffers::CallTarget::language);
-  mutable_function_call->set_function("BERT.SetCallbacks");
-  mutable_function_call->add_arguments()->set_u64((uint64_t)&COMCallback);
-  mutable_function_call->add_arguments()->set_u64((uint64_t)&Callback2);
-  JuliaCall(response, translated_call);
-
-}
-
-jl_value_t *JuliaCallJlValue(BERTBuffers::CompositeFunctionCall &call) {
-
-  std::string function = call.function();
-
-  // lookup in main includes our defined functions plus (apparently) Base, which 
-  // is attached is some fashion. can we dereference pacakges? [A: no, probably 
-  // need to do that manually].
+jl_function_t* FindFunction(const std::string &function) {
 
   jl_function_t *function_pointer = jl_nothing;
-  jl_value_t *function_result = jl_nothing;
 
+  if (!function.length()) return function_pointer;
   std::vector<std::string> elements;
   StringUtilities::Split(function, '.', 1, elements);
 
@@ -696,6 +759,70 @@ jl_value_t *JuliaCallJlValue(BERTBuffers::CompositeFunctionCall &call) {
     for (int i = 1; i< elements.size(); i++) function_pointer = jl_get_global((jl_module_t*)function_pointer, jl_symbol(elements[i].c_str()));
   }
 
+  return function_pointer;
+
+}
+
+__inline bool ReportException(const char *tag) {
+
+  // ASSERT(message); // not zero
+
+  if (jl_exception_occurred()) {
+    std::cout << "* [" << tag << "] EXCEPTION" << std::endl;
+    jl_printf(JL_STDERR, "[%s] error during run:\n", tag);
+    jl_static_show(JL_STDERR, ptls->exception_in_transit);
+    jl_exception_clear();
+    jl_printf(JL_STDOUT, "\n");
+
+    // set err
+    //response.set_err("julia exception");
+    
+    return true;
+  }
+  return false;
+}
+
+bool JuliaPostInit() {
+  
+  jl_function_t *function_pointer = FindFunction("BERT.SetCallbacks");
+  if (!function_pointer || jl_is_nothing(function_pointer)) return false;
+
+  std::vector<jl_value_t*> arguments_vector = {
+    jl_box_voidpointer(&COMCallback),
+    jl_box_voidpointer(&Callback2)
+  };
+  
+  JL_TRY{
+    jl_call(function_pointer, &(arguments_vector[0]), arguments_vector.size());
+    ReportException("post-install");
+  }
+  JL_CATCH{
+    std::cout << "* CATCH [post-install]" << std::endl;
+    jl_printf(JL_STDERR, "\nparser error:\n");
+    jl_static_show(JL_STDERR, ptls->exception_in_transit);
+    jl_printf(JL_STDERR, "\n");
+    jlbacktrace();
+    jl_exception_clear();
+  }
+
+  /*
+
+  auto mutable_function_call = translated_call.mutable_function_call();
+  mutable_function_call->set_target(BERTBuffers::CallTarget::language);
+  mutable_function_call->set_function("BERT.SetCallbacks");
+  mutable_function_call->add_arguments()->set_u64((uint64_t)&COMCallback);
+  mutable_function_call->add_arguments()->set_u64((uint64_t)&Callback2);
+  JuliaCall(response, translated_call);
+
+  */
+
+  return true;
+}
+
+jl_value_t *JuliaCallJlValue(const BERTBuffers::CompositeFunctionCall &call) {
+
+  jl_function_t *function_pointer = FindFunction(call.function());
+  jl_value_t *function_result = jl_nothing;
   if (!function_pointer || jl_is_nothing(function_pointer)) return function_result;
 
   JL_TRY{
@@ -712,45 +839,22 @@ jl_value_t *JuliaCallJlValue(BERTBuffers::CompositeFunctionCall &call) {
     else {
       function_result = jl_call0(function_pointer);
     }
-
-  // check for a julia exception (handled)
-  if (jl_exception_occurred()) {
-    std::cout << "* [JCJV] EXCEPTION" << std::endl;
-    jl_printf(JL_STDERR, "[JC] error during run:\n");
-    jl_static_show(JL_STDERR, ptls->exception_in_transit);
-    jl_exception_clear();
-    jl_printf(JL_STDOUT, "\n");
-
-    // set err
-    //response.set_err("julia exception");
+    ReportException("JCJV");
+     
   }
-  else
-  {
-    /*
-    // success: return result or nil as an empty success value
-    if (function_result) {
-      JlValueToVariable(response.mutable_result(), function_result);
-    }
-    else {
-      response.mutable_result()->set_nil(true);
-    }
-    */
-  }
-
-  }
-    JL_CATCH{
+  JL_CATCH{
 
     // external exception; return error
 
     std::cout << "* CATCH [JCJV]" << std::endl;
-  jl_printf(JL_STDERR, "\nparser error:\n");
+    jl_printf(JL_STDERR, "\nparser error:\n");
 
-  jl_static_show(JL_STDERR, ptls->exception_in_transit);
-  jl_printf(JL_STDERR, "\n");
-  jlbacktrace();
-  jl_exception_clear();
+    jl_static_show(JL_STDERR, ptls->exception_in_transit);
+    jl_printf(JL_STDERR, "\n");
+    jlbacktrace();
+    jl_exception_clear();
 
-  //response.set_err("external exception");
+   //response.set_err("external exception");
 
   }
 
@@ -765,19 +869,9 @@ void JuliaCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallRespo
 
   // lookup in main includes our defined functions plus (apparently) Base, which 
   // is attached is some fashion. can we dereference pacakges? [A: no, probably 
-  // need to do that manually].
+  // need to do that manually]. [moved to function]
 
-  jl_function_t *function_pointer = jl_nothing;
-
-  std::vector<std::string> elements;
-  StringUtilities::Split(function, '.', 1, elements);
-
-  if( elements.size() == 1 ) function_pointer = jl_get_function(jl_main_module, function.c_str());
-  else {
-    function_pointer = jl_get_global(jl_main_module, jl_symbol(elements[0].c_str()));
-    for( int i = 1; i< elements.size(); i++ ) function_pointer = jl_get_global((jl_module_t*)function_pointer, jl_symbol(elements[i].c_str()));
-  }
-
+  jl_function_t *function_pointer = FindFunction(function);
   if (!function_pointer || jl_is_nothing(function_pointer)) return;
   jl_value_t *function_result;
 

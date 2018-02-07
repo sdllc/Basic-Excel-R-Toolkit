@@ -153,9 +153,6 @@ void QueueConsoleWrites() {
 bool SystemCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallResponse &call, int pipe_index) {
   std::string function = call.function_call().function();
 
-  BERTBuffers::CallResponse translated_call;
-  translated_call.CopyFrom(call);
-
   if (!function.compare("get-language")) {
     response.mutable_result()->set_str("Julia");
   }
@@ -169,9 +166,12 @@ bool SystemCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallResp
     response.mutable_result()->set_boolean(success);
   }
   else if (!function.compare("post-init")) {
-    JuliaPostInit(response, translated_call);
+    //JuliaPostInit(response, translated_call);
+    response.mutable_result()->set_boolean(JuliaPostInit());
   }
   else if (!function.compare("install-application-pointer")) {
+    BERTBuffers::CallResponse translated_call;
+    translated_call.CopyFrom(call);
     auto mutable_function_call = translated_call.mutable_function_call();
     mutable_function_call->set_target(BERTBuffers::CallTarget::language);
     mutable_function_call->set_function("BERT.InstallApplicationPointer");
@@ -219,7 +219,7 @@ void pipe_loop() {
   char default_prompt[] = "> ";
   char continuation_prompt[] = "+ ";
 
-  DWORD result, len;
+  DWORD result;
   uint32_t console_prompt_id = 1;
   std::string message;
 
@@ -554,7 +554,7 @@ bool Callback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &
 
   Pipe *pipe = 0;
 
-  /*
+  /* FIXME
   if (active_pipe.size()) {
     int index = active_pipe.top();
     pipe = pipes[index];
