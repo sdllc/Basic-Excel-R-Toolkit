@@ -192,6 +192,82 @@ have questions or comments, and save your work often.
 
   end
 
+  # ####################################
+
+  #
+  # single enum
+  #
+  macro CreateCOMEnumType(struct_name, descriptor)
+
+    _descriptor = eval(descriptor)
+    name, value_list = _descriptor
+
+    sym = Symbol(struct_name)
+
+    return quote
+      struct $sym 
+        $([Symbol(x[1]) for x in value_list]...)
+        function $sym() 
+          new($([x[2] for x in value_list]...))
+        end
+      end
+    end
+
+  end
+
+  CreateCOMEnum = function(parent_object, descriptor)
+
+    name, values = descriptor
+    struct_name = string("com_enum_", parent_object, "_", name)
+
+    # create the enum type
+    if(!isdefined(Symbol(struct_name)))
+      eval(:(@CreateCOMEnumType($struct_name, $descriptor)))
+    end
+
+    # create instance
+    eval(:($(Symbol(struct_name))()))
+
+  end
+
+  #
+  # composite/container type
+  #
+  macro CreateCOMEnumsType(struct_name, name_list, value_list)
+
+    sym = Symbol(struct_name)
+
+    return quote
+      struct $sym 
+        Application
+        $([Symbol(x) for x in name_list]...)
+        function $sym(application) 
+          new(application, $(value_list...))
+        end
+      end
+    end
+
+  end
+
+  #
+  # this is * way * too slow to use. creating lots of structs is painful.
+  # we have to do this another way.
+  #
+  CreateCOMEnums = function(parent_object, descriptor, pointer)
+
+    struct_name = string("com_enums_", parent_object)
+
+    # map(x -> x[1], descriptor)
+    instance_list = map(x -> CreateCOMEnum(parent_object, x), descriptor)
+    name_list = map(x -> x[1], descriptor)
+
+    eval(:(@CreateCOMEnumsType($struct_name, $name_list, $instance_list)))
+    eval(:($(Symbol(struct_name))($pointer)))
+
+  end
+
+  # ####################################
+
   #
   # type to match R 
   #
@@ -207,7 +283,13 @@ have questions or comments, and save your work often.
   #
   InstallApplicationPointer = function(descriptor)
     global ApplicationDescriptor = descriptor # for dev/debug
-    global EXCEL = ExcelType(CreateCOMType(descriptor))
+   
+    local app = CreateCOMType(descriptor)
+    global EXCEL = ExcelType(app)
+
+    # too slow
+    # global EXCEL = CreateCOMEnums(descriptor[1], descriptor[4], app)
+    
     nothing
   end
 

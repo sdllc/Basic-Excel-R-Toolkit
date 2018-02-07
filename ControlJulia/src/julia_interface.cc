@@ -116,10 +116,30 @@ jl_value_t * VariableToJlValue(const BERTBuffers::Variable *variable) {
     // enums
     if (com_pointer.enums_size()) {
       jl_array_t *enums_array = jl_alloc_array_1d(array_type, com_pointer.enums_size());
+      //jl_tupletype_t *tupletype = jl_apply_tuple_type(jl_svec2(jl_string_type, jl_int32_type));
+
       for (int i = 0, len = com_pointer.enums_size(); i < len; i++) {
         const auto &enum_definition = com_pointer.enums(i);
-        jl_value_t *val = jl_pchar_to_string(enum_definition.name().c_str(), enum_definition.name().length());
-        jl_arrayset(enums_array, val, i);
+
+        jl_array_t *enum_array = jl_alloc_array_1d(array_type, 2);
+        jl_arrayset(enum_array, jl_pchar_to_string(enum_definition.name().c_str(), enum_definition.name().length()), 0);
+
+        int enum_values_length = enum_definition.values_size();
+        jl_array_t *enum_values_array = jl_alloc_array_1d(array_type, enum_values_length);
+        for (int j = 0; j < enum_values_length; j++) {
+
+          auto enum_value_list = enum_definition.values(j);
+
+          jl_value_t* jl_value_name = jl_pchar_to_string(enum_value_list.name().c_str(), enum_value_list.name().length());
+          jl_value_t* jl_value_value = jl_box_int32(enum_value_list.value());
+          jl_svec_t* svec = jl_svec2(jl_value_name, jl_value_value);
+
+          jl_arrayset(enum_values_array, (jl_value_t*)svec, j);
+
+        }
+        jl_arrayset(enum_array, (jl_value_t*)enum_values_array, 1);
+
+        jl_arrayset(enums_array, (jl_value_t*)enum_array, i);
       }
       jl_arrayset(julia_array, (jl_value_t*)enums_array, 3);
     }
