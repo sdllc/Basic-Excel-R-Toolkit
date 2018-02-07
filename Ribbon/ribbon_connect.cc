@@ -6,7 +6,6 @@
 extern CBERT2RibbonModule _AtlModule;
 
 bool GetRegistryString(std::string &result_value, HKEY base_key, const char *key, const char *name) {
-    HKEY registry_handle;
     bool succeeded = false;
     char buffer[MAX_PATH];
     DWORD data_size = MAX_PATH;
