@@ -3,6 +3,9 @@ import { Terminal as XTerm, ITerminalOptions, ITheme as ITerminalTheme } from 'x
 import * as fit from 'xterm/lib/addons/fit/fit';
 XTerm.applyAddon(fit);
 
+import * as CursorClientPosition from './cursor_client_position_addon';
+XTerm.applyAddon(CursorClientPosition);
+
 import { TextFormatter, VTESC } from './text_formatter';
 import { clipboard } from 'electron';
 import { LanguageInterface } from './language_interface';
@@ -14,45 +17,6 @@ import { ConnectableObservable } from 'rxjs/observable/ConnectableObservable';
 // for julia, replacing backslash entities in the shell like Julia REPL. 
 
 const SymbolTable = require('../data/symbol_table.json');
-
-/** 
- * cursor position locator, implemented as terminal add-on
- */
-class CursorPosition {
-
-  static GetCursorPosition(terminal, offset_x = 0){
-
-    // character position
-    let x = terminal.buffer.x;
-    let y = terminal.buffer.y;
-
-    // renderer dimensions
-    let dimensions = terminal.renderer.dimensions;
-
-    // position is relative to the canvas... although we should be
-    // able to use the container node as a proxy. fixme: cache, or
-    // use our node? (actually this is our node, we should just cache)
-    let client_rect = (terminal.parent as HTMLElement).getBoundingClientRect();
-   
-    let rect = {
-      left: client_rect.left + ((x+offset_x) * dimensions.scaledCellWidth),
-      right: client_rect.left + ((x+offset_x+1) * dimensions.scaledCellWidth),
-      top: client_rect.top + (y * dimensions.scaledCellHeight),
-      bottom: client_rect.top + ((y+1) * dimensions.scaledCellHeight),
-    };
-    
-    return rect;
-  }
-
-  static apply(terminalConstructor) {
-    terminalConstructor.prototype.GetCursorPosition = function (offset_x = 0) {
-      return CursorPosition.GetCursorPosition(this, offset_x); // this will be terminal
-    };
-  }
-
-}
-
-XTerm.applyAddon(CursorPosition);
 
 /**
  * 

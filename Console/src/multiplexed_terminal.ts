@@ -95,7 +95,7 @@ export class MuliplexedTerminal {
     this.active_instance_.terminal.Focus();
   }
 
-  Activate(label:string){
+  Activate(label:string|number = 0){
     this.tabs_.ActivateTab(label);
     this.active_instance_.terminal.Focus();
   }
