@@ -59,53 +59,6 @@ have questions or comments, and save your work often.
 
   end
 
-  ListFunctions2 = function()
-
-    # this is a little better, need a filter+transform method.
-    # unless we can assume that all functions will match the 
-    # regex.
-
-    results = []
-
-    function_list = filter(x -> (x != "ans" && getfield(Main, x) isa Function), names(Main)) 
-    map(function(x)
-      m = match( r"\(([^\(]*)\) in", string(methods(getfield(Main, x))))
-      if m != nothing
-        arguments = map(x -> strip(x), split(m[1], ",", keep=false))
-        function_desc = append!([string(x)], arguments)
-        push!(results, function_desc)
-      else 
-        println( "M is nothing! ", x)
-      end
-    end, function_list )
-    
-    results
-    
-  end
-
-  ListFunctions3 = function()
-
-    # better; we're making the assumption that the regex will 
-    # never fail. if it fails, this will cause all sorts of 
-    # problems. we just don't want to run it twice.
-
-    # note that we're calling getfield twice. frowny-face.
-
-    # ALSO: append! is unappealing. this is the retval, so we
-    # should just construct a new list. [fixed]
-
-    # is there a filter+transform method? have I asked that before?
-    # BTW love the short map syntax. want for filter!
-
-    function_list = filter(x -> (x != "ans" && getfield(Main, x) isa Function), names(Main)) 
-    map(function(x)
-      m = match( r"\(([^\(]*)\) in", string(methods(getfield(Main, x))))
-      arguments = map(x -> strip(x), split(m[1], ",", keep=false))
-      [string(x), arguments...]
-    end, function_list )
-    
-  end
-
   #
   # this function gets a list of all functions in Main, returning function 
   # name and list of argument names. note that (at least for now) we don't
@@ -114,21 +67,12 @@ have questions or comments, and save your work often.
   # there may be a faster way to do this from code
   #
   ListFunctions = function()
-    function_list = []
-    for name in names(Main) # these are symbols
-      if string(name) != "ans"
-        field = getfield(Main, name)
-        if isa(field, Function)
-          m = match( r"\(([^\(]*)\) in", string(methods(field)))
-          if m != nothing 
-            arguments = map( x -> strip(x), split(m[1], ",", keep=false))
-            function_desc = append!([string(name)], arguments)
-            push!(function_list, function_desc)
-          end
-        end
-      end
-    end
-    function_list
+    function_list = filter(x -> (x != "ans" && getfield(Main, x) isa Function), names(Main)) 
+    map(function(x)
+      m = match( r"\(([^\(]*)\) in", string(methods(getfield(Main, x))))
+      arguments = map(x -> strip(x), split(m[1], ",", keep=false))
+      [string(x), arguments...]
+    end, function_list )
   end
 
   #
