@@ -765,7 +765,7 @@ jl_value_t * COMCallback(uint64_t pointer, const char *name, const char *calltyp
 }
 
 
-jl_function_t* FindFunction(const std::string &function) {
+jl_function_t* ResolveFunction(const std::string &function) {
 
   jl_function_t *function_pointer = jl_nothing;
 
@@ -804,7 +804,7 @@ __inline bool ReportException(const char *tag) {
 
 bool JuliaPostInit() {
   
-  jl_function_t *function_pointer = FindFunction("BERT.SetCallbacks");
+  jl_function_t *function_pointer = ResolveFunction("BERT.SetCallbacks");
   if (!function_pointer || jl_is_nothing(function_pointer)) return false;
 
   std::vector<jl_value_t*> arguments_vector = {
@@ -841,7 +841,7 @@ bool JuliaPostInit() {
 
 jl_value_t *JuliaCallJlValue(const BERTBuffers::CompositeFunctionCall &call) {
 
-  jl_function_t *function_pointer = FindFunction(call.function());
+  jl_function_t *function_pointer = ResolveFunction(call.function());
   jl_value_t *function_result = jl_nothing;
   if (!function_pointer || jl_is_nothing(function_pointer)) return function_result;
 
@@ -891,7 +891,7 @@ void JuliaCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallRespo
   // is attached is some fashion. can we dereference pacakges? [A: no, probably 
   // need to do that manually]. [moved to function]
 
-  jl_function_t *function_pointer = FindFunction(function);
+  jl_function_t *function_pointer = ResolveFunction(function);
   if (!function_pointer || jl_is_nothing(function_pointer)) return;
   jl_value_t *function_result;
 

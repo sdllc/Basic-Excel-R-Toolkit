@@ -6,7 +6,11 @@
 # =============================================================================
 module BERT
 
-  EXCEL = nothing
+  module EXCEL
+    Application = nothing
+  end
+
+  # EXCEL = nothing
 
   #---------------------------------------------------------------------------- 
   # banner under regular julia banner
@@ -266,6 +270,37 @@ have questions or comments, and save your work often.
 
   end
 
+  #
+  # this is pretty fast, even if it's rewriting. e.g.:
+  # 
+  # CreateEnumModules(EXCEL, BERT.ApplicationDescriptor[4])
+  #
+  CreateEnumModules = function(mod, enums_list)
+
+    # create all modules 
+    names = [x[1] for x in enums_list]
+    [mod.eval( Expr( :toplevel, :(module $(Symbol(name)); end)))
+      for name in names]
+    nothing
+
+    # add values
+    foreach(function(x)
+      name, entries = x
+      CreateEnumValues(mod, name, entries)
+    end, enums_list)
+
+  end
+
+  #
+  # also pretty fast. much better.
+  #
+  CreateEnumValues = function(parent_module, module_name, values)
+    mod = getfield(parent_module, Symbol(module_name))
+    [eval(mod, :($(Symbol(x[1])) = $(x[2]))) for x in values]
+  end
+
+
+
   # ####################################
 
   #
@@ -285,7 +320,11 @@ have questions or comments, and save your work often.
     global ApplicationDescriptor = descriptor # for dev/debug
    
     local app = CreateCOMType(descriptor)
-    global EXCEL = ExcelType(app)
+    #global EXCEL = ExcelType(app)
+    #global _app = app;
+
+    EXCEL.eval(:(Application = $(app)))
+    CreateEnumModules(EXCEL, descriptor[4])
 
     # too slow
     # global EXCEL = CreateCOMEnums(descriptor[1], descriptor[4], app)
