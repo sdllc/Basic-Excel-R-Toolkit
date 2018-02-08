@@ -46,7 +46,7 @@ let dialog_manager = new DialogManager();
 
 // terminals and tabs
 
-let terminals = new MuliplexedTerminal("#terminal-container", "#terminal-tabs");
+let terminals = new MuliplexedTerminal("#terminal-tabs");
 
 // language connections. 
 // FIXME: parameterize, or make these dynamic. in fact, do that (make them dynamic).

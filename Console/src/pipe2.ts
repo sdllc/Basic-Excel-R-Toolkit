@@ -55,10 +55,10 @@ export class Pipe2 {
     this.pipe_name_ = opts.pipe_name || "";
 
     return new Promise((resolve, reject) => {
-      console.info("connecting (2)...");
+      console.info(`connecting (2: ${this.pipe_name_})...`);
 
       let client = net.createConnection({ path: "\\\\.\\pipe\\" + this.pipe_name_ }, () => {
-        console.log('connected (2)');
+        console.info(`connected (2: ${this.pipe_name_})`);
       });
 
       client.on("data", data => this.HandleData(data));

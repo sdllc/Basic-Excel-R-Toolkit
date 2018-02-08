@@ -24,21 +24,21 @@
     "repackage": "./node_modules/.bin/less-watch-compiler --run-once && ./node_modules/.bin/tsc && ./node_modules/.bin/electron-builder"
   },
   "devDependencies": {
-    "@types/node": "^8.5.2",
-    "asar": "^0.14.0",
-    "electron": "^1.7.10",
-    "electron-builder": "^19.49.1",
+    "@types/node": "^8.9.1",
+    "asar": "^0.14.1",
+    "electron": "^1.8.2",
+    "electron-builder": "^19.56.0",
     "less": "^2.7.3",
-    "less-watch-compiler": "^1.10.2",
-    "typescript": "^2.6.2"
+    "less-watch-compiler": "^1.11.0",
+    "typescript": "^2.7.1"
   },
   "dependencies": {
-    "chokidar": "^2.0.0",
+    "chokidar": "^2.0.1",
     "electron-reload": "^1.2.2",
     "electron-window-state": "^4.1.1",
     "google-protobuf": "^3.5.0",
     "monaco-editor": "^0.10.1",
     "rxjs": "^5.5.6",
-    "xterm": "^2.9.2"
+    "xterm": "^3.0.2"
   }
 }

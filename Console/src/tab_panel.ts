@@ -100,7 +100,11 @@ export class TabPanel {
     else this.parent_ = parent;
     this.parent_.classList.add( "tab-panel-container");
 
-    let children = this.parent_.children;
+    // was bug: the actual `children` list is live, so if we use 
+    // it below, it will include stuff added later. here we copy 
+    // the list so we just get the snapshot at T=0.
+    
+    let children = Array.prototype.map.call(this.parent_.children, x => x);
 
     // create the tab bar
 
@@ -115,9 +119,7 @@ export class TabPanel {
     this.tab_content_ = document.createElement("div");
     this.tab_content_.classList.add( "tab-panel-content" );
     
-    Array.prototype.forEach.call(children, child => {
-      this.tab_content_.appendChild(child);
-    });
+    children.forEach(child => this.tab_content_.appendChild(child));
 
     this.parent_.appendChild(this.tab_content_);
 

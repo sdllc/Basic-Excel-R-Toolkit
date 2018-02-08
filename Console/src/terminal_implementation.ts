@@ -1,6 +1,7 @@
 
-import * as XTerm from 'xterm';
-const fitAddon = XTerm.loadAddon('fit');
+import { Terminal as XTerm, ITerminalOptions, ITheme as ITerminalTheme } from 'xterm';
+import * as fit from 'xterm/lib/addons/fit/fit';
+XTerm.applyAddon(fit);
 
 import { TextFormatter, VTESC } from './text_formatter';
 import { clipboard } from 'electron';
@@ -13,6 +14,45 @@ import { ConnectableObservable } from 'rxjs/observable/ConnectableObservable';
 // for julia, replacing backslash entities in the shell like Julia REPL. 
 
 const SymbolTable = require('../data/symbol_table.json');
+
+/** 
+ * cursor position locator, implemented as terminal add-on
+ */
+class CursorPosition {
+
+  static GetCursorPosition(terminal, offset_x = 0){
+
+    // character position
+    let x = terminal.buffer.x;
+    let y = terminal.buffer.y;
+
+    // renderer dimensions
+    let dimensions = terminal.renderer.dimensions;
+
+    // position is relative to the canvas... although we should be
+    // able to use the container node as a proxy. fixme: cache, or
+    // use our node? (actually this is our node, we should just cache)
+    let client_rect = (terminal.parent as HTMLElement).getBoundingClientRect();
+   
+    let rect = {
+      left: client_rect.left + ((x+offset_x) * dimensions.scaledCellWidth),
+      right: client_rect.left + ((x+offset_x+1) * dimensions.scaledCellWidth),
+      top: client_rect.top + (y * dimensions.scaledCellHeight),
+      bottom: client_rect.top + ((y+1) * dimensions.scaledCellHeight),
+    };
+    
+    return rect;
+  }
+
+  static apply(terminalConstructor) {
+    terminalConstructor.prototype.GetCursorPosition = function (offset_x = 0) {
+      return CursorPosition.GetCursorPosition(this, offset_x); // this will be terminal
+    };
+  }
+
+}
+
+XTerm.applyAddon(CursorPosition);
 
 /**
  * 
@@ -113,7 +153,7 @@ class Autocomplete {
    * don't automatically select the last option (that's what the flag
    * argument is for).
    */
-  Show(acceptSingleCompletion = true) {
+  Show(cursor_position, acceptSingleCompletion = true) {
 
     if (!this.last_ || !this.last_.comps) {
       this.Dismiss();
@@ -153,14 +193,12 @@ class Autocomplete {
       this.node_.appendChild(li);
     });
 
-    let cursorNode = this.parent_.querySelector(".terminal-cursor") as HTMLElement;
     this.node_.scrollTop = 0;
-    let cursor_bounds = cursorNode.getBoundingClientRect();
 
-    let top = Math.round(cursor_bounds.top - this.node_.offsetHeight);
-    if (top < 0) top = Math.round(cursor_bounds.bottom); 
+    let top = Math.round(cursor_position.top - this.node_.offsetHeight);
+    if (top < 0) top = Math.round(cursor_position.bottom); 
 
-    let left = Math.round(cursor_bounds.left);
+    let left = Math.round(cursor_position.left);
 
     // FIXME: move to the left if necessary
 
@@ -232,30 +270,6 @@ class Autocomplete {
 export interface AutocompleteCallbackType { (buffer: string, position: number): Promise<any> }
 
 export interface ExecCallbackType { (buffer: string): Promise<any> }
-
-/*
-export interface TerminalConfig {
-
-  // nodes
-
-  node_: HTMLElement;
-
-  / *
-  // callbacks
-
-  autocomplete_callback_: AutocompleteCallbackType;
-  exec_callback_: ExecCallbackType;
-  break_callback_: Function;
-
-  // objects
-
-  formatter_: TextFormatter;
-  * /
-
-  language_interface_:LanguageInterface;
-
-}
-*/
 
 export interface PromptMessage {
   text?:string;
@@ -413,10 +427,20 @@ export class TerminalImplementation {
 
   }
 
+  /**
+   * returns the theoretical rect around the cursor. 
+   * offset is in chars, for pushing back function tips.
+   * 
+   * @param offset_x 
+   */
+  CursorClientPosition(offset_x = 0){
+    return (this.xterm_ as any).GetCursorPosition(offset_x);
+  }
+
   /** focus */
   Focus(){ this.xterm_.focus(); }
 
-  /**
+   /**
    * any housekeeping before closing
    */
   CleanUp() {
@@ -431,7 +455,7 @@ export class TerminalImplementation {
       if (!autocomplete_response) return;
       this.autocomplete_.Update(autocomplete_response);
       if (this.autocomplete_.visible_) {
-        this.autocomplete_.Show(false);
+        this.autocomplete_.Show(this.CursorClientPosition(), false);
       }
       else {
         this.FunctionTip(autocomplete_response['function.signature'], autocomplete_response.fguess);
@@ -450,7 +474,6 @@ export class TerminalImplementation {
     else {
 
       if (message === this.dismissed_tip_) return;
-      let cursor_node = this.node_.querySelector(".terminal-cursor") as HTMLElement
 
       // FIXME: generalize this into finding position of a character, 
       // we can probably use it again
@@ -460,6 +483,7 @@ export class TerminalImplementation {
 
       let regex = new RegExp(function_guess.replace(/\$/g, "\\$") + "\\s*\\(", "i");
 
+      /*
       let m = this.line_info_.buffer.match(regex);
       let range = document.createRange();
       let node = cursor_node.previousSibling.firstChild as HTMLElement;
@@ -478,19 +502,25 @@ export class TerminalImplementation {
       }
 
       let rect = range.getBoundingClientRect();
+      */
+
+      let offset_text = message.replace( /\(.*$/, "X" );
+      console.info( offset_text, offset_text.length )
 
       this.current_tip_ = message;
       this.dismissed_tip_ = null;
 
-      node = TerminalImplementation.function_tip_node_;
+      let node = TerminalImplementation.function_tip_node_;
       node.textContent = message;
 
-      node.style.left = `${rect.right}px`;
+      let cursor_bounds = this.CursorClientPosition(-offset_text.length);
       
-      let client_rect = cursor_node.getBoundingClientRect();
-      let top = client_rect.top - node.offsetHeight;
+      node.style.left = `${cursor_bounds.right}px`;
+      
+      //let client_rect = cursor_node.getBoundingClientRect();
+      let top = cursor_bounds.top - node.offsetHeight;
 
-      if (top < 0) { top = rect.bottom + 2; }
+      if (top < 0) { top = cursor_bounds.bottom + 2; }
 
       node.style.top = `${top}px`;
       node.style.opacity = "1";
@@ -748,7 +778,7 @@ export class TerminalImplementation {
 
           case "Tab":
             if (this.autocomplete_.visible_) { this.autocomplete_.Accept(); return; }
-            this.autocomplete_.Show();
+            this.autocomplete_.Show(this.CursorClientPosition());
             break;
 
           case "End":
@@ -794,18 +824,32 @@ export class TerminalImplementation {
   }
 
   Resize(){
-    this.xterm_.fit();
+    (this.xterm_ as any).fit();
   }
 
   Init() {
 
-    this.xterm_ = new XTerm({
-      cols: 80, cursorBlink: true
-    });
+    let theme_object:ITerminalTheme = {
+      background: "#fff", 
+      foreground: "#000",
+      cursor: "#000"
+    };
 
-    this.xterm_.open(this.node_, { focus: true });
-    this.xterm_.fit();
-    this.xterm_.write(`\x1b[\x35 q`);
+    let terminal_options:ITerminalOptions = {
+      cols: 80, 
+      cursorBlink: true,
+      theme: theme_object,
+      fontFamily: 'consolas',
+      fontSize: 13
+    };
+
+    this.xterm_ = new XTerm(terminal_options);
+    this.xterm_.open(this.node_); //, { focus: true });
+    this.xterm_.focus();
+
+    this.Resize();
+
+    this.xterm_.write(`\x1b[\x35 q`); // ?
 
     let ac_accept = (addition:string, scrub = 0) => {
 
@@ -821,7 +865,8 @@ export class TerminalImplementation {
     this.autocomplete_ = new Autocomplete(ac_accept, this.node_);
 
     window.addEventListener("resize", event => {
-      this.xterm_.fit(); // fixme: debounce?
+      // FIXME: debounce
+      this.Resize(); // checks active
     });
 
     this.xterm_.on("key", (key, event) => this.KeyDown(key, event));

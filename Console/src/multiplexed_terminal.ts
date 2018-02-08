@@ -31,8 +31,6 @@ export class MuliplexedTerminal {
 
   private tabs_:TabPanel;
 
-  private container_node_:HTMLElement;
-
   /** layout index increments on update */
   private layout_ = -1;
 
@@ -42,14 +40,7 @@ export class MuliplexedTerminal {
   /** accessor for active tab */
   public get active_tab() { return this.active_tab_; }
 
-  constructor(node:string|HTMLElement, tab_node_selector:string){
-
-    if( typeof node === "string" ){
-      this.container_node_ = document.querySelector(node);
-    }
-    else {
-      this.container_node_ = node;
-    }
+  constructor(tab_node_selector:string){
 
     this.tabs_ = new TabPanel(tab_node_selector, TabJustify.left);
 

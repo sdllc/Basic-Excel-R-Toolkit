@@ -1,5 +1,11 @@
 /// <reference path="../node_modules/monaco-editor/monaco.d.ts" />
 
+/**
+ * this is a language tokenizer for julia for the monaco editor.
+ * still learning how monarch works (and learning julia syntax).
+ * work in progress.
+ */
+
 import IRichLanguageConfiguration = monaco.languages.LanguageConfiguration;
 import ILanguage = monaco.languages.IMonarchLanguage;
 
