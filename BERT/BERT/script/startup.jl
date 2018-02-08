@@ -59,10 +59,59 @@ have questions or comments, and save your work often.
 
   end
 
+  ListFunctions2 = function()
+
+    # this is a little better, need a filter+transform method.
+    # unless we can assume that all functions will match the 
+    # regex.
+
+    results = []
+
+    function_list = filter(x -> (x != "ans" && getfield(Main, x) isa Function), names(Main)) 
+    map(function(x)
+      m = match( r"\(([^\(]*)\) in", string(methods(getfield(Main, x))))
+      if m != nothing
+        arguments = map(x -> strip(x), split(m[1], ",", keep=false))
+        function_desc = append!([string(x)], arguments)
+        push!(results, function_desc)
+      else 
+        println( "M is nothing! ", x)
+      end
+    end, function_list )
+    
+    results
+    
+  end
+
+  ListFunctions3 = function()
+
+    # better; we're making the assumption that the regex will 
+    # never fail. if it fails, this will cause all sorts of 
+    # problems. we just don't want to run it twice.
+
+    # note that we're calling getfield twice. frowny-face.
+
+    # ALSO: append! is unappealing. this is the retval, so we
+    # should just construct a new list. [fixed]
+
+    # is there a filter+transform method? have I asked that before?
+    # BTW love the short map syntax. want for filter!
+
+    function_list = filter(x -> (x != "ans" && getfield(Main, x) isa Function), names(Main)) 
+    map(function(x)
+      m = match( r"\(([^\(]*)\) in", string(methods(getfield(Main, x))))
+      arguments = map(x -> strip(x), split(m[1], ",", keep=false))
+      [string(x), arguments...]
+    end, function_list )
+    
+  end
+
   #
   # this function gets a list of all functions in Main, returning function 
   # name and list of argument names. note that (at least for now) we don't
   # support named arguments; only ordinal arguments.
+  #
+  # there may be a faster way to do this from code
   #
   ListFunctions = function()
     function_list = []
@@ -136,7 +185,7 @@ have questions or comments, and save your work often.
     function FinalizablePointer(p)
       instance = new(p)
       finalizer(instance, FinalizeCOMPointer)
-      return instance
+      return instance # necessary?
     end
   end
 
@@ -255,6 +304,10 @@ have questions or comments, and save your work often.
 
   #
   # this is * way * too slow to use. creating lots of structs is painful.
+  # not sure if this was caused by defining the structs or by instantiating
+  # them (NOTE: we tried both inner constructor and explicit constructor, 
+  # both were bad).
+  #
   # we have to do this another way.
   #
   CreateCOMEnums = function(parent_object, descriptor, pointer)
@@ -271,9 +324,10 @@ have questions or comments, and save your work often.
   end
 
   #
-  # this is pretty fast, even if it's rewriting. e.g.:
-  # 
-  # CreateEnumModules(EXCEL, BERT.ApplicationDescriptor[4])
+  # this is pretty fast, even if it's rewriting. it's night and day
+  # vis a vis using structs. (also love that you can redefine modules).
+  #
+  # would like to remove the eval function from each module, though.
   #
   CreateEnumModules = function(mod, enums_list)
 
@@ -292,43 +346,26 @@ have questions or comments, and save your work often.
   end
 
   #
-  # also pretty fast. much better.
+  # also pretty fast. much better. could probably speed it up by
+  # consolidating all the evals. (FIXME: maybe via quote?)
   #
   CreateEnumValues = function(parent_module, module_name, values)
     mod = getfield(parent_module, Symbol(module_name))
     [eval(mod, :($(Symbol(x[1])) = $(x[2]))) for x in values]
   end
 
-
-
-  # ####################################
-
   #
-  # type to match R 
-  #
-  struct ExcelType
-    Application
-  end
-
-  #
-  # installs the root "Application" pointer and creates the EXCEL 
-  # wrapper object. 
-  # 
-  # FIXME: enums
+  # installs the root "Application" pointer in the EXCEL module
   #
   InstallApplicationPointer = function(descriptor)
     global ApplicationDescriptor = descriptor # for dev/debug
    
     local app = CreateCOMType(descriptor)
-    #global EXCEL = ExcelType(app)
-    #global _app = app;
-
     EXCEL.eval(:(Application = $(app)))
-    CreateEnumModules(EXCEL, descriptor[4])
 
-    # too slow
-    # global EXCEL = CreateCOMEnums(descriptor[1], descriptor[4], app)
-    
+    # use module system
+    CreateEnumModules(EXCEL, descriptor[4])
+   
     nothing
   end
 
