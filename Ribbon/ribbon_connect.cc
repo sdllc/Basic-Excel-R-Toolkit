@@ -44,7 +44,7 @@ STDMETHODIMP CConnect::OnConnection(IDispatch *pApplication, AddInDesignerObject
     const char path_separator[] = "\\";
 
     std::string xll_path;
-    GetRegistryString(xll_path, HKEY_CURRENT_USER, "Software\\BERT", "BERT2.XLLDir");
+    GetRegistryString(xll_path, HKEY_CURRENT_USER, "Software\\BERT", "BERT2.BinDir");
 
     if (xll_path.length() && xll_path.compare(xll_path.length() - 1, 1, path_separator)) {
         xll_path.append(path_separator);

@@ -31,6 +31,14 @@ public:
     APIFunctions::GetRegistryString(child_path, "BERT2.ControlJuliaCommand");
     APIFunctions::GetRegistryString(pipe_name, "BERT2.OverrideJuliaPipeName");
 
+    std::string bin_path;
+    APIFunctions::GetRegistryString(bin_path, "BERT2.BinDir");
+
+    bin_path.append("/");
+    bin_path.append(child_path);
+    child_path = bin_path;
+
+
     if (!pipe_name.length()) {
       std::stringstream ss;
       ss << "BERT2-PIPE-JL-" << _getpid();
