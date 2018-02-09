@@ -53,9 +53,7 @@ export class MuliplexedTerminal {
 
       switch(event.type){
       case "activate":
-
-        this.active_tab_.next(label);
-
+        this.active_tab_.next(label); 
         terminal_instance.child.style.display = "block";
         this.active_instance_ = terminal_instance;
         if( terminal_instance.layout !== this.layout_ ) {
@@ -66,10 +64,12 @@ export class MuliplexedTerminal {
         }
         terminal_instance.terminal.Focus();
         break;
+
       case "deactivate":
         terminal_instance.child.style.display = "none";
         if( this.active_instance_ === terminal_instance ) this.active_instance_ = null;
         break;
+
       default:
         console.info( "unexpected tab event", event);
       }
@@ -158,7 +158,7 @@ export class MuliplexedTerminal {
    * FIXME: we should share context menu/event handler.
    * FIXME: context menu should be parameterized (per-language)
    */
-  Add(language_interface:LanguageInterface){
+  Add(language_interface:LanguageInterface, activate = false){
 
     let child = document.createElement("div");
     child.classList.add("terminal-child");
@@ -177,6 +177,8 @@ export class MuliplexedTerminal {
       ]).popup();
     });
     
+    child.style.display = (activate ? "block": "none");
+
     this.CreateBusyOverlay(language_interface.pipe_.busy_status, child, "busy");
 
     this.terminal_instances_[label] = {child, terminal};

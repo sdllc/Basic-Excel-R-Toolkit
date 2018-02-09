@@ -601,6 +601,34 @@ export class TerminalImplementation {
   }
   */
 
+  InsertGraphic(height:number, node:HTMLElement){
+    let row_height = (this.xterm_ as any).renderer.dimensions.scaledCellHeight;
+    let rows = Math.ceil( height / row_height ) + 2;
+    let row = (this.xterm_ as any).buffer.y + 1;
+
+    let tmp = document.createElement("div");
+    tmp.className = "xterm-graphic";
+    tmp.style.width = `${height}px`;
+    tmp.style.height = `${height}px`;
+
+    this.InsertLines(rows);
+    (this.xterm_ as any).annotation_manager.AddAnnotation({
+      element: tmp, line: row
+    });
+
+  }
+  
+  /** 
+   * inserts X blank lines above the cursor, preserving prompt 
+   * and any existing text. if busy, we can just insert.
+   */
+  InsertLines(lines:number){
+    let offset = !this.language_interface_.pipe_.busy;
+    let text = "";
+    for( let i = 0; i< lines; i++ ) text += "\n";
+    this.PrintConsole(text, offset);
+  }
+
   PrintConsole(text: string, offset = false, flags = ConsolePrintFlags.None ) {
 
     // if not busy, meaning we're waiting at a prompt, we want any
@@ -828,6 +856,9 @@ export class TerminalImplementation {
     this.xterm_ = new XTerm(terminal_options);
     this.xterm_.open(this.node_); //, { focus: true });
     this.xterm_.focus();
+
+    // ensure
+    (this.xterm_ as any).annotation_manager.Init();
 
     this.Resize();
 

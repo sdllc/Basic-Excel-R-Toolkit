@@ -1,9 +1,15 @@
 
-import {Terminal} from "xterm/src/Terminal";
+
+// we can use this for importing type info, but it will break the 
+// production build. xterm's ts integration is somewhat iffy atm.
+// import {Terminal} from "xterm/src/Terminal";
+
+// for build
+type Terminal = any;
 
 /**
  * addon for annotations (html nodes) in xtermjs. the basic idea 
- * is that we can attach an arbitrary node to a text position. 
+ * is that we can attach an arbitrary html element to a text position. 
  * 
  * there's an underlying assumption that the container for the xterm
  * node has relative positioning, otherwise the elements won't be 
@@ -15,19 +21,52 @@ import {Terminal} from "xterm/src/Terminal";
  * left.
  * 
  * TODO: capture when selected [?]
+ * TODO: copy as html, including annotations?
+ * 
+ * ---
+ * 
+ * FIXME: I have an idea for a more efficient implementation. create 
+ * a giant overlay on top of the terminal and clip with overflow. then
+ * attach nodes to that. it means we only have to move the parent and 
+ * everything else will move in turn. will screw up mouse handling, 
+ * though (you can declare mouseevents:none, but then we'll lose mouse 
+ * events on annotations).
+ * 
+ * something to think about.
+ * 
  */
 
 export interface AnnotationType {
+
+  /** insert at line (required) */
   line:number;
+
+  /** insert at column (optional, defaults to zero) */
   column?:number;
+
+  /** the node */
   element:HTMLElement;
-  attached?:boolean;
+
+  /** 
+   * this can be used to delete if you don't want to hold on to the 
+   * annotation struct or even the node
+   */
+  id?:any;
 }
 
+interface AnnotationTypeInternal extends AnnotationType {
+  
+  /** internal flag */
+  attached?: boolean;
+}
+
+/**
+ * class implementation, also the factory for attaching to xterm instances
+ */
 export class AnnotationManager {
 
   /** cache */
-  private annotations_:AnnotationType[] = [];
+  private annotations_:AnnotationTypeInternal[] = [];
 
   /** accessor */
   public get annotations() : AnnotationType[] { return this.annotations_ }
@@ -35,41 +74,35 @@ export class AnnotationManager {
   /** ref */
   private terminal_:Terminal;
 
-  /** top of buffer, in case it's adjusted */
+  /** top of buffer, in case it overflows */ 
   private top_offset_ = 0;
 
-  /** use factory (via accessor) */
+  /** constructor is private; use factory (via accessor) */
   private constructor(terminal:Terminal){
     this.terminal_ = terminal;
 
     // hook up events. we're interested in scrolling, but that's not 
-    // implemented (at least not as one would expect). @see #657:
+    // implemented (at least not as one would expect). @see #657.
 
     (this.terminal_.viewport as any).viewportElement.addEventListener('scroll', e => {
       this.UpdateAnnotations();
     });
     
-    // the actual scroll event can be used to check for overflow. it
-    // seems to get triggered on every line scroll, not batched. that
-    // actually works out ok for us (assume this will probably change,
-    // though).
-
-    // FIXME: it's possible an annotation has been shifted completely
-    // out of visible scope. in that case we can dispose of it, or at 
-    // least stop rendering it. maybe that should be handled in the 
-    // update method, just to centralize.
-
-    this.terminal_.on("scroll", (ydisp) => {
-      let scrollback = this.terminal_.options.scrollback;
-      if( scrollback && ydisp >= scrollback ) this.top_offset_++;
-    });
-
   }
 
+  /** 
+   * dummy. intended to be called when an xterm instance is created or 
+   * instantiated. we could just override Open, but this way it's optional
+   * on a per-instance basis (which is useful since apply acts globally).
+   */
+  public Init(){}
+
+  /** updates element positions, inserting into DOM if necessary */
   private UpdateAnnotations(){
 
-    // FIXME: we could cache this, if we had a way of getting notified 
-    // on style chages. is that a thing?
+    // FIXME: we could cache this, if we had a way of getting 
+    // notified on style chages. is that a thing? OTOH, this is 
+    // not expensive. optimize somewhere else.
 
     let dimensions = this.terminal_.renderer.dimensions;
 
@@ -83,8 +116,6 @@ export class AnnotationManager {
     // TODO: flag for removal?
 
     this.annotations_.forEach(annotation => {
-
-      // FIXME: there's a little error, I think added when the offset changes.
 
       let top = (annotation.line - buffer.ydisp - this.top_offset_) * dimensions.scaledCellHeight;
       let left = (annotation.column||0) * dimensions.scaledCellWidth; 
@@ -103,7 +134,22 @@ export class AnnotationManager {
 
   }
 
-  public SetTopOffset(){
+  /** explicitly sets (or resets) top offset */
+  public SetTopOffset(offset = 0){
+    this.top_offset_ = offset;
+    this.UpdateAnnotations();
+  }
+
+  /** updates offset when we overflow */
+  public Overflow(count = 1){
+    this.top_offset_ += count;
+    
+    // this is called when the buffer is modified, but before 
+    // anything else happens. we can rely on subsequent events
+    // to trigger layout updates.
+
+    // BUT this might be a good time to check if something
+    // has gone offscreen, or at least flag someone else to do so
 
   }
 
@@ -112,9 +158,12 @@ export class AnnotationManager {
     this.UpdateAnnotations();
   }
 
-  public RemoveAnnotation(annotation:AnnotationType){
+  /**
+   * remove annotation by instance, node, or ID
+   */
+  public RemoveAnnotation(annotation:any){
     this.annotations_ = this.annotations_.filter(x => {
-      if(x === annotation){
+      if(x === annotation || x.id === annotation || x.element === annotation){
         if( x.element.parentElement ){
           x.element.parentElement.removeChild(x.element);
         }
@@ -124,6 +173,9 @@ export class AnnotationManager {
     });
   }
 
+  /**
+   * remove all annotations. 
+   */
   public RemoveAnnotations(){
     this.annotations_.forEach(x => {
       if(x.element.parentElement){
@@ -134,6 +186,14 @@ export class AnnotationManager {
   }
 
   static apply(terminalConstructor) {
+
+    // NOTE: the business with the top offset is not going to work 
+    // if the instance is not created before scrolling over the end. 
+    // so we will need to create beforehand, which will require 
+    // overloading some method. or you can just be very disciplined 
+    // and call the accessor when you create the thing. 
+    //
+    // [UPDATE: that's what the Init method is for]
 
     Object.defineProperty(terminalConstructor.prototype, "annotation_manager", {
 
@@ -147,6 +207,34 @@ export class AnnotationManager {
       }
 
     });
+
+    // override scroll so we can get clean overflow events.
+
+    let scroll_function = terminalConstructor.prototype.scroll;
+    terminalConstructor.prototype.scroll = function(arg){
+
+      // this test is duplicated from the scroll function, which
+      // checks for overflow
+
+      if ( this.annotation_manager
+        && this.buffer.scrollTop === 0 
+        && (this.buffer.lines.length === this.buffer.lines.maxLength)){
+        this.annotation_manager.Overflow();
+      }
+
+      scroll_function.call(this, arg);      
+    };
+
+    // extend "clear" to remove annotations, reset overflow
+
+    let clear_function = terminalConstructor.prototype.clear;
+    terminalConstructor.prototype.clear = function(){
+      clear_function.call(this);
+      if(this.annotation_manager){
+        this.annotation_manager.RemoveAnnotations();
+        this.annotation_manager.SetTopOffset(); // reset w/ default value
+      }
+    };
 
   }
 
