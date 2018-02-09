@@ -6,6 +6,9 @@ XTerm.applyAddon(fit);
 import * as CursorClientPosition from './cursor_client_position_addon';
 XTerm.applyAddon(CursorClientPosition);
 
+import {AnnotationManager, AnnotationType} from './annotation_addon';
+XTerm.applyAddon(AnnotationManager);
+
 import { TextFormatter, VTESC } from './text_formatter';
 import { clipboard } from 'electron';
 import { LanguageInterface } from './language_interface';
@@ -402,7 +405,22 @@ export class TerminalImplementation {
   }
 
   /** focus */
-  Focus(){ this.xterm_.focus(); }
+  Focus(){ this.xterm_.focus(); window['term'] = this }
+
+  TestAnnotation(x=2, y=12, text="SOZB"){
+    let annotation_manager:AnnotationManager = (this.xterm_ as any).annotation_manager;
+
+    let element = document.createElement("div");
+    element.classList.add( "xterm-annotation" );
+    element.style.color = "green";
+    element.style.fontWeight = "600";
+    element.style.border = "2px solid orange";
+    element.style.borderRadius = "2px";
+    element.innerText = text;
+    
+    annotation_manager.AddAnnotation({element, line: y, column: x});
+
+  }
 
    /**
    * any housekeeping before closing

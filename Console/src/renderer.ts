@@ -140,6 +140,7 @@ setTimeout(() => {
       console.info( "Activate:", properties.active_tab);
       terminals.Activate(properties.active_tab);
     }
+    else terminals.Activate();
     terminals.active_tab.subscribe(active => {
       if(properties.active_tab !== active) properties.active_tab = active;
     })
