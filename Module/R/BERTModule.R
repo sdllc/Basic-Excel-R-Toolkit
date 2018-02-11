@@ -154,6 +154,29 @@ BERT.graphics.device <- function( name="BERT-default", bgcolor="white", width=40
 	}
 }
 
+#' Create a console graphics device.
+#'
+#' \code{BERT.console.graphics.device} creates a graphics device that 
+#' renders to the shell.
+#'
+#' @export 
+BERT.console.graphics.device <- function( bgcolor="white", width=400, height=300, pointsize=14, scale=Sys.getenv("BERTGraphicsScale")){
+
+  scale <- as.numeric(scale);
+  if(is.na(scale) | is.null(scale)){ scale = 1; }
+
+  width = round( width * scale ); 
+  height = round( height * scale ); 
+  pointsize = round( pointsize * scale ); 
+
+  name <- "BERT-console-device";
+
+  x <- dev.list();
+  if((length(x) > 0) & (name %in% names(x))){ dev.set( x[[name]]) }
+  else {
+    .Call( "console_device", bgcolor, width, height, pointsize, PACKAGE='BERTModule' );
+  }
+}
 
 #==============================================================================
 #

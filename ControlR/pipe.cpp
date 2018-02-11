@@ -58,6 +58,7 @@ int Pipe::NextWrite() {
             case WAIT_TIMEOUT:
             case WAIT_IO_COMPLETION:
             case ERROR_IO_INCOMPLETE:
+             // std::cout << "WriteE " << err << std::endl;
                 return 0; // write in progress
             default:
                 error_ = true;

@@ -2,6 +2,7 @@
 
 S3method(close,js.client.progress.bar)
 S3method(print,history.list)
+export(BERT.console.graphics.device)
 export(BERT.graphics.device)
 export(ncol)
 export(nrow)

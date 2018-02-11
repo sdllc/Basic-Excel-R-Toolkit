@@ -30,6 +30,9 @@
     <ClCompile Include="rinterface_win.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="console_graphics_device.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\PB\variable.pb.h">
@@ -58,6 +61,9 @@
     </ClInclude>
     <ClInclude Include="..\PB\message_utilities.h">
       <Filter>PB</Filter>
+    </ClInclude>
+    <ClInclude Include="console_graphics_device.h">
+      <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

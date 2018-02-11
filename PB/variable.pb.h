@@ -37,7 +37,7 @@ namespace protobuf_variable_2eproto {
 struct TableStruct {
   static const ::google::protobuf::internal::ParseTableField entries[];
   static const ::google::protobuf::internal::AuxillaryParseTableField aux[];
-  static const ::google::protobuf::internal::ParseTable schema[15];
+  static const ::google::protobuf::internal::ParseTable schema[18];
   static const ::google::protobuf::internal::FieldMetadata field_metadata[];
   static const ::google::protobuf::internal::SerializationTable serialization_table[];
   static const ::google::protobuf::uint32 offsets[];
@@ -55,6 +55,12 @@ void InitDefaultsCodeImpl();
 void InitDefaultsCode();
 void InitDefaultsCompositeFunctionCallImpl();
 void InitDefaultsCompositeFunctionCall();
+void InitDefaultsGraphicsCommandImpl();
+void InitDefaultsGraphicsCommand();
+void InitDefaultsColorImpl();
+void InitDefaultsColor();
+void InitDefaultsGraphicsContextImpl();
+void InitDefaultsGraphicsContext();
 void InitDefaultsConsoleImpl();
 void InitDefaultsConsole();
 void InitDefaultsFunctionListImpl();
@@ -72,6 +78,9 @@ inline void InitDefaults() {
   InitDefaultsSheetReference();
   InitDefaultsCode();
   InitDefaultsCompositeFunctionCall();
+  InitDefaultsGraphicsCommand();
+  InitDefaultsColor();
+  InitDefaultsGraphicsContext();
   InitDefaultsConsole();
   InitDefaultsFunctionList();
   InitDefaultsEnumValue();
@@ -89,6 +98,9 @@ extern CallResponseDefaultTypeInternal _CallResponse_default_instance_;
 class Code;
 class CodeDefaultTypeInternal;
 extern CodeDefaultTypeInternal _Code_default_instance_;
+class Color;
+class ColorDefaultTypeInternal;
+extern ColorDefaultTypeInternal _Color_default_instance_;
 class Complex;
 class ComplexDefaultTypeInternal;
 extern ComplexDefaultTypeInternal _Complex_default_instance_;
@@ -119,6 +131,12 @@ extern FunctionElementDefaultTypeInternal _FunctionElement_default_instance_;
 class FunctionList;
 class FunctionListDefaultTypeInternal;
 extern FunctionListDefaultTypeInternal _FunctionList_default_instance_;
+class GraphicsCommand;
+class GraphicsCommandDefaultTypeInternal;
+extern GraphicsCommandDefaultTypeInternal _GraphicsCommand_default_instance_;
+class GraphicsContext;
+class GraphicsContextDefaultTypeInternal;
+extern GraphicsContextDefaultTypeInternal _GraphicsContext_default_instance_;
 class SheetReference;
 class SheetReferenceDefaultTypeInternal;
 extern SheetReferenceDefaultTypeInternal _SheetReference_default_instance_;
@@ -744,14 +762,14 @@ class Variable : public ::google::protobuf::Message /* @@protoc_insertion_point(
     kNil = 1,
     kMissing = 2,
     kErr = 3,
-    kInteger = 4,
-    kReal = 5,
-    kStr = 6,
-    kBoolean = 7,
-    kCpx = 8,
-    kArr = 9,
-    kRef = 10,
-    kComPointer = 11,
+    kInteger = 5,
+    kReal = 6,
+    kStr = 7,
+    kBoolean = 8,
+    kCpx = 9,
+    kArr = 10,
+    kRef = 11,
+    kComPointer = 12,
     VALUE_NOT_SET = 0,
   };
 
@@ -849,30 +867,30 @@ class Variable : public ::google::protobuf::Message /* @@protoc_insertion_point(
   ::BERTBuffers::Error* mutable_err();
   void set_allocated_err(::BERTBuffers::Error* err);
 
-  // int32 integer = 4;
+  // int32 integer = 5;
   private:
   bool has_integer() const;
   public:
   void clear_integer();
-  static const int kIntegerFieldNumber = 4;
+  static const int kIntegerFieldNumber = 5;
   ::google::protobuf::int32 integer() const;
   void set_integer(::google::protobuf::int32 value);
 
-  // double real = 5;
+  // double real = 6;
   private:
   bool has_real() const;
   public:
   void clear_real();
-  static const int kRealFieldNumber = 5;
+  static const int kRealFieldNumber = 6;
   double real() const;
   void set_real(double value);
 
-  // string str = 6;
+  // string str = 7;
   private:
   bool has_str() const;
   public:
   void clear_str();
-  static const int kStrFieldNumber = 6;
+  static const int kStrFieldNumber = 7;
   const ::std::string& str() const;
   void set_str(const ::std::string& value);
   #if LANG_CXX11
@@ -884,46 +902,46 @@ class Variable : public ::google::protobuf::Message /* @@protoc_insertion_point(
   ::std::string* release_str();
   void set_allocated_str(::std::string* str);
 
-  // bool boolean = 7;
+  // bool boolean = 8;
   private:
   bool has_boolean() const;
   public:
   void clear_boolean();
-  static const int kBooleanFieldNumber = 7;
+  static const int kBooleanFieldNumber = 8;
   bool boolean() const;
   void set_boolean(bool value);
 
-  // .BERTBuffers.Complex cpx = 8;
+  // .BERTBuffers.Complex cpx = 9;
   bool has_cpx() const;
   void clear_cpx();
-  static const int kCpxFieldNumber = 8;
+  static const int kCpxFieldNumber = 9;
   const ::BERTBuffers::Complex& cpx() const;
   ::BERTBuffers::Complex* release_cpx();
   ::BERTBuffers::Complex* mutable_cpx();
   void set_allocated_cpx(::BERTBuffers::Complex* cpx);
 
-  // .BERTBuffers.Array arr = 9;
+  // .BERTBuffers.Array arr = 10;
   bool has_arr() const;
   void clear_arr();
-  static const int kArrFieldNumber = 9;
+  static const int kArrFieldNumber = 10;
   const ::BERTBuffers::Array& arr() const;
   ::BERTBuffers::Array* release_arr();
   ::BERTBuffers::Array* mutable_arr();
   void set_allocated_arr(::BERTBuffers::Array* arr);
 
-  // .BERTBuffers.SheetReference ref = 10;
+  // .BERTBuffers.SheetReference ref = 11;
   bool has_ref() const;
   void clear_ref();
-  static const int kRefFieldNumber = 10;
+  static const int kRefFieldNumber = 11;
   const ::BERTBuffers::SheetReference& ref() const;
   ::BERTBuffers::SheetReference* release_ref();
   ::BERTBuffers::SheetReference* mutable_ref();
   void set_allocated_ref(::BERTBuffers::SheetReference* ref);
 
-  // .BERTBuffers.ExternalPointer com_pointer = 11;
+  // .BERTBuffers.ExternalPointer com_pointer = 12;
   bool has_com_pointer() const;
   void clear_com_pointer();
-  static const int kComPointerFieldNumber = 11;
+  static const int kComPointerFieldNumber = 12;
   const ::BERTBuffers::ExternalPointer& com_pointer() const;
   ::BERTBuffers::ExternalPointer* release_com_pointer();
   ::BERTBuffers::ExternalPointer* mutable_com_pointer();
@@ -1235,6 +1253,533 @@ class CompositeFunctionCall : public ::google::protobuf::Message /* @@protoc_ins
 };
 // -------------------------------------------------------------------
 
+class GraphicsCommand : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:BERTBuffers.GraphicsCommand) */ {
+ public:
+  GraphicsCommand();
+  virtual ~GraphicsCommand();
+
+  GraphicsCommand(const GraphicsCommand& from);
+
+  inline GraphicsCommand& operator=(const GraphicsCommand& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  GraphicsCommand(GraphicsCommand&& from) noexcept
+    : GraphicsCommand() {
+    *this = ::std::move(from);
+  }
+
+  inline GraphicsCommand& operator=(GraphicsCommand&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const GraphicsCommand& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const GraphicsCommand* internal_default_instance() {
+    return reinterpret_cast<const GraphicsCommand*>(
+               &_GraphicsCommand_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    7;
+
+  void Swap(GraphicsCommand* other);
+  friend void swap(GraphicsCommand& a, GraphicsCommand& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline GraphicsCommand* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  GraphicsCommand* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CopyFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void MergeFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void CopyFrom(const GraphicsCommand& from);
+  void MergeFrom(const GraphicsCommand& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const PROTOBUF_FINAL;
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const PROTOBUF_FINAL;
+  void InternalSwap(GraphicsCommand* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // repeated double x = 2;
+  int x_size() const;
+  void clear_x();
+  static const int kXFieldNumber = 2;
+  double x(int index) const;
+  void set_x(int index, double value);
+  void add_x(double value);
+  const ::google::protobuf::RepeatedField< double >&
+      x() const;
+  ::google::protobuf::RepeatedField< double >*
+      mutable_x();
+
+  // repeated double y = 3;
+  int y_size() const;
+  void clear_y();
+  static const int kYFieldNumber = 3;
+  double y(int index) const;
+  void set_y(int index, double value);
+  void add_y(double value);
+  const ::google::protobuf::RepeatedField< double >&
+      y() const;
+  ::google::protobuf::RepeatedField< double >*
+      mutable_y();
+
+  // string command = 1;
+  void clear_command();
+  static const int kCommandFieldNumber = 1;
+  const ::std::string& command() const;
+  void set_command(const ::std::string& value);
+  #if LANG_CXX11
+  void set_command(::std::string&& value);
+  #endif
+  void set_command(const char* value);
+  void set_command(const char* value, size_t size);
+  ::std::string* mutable_command();
+  ::std::string* release_command();
+  void set_allocated_command(::std::string* command);
+
+  // string text = 6;
+  void clear_text();
+  static const int kTextFieldNumber = 6;
+  const ::std::string& text() const;
+  void set_text(const ::std::string& value);
+  #if LANG_CXX11
+  void set_text(::std::string&& value);
+  #endif
+  void set_text(const char* value);
+  void set_text(const char* value, size_t size);
+  ::std::string* mutable_text();
+  ::std::string* release_text();
+  void set_allocated_text(::std::string* text);
+
+  // bytes raster = 9;
+  void clear_raster();
+  static const int kRasterFieldNumber = 9;
+  const ::std::string& raster() const;
+  void set_raster(const ::std::string& value);
+  #if LANG_CXX11
+  void set_raster(::std::string&& value);
+  #endif
+  void set_raster(const char* value);
+  void set_raster(const void* value, size_t size);
+  ::std::string* mutable_raster();
+  ::std::string* release_raster();
+  void set_allocated_raster(::std::string* raster);
+
+  // .BERTBuffers.GraphicsContext context = 15;
+  bool has_context() const;
+  void clear_context();
+  static const int kContextFieldNumber = 15;
+  const ::BERTBuffers::GraphicsContext& context() const;
+  ::BERTBuffers::GraphicsContext* release_context();
+  ::BERTBuffers::GraphicsContext* mutable_context();
+  void set_allocated_context(::BERTBuffers::GraphicsContext* context);
+
+  // double r = 4;
+  void clear_r();
+  static const int kRFieldNumber = 4;
+  double r() const;
+  void set_r(double value);
+
+  // double rot = 5;
+  void clear_rot();
+  static const int kRotFieldNumber = 5;
+  double rot() const;
+  void set_rot(double value);
+
+  // double hadj = 8;
+  void clear_hadj();
+  static const int kHadjFieldNumber = 8;
+  double hadj() const;
+  void set_hadj(double value);
+
+  // bool filled = 7;
+  void clear_filled();
+  static const int kFilledFieldNumber = 7;
+  bool filled() const;
+  void set_filled(bool value);
+
+  // bool interpolate = 10;
+  void clear_interpolate();
+  static const int kInterpolateFieldNumber = 10;
+  bool interpolate() const;
+  void set_interpolate(bool value);
+
+  // @@protoc_insertion_point(class_scope:BERTBuffers.GraphicsCommand)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::RepeatedField< double > x_;
+  mutable int _x_cached_byte_size_;
+  ::google::protobuf::RepeatedField< double > y_;
+  mutable int _y_cached_byte_size_;
+  ::google::protobuf::internal::ArenaStringPtr command_;
+  ::google::protobuf::internal::ArenaStringPtr text_;
+  ::google::protobuf::internal::ArenaStringPtr raster_;
+  ::BERTBuffers::GraphicsContext* context_;
+  double r_;
+  double rot_;
+  double hadj_;
+  bool filled_;
+  bool interpolate_;
+  mutable int _cached_size_;
+  friend struct ::protobuf_variable_2eproto::TableStruct;
+  friend void ::protobuf_variable_2eproto::InitDefaultsGraphicsCommandImpl();
+};
+// -------------------------------------------------------------------
+
+class Color : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:BERTBuffers.Color) */ {
+ public:
+  Color();
+  virtual ~Color();
+
+  Color(const Color& from);
+
+  inline Color& operator=(const Color& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  Color(Color&& from) noexcept
+    : Color() {
+    *this = ::std::move(from);
+  }
+
+  inline Color& operator=(Color&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Color& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const Color* internal_default_instance() {
+    return reinterpret_cast<const Color*>(
+               &_Color_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    8;
+
+  void Swap(Color* other);
+  friend void swap(Color& a, Color& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline Color* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  Color* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CopyFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void MergeFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void CopyFrom(const Color& from);
+  void MergeFrom(const Color& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const PROTOBUF_FINAL;
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const PROTOBUF_FINAL;
+  void InternalSwap(Color* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // uint32 a = 1;
+  void clear_a();
+  static const int kAFieldNumber = 1;
+  ::google::protobuf::uint32 a() const;
+  void set_a(::google::protobuf::uint32 value);
+
+  // uint32 r = 2;
+  void clear_r();
+  static const int kRFieldNumber = 2;
+  ::google::protobuf::uint32 r() const;
+  void set_r(::google::protobuf::uint32 value);
+
+  // uint32 g = 3;
+  void clear_g();
+  static const int kGFieldNumber = 3;
+  ::google::protobuf::uint32 g() const;
+  void set_g(::google::protobuf::uint32 value);
+
+  // uint32 b = 4;
+  void clear_b();
+  static const int kBFieldNumber = 4;
+  ::google::protobuf::uint32 b() const;
+  void set_b(::google::protobuf::uint32 value);
+
+  // @@protoc_insertion_point(class_scope:BERTBuffers.Color)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::uint32 a_;
+  ::google::protobuf::uint32 r_;
+  ::google::protobuf::uint32 g_;
+  ::google::protobuf::uint32 b_;
+  mutable int _cached_size_;
+  friend struct ::protobuf_variable_2eproto::TableStruct;
+  friend void ::protobuf_variable_2eproto::InitDefaultsColorImpl();
+};
+// -------------------------------------------------------------------
+
+class GraphicsContext : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:BERTBuffers.GraphicsContext) */ {
+ public:
+  GraphicsContext();
+  virtual ~GraphicsContext();
+
+  GraphicsContext(const GraphicsContext& from);
+
+  inline GraphicsContext& operator=(const GraphicsContext& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  GraphicsContext(GraphicsContext&& from) noexcept
+    : GraphicsContext() {
+    *this = ::std::move(from);
+  }
+
+  inline GraphicsContext& operator=(GraphicsContext&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const GraphicsContext& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const GraphicsContext* internal_default_instance() {
+    return reinterpret_cast<const GraphicsContext*>(
+               &_GraphicsContext_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    9;
+
+  void Swap(GraphicsContext* other);
+  friend void swap(GraphicsContext& a, GraphicsContext& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline GraphicsContext* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  GraphicsContext* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CopyFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void MergeFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void CopyFrom(const GraphicsContext& from);
+  void MergeFrom(const GraphicsContext& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const PROTOBUF_FINAL;
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const PROTOBUF_FINAL;
+  void InternalSwap(GraphicsContext* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // string fontfamily = 13;
+  void clear_fontfamily();
+  static const int kFontfamilyFieldNumber = 13;
+  const ::std::string& fontfamily() const;
+  void set_fontfamily(const ::std::string& value);
+  #if LANG_CXX11
+  void set_fontfamily(::std::string&& value);
+  #endif
+  void set_fontfamily(const char* value);
+  void set_fontfamily(const char* value, size_t size);
+  ::std::string* mutable_fontfamily();
+  ::std::string* release_fontfamily();
+  void set_allocated_fontfamily(::std::string* fontfamily);
+
+  // .BERTBuffers.Color col = 1;
+  bool has_col() const;
+  void clear_col();
+  static const int kColFieldNumber = 1;
+  const ::BERTBuffers::Color& col() const;
+  ::BERTBuffers::Color* release_col();
+  ::BERTBuffers::Color* mutable_col();
+  void set_allocated_col(::BERTBuffers::Color* col);
+
+  // .BERTBuffers.Color fill = 2;
+  bool has_fill() const;
+  void clear_fill();
+  static const int kFillFieldNumber = 2;
+  const ::BERTBuffers::Color& fill() const;
+  ::BERTBuffers::Color* release_fill();
+  ::BERTBuffers::Color* mutable_fill();
+  void set_allocated_fill(::BERTBuffers::Color* fill);
+
+  // double gamma = 3;
+  void clear_gamma();
+  static const int kGammaFieldNumber = 3;
+  double gamma() const;
+  void set_gamma(double value);
+
+  // double lwd = 4;
+  void clear_lwd();
+  static const int kLwdFieldNumber = 4;
+  double lwd() const;
+  void set_lwd(double value);
+
+  // int32 lty = 5;
+  void clear_lty();
+  static const int kLtyFieldNumber = 5;
+  ::google::protobuf::int32 lty() const;
+  void set_lty(::google::protobuf::int32 value);
+
+  // int32 lend = 6;
+  void clear_lend();
+  static const int kLendFieldNumber = 6;
+  ::google::protobuf::int32 lend() const;
+  void set_lend(::google::protobuf::int32 value);
+
+  // double lmitre = 8;
+  void clear_lmitre();
+  static const int kLmitreFieldNumber = 8;
+  double lmitre() const;
+  void set_lmitre(double value);
+
+  // double cex = 9;
+  void clear_cex();
+  static const int kCexFieldNumber = 9;
+  double cex() const;
+  void set_cex(double value);
+
+  // int32 ljoin = 7;
+  void clear_ljoin();
+  static const int kLjoinFieldNumber = 7;
+  ::google::protobuf::int32 ljoin() const;
+  void set_ljoin(::google::protobuf::int32 value);
+
+  // int32 fontface = 12;
+  void clear_fontface();
+  static const int kFontfaceFieldNumber = 12;
+  ::google::protobuf::int32 fontface() const;
+  void set_fontface(::google::protobuf::int32 value);
+
+  // double ps = 10;
+  void clear_ps();
+  static const int kPsFieldNumber = 10;
+  double ps() const;
+  void set_ps(double value);
+
+  // double lineheight = 11;
+  void clear_lineheight();
+  static const int kLineheightFieldNumber = 11;
+  double lineheight() const;
+  void set_lineheight(double value);
+
+  // @@protoc_insertion_point(class_scope:BERTBuffers.GraphicsContext)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr fontfamily_;
+  ::BERTBuffers::Color* col_;
+  ::BERTBuffers::Color* fill_;
+  double gamma_;
+  double lwd_;
+  ::google::protobuf::int32 lty_;
+  ::google::protobuf::int32 lend_;
+  double lmitre_;
+  double cex_;
+  ::google::protobuf::int32 ljoin_;
+  ::google::protobuf::int32 fontface_;
+  double ps_;
+  double lineheight_;
+  mutable int _cached_size_;
+  friend struct ::protobuf_variable_2eproto::TableStruct;
+  friend void ::protobuf_variable_2eproto::InitDefaultsGraphicsContextImpl();
+};
+// -------------------------------------------------------------------
+
 class Console : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:BERTBuffers.Console) */ {
  public:
   Console();
@@ -1268,6 +1813,7 @@ class Console : public ::google::protobuf::Message /* @@protoc_insertion_point(c
     kText = 1,
     kErr = 2,
     kPrompt = 3,
+    kGraphics = 4,
     MESSAGE_NOT_SET = 0,
   };
 
@@ -1277,7 +1823,7 @@ class Console : public ::google::protobuf::Message /* @@protoc_insertion_point(c
                &_Console_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    7;
+    10;
 
   void Swap(Console* other);
   friend void swap(Console& a, Console& b) {
@@ -1375,12 +1921,22 @@ class Console : public ::google::protobuf::Message /* @@protoc_insertion_point(c
   ::std::string* release_prompt();
   void set_allocated_prompt(::std::string* prompt);
 
+  // .BERTBuffers.GraphicsCommand graphics = 4;
+  bool has_graphics() const;
+  void clear_graphics();
+  static const int kGraphicsFieldNumber = 4;
+  const ::BERTBuffers::GraphicsCommand& graphics() const;
+  ::BERTBuffers::GraphicsCommand* release_graphics();
+  ::BERTBuffers::GraphicsCommand* mutable_graphics();
+  void set_allocated_graphics(::BERTBuffers::GraphicsCommand* graphics);
+
   MessageCase message_case() const;
   // @@protoc_insertion_point(class_scope:BERTBuffers.Console)
  private:
   void set_has_text();
   void set_has_err();
   void set_has_prompt();
+  void set_has_graphics();
 
   inline bool has_message() const;
   void clear_message();
@@ -1392,6 +1948,7 @@ class Console : public ::google::protobuf::Message /* @@protoc_insertion_point(c
     ::google::protobuf::internal::ArenaStringPtr text_;
     ::google::protobuf::internal::ArenaStringPtr err_;
     ::google::protobuf::internal::ArenaStringPtr prompt_;
+    ::BERTBuffers::GraphicsCommand* graphics_;
   } message_;
   mutable int _cached_size_;
   ::google::protobuf::uint32 _oneof_case_[1];
@@ -1436,7 +1993,7 @@ class FunctionElement : public ::google::protobuf::Message /* @@protoc_insertion
                &_FunctionElement_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    8;
+    11;
 
   void Swap(FunctionElement* other);
   friend void swap(FunctionElement& a, FunctionElement& b) {
@@ -1590,7 +2147,7 @@ class FunctionDescriptor : public ::google::protobuf::Message /* @@protoc_insert
                &_FunctionDescriptor_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    9;
+    12;
 
   void Swap(FunctionDescriptor* other);
   friend void swap(FunctionDescriptor& a, FunctionDescriptor& b) {
@@ -1712,7 +2269,7 @@ class FunctionList : public ::google::protobuf::Message /* @@protoc_insertion_po
                &_FunctionList_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    10;
+    13;
 
   void Swap(FunctionList* other);
   friend void swap(FunctionList& a, FunctionList& b) {
@@ -1817,7 +2374,7 @@ class EnumValue : public ::google::protobuf::Message /* @@protoc_insertion_point
                &_EnumValue_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    11;
+    14;
 
   void Swap(EnumValue* other);
   friend void swap(EnumValue& a, EnumValue& b) {
@@ -1931,7 +2488,7 @@ class EnumType : public ::google::protobuf::Message /* @@protoc_insertion_point(
                &_EnumType_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    12;
+    15;
 
   void Swap(EnumType* other);
   friend void swap(EnumType& a, EnumType& b) {
@@ -2051,7 +2608,7 @@ class ExternalPointer : public ::google::protobuf::Message /* @@protoc_insertion
                &_ExternalPointer_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    13;
+    16;
 
   void Swap(ExternalPointer* other);
   friend void swap(ExternalPointer& a, ExternalPointer& b) {
@@ -2202,7 +2759,7 @@ class CallResponse : public ::google::protobuf::Message /* @@protoc_insertion_po
                &_CallResponse_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    14;
+    17;
 
   void Swap(CallResponse* other);
   friend void swap(CallResponse& a, CallResponse& b) {
@@ -2860,7 +3417,7 @@ inline ::BERTBuffers::Error* Variable::mutable_err() {
   return value_.err_;
 }
 
-// int32 integer = 4;
+// int32 integer = 5;
 inline bool Variable::has_integer() const {
   return value_case() == kInteger;
 }
@@ -2889,7 +3446,7 @@ inline void Variable::set_integer(::google::protobuf::int32 value) {
   // @@protoc_insertion_point(field_set:BERTBuffers.Variable.integer)
 }
 
-// double real = 5;
+// double real = 6;
 inline bool Variable::has_real() const {
   return value_case() == kReal;
 }
@@ -2918,7 +3475,7 @@ inline void Variable::set_real(double value) {
   // @@protoc_insertion_point(field_set:BERTBuffers.Variable.real)
 }
 
-// string str = 6;
+// string str = 7;
 inline bool Variable::has_str() const {
   return value_case() == kStr;
 }
@@ -3013,7 +3570,7 @@ inline void Variable::set_allocated_str(::std::string* str) {
   // @@protoc_insertion_point(field_set_allocated:BERTBuffers.Variable.str)
 }
 
-// bool boolean = 7;
+// bool boolean = 8;
 inline bool Variable::has_boolean() const {
   return value_case() == kBoolean;
 }
@@ -3042,7 +3599,7 @@ inline void Variable::set_boolean(bool value) {
   // @@protoc_insertion_point(field_set:BERTBuffers.Variable.boolean)
 }
 
-// .BERTBuffers.Complex cpx = 8;
+// .BERTBuffers.Complex cpx = 9;
 inline bool Variable::has_cpx() const {
   return value_case() == kCpx;
 }
@@ -3082,7 +3639,7 @@ inline ::BERTBuffers::Complex* Variable::mutable_cpx() {
   return value_.cpx_;
 }
 
-// .BERTBuffers.Array arr = 9;
+// .BERTBuffers.Array arr = 10;
 inline bool Variable::has_arr() const {
   return value_case() == kArr;
 }
@@ -3122,7 +3679,7 @@ inline ::BERTBuffers::Array* Variable::mutable_arr() {
   return value_.arr_;
 }
 
-// .BERTBuffers.SheetReference ref = 10;
+// .BERTBuffers.SheetReference ref = 11;
 inline bool Variable::has_ref() const {
   return value_case() == kRef;
 }
@@ -3162,7 +3719,7 @@ inline ::BERTBuffers::SheetReference* Variable::mutable_ref() {
   return value_.ref_;
 }
 
-// .BERTBuffers.ExternalPointer com_pointer = 11;
+// .BERTBuffers.ExternalPointer com_pointer = 12;
 inline bool Variable::has_com_pointer() const {
   return value_case() == kComPointer;
 }
@@ -3482,6 +4039,706 @@ inline void CompositeFunctionCall::set_target(::BERTBuffers::CallTarget value) {
 
 // -------------------------------------------------------------------
 
+// GraphicsCommand
+
+// string command = 1;
+inline void GraphicsCommand::clear_command() {
+  command_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& GraphicsCommand::command() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.GraphicsCommand.command)
+  return command_.GetNoArena();
+}
+inline void GraphicsCommand::set_command(const ::std::string& value) {
+  
+  command_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:BERTBuffers.GraphicsCommand.command)
+}
+#if LANG_CXX11
+inline void GraphicsCommand::set_command(::std::string&& value) {
+  
+  command_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:BERTBuffers.GraphicsCommand.command)
+}
+#endif
+inline void GraphicsCommand::set_command(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  command_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:BERTBuffers.GraphicsCommand.command)
+}
+inline void GraphicsCommand::set_command(const char* value, size_t size) {
+  
+  command_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:BERTBuffers.GraphicsCommand.command)
+}
+inline ::std::string* GraphicsCommand::mutable_command() {
+  
+  // @@protoc_insertion_point(field_mutable:BERTBuffers.GraphicsCommand.command)
+  return command_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* GraphicsCommand::release_command() {
+  // @@protoc_insertion_point(field_release:BERTBuffers.GraphicsCommand.command)
+  
+  return command_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void GraphicsCommand::set_allocated_command(::std::string* command) {
+  if (command != NULL) {
+    
+  } else {
+    
+  }
+  command_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), command);
+  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.GraphicsCommand.command)
+}
+
+// repeated double x = 2;
+inline int GraphicsCommand::x_size() const {
+  return x_.size();
+}
+inline void GraphicsCommand::clear_x() {
+  x_.Clear();
+}
+inline double GraphicsCommand::x(int index) const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.GraphicsCommand.x)
+  return x_.Get(index);
+}
+inline void GraphicsCommand::set_x(int index, double value) {
+  x_.Set(index, value);
+  // @@protoc_insertion_point(field_set:BERTBuffers.GraphicsCommand.x)
+}
+inline void GraphicsCommand::add_x(double value) {
+  x_.Add(value);
+  // @@protoc_insertion_point(field_add:BERTBuffers.GraphicsCommand.x)
+}
+inline const ::google::protobuf::RepeatedField< double >&
+GraphicsCommand::x() const {
+  // @@protoc_insertion_point(field_list:BERTBuffers.GraphicsCommand.x)
+  return x_;
+}
+inline ::google::protobuf::RepeatedField< double >*
+GraphicsCommand::mutable_x() {
+  // @@protoc_insertion_point(field_mutable_list:BERTBuffers.GraphicsCommand.x)
+  return &x_;
+}
+
+// repeated double y = 3;
+inline int GraphicsCommand::y_size() const {
+  return y_.size();
+}
+inline void GraphicsCommand::clear_y() {
+  y_.Clear();
+}
+inline double GraphicsCommand::y(int index) const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.GraphicsCommand.y)
+  return y_.Get(index);
+}
+inline void GraphicsCommand::set_y(int index, double value) {
+  y_.Set(index, value);
+  // @@protoc_insertion_point(field_set:BERTBuffers.GraphicsCommand.y)
+}
+inline void GraphicsCommand::add_y(double value) {
+  y_.Add(value);
+  // @@protoc_insertion_point(field_add:BERTBuffers.GraphicsCommand.y)
+}
+inline const ::google::protobuf::RepeatedField< double >&
+GraphicsCommand::y() const {
+  // @@protoc_insertion_point(field_list:BERTBuffers.GraphicsCommand.y)
+  return y_;
+}
+inline ::google::protobuf::RepeatedField< double >*
+GraphicsCommand::mutable_y() {
+  // @@protoc_insertion_point(field_mutable_list:BERTBuffers.GraphicsCommand.y)
+  return &y_;
+}
+
+// double r = 4;
+inline void GraphicsCommand::clear_r() {
+  r_ = 0;
+}
+inline double GraphicsCommand::r() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.GraphicsCommand.r)
+  return r_;
+}
+inline void GraphicsCommand::set_r(double value) {
+  
+  r_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.GraphicsCommand.r)
+}
+
+// double rot = 5;
+inline void GraphicsCommand::clear_rot() {
+  rot_ = 0;
+}
+inline double GraphicsCommand::rot() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.GraphicsCommand.rot)
+  return rot_;
+}
+inline void GraphicsCommand::set_rot(double value) {
+  
+  rot_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.GraphicsCommand.rot)
+}
+
+// string text = 6;
+inline void GraphicsCommand::clear_text() {
+  text_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& GraphicsCommand::text() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.GraphicsCommand.text)
+  return text_.GetNoArena();
+}
+inline void GraphicsCommand::set_text(const ::std::string& value) {
+  
+  text_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:BERTBuffers.GraphicsCommand.text)
+}
+#if LANG_CXX11
+inline void GraphicsCommand::set_text(::std::string&& value) {
+  
+  text_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:BERTBuffers.GraphicsCommand.text)
+}
+#endif
+inline void GraphicsCommand::set_text(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  text_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:BERTBuffers.GraphicsCommand.text)
+}
+inline void GraphicsCommand::set_text(const char* value, size_t size) {
+  
+  text_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:BERTBuffers.GraphicsCommand.text)
+}
+inline ::std::string* GraphicsCommand::mutable_text() {
+  
+  // @@protoc_insertion_point(field_mutable:BERTBuffers.GraphicsCommand.text)
+  return text_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* GraphicsCommand::release_text() {
+  // @@protoc_insertion_point(field_release:BERTBuffers.GraphicsCommand.text)
+  
+  return text_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void GraphicsCommand::set_allocated_text(::std::string* text) {
+  if (text != NULL) {
+    
+  } else {
+    
+  }
+  text_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), text);
+  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.GraphicsCommand.text)
+}
+
+// bool filled = 7;
+inline void GraphicsCommand::clear_filled() {
+  filled_ = false;
+}
+inline bool GraphicsCommand::filled() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.GraphicsCommand.filled)
+  return filled_;
+}
+inline void GraphicsCommand::set_filled(bool value) {
+  
+  filled_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.GraphicsCommand.filled)
+}
+
+// double hadj = 8;
+inline void GraphicsCommand::clear_hadj() {
+  hadj_ = 0;
+}
+inline double GraphicsCommand::hadj() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.GraphicsCommand.hadj)
+  return hadj_;
+}
+inline void GraphicsCommand::set_hadj(double value) {
+  
+  hadj_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.GraphicsCommand.hadj)
+}
+
+// bytes raster = 9;
+inline void GraphicsCommand::clear_raster() {
+  raster_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& GraphicsCommand::raster() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.GraphicsCommand.raster)
+  return raster_.GetNoArena();
+}
+inline void GraphicsCommand::set_raster(const ::std::string& value) {
+  
+  raster_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:BERTBuffers.GraphicsCommand.raster)
+}
+#if LANG_CXX11
+inline void GraphicsCommand::set_raster(::std::string&& value) {
+  
+  raster_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:BERTBuffers.GraphicsCommand.raster)
+}
+#endif
+inline void GraphicsCommand::set_raster(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  raster_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:BERTBuffers.GraphicsCommand.raster)
+}
+inline void GraphicsCommand::set_raster(const void* value, size_t size) {
+  
+  raster_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:BERTBuffers.GraphicsCommand.raster)
+}
+inline ::std::string* GraphicsCommand::mutable_raster() {
+  
+  // @@protoc_insertion_point(field_mutable:BERTBuffers.GraphicsCommand.raster)
+  return raster_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* GraphicsCommand::release_raster() {
+  // @@protoc_insertion_point(field_release:BERTBuffers.GraphicsCommand.raster)
+  
+  return raster_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void GraphicsCommand::set_allocated_raster(::std::string* raster) {
+  if (raster != NULL) {
+    
+  } else {
+    
+  }
+  raster_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), raster);
+  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.GraphicsCommand.raster)
+}
+
+// bool interpolate = 10;
+inline void GraphicsCommand::clear_interpolate() {
+  interpolate_ = false;
+}
+inline bool GraphicsCommand::interpolate() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.GraphicsCommand.interpolate)
+  return interpolate_;
+}
+inline void GraphicsCommand::set_interpolate(bool value) {
+  
+  interpolate_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.GraphicsCommand.interpolate)
+}
+
+// .BERTBuffers.GraphicsContext context = 15;
+inline bool GraphicsCommand::has_context() const {
+  return this != internal_default_instance() && context_ != NULL;
+}
+inline void GraphicsCommand::clear_context() {
+  if (GetArenaNoVirtual() == NULL && context_ != NULL) {
+    delete context_;
+  }
+  context_ = NULL;
+}
+inline const ::BERTBuffers::GraphicsContext& GraphicsCommand::context() const {
+  const ::BERTBuffers::GraphicsContext* p = context_;
+  // @@protoc_insertion_point(field_get:BERTBuffers.GraphicsCommand.context)
+  return p != NULL ? *p : *reinterpret_cast<const ::BERTBuffers::GraphicsContext*>(
+      &::BERTBuffers::_GraphicsContext_default_instance_);
+}
+inline ::BERTBuffers::GraphicsContext* GraphicsCommand::release_context() {
+  // @@protoc_insertion_point(field_release:BERTBuffers.GraphicsCommand.context)
+  
+  ::BERTBuffers::GraphicsContext* temp = context_;
+  context_ = NULL;
+  return temp;
+}
+inline ::BERTBuffers::GraphicsContext* GraphicsCommand::mutable_context() {
+  
+  if (context_ == NULL) {
+    context_ = new ::BERTBuffers::GraphicsContext;
+  }
+  // @@protoc_insertion_point(field_mutable:BERTBuffers.GraphicsCommand.context)
+  return context_;
+}
+inline void GraphicsCommand::set_allocated_context(::BERTBuffers::GraphicsContext* context) {
+  ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
+  if (message_arena == NULL) {
+    delete context_;
+  }
+  if (context) {
+    ::google::protobuf::Arena* submessage_arena = NULL;
+    if (message_arena != submessage_arena) {
+      context = ::google::protobuf::internal::GetOwnedMessage(
+          message_arena, context, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  context_ = context;
+  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.GraphicsCommand.context)
+}
+
+// -------------------------------------------------------------------
+
+// Color
+
+// uint32 a = 1;
+inline void Color::clear_a() {
+  a_ = 0u;
+}
+inline ::google::protobuf::uint32 Color::a() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.Color.a)
+  return a_;
+}
+inline void Color::set_a(::google::protobuf::uint32 value) {
+  
+  a_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.Color.a)
+}
+
+// uint32 r = 2;
+inline void Color::clear_r() {
+  r_ = 0u;
+}
+inline ::google::protobuf::uint32 Color::r() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.Color.r)
+  return r_;
+}
+inline void Color::set_r(::google::protobuf::uint32 value) {
+  
+  r_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.Color.r)
+}
+
+// uint32 g = 3;
+inline void Color::clear_g() {
+  g_ = 0u;
+}
+inline ::google::protobuf::uint32 Color::g() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.Color.g)
+  return g_;
+}
+inline void Color::set_g(::google::protobuf::uint32 value) {
+  
+  g_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.Color.g)
+}
+
+// uint32 b = 4;
+inline void Color::clear_b() {
+  b_ = 0u;
+}
+inline ::google::protobuf::uint32 Color::b() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.Color.b)
+  return b_;
+}
+inline void Color::set_b(::google::protobuf::uint32 value) {
+  
+  b_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.Color.b)
+}
+
+// -------------------------------------------------------------------
+
+// GraphicsContext
+
+// .BERTBuffers.Color col = 1;
+inline bool GraphicsContext::has_col() const {
+  return this != internal_default_instance() && col_ != NULL;
+}
+inline void GraphicsContext::clear_col() {
+  if (GetArenaNoVirtual() == NULL && col_ != NULL) {
+    delete col_;
+  }
+  col_ = NULL;
+}
+inline const ::BERTBuffers::Color& GraphicsContext::col() const {
+  const ::BERTBuffers::Color* p = col_;
+  // @@protoc_insertion_point(field_get:BERTBuffers.GraphicsContext.col)
+  return p != NULL ? *p : *reinterpret_cast<const ::BERTBuffers::Color*>(
+      &::BERTBuffers::_Color_default_instance_);
+}
+inline ::BERTBuffers::Color* GraphicsContext::release_col() {
+  // @@protoc_insertion_point(field_release:BERTBuffers.GraphicsContext.col)
+  
+  ::BERTBuffers::Color* temp = col_;
+  col_ = NULL;
+  return temp;
+}
+inline ::BERTBuffers::Color* GraphicsContext::mutable_col() {
+  
+  if (col_ == NULL) {
+    col_ = new ::BERTBuffers::Color;
+  }
+  // @@protoc_insertion_point(field_mutable:BERTBuffers.GraphicsContext.col)
+  return col_;
+}
+inline void GraphicsContext::set_allocated_col(::BERTBuffers::Color* col) {
+  ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
+  if (message_arena == NULL) {
+    delete col_;
+  }
+  if (col) {
+    ::google::protobuf::Arena* submessage_arena = NULL;
+    if (message_arena != submessage_arena) {
+      col = ::google::protobuf::internal::GetOwnedMessage(
+          message_arena, col, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  col_ = col;
+  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.GraphicsContext.col)
+}
+
+// .BERTBuffers.Color fill = 2;
+inline bool GraphicsContext::has_fill() const {
+  return this != internal_default_instance() && fill_ != NULL;
+}
+inline void GraphicsContext::clear_fill() {
+  if (GetArenaNoVirtual() == NULL && fill_ != NULL) {
+    delete fill_;
+  }
+  fill_ = NULL;
+}
+inline const ::BERTBuffers::Color& GraphicsContext::fill() const {
+  const ::BERTBuffers::Color* p = fill_;
+  // @@protoc_insertion_point(field_get:BERTBuffers.GraphicsContext.fill)
+  return p != NULL ? *p : *reinterpret_cast<const ::BERTBuffers::Color*>(
+      &::BERTBuffers::_Color_default_instance_);
+}
+inline ::BERTBuffers::Color* GraphicsContext::release_fill() {
+  // @@protoc_insertion_point(field_release:BERTBuffers.GraphicsContext.fill)
+  
+  ::BERTBuffers::Color* temp = fill_;
+  fill_ = NULL;
+  return temp;
+}
+inline ::BERTBuffers::Color* GraphicsContext::mutable_fill() {
+  
+  if (fill_ == NULL) {
+    fill_ = new ::BERTBuffers::Color;
+  }
+  // @@protoc_insertion_point(field_mutable:BERTBuffers.GraphicsContext.fill)
+  return fill_;
+}
+inline void GraphicsContext::set_allocated_fill(::BERTBuffers::Color* fill) {
+  ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
+  if (message_arena == NULL) {
+    delete fill_;
+  }
+  if (fill) {
+    ::google::protobuf::Arena* submessage_arena = NULL;
+    if (message_arena != submessage_arena) {
+      fill = ::google::protobuf::internal::GetOwnedMessage(
+          message_arena, fill, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  fill_ = fill;
+  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.GraphicsContext.fill)
+}
+
+// double gamma = 3;
+inline void GraphicsContext::clear_gamma() {
+  gamma_ = 0;
+}
+inline double GraphicsContext::gamma() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.GraphicsContext.gamma)
+  return gamma_;
+}
+inline void GraphicsContext::set_gamma(double value) {
+  
+  gamma_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.GraphicsContext.gamma)
+}
+
+// double lwd = 4;
+inline void GraphicsContext::clear_lwd() {
+  lwd_ = 0;
+}
+inline double GraphicsContext::lwd() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.GraphicsContext.lwd)
+  return lwd_;
+}
+inline void GraphicsContext::set_lwd(double value) {
+  
+  lwd_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.GraphicsContext.lwd)
+}
+
+// int32 lty = 5;
+inline void GraphicsContext::clear_lty() {
+  lty_ = 0;
+}
+inline ::google::protobuf::int32 GraphicsContext::lty() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.GraphicsContext.lty)
+  return lty_;
+}
+inline void GraphicsContext::set_lty(::google::protobuf::int32 value) {
+  
+  lty_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.GraphicsContext.lty)
+}
+
+// int32 lend = 6;
+inline void GraphicsContext::clear_lend() {
+  lend_ = 0;
+}
+inline ::google::protobuf::int32 GraphicsContext::lend() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.GraphicsContext.lend)
+  return lend_;
+}
+inline void GraphicsContext::set_lend(::google::protobuf::int32 value) {
+  
+  lend_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.GraphicsContext.lend)
+}
+
+// int32 ljoin = 7;
+inline void GraphicsContext::clear_ljoin() {
+  ljoin_ = 0;
+}
+inline ::google::protobuf::int32 GraphicsContext::ljoin() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.GraphicsContext.ljoin)
+  return ljoin_;
+}
+inline void GraphicsContext::set_ljoin(::google::protobuf::int32 value) {
+  
+  ljoin_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.GraphicsContext.ljoin)
+}
+
+// double lmitre = 8;
+inline void GraphicsContext::clear_lmitre() {
+  lmitre_ = 0;
+}
+inline double GraphicsContext::lmitre() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.GraphicsContext.lmitre)
+  return lmitre_;
+}
+inline void GraphicsContext::set_lmitre(double value) {
+  
+  lmitre_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.GraphicsContext.lmitre)
+}
+
+// double cex = 9;
+inline void GraphicsContext::clear_cex() {
+  cex_ = 0;
+}
+inline double GraphicsContext::cex() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.GraphicsContext.cex)
+  return cex_;
+}
+inline void GraphicsContext::set_cex(double value) {
+  
+  cex_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.GraphicsContext.cex)
+}
+
+// double ps = 10;
+inline void GraphicsContext::clear_ps() {
+  ps_ = 0;
+}
+inline double GraphicsContext::ps() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.GraphicsContext.ps)
+  return ps_;
+}
+inline void GraphicsContext::set_ps(double value) {
+  
+  ps_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.GraphicsContext.ps)
+}
+
+// double lineheight = 11;
+inline void GraphicsContext::clear_lineheight() {
+  lineheight_ = 0;
+}
+inline double GraphicsContext::lineheight() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.GraphicsContext.lineheight)
+  return lineheight_;
+}
+inline void GraphicsContext::set_lineheight(double value) {
+  
+  lineheight_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.GraphicsContext.lineheight)
+}
+
+// int32 fontface = 12;
+inline void GraphicsContext::clear_fontface() {
+  fontface_ = 0;
+}
+inline ::google::protobuf::int32 GraphicsContext::fontface() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.GraphicsContext.fontface)
+  return fontface_;
+}
+inline void GraphicsContext::set_fontface(::google::protobuf::int32 value) {
+  
+  fontface_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.GraphicsContext.fontface)
+}
+
+// string fontfamily = 13;
+inline void GraphicsContext::clear_fontfamily() {
+  fontfamily_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& GraphicsContext::fontfamily() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.GraphicsContext.fontfamily)
+  return fontfamily_.GetNoArena();
+}
+inline void GraphicsContext::set_fontfamily(const ::std::string& value) {
+  
+  fontfamily_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:BERTBuffers.GraphicsContext.fontfamily)
+}
+#if LANG_CXX11
+inline void GraphicsContext::set_fontfamily(::std::string&& value) {
+  
+  fontfamily_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:BERTBuffers.GraphicsContext.fontfamily)
+}
+#endif
+inline void GraphicsContext::set_fontfamily(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  fontfamily_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:BERTBuffers.GraphicsContext.fontfamily)
+}
+inline void GraphicsContext::set_fontfamily(const char* value, size_t size) {
+  
+  fontfamily_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:BERTBuffers.GraphicsContext.fontfamily)
+}
+inline ::std::string* GraphicsContext::mutable_fontfamily() {
+  
+  // @@protoc_insertion_point(field_mutable:BERTBuffers.GraphicsContext.fontfamily)
+  return fontfamily_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* GraphicsContext::release_fontfamily() {
+  // @@protoc_insertion_point(field_release:BERTBuffers.GraphicsContext.fontfamily)
+  
+  return fontfamily_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void GraphicsContext::set_allocated_fontfamily(::std::string* fontfamily) {
+  if (fontfamily != NULL) {
+    
+  } else {
+    
+  }
+  fontfamily_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), fontfamily);
+  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.GraphicsContext.fontfamily)
+}
+
+// -------------------------------------------------------------------
+
 // Console
 
 // string text = 1;
@@ -3767,6 +5024,46 @@ inline void Console::set_allocated_prompt(::std::string* prompt) {
         prompt);
   }
   // @@protoc_insertion_point(field_set_allocated:BERTBuffers.Console.prompt)
+}
+
+// .BERTBuffers.GraphicsCommand graphics = 4;
+inline bool Console::has_graphics() const {
+  return message_case() == kGraphics;
+}
+inline void Console::set_has_graphics() {
+  _oneof_case_[0] = kGraphics;
+}
+inline void Console::clear_graphics() {
+  if (has_graphics()) {
+    delete message_.graphics_;
+    clear_has_message();
+  }
+}
+inline ::BERTBuffers::GraphicsCommand* Console::release_graphics() {
+  // @@protoc_insertion_point(field_release:BERTBuffers.Console.graphics)
+  if (has_graphics()) {
+    clear_has_message();
+      ::BERTBuffers::GraphicsCommand* temp = message_.graphics_;
+    message_.graphics_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline const ::BERTBuffers::GraphicsCommand& Console::graphics() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.Console.graphics)
+  return has_graphics()
+      ? *message_.graphics_
+      : *reinterpret_cast< ::BERTBuffers::GraphicsCommand*>(&::BERTBuffers::_GraphicsCommand_default_instance_);
+}
+inline ::BERTBuffers::GraphicsCommand* Console::mutable_graphics() {
+  if (!has_graphics()) {
+    clear_message();
+    set_has_graphics();
+    message_.graphics_ = new ::BERTBuffers::GraphicsCommand;
+  }
+  // @@protoc_insertion_point(field_mutable:BERTBuffers.Console.graphics)
+  return message_.graphics_;
 }
 
 inline bool Console::has_message() const {
@@ -4860,6 +6157,12 @@ inline CallResponse::OperationCase CallResponse::operation_case() const {
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

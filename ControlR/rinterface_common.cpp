@@ -27,6 +27,8 @@
 #include "controlr_common.h"
 #include "util.hpp"
 
+#include "console_graphics_device.h"
+
 extern unsigned long long GetTimeMs64();
 
 // std::vector< std::string > cmdBuffer;
@@ -750,6 +752,11 @@ SEXP ExternalCallback(int command_id, void* a, void* b) {
 
   static uint32_t callback_id = 1;
   SEXP sexp_result = R_NilValue;
+
+  if (command_id == 8103) {
+    InitConsoleGraphicsDevice("bert-console-device", a);
+    return Rf_ScalarLogical(1);
+  }
 
   // it looks like we pass SEXPs as these arguments. not sure for 
   // the rationale having them as void*, although it should be fine

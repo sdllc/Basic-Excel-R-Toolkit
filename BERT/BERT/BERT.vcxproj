@@ -169,7 +169,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>src/BERT.def</ModuleDefinitionFile>
       <AdditionalDependencies>libprotobufd.lib;Ws2_32.lib;psapi.lib;Userenv.lib;Iphlpapi.lib;Kernel32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(TargetName)$(TargetExt)</OutputFile>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <AdditionalLibraryDirectories>E:\BERT2\protobuf-3.5.0\cmake\build\solution\DebugDLL;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>

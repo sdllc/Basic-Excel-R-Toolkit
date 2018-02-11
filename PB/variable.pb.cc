@@ -66,6 +66,21 @@ class CompositeFunctionCallDefaultTypeInternal {
   ::google::protobuf::internal::ExplicitlyConstructed<CompositeFunctionCall>
       _instance;
 } _CompositeFunctionCall_default_instance_;
+class GraphicsCommandDefaultTypeInternal {
+ public:
+  ::google::protobuf::internal::ExplicitlyConstructed<GraphicsCommand>
+      _instance;
+} _GraphicsCommand_default_instance_;
+class ColorDefaultTypeInternal {
+ public:
+  ::google::protobuf::internal::ExplicitlyConstructed<Color>
+      _instance;
+} _Color_default_instance_;
+class GraphicsContextDefaultTypeInternal {
+ public:
+  ::google::protobuf::internal::ExplicitlyConstructed<GraphicsContext>
+      _instance;
+} _GraphicsContext_default_instance_;
 class ConsoleDefaultTypeInternal {
  public:
   ::google::protobuf::internal::ExplicitlyConstructed<Console>
@@ -73,6 +88,7 @@ class ConsoleDefaultTypeInternal {
   ::google::protobuf::internal::ArenaStringPtr text_;
   ::google::protobuf::internal::ArenaStringPtr err_;
   ::google::protobuf::internal::ArenaStringPtr prompt_;
+  const ::BERTBuffers::GraphicsCommand* graphics_;
 } _Console_default_instance_;
 class FunctionElementDefaultTypeInternal {
  public:
@@ -273,6 +289,71 @@ void InitDefaultsCompositeFunctionCall() {
   ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsCompositeFunctionCallImpl);
 }
 
+void InitDefaultsGraphicsCommandImpl() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+#ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
+  ::google::protobuf::internal::InitProtobufDefaultsForceUnique();
+#else
+  ::google::protobuf::internal::InitProtobufDefaults();
+#endif  // GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
+  protobuf_variable_2eproto::InitDefaultsGraphicsContext();
+  {
+    void* ptr = &::BERTBuffers::_GraphicsCommand_default_instance_;
+    new (ptr) ::BERTBuffers::GraphicsCommand();
+    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::BERTBuffers::GraphicsCommand::InitAsDefaultInstance();
+}
+
+void InitDefaultsGraphicsCommand() {
+  static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
+  ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsGraphicsCommandImpl);
+}
+
+void InitDefaultsColorImpl() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+#ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
+  ::google::protobuf::internal::InitProtobufDefaultsForceUnique();
+#else
+  ::google::protobuf::internal::InitProtobufDefaults();
+#endif  // GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
+  {
+    void* ptr = &::BERTBuffers::_Color_default_instance_;
+    new (ptr) ::BERTBuffers::Color();
+    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::BERTBuffers::Color::InitAsDefaultInstance();
+}
+
+void InitDefaultsColor() {
+  static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
+  ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsColorImpl);
+}
+
+void InitDefaultsGraphicsContextImpl() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+#ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
+  ::google::protobuf::internal::InitProtobufDefaultsForceUnique();
+#else
+  ::google::protobuf::internal::InitProtobufDefaults();
+#endif  // GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
+  protobuf_variable_2eproto::InitDefaultsColor();
+  {
+    void* ptr = &::BERTBuffers::_GraphicsContext_default_instance_;
+    new (ptr) ::BERTBuffers::GraphicsContext();
+    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::BERTBuffers::GraphicsContext::InitAsDefaultInstance();
+}
+
+void InitDefaultsGraphicsContext() {
+  static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
+  ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsGraphicsContextImpl);
+}
+
 void InitDefaultsConsoleImpl() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
@@ -281,6 +362,7 @@ void InitDefaultsConsoleImpl() {
 #else
   ::google::protobuf::internal::InitProtobufDefaults();
 #endif  // GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
+  protobuf_variable_2eproto::InitDefaultsGraphicsCommand();
   {
     void* ptr = &::BERTBuffers::_Console_default_instance_;
     new (ptr) ::BERTBuffers::Console();
@@ -385,7 +467,7 @@ void InitDefaultsCallResponse() {
   ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsCallResponseImpl);
 }
 
-::google::protobuf::Metadata file_level_metadata[15];
+::google::protobuf::Metadata file_level_metadata[18];
 const ::google::protobuf::EnumDescriptor* file_level_enum_descriptors[3];
 
 const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
@@ -459,6 +541,49 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::CompositeFunctionCall, type_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::CompositeFunctionCall, target_),
   ~0u,  // no _has_bits_
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsCommand, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsCommand, command_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsCommand, x_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsCommand, y_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsCommand, r_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsCommand, rot_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsCommand, text_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsCommand, filled_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsCommand, hadj_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsCommand, raster_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsCommand, interpolate_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsCommand, context_),
+  ~0u,  // no _has_bits_
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::Color, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::Color, a_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::Color, r_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::Color, g_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::Color, b_),
+  ~0u,  // no _has_bits_
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsContext, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsContext, col_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsContext, fill_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsContext, gamma_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsContext, lwd_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsContext, lty_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsContext, lend_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsContext, ljoin_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsContext, lmitre_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsContext, cex_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsContext, ps_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsContext, lineheight_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsContext, fontface_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsContext, fontfamily_),
+  ~0u,  // no _has_bits_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::Console, _internal_metadata_),
   ~0u,  // no _extensions_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::Console, _oneof_case_[0]),
@@ -466,6 +591,7 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   offsetof(::BERTBuffers::ConsoleDefaultTypeInternal, text_),
   offsetof(::BERTBuffers::ConsoleDefaultTypeInternal, err_),
   offsetof(::BERTBuffers::ConsoleDefaultTypeInternal, prompt_),
+  offsetof(::BERTBuffers::ConsoleDefaultTypeInternal, graphics_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::Console, message_),
   ~0u,  // no _has_bits_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::FunctionElement, _internal_metadata_),
@@ -538,14 +664,17 @@ static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROT
   { 34, -1, sizeof(::BERTBuffers::Variable)},
   { 52, -1, sizeof(::BERTBuffers::Code)},
   { 58, -1, sizeof(::BERTBuffers::CompositeFunctionCall)},
-  { 69, -1, sizeof(::BERTBuffers::Console)},
-  { 78, -1, sizeof(::BERTBuffers::FunctionElement)},
-  { 88, -1, sizeof(::BERTBuffers::FunctionDescriptor)},
-  { 96, -1, sizeof(::BERTBuffers::FunctionList)},
-  { 102, -1, sizeof(::BERTBuffers::EnumValue)},
-  { 109, -1, sizeof(::BERTBuffers::EnumType)},
-  { 116, -1, sizeof(::BERTBuffers::ExternalPointer)},
-  { 125, -1, sizeof(::BERTBuffers::CallResponse)},
+  { 69, -1, sizeof(::BERTBuffers::GraphicsCommand)},
+  { 85, -1, sizeof(::BERTBuffers::Color)},
+  { 94, -1, sizeof(::BERTBuffers::GraphicsContext)},
+  { 112, -1, sizeof(::BERTBuffers::Console)},
+  { 122, -1, sizeof(::BERTBuffers::FunctionElement)},
+  { 132, -1, sizeof(::BERTBuffers::FunctionDescriptor)},
+  { 140, -1, sizeof(::BERTBuffers::FunctionList)},
+  { 146, -1, sizeof(::BERTBuffers::EnumValue)},
+  { 153, -1, sizeof(::BERTBuffers::EnumType)},
+  { 160, -1, sizeof(::BERTBuffers::ExternalPointer)},
+  { 169, -1, sizeof(::BERTBuffers::CallResponse)},
 };
 
 static ::google::protobuf::Message const * const file_default_instances[] = {
@@ -556,6 +685,9 @@ static ::google::protobuf::Message const * const file_default_instances[] = {
   reinterpret_cast<const ::google::protobuf::Message*>(&::BERTBuffers::_Variable_default_instance_),
   reinterpret_cast<const ::google::protobuf::Message*>(&::BERTBuffers::_Code_default_instance_),
   reinterpret_cast<const ::google::protobuf::Message*>(&::BERTBuffers::_CompositeFunctionCall_default_instance_),
+  reinterpret_cast<const ::google::protobuf::Message*>(&::BERTBuffers::_GraphicsCommand_default_instance_),
+  reinterpret_cast<const ::google::protobuf::Message*>(&::BERTBuffers::_Color_default_instance_),
+  reinterpret_cast<const ::google::protobuf::Message*>(&::BERTBuffers::_GraphicsContext_default_instance_),
   reinterpret_cast<const ::google::protobuf::Message*>(&::BERTBuffers::_Console_default_instance_),
   reinterpret_cast<const ::google::protobuf::Message*>(&::BERTBuffers::_FunctionElement_default_instance_),
   reinterpret_cast<const ::google::protobuf::Message*>(&::BERTBuffers::_FunctionDescriptor_default_instance_),
@@ -582,7 +714,7 @@ void protobuf_AssignDescriptorsOnce() {
 void protobuf_RegisterTypes(const ::std::string&) GOOGLE_PROTOBUF_ATTRIBUTE_COLD;
 void protobuf_RegisterTypes(const ::std::string&) {
   protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::internal::RegisterAllTypes(file_level_metadata, 15);
+  ::google::protobuf::internal::RegisterAllTypes(file_level_metadata, 18);
 }
 
 void AddDescriptorsImpl() {
@@ -599,51 +731,66 @@ void AddDescriptorsImpl() {
       "column\030\004 \001(\r\022\020\n\010sheet_id\030\005 \001(\004\"\324\002\n\010Varia"
       "ble\022\r\n\003nil\030\001 \001(\010H\000\022\021\n\007missing\030\002 \001(\010H\000\022!\n"
       "\003err\030\003 \001(\0132\022.BERTBuffers.ErrorH\000\022\021\n\007inte"
-      "ger\030\004 \001(\005H\000\022\016\n\004real\030\005 \001(\001H\000\022\r\n\003str\030\006 \001(\t"
-      "H\000\022\021\n\007boolean\030\007 \001(\010H\000\022#\n\003cpx\030\010 \001(\0132\024.BER"
-      "TBuffers.ComplexH\000\022!\n\003arr\030\t \001(\0132\022.BERTBu"
-      "ffers.ArrayH\000\022*\n\003ref\030\n \001(\0132\033.BERTBuffers"
-      ".SheetReferenceH\000\0223\n\013com_pointer\030\013 \001(\0132\034"
+      "ger\030\005 \001(\005H\000\022\016\n\004real\030\006 \001(\001H\000\022\r\n\003str\030\007 \001(\t"
+      "H\000\022\021\n\007boolean\030\010 \001(\010H\000\022#\n\003cpx\030\t \001(\0132\024.BER"
+      "TBuffers.ComplexH\000\022!\n\003arr\030\n \001(\0132\022.BERTBu"
+      "ffers.ArrayH\000\022*\n\003ref\030\013 \001(\0132\033.BERTBuffers"
+      ".SheetReferenceH\000\0223\n\013com_pointer\030\014 \001(\0132\034"
       ".BERTBuffers.ExternalPointerH\000\022\014\n\004name\030\017"
       " \001(\tB\007\n\005value\"\024\n\004Code\022\014\n\004line\030\001 \003(\t\"\301\001\n\025"
       "CompositeFunctionCall\022\020\n\010function\030\001 \001(\t\022"
       "(\n\targuments\030\002 \003(\0132\025.BERTBuffers.Variabl"
       "e\022\017\n\007pointer\030\003 \001(\004\022\r\n\005index\030\004 \001(\r\022#\n\004typ"
       "e\030\005 \001(\0162\025.BERTBuffers.CallType\022\'\n\006target"
-      "\030\006 \001(\0162\027.BERTBuffers.CallTarget\"E\n\007Conso"
+      "\030\006 \001(\0162\027.BERTBuffers.CallTarget\"\320\001\n\017Grap"
+      "hicsCommand\022\017\n\007command\030\001 \001(\t\022\t\n\001x\030\002 \003(\001\022"
+      "\t\n\001y\030\003 \003(\001\022\t\n\001r\030\004 \001(\001\022\013\n\003rot\030\005 \001(\001\022\014\n\004te"
+      "xt\030\006 \001(\t\022\016\n\006filled\030\007 \001(\010\022\014\n\004hadj\030\010 \001(\001\022\016"
+      "\n\006raster\030\t \001(\014\022\023\n\013interpolate\030\n \001(\010\022-\n\007c"
+      "ontext\030\017 \001(\0132\034.BERTBuffers.GraphicsConte"
+      "xt\"3\n\005Color\022\t\n\001a\030\001 \001(\r\022\t\n\001r\030\002 \001(\r\022\t\n\001g\030\003"
+      " \001(\r\022\t\n\001b\030\004 \001(\r\"\375\001\n\017GraphicsContext\022\037\n\003c"
+      "ol\030\001 \001(\0132\022.BERTBuffers.Color\022 \n\004fill\030\002 \001"
+      "(\0132\022.BERTBuffers.Color\022\r\n\005gamma\030\003 \001(\001\022\013\n"
+      "\003lwd\030\004 \001(\001\022\013\n\003lty\030\005 \001(\005\022\014\n\004lend\030\006 \001(\005\022\r\n"
+      "\005ljoin\030\007 \001(\005\022\016\n\006lmitre\030\010 \001(\001\022\013\n\003cex\030\t \001("
+      "\001\022\n\n\002ps\030\n \001(\001\022\022\n\nlineheight\030\013 \001(\001\022\020\n\010fon"
+      "tface\030\014 \001(\005\022\022\n\nfontfamily\030\r \001(\t\"w\n\007Conso"
       "le\022\016\n\004text\030\001 \001(\tH\000\022\r\n\003err\030\002 \001(\tH\000\022\020\n\006pro"
-      "mpt\030\003 \001(\tH\000B\t\n\007message\"\204\001\n\017FunctionEleme"
-      "nt\022\014\n\004name\030\001 \001(\t\022\021\n\ttype_name\030\002 \001(\t\022,\n\rd"
-      "efault_value\030\003 \001(\0132\025.BERTBuffers.Variabl"
-      "e\022\023\n\013description\030\004 \001(\t\022\r\n\005index\030\005 \001(\r\"\237\001"
-      "\n\022FunctionDescriptor\022.\n\010function\030\001 \001(\0132\034"
-      ".BERTBuffers.FunctionElement\022(\n\tcall_typ"
-      "e\030\002 \001(\0162\025.BERTBuffers.CallType\022/\n\targume"
-      "nts\030\003 \003(\0132\034.BERTBuffers.FunctionElement\""
-      "B\n\014FunctionList\0222\n\tfunctions\030\001 \003(\0132\037.BER"
-      "TBuffers.FunctionDescriptor\"(\n\tEnumValue"
-      "\022\014\n\004name\030\001 \001(\t\022\r\n\005value\030\002 \001(\005\"@\n\010EnumTyp"
-      "e\022\014\n\004name\030\001 \001(\t\022&\n\006values\030\002 \003(\0132\026.BERTBu"
-      "ffers.EnumValue\"\224\001\n\017ExternalPointer\022\026\n\016i"
-      "nterface_name\030\001 \001(\t\022\017\n\007pointer\030\002 \001(\004\0222\n\t"
-      "functions\030\003 \003(\0132\037.BERTBuffers.FunctionDe"
-      "scriptor\022$\n\005enums\030\004 \003(\0132\025.BERTBuffers.En"
-      "umType\"\303\002\n\014CallResponse\022\n\n\002id\030\001 \001(\r\022\014\n\004w"
-      "ait\030\002 \001(\010\022\r\n\003err\030\003 \001(\tH\000\022\'\n\006result\030\004 \001(\013"
-      "2\025.BERTBuffers.VariableH\000\022\'\n\007console\030\005 \001"
-      "(\0132\024.BERTBuffers.ConsoleH\000\022!\n\004code\030\006 \001(\013"
-      "2\021.BERTBuffers.CodeH\000\022\027\n\rshell_command\030\007"
-      " \001(\tH\000\022;\n\rfunction_call\030\010 \001(\0132\".BERTBuff"
-      "ers.CompositeFunctionCallH\000\0222\n\rfunction_"
-      "list\030\t \001(\0132\031.BERTBuffers.FunctionListH\000B"
-      "\013\n\toperation*N\n\tErrorType\022\013\n\007GENERIC\020\000\022\006"
-      "\n\002NA\020\001\022\007\n\003INF\020\002\022\t\n\005PARSE\020\003\022\r\n\tEXECUTION\020"
-      "\004\022\t\n\005OTHER\020\017*(\n\010CallType\022\n\n\006method\020\000\022\007\n\003"
-      "get\020\001\022\007\n\003put\020\002*/\n\nCallTarget\022\014\n\010language"
-      "\020\000\022\007\n\003COM\020\001\022\n\n\006system\020\002B\002H\001b\006proto3"
+      "mpt\030\003 \001(\tH\000\0220\n\010graphics\030\004 \001(\0132\034.BERTBuff"
+      "ers.GraphicsCommandH\000B\t\n\007message\"\204\001\n\017Fun"
+      "ctionElement\022\014\n\004name\030\001 \001(\t\022\021\n\ttype_name\030"
+      "\002 \001(\t\022,\n\rdefault_value\030\003 \001(\0132\025.BERTBuffe"
+      "rs.Variable\022\023\n\013description\030\004 \001(\t\022\r\n\005inde"
+      "x\030\005 \001(\r\"\237\001\n\022FunctionDescriptor\022.\n\010functi"
+      "on\030\001 \001(\0132\034.BERTBuffers.FunctionElement\022("
+      "\n\tcall_type\030\002 \001(\0162\025.BERTBuffers.CallType"
+      "\022/\n\targuments\030\003 \003(\0132\034.BERTBuffers.Functi"
+      "onElement\"B\n\014FunctionList\0222\n\tfunctions\030\001"
+      " \003(\0132\037.BERTBuffers.FunctionDescriptor\"(\n"
+      "\tEnumValue\022\014\n\004name\030\001 \001(\t\022\r\n\005value\030\002 \001(\005\""
+      "@\n\010EnumType\022\014\n\004name\030\001 \001(\t\022&\n\006values\030\002 \003("
+      "\0132\026.BERTBuffers.EnumValue\"\224\001\n\017ExternalPo"
+      "inter\022\026\n\016interface_name\030\001 \001(\t\022\017\n\007pointer"
+      "\030\002 \001(\004\0222\n\tfunctions\030\003 \003(\0132\037.BERTBuffers."
+      "FunctionDescriptor\022$\n\005enums\030\004 \003(\0132\025.BERT"
+      "Buffers.EnumType\"\303\002\n\014CallResponse\022\n\n\002id\030"
+      "\001 \001(\r\022\014\n\004wait\030\002 \001(\010\022\r\n\003err\030\003 \001(\tH\000\022\'\n\006re"
+      "sult\030\004 \001(\0132\025.BERTBuffers.VariableH\000\022\'\n\007c"
+      "onsole\030\005 \001(\0132\024.BERTBuffers.ConsoleH\000\022!\n\004"
+      "code\030\006 \001(\0132\021.BERTBuffers.CodeH\000\022\027\n\rshell"
+      "_command\030\007 \001(\tH\000\022;\n\rfunction_call\030\010 \001(\0132"
+      "\".BERTBuffers.CompositeFunctionCallH\000\0222\n"
+      "\rfunction_list\030\t \001(\0132\031.BERTBuffers.Funct"
+      "ionListH\000B\013\n\toperation*N\n\tErrorType\022\013\n\007G"
+      "ENERIC\020\000\022\006\n\002NA\020\001\022\007\n\003INF\020\002\022\t\n\005PARSE\020\003\022\r\n\t"
+      "EXECUTION\020\004\022\t\n\005OTHER\020\017*(\n\010CallType\022\n\n\006me"
+      "thod\020\000\022\007\n\003get\020\001\022\007\n\003put\020\002*/\n\nCallTarget\022\014"
+      "\n\010language\020\000\022\007\n\003COM\020\001\022\n\n\006system\020\002B\002H\001b\006p"
+      "roto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 2115);
+      descriptor, 2685);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "variable.proto", &protobuf_RegisterTypes);
 }
@@ -2427,10 +2574,10 @@ bool Variable::MergePartialFromCodedStream(
         break;
       }
 
-      // int32 integer = 4;
-      case 4: {
+      // int32 integer = 5;
+      case 5: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(32u /* 32 & 0xFF */)) {
+            static_cast< ::google::protobuf::uint8>(40u /* 40 & 0xFF */)) {
           clear_value();
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
@@ -2442,10 +2589,10 @@ bool Variable::MergePartialFromCodedStream(
         break;
       }
 
-      // double real = 5;
-      case 5: {
+      // double real = 6;
+      case 6: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(41u /* 41 & 0xFF */)) {
+            static_cast< ::google::protobuf::uint8>(49u /* 49 & 0xFF */)) {
           clear_value();
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
@@ -2457,10 +2604,10 @@ bool Variable::MergePartialFromCodedStream(
         break;
       }
 
-      // string str = 6;
-      case 6: {
+      // string str = 7;
+      case 7: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(50u /* 50 & 0xFF */)) {
+            static_cast< ::google::protobuf::uint8>(58u /* 58 & 0xFF */)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->mutable_str()));
           DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
@@ -2473,10 +2620,10 @@ bool Variable::MergePartialFromCodedStream(
         break;
       }
 
-      // bool boolean = 7;
-      case 7: {
+      // bool boolean = 8;
+      case 8: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(56u /* 56 & 0xFF */)) {
+            static_cast< ::google::protobuf::uint8>(64u /* 64 & 0xFF */)) {
           clear_value();
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
@@ -2488,10 +2635,10 @@ bool Variable::MergePartialFromCodedStream(
         break;
       }
 
-      // .BERTBuffers.Complex cpx = 8;
-      case 8: {
+      // .BERTBuffers.Complex cpx = 9;
+      case 9: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(66u /* 66 & 0xFF */)) {
+            static_cast< ::google::protobuf::uint8>(74u /* 74 & 0xFF */)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
                input, mutable_cpx()));
         } else {
@@ -2500,10 +2647,10 @@ bool Variable::MergePartialFromCodedStream(
         break;
       }
 
-      // .BERTBuffers.Array arr = 9;
-      case 9: {
+      // .BERTBuffers.Array arr = 10;
+      case 10: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(74u /* 74 & 0xFF */)) {
+            static_cast< ::google::protobuf::uint8>(82u /* 82 & 0xFF */)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
                input, mutable_arr()));
         } else {
@@ -2512,10 +2659,10 @@ bool Variable::MergePartialFromCodedStream(
         break;
       }
 
-      // .BERTBuffers.SheetReference ref = 10;
-      case 10: {
+      // .BERTBuffers.SheetReference ref = 11;
+      case 11: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(82u /* 82 & 0xFF */)) {
+            static_cast< ::google::protobuf::uint8>(90u /* 90 & 0xFF */)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
                input, mutable_ref()));
         } else {
@@ -2524,10 +2671,10 @@ bool Variable::MergePartialFromCodedStream(
         break;
       }
 
-      // .BERTBuffers.ExternalPointer com_pointer = 11;
-      case 11: {
+      // .BERTBuffers.ExternalPointer com_pointer = 12;
+      case 12: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(90u /* 90 & 0xFF */)) {
+            static_cast< ::google::protobuf::uint8>(98u /* 98 & 0xFF */)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
                input, mutable_com_pointer()));
         } else {
@@ -2594,53 +2741,53 @@ void Variable::SerializeWithCachedSizes(
       3, *value_.err_, output);
   }
 
-  // int32 integer = 4;
+  // int32 integer = 5;
   if (has_integer()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(4, this->integer(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(5, this->integer(), output);
   }
 
-  // double real = 5;
+  // double real = 6;
   if (has_real()) {
-    ::google::protobuf::internal::WireFormatLite::WriteDouble(5, this->real(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteDouble(6, this->real(), output);
   }
 
-  // string str = 6;
+  // string str = 7;
   if (has_str()) {
     ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
       this->str().data(), static_cast<int>(this->str().length()),
       ::google::protobuf::internal::WireFormatLite::SERIALIZE,
       "BERTBuffers.Variable.str");
     ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      6, this->str(), output);
+      7, this->str(), output);
   }
 
-  // bool boolean = 7;
+  // bool boolean = 8;
   if (has_boolean()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(7, this->boolean(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteBool(8, this->boolean(), output);
   }
 
-  // .BERTBuffers.Complex cpx = 8;
+  // .BERTBuffers.Complex cpx = 9;
   if (has_cpx()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      8, *value_.cpx_, output);
+      9, *value_.cpx_, output);
   }
 
-  // .BERTBuffers.Array arr = 9;
+  // .BERTBuffers.Array arr = 10;
   if (has_arr()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      9, *value_.arr_, output);
+      10, *value_.arr_, output);
   }
 
-  // .BERTBuffers.SheetReference ref = 10;
+  // .BERTBuffers.SheetReference ref = 11;
   if (has_ref()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      10, *value_.ref_, output);
+      11, *value_.ref_, output);
   }
 
-  // .BERTBuffers.ExternalPointer com_pointer = 11;
+  // .BERTBuffers.ExternalPointer com_pointer = 12;
   if (has_com_pointer()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      11, *value_.com_pointer_, output);
+      12, *value_.com_pointer_, output);
   }
 
   // string name = 15;
@@ -2684,17 +2831,17 @@ void Variable::SerializeWithCachedSizes(
         3, *value_.err_, deterministic, target);
   }
 
-  // int32 integer = 4;
+  // int32 integer = 5;
   if (has_integer()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(4, this->integer(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(5, this->integer(), target);
   }
 
-  // double real = 5;
+  // double real = 6;
   if (has_real()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteDoubleToArray(5, this->real(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteDoubleToArray(6, this->real(), target);
   }
 
-  // string str = 6;
+  // string str = 7;
   if (has_str()) {
     ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
       this->str().data(), static_cast<int>(this->str().length()),
@@ -2702,40 +2849,40 @@ void Variable::SerializeWithCachedSizes(
       "BERTBuffers.Variable.str");
     target =
       ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        6, this->str(), target);
+        7, this->str(), target);
   }
 
-  // bool boolean = 7;
+  // bool boolean = 8;
   if (has_boolean()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(7, this->boolean(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(8, this->boolean(), target);
   }
 
-  // .BERTBuffers.Complex cpx = 8;
+  // .BERTBuffers.Complex cpx = 9;
   if (has_cpx()) {
     target = ::google::protobuf::internal::WireFormatLite::
       InternalWriteMessageToArray(
-        8, *value_.cpx_, deterministic, target);
+        9, *value_.cpx_, deterministic, target);
   }
 
-  // .BERTBuffers.Array arr = 9;
+  // .BERTBuffers.Array arr = 10;
   if (has_arr()) {
     target = ::google::protobuf::internal::WireFormatLite::
       InternalWriteMessageToArray(
-        9, *value_.arr_, deterministic, target);
+        10, *value_.arr_, deterministic, target);
   }
 
-  // .BERTBuffers.SheetReference ref = 10;
+  // .BERTBuffers.SheetReference ref = 11;
   if (has_ref()) {
     target = ::google::protobuf::internal::WireFormatLite::
       InternalWriteMessageToArray(
-        10, *value_.ref_, deterministic, target);
+        11, *value_.ref_, deterministic, target);
   }
 
-  // .BERTBuffers.ExternalPointer com_pointer = 11;
+  // .BERTBuffers.ExternalPointer com_pointer = 12;
   if (has_com_pointer()) {
     target = ::google::protobuf::internal::WireFormatLite::
       InternalWriteMessageToArray(
-        11, *value_.com_pointer_, deterministic, target);
+        12, *value_.com_pointer_, deterministic, target);
   }
 
   // string name = 15;
@@ -2791,52 +2938,52 @@ size_t Variable::ByteSizeLong() const {
           *value_.err_);
       break;
     }
-    // int32 integer = 4;
+    // int32 integer = 5;
     case kInteger: {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::Int32Size(
           this->integer());
       break;
     }
-    // double real = 5;
+    // double real = 6;
     case kReal: {
       total_size += 1 + 8;
       break;
     }
-    // string str = 6;
+    // string str = 7;
     case kStr: {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::StringSize(
           this->str());
       break;
     }
-    // bool boolean = 7;
+    // bool boolean = 8;
     case kBoolean: {
       total_size += 1 + 1;
       break;
     }
-    // .BERTBuffers.Complex cpx = 8;
+    // .BERTBuffers.Complex cpx = 9;
     case kCpx: {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::MessageSize(
           *value_.cpx_);
       break;
     }
-    // .BERTBuffers.Array arr = 9;
+    // .BERTBuffers.Array arr = 10;
     case kArr: {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::MessageSize(
           *value_.arr_);
       break;
     }
-    // .BERTBuffers.SheetReference ref = 10;
+    // .BERTBuffers.SheetReference ref = 11;
     case kRef: {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::MessageSize(
           *value_.ref_);
       break;
     }
-    // .BERTBuffers.ExternalPointer com_pointer = 11;
+    // .BERTBuffers.ExternalPointer com_pointer = 12;
     case kComPointer: {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::MessageSize(
@@ -3674,6 +3821,1779 @@ void CompositeFunctionCall::InternalSwap(CompositeFunctionCall* other) {
 
 // ===================================================================
 
+void GraphicsCommand::InitAsDefaultInstance() {
+  ::BERTBuffers::_GraphicsCommand_default_instance_._instance.get_mutable()->context_ = const_cast< ::BERTBuffers::GraphicsContext*>(
+      ::BERTBuffers::GraphicsContext::internal_default_instance());
+}
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int GraphicsCommand::kCommandFieldNumber;
+const int GraphicsCommand::kXFieldNumber;
+const int GraphicsCommand::kYFieldNumber;
+const int GraphicsCommand::kRFieldNumber;
+const int GraphicsCommand::kRotFieldNumber;
+const int GraphicsCommand::kTextFieldNumber;
+const int GraphicsCommand::kFilledFieldNumber;
+const int GraphicsCommand::kHadjFieldNumber;
+const int GraphicsCommand::kRasterFieldNumber;
+const int GraphicsCommand::kInterpolateFieldNumber;
+const int GraphicsCommand::kContextFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+GraphicsCommand::GraphicsCommand()
+  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    ::protobuf_variable_2eproto::InitDefaultsGraphicsCommand();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:BERTBuffers.GraphicsCommand)
+}
+GraphicsCommand::GraphicsCommand(const GraphicsCommand& from)
+  : ::google::protobuf::Message(),
+      _internal_metadata_(NULL),
+      x_(from.x_),
+      y_(from.y_),
+      _cached_size_(0) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  command_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.command().size() > 0) {
+    command_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.command_);
+  }
+  text_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.text().size() > 0) {
+    text_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.text_);
+  }
+  raster_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.raster().size() > 0) {
+    raster_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.raster_);
+  }
+  if (from.has_context()) {
+    context_ = new ::BERTBuffers::GraphicsContext(*from.context_);
+  } else {
+    context_ = NULL;
+  }
+  ::memcpy(&r_, &from.r_,
+    static_cast<size_t>(reinterpret_cast<char*>(&interpolate_) -
+    reinterpret_cast<char*>(&r_)) + sizeof(interpolate_));
+  // @@protoc_insertion_point(copy_constructor:BERTBuffers.GraphicsCommand)
+}
+
+void GraphicsCommand::SharedCtor() {
+  command_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  text_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  raster_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  ::memset(&context_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&interpolate_) -
+      reinterpret_cast<char*>(&context_)) + sizeof(interpolate_));
+  _cached_size_ = 0;
+}
+
+GraphicsCommand::~GraphicsCommand() {
+  // @@protoc_insertion_point(destructor:BERTBuffers.GraphicsCommand)
+  SharedDtor();
+}
+
+void GraphicsCommand::SharedDtor() {
+  command_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  text_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  raster_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (this != internal_default_instance()) delete context_;
+}
+
+void GraphicsCommand::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ::google::protobuf::Descriptor* GraphicsCommand::descriptor() {
+  ::protobuf_variable_2eproto::protobuf_AssignDescriptorsOnce();
+  return ::protobuf_variable_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
+}
+
+const GraphicsCommand& GraphicsCommand::default_instance() {
+  ::protobuf_variable_2eproto::InitDefaultsGraphicsCommand();
+  return *internal_default_instance();
+}
+
+GraphicsCommand* GraphicsCommand::New(::google::protobuf::Arena* arena) const {
+  GraphicsCommand* n = new GraphicsCommand;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void GraphicsCommand::Clear() {
+// @@protoc_insertion_point(message_clear_start:BERTBuffers.GraphicsCommand)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  x_.Clear();
+  y_.Clear();
+  command_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  text_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  raster_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (GetArenaNoVirtual() == NULL && context_ != NULL) {
+    delete context_;
+  }
+  context_ = NULL;
+  ::memset(&r_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&interpolate_) -
+      reinterpret_cast<char*>(&r_)) + sizeof(interpolate_));
+  _internal_metadata_.Clear();
+}
+
+bool GraphicsCommand::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  // @@protoc_insertion_point(parse_start:BERTBuffers.GraphicsCommand)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // string command = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_command()));
+          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+            this->command().data(), static_cast<int>(this->command().length()),
+            ::google::protobuf::internal::WireFormatLite::PARSE,
+            "BERTBuffers.GraphicsCommand.command"));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // repeated double x = 2;
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPackedPrimitive<
+                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
+                 input, this->mutable_x())));
+        } else if (
+            static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(17u /* 17 & 0xFF */)) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadRepeatedPrimitiveNoInline<
+                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
+                 1, 18u, input, this->mutable_x())));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // repeated double y = 3;
+      case 3: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(26u /* 26 & 0xFF */)) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPackedPrimitive<
+                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
+                 input, this->mutable_y())));
+        } else if (
+            static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(25u /* 25 & 0xFF */)) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadRepeatedPrimitiveNoInline<
+                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
+                 1, 26u, input, this->mutable_y())));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // double r = 4;
+      case 4: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(33u /* 33 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
+                 input, &r_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // double rot = 5;
+      case 5: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(41u /* 41 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
+                 input, &rot_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // string text = 6;
+      case 6: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(50u /* 50 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_text()));
+          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+            this->text().data(), static_cast<int>(this->text().length()),
+            ::google::protobuf::internal::WireFormatLite::PARSE,
+            "BERTBuffers.GraphicsCommand.text"));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // bool filled = 7;
+      case 7: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(56u /* 56 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &filled_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // double hadj = 8;
+      case 8: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(65u /* 65 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
+                 input, &hadj_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // bytes raster = 9;
+      case 9: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(74u /* 74 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+                input, this->mutable_raster()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // bool interpolate = 10;
+      case 10: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(80u /* 80 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &interpolate_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // .BERTBuffers.GraphicsContext context = 15;
+      case 15: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(122u /* 122 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
+               input, mutable_context()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormat::SkipField(
+              input, tag, _internal_metadata_.mutable_unknown_fields()));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:BERTBuffers.GraphicsCommand)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:BERTBuffers.GraphicsCommand)
+  return false;
+#undef DO_
+}
+
+void GraphicsCommand::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:BERTBuffers.GraphicsCommand)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // string command = 1;
+  if (this->command().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->command().data(), static_cast<int>(this->command().length()),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "BERTBuffers.GraphicsCommand.command");
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      1, this->command(), output);
+  }
+
+  // repeated double x = 2;
+  if (this->x_size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteTag(2, ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED, output);
+    output->WriteVarint32(static_cast< ::google::protobuf::uint32>(
+        _x_cached_byte_size_));
+    ::google::protobuf::internal::WireFormatLite::WriteDoubleArray(
+      this->x().data(), this->x_size(), output);
+  }
+
+  // repeated double y = 3;
+  if (this->y_size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteTag(3, ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED, output);
+    output->WriteVarint32(static_cast< ::google::protobuf::uint32>(
+        _y_cached_byte_size_));
+    ::google::protobuf::internal::WireFormatLite::WriteDoubleArray(
+      this->y().data(), this->y_size(), output);
+  }
+
+  // double r = 4;
+  if (this->r() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteDouble(4, this->r(), output);
+  }
+
+  // double rot = 5;
+  if (this->rot() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteDouble(5, this->rot(), output);
+  }
+
+  // string text = 6;
+  if (this->text().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->text().data(), static_cast<int>(this->text().length()),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "BERTBuffers.GraphicsCommand.text");
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      6, this->text(), output);
+  }
+
+  // bool filled = 7;
+  if (this->filled() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(7, this->filled(), output);
+  }
+
+  // double hadj = 8;
+  if (this->hadj() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteDouble(8, this->hadj(), output);
+  }
+
+  // bytes raster = 9;
+  if (this->raster().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteBytesMaybeAliased(
+      9, this->raster(), output);
+  }
+
+  // bool interpolate = 10;
+  if (this->interpolate() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(10, this->interpolate(), output);
+  }
+
+  // .BERTBuffers.GraphicsContext context = 15;
+  if (this->has_context()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+      15, *this->context_, output);
+  }
+
+  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
+    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
+        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
+  }
+  // @@protoc_insertion_point(serialize_end:BERTBuffers.GraphicsCommand)
+}
+
+::google::protobuf::uint8* GraphicsCommand::InternalSerializeWithCachedSizesToArray(
+    bool deterministic, ::google::protobuf::uint8* target) const {
+  (void)deterministic; // Unused
+  // @@protoc_insertion_point(serialize_to_array_start:BERTBuffers.GraphicsCommand)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // string command = 1;
+  if (this->command().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->command().data(), static_cast<int>(this->command().length()),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "BERTBuffers.GraphicsCommand.command");
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        1, this->command(), target);
+  }
+
+  // repeated double x = 2;
+  if (this->x_size() > 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteTagToArray(
+      2,
+      ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED,
+      target);
+    target = ::google::protobuf::io::CodedOutputStream::WriteVarint32ToArray(
+        static_cast< ::google::protobuf::int32>(
+            _x_cached_byte_size_), target);
+    target = ::google::protobuf::internal::WireFormatLite::
+      WriteDoubleNoTagToArray(this->x_, target);
+  }
+
+  // repeated double y = 3;
+  if (this->y_size() > 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteTagToArray(
+      3,
+      ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED,
+      target);
+    target = ::google::protobuf::io::CodedOutputStream::WriteVarint32ToArray(
+        static_cast< ::google::protobuf::int32>(
+            _y_cached_byte_size_), target);
+    target = ::google::protobuf::internal::WireFormatLite::
+      WriteDoubleNoTagToArray(this->y_, target);
+  }
+
+  // double r = 4;
+  if (this->r() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteDoubleToArray(4, this->r(), target);
+  }
+
+  // double rot = 5;
+  if (this->rot() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteDoubleToArray(5, this->rot(), target);
+  }
+
+  // string text = 6;
+  if (this->text().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->text().data(), static_cast<int>(this->text().length()),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "BERTBuffers.GraphicsCommand.text");
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        6, this->text(), target);
+  }
+
+  // bool filled = 7;
+  if (this->filled() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(7, this->filled(), target);
+  }
+
+  // double hadj = 8;
+  if (this->hadj() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteDoubleToArray(8, this->hadj(), target);
+  }
+
+  // bytes raster = 9;
+  if (this->raster().size() > 0) {
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
+        9, this->raster(), target);
+  }
+
+  // bool interpolate = 10;
+  if (this->interpolate() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(10, this->interpolate(), target);
+  }
+
+  // .BERTBuffers.GraphicsContext context = 15;
+  if (this->has_context()) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      InternalWriteMessageToArray(
+        15, *this->context_, deterministic, target);
+  }
+
+  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:BERTBuffers.GraphicsCommand)
+  return target;
+}
+
+size_t GraphicsCommand::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:BERTBuffers.GraphicsCommand)
+  size_t total_size = 0;
+
+  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
+    total_size +=
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
+  }
+  // repeated double x = 2;
+  {
+    unsigned int count = static_cast<unsigned int>(this->x_size());
+    size_t data_size = 8UL * count;
+    if (data_size > 0) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+            static_cast< ::google::protobuf::int32>(data_size));
+    }
+    int cached_size = ::google::protobuf::internal::ToCachedSize(data_size);
+    GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+    _x_cached_byte_size_ = cached_size;
+    GOOGLE_SAFE_CONCURRENT_WRITES_END();
+    total_size += data_size;
+  }
+
+  // repeated double y = 3;
+  {
+    unsigned int count = static_cast<unsigned int>(this->y_size());
+    size_t data_size = 8UL * count;
+    if (data_size > 0) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+            static_cast< ::google::protobuf::int32>(data_size));
+    }
+    int cached_size = ::google::protobuf::internal::ToCachedSize(data_size);
+    GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+    _y_cached_byte_size_ = cached_size;
+    GOOGLE_SAFE_CONCURRENT_WRITES_END();
+    total_size += data_size;
+  }
+
+  // string command = 1;
+  if (this->command().size() > 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::StringSize(
+        this->command());
+  }
+
+  // string text = 6;
+  if (this->text().size() > 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::StringSize(
+        this->text());
+  }
+
+  // bytes raster = 9;
+  if (this->raster().size() > 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::BytesSize(
+        this->raster());
+  }
+
+  // .BERTBuffers.GraphicsContext context = 15;
+  if (this->has_context()) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::MessageSize(
+        *this->context_);
+  }
+
+  // double r = 4;
+  if (this->r() != 0) {
+    total_size += 1 + 8;
+  }
+
+  // double rot = 5;
+  if (this->rot() != 0) {
+    total_size += 1 + 8;
+  }
+
+  // double hadj = 8;
+  if (this->hadj() != 0) {
+    total_size += 1 + 8;
+  }
+
+  // bool filled = 7;
+  if (this->filled() != 0) {
+    total_size += 1 + 1;
+  }
+
+  // bool interpolate = 10;
+  if (this->interpolate() != 0) {
+    total_size += 1 + 1;
+  }
+
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void GraphicsCommand::MergeFrom(const ::google::protobuf::Message& from) {
+// @@protoc_insertion_point(generalized_merge_from_start:BERTBuffers.GraphicsCommand)
+  GOOGLE_DCHECK_NE(&from, this);
+  const GraphicsCommand* source =
+      ::google::protobuf::internal::DynamicCastToGenerated<const GraphicsCommand>(
+          &from);
+  if (source == NULL) {
+  // @@protoc_insertion_point(generalized_merge_from_cast_fail:BERTBuffers.GraphicsCommand)
+    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+  } else {
+  // @@protoc_insertion_point(generalized_merge_from_cast_success:BERTBuffers.GraphicsCommand)
+    MergeFrom(*source);
+  }
+}
+
+void GraphicsCommand::MergeFrom(const GraphicsCommand& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:BERTBuffers.GraphicsCommand)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  x_.MergeFrom(from.x_);
+  y_.MergeFrom(from.y_);
+  if (from.command().size() > 0) {
+
+    command_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.command_);
+  }
+  if (from.text().size() > 0) {
+
+    text_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.text_);
+  }
+  if (from.raster().size() > 0) {
+
+    raster_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.raster_);
+  }
+  if (from.has_context()) {
+    mutable_context()->::BERTBuffers::GraphicsContext::MergeFrom(from.context());
+  }
+  if (from.r() != 0) {
+    set_r(from.r());
+  }
+  if (from.rot() != 0) {
+    set_rot(from.rot());
+  }
+  if (from.hadj() != 0) {
+    set_hadj(from.hadj());
+  }
+  if (from.filled() != 0) {
+    set_filled(from.filled());
+  }
+  if (from.interpolate() != 0) {
+    set_interpolate(from.interpolate());
+  }
+}
+
+void GraphicsCommand::CopyFrom(const ::google::protobuf::Message& from) {
+// @@protoc_insertion_point(generalized_copy_from_start:BERTBuffers.GraphicsCommand)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void GraphicsCommand::CopyFrom(const GraphicsCommand& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:BERTBuffers.GraphicsCommand)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool GraphicsCommand::IsInitialized() const {
+  return true;
+}
+
+void GraphicsCommand::Swap(GraphicsCommand* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void GraphicsCommand::InternalSwap(GraphicsCommand* other) {
+  using std::swap;
+  x_.InternalSwap(&other->x_);
+  y_.InternalSwap(&other->y_);
+  command_.Swap(&other->command_);
+  text_.Swap(&other->text_);
+  raster_.Swap(&other->raster_);
+  swap(context_, other->context_);
+  swap(r_, other->r_);
+  swap(rot_, other->rot_);
+  swap(hadj_, other->hadj_);
+  swap(filled_, other->filled_);
+  swap(interpolate_, other->interpolate_);
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  swap(_cached_size_, other->_cached_size_);
+}
+
+::google::protobuf::Metadata GraphicsCommand::GetMetadata() const {
+  protobuf_variable_2eproto::protobuf_AssignDescriptorsOnce();
+  return ::protobuf_variable_2eproto::file_level_metadata[kIndexInFileMessages];
+}
+
+
+// ===================================================================
+
+void Color::InitAsDefaultInstance() {
+}
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int Color::kAFieldNumber;
+const int Color::kRFieldNumber;
+const int Color::kGFieldNumber;
+const int Color::kBFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+Color::Color()
+  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    ::protobuf_variable_2eproto::InitDefaultsColor();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:BERTBuffers.Color)
+}
+Color::Color(const Color& from)
+  : ::google::protobuf::Message(),
+      _internal_metadata_(NULL),
+      _cached_size_(0) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::memcpy(&a_, &from.a_,
+    static_cast<size_t>(reinterpret_cast<char*>(&b_) -
+    reinterpret_cast<char*>(&a_)) + sizeof(b_));
+  // @@protoc_insertion_point(copy_constructor:BERTBuffers.Color)
+}
+
+void Color::SharedCtor() {
+  ::memset(&a_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&b_) -
+      reinterpret_cast<char*>(&a_)) + sizeof(b_));
+  _cached_size_ = 0;
+}
+
+Color::~Color() {
+  // @@protoc_insertion_point(destructor:BERTBuffers.Color)
+  SharedDtor();
+}
+
+void Color::SharedDtor() {
+}
+
+void Color::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ::google::protobuf::Descriptor* Color::descriptor() {
+  ::protobuf_variable_2eproto::protobuf_AssignDescriptorsOnce();
+  return ::protobuf_variable_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
+}
+
+const Color& Color::default_instance() {
+  ::protobuf_variable_2eproto::InitDefaultsColor();
+  return *internal_default_instance();
+}
+
+Color* Color::New(::google::protobuf::Arena* arena) const {
+  Color* n = new Color;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void Color::Clear() {
+// @@protoc_insertion_point(message_clear_start:BERTBuffers.Color)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  ::memset(&a_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&b_) -
+      reinterpret_cast<char*>(&a_)) + sizeof(b_));
+  _internal_metadata_.Clear();
+}
+
+bool Color::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  // @@protoc_insertion_point(parse_start:BERTBuffers.Color)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // uint32 a = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(8u /* 8 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
+                 input, &a_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // uint32 r = 2;
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
+                 input, &r_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // uint32 g = 3;
+      case 3: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(24u /* 24 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
+                 input, &g_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // uint32 b = 4;
+      case 4: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(32u /* 32 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
+                 input, &b_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormat::SkipField(
+              input, tag, _internal_metadata_.mutable_unknown_fields()));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:BERTBuffers.Color)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:BERTBuffers.Color)
+  return false;
+#undef DO_
+}
+
+void Color::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:BERTBuffers.Color)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // uint32 a = 1;
+  if (this->a() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt32(1, this->a(), output);
+  }
+
+  // uint32 r = 2;
+  if (this->r() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt32(2, this->r(), output);
+  }
+
+  // uint32 g = 3;
+  if (this->g() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt32(3, this->g(), output);
+  }
+
+  // uint32 b = 4;
+  if (this->b() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt32(4, this->b(), output);
+  }
+
+  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
+    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
+        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
+  }
+  // @@protoc_insertion_point(serialize_end:BERTBuffers.Color)
+}
+
+::google::protobuf::uint8* Color::InternalSerializeWithCachedSizesToArray(
+    bool deterministic, ::google::protobuf::uint8* target) const {
+  (void)deterministic; // Unused
+  // @@protoc_insertion_point(serialize_to_array_start:BERTBuffers.Color)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // uint32 a = 1;
+  if (this->a() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(1, this->a(), target);
+  }
+
+  // uint32 r = 2;
+  if (this->r() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(2, this->r(), target);
+  }
+
+  // uint32 g = 3;
+  if (this->g() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(3, this->g(), target);
+  }
+
+  // uint32 b = 4;
+  if (this->b() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(4, this->b(), target);
+  }
+
+  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:BERTBuffers.Color)
+  return target;
+}
+
+size_t Color::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:BERTBuffers.Color)
+  size_t total_size = 0;
+
+  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
+    total_size +=
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
+  }
+  // uint32 a = 1;
+  if (this->a() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::UInt32Size(
+        this->a());
+  }
+
+  // uint32 r = 2;
+  if (this->r() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::UInt32Size(
+        this->r());
+  }
+
+  // uint32 g = 3;
+  if (this->g() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::UInt32Size(
+        this->g());
+  }
+
+  // uint32 b = 4;
+  if (this->b() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::UInt32Size(
+        this->b());
+  }
+
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void Color::MergeFrom(const ::google::protobuf::Message& from) {
+// @@protoc_insertion_point(generalized_merge_from_start:BERTBuffers.Color)
+  GOOGLE_DCHECK_NE(&from, this);
+  const Color* source =
+      ::google::protobuf::internal::DynamicCastToGenerated<const Color>(
+          &from);
+  if (source == NULL) {
+  // @@protoc_insertion_point(generalized_merge_from_cast_fail:BERTBuffers.Color)
+    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+  } else {
+  // @@protoc_insertion_point(generalized_merge_from_cast_success:BERTBuffers.Color)
+    MergeFrom(*source);
+  }
+}
+
+void Color::MergeFrom(const Color& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:BERTBuffers.Color)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from.a() != 0) {
+    set_a(from.a());
+  }
+  if (from.r() != 0) {
+    set_r(from.r());
+  }
+  if (from.g() != 0) {
+    set_g(from.g());
+  }
+  if (from.b() != 0) {
+    set_b(from.b());
+  }
+}
+
+void Color::CopyFrom(const ::google::protobuf::Message& from) {
+// @@protoc_insertion_point(generalized_copy_from_start:BERTBuffers.Color)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void Color::CopyFrom(const Color& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:BERTBuffers.Color)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool Color::IsInitialized() const {
+  return true;
+}
+
+void Color::Swap(Color* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void Color::InternalSwap(Color* other) {
+  using std::swap;
+  swap(a_, other->a_);
+  swap(r_, other->r_);
+  swap(g_, other->g_);
+  swap(b_, other->b_);
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  swap(_cached_size_, other->_cached_size_);
+}
+
+::google::protobuf::Metadata Color::GetMetadata() const {
+  protobuf_variable_2eproto::protobuf_AssignDescriptorsOnce();
+  return ::protobuf_variable_2eproto::file_level_metadata[kIndexInFileMessages];
+}
+
+
+// ===================================================================
+
+void GraphicsContext::InitAsDefaultInstance() {
+  ::BERTBuffers::_GraphicsContext_default_instance_._instance.get_mutable()->col_ = const_cast< ::BERTBuffers::Color*>(
+      ::BERTBuffers::Color::internal_default_instance());
+  ::BERTBuffers::_GraphicsContext_default_instance_._instance.get_mutable()->fill_ = const_cast< ::BERTBuffers::Color*>(
+      ::BERTBuffers::Color::internal_default_instance());
+}
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int GraphicsContext::kColFieldNumber;
+const int GraphicsContext::kFillFieldNumber;
+const int GraphicsContext::kGammaFieldNumber;
+const int GraphicsContext::kLwdFieldNumber;
+const int GraphicsContext::kLtyFieldNumber;
+const int GraphicsContext::kLendFieldNumber;
+const int GraphicsContext::kLjoinFieldNumber;
+const int GraphicsContext::kLmitreFieldNumber;
+const int GraphicsContext::kCexFieldNumber;
+const int GraphicsContext::kPsFieldNumber;
+const int GraphicsContext::kLineheightFieldNumber;
+const int GraphicsContext::kFontfaceFieldNumber;
+const int GraphicsContext::kFontfamilyFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+GraphicsContext::GraphicsContext()
+  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    ::protobuf_variable_2eproto::InitDefaultsGraphicsContext();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:BERTBuffers.GraphicsContext)
+}
+GraphicsContext::GraphicsContext(const GraphicsContext& from)
+  : ::google::protobuf::Message(),
+      _internal_metadata_(NULL),
+      _cached_size_(0) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  fontfamily_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.fontfamily().size() > 0) {
+    fontfamily_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.fontfamily_);
+  }
+  if (from.has_col()) {
+    col_ = new ::BERTBuffers::Color(*from.col_);
+  } else {
+    col_ = NULL;
+  }
+  if (from.has_fill()) {
+    fill_ = new ::BERTBuffers::Color(*from.fill_);
+  } else {
+    fill_ = NULL;
+  }
+  ::memcpy(&gamma_, &from.gamma_,
+    static_cast<size_t>(reinterpret_cast<char*>(&lineheight_) -
+    reinterpret_cast<char*>(&gamma_)) + sizeof(lineheight_));
+  // @@protoc_insertion_point(copy_constructor:BERTBuffers.GraphicsContext)
+}
+
+void GraphicsContext::SharedCtor() {
+  fontfamily_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  ::memset(&col_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&lineheight_) -
+      reinterpret_cast<char*>(&col_)) + sizeof(lineheight_));
+  _cached_size_ = 0;
+}
+
+GraphicsContext::~GraphicsContext() {
+  // @@protoc_insertion_point(destructor:BERTBuffers.GraphicsContext)
+  SharedDtor();
+}
+
+void GraphicsContext::SharedDtor() {
+  fontfamily_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (this != internal_default_instance()) delete col_;
+  if (this != internal_default_instance()) delete fill_;
+}
+
+void GraphicsContext::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ::google::protobuf::Descriptor* GraphicsContext::descriptor() {
+  ::protobuf_variable_2eproto::protobuf_AssignDescriptorsOnce();
+  return ::protobuf_variable_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
+}
+
+const GraphicsContext& GraphicsContext::default_instance() {
+  ::protobuf_variable_2eproto::InitDefaultsGraphicsContext();
+  return *internal_default_instance();
+}
+
+GraphicsContext* GraphicsContext::New(::google::protobuf::Arena* arena) const {
+  GraphicsContext* n = new GraphicsContext;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void GraphicsContext::Clear() {
+// @@protoc_insertion_point(message_clear_start:BERTBuffers.GraphicsContext)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  fontfamily_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (GetArenaNoVirtual() == NULL && col_ != NULL) {
+    delete col_;
+  }
+  col_ = NULL;
+  if (GetArenaNoVirtual() == NULL && fill_ != NULL) {
+    delete fill_;
+  }
+  fill_ = NULL;
+  ::memset(&gamma_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&lineheight_) -
+      reinterpret_cast<char*>(&gamma_)) + sizeof(lineheight_));
+  _internal_metadata_.Clear();
+}
+
+bool GraphicsContext::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  // @@protoc_insertion_point(parse_start:BERTBuffers.GraphicsContext)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // .BERTBuffers.Color col = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
+               input, mutable_col()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // .BERTBuffers.Color fill = 2;
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
+               input, mutable_fill()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // double gamma = 3;
+      case 3: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(25u /* 25 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
+                 input, &gamma_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // double lwd = 4;
+      case 4: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(33u /* 33 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
+                 input, &lwd_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 lty = 5;
+      case 5: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(40u /* 40 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &lty_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 lend = 6;
+      case 6: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(48u /* 48 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &lend_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 ljoin = 7;
+      case 7: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(56u /* 56 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &ljoin_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // double lmitre = 8;
+      case 8: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(65u /* 65 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
+                 input, &lmitre_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // double cex = 9;
+      case 9: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(73u /* 73 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
+                 input, &cex_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // double ps = 10;
+      case 10: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(81u /* 81 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
+                 input, &ps_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // double lineheight = 11;
+      case 11: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(89u /* 89 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
+                 input, &lineheight_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 fontface = 12;
+      case 12: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(96u /* 96 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &fontface_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // string fontfamily = 13;
+      case 13: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(106u /* 106 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_fontfamily()));
+          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+            this->fontfamily().data(), static_cast<int>(this->fontfamily().length()),
+            ::google::protobuf::internal::WireFormatLite::PARSE,
+            "BERTBuffers.GraphicsContext.fontfamily"));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormat::SkipField(
+              input, tag, _internal_metadata_.mutable_unknown_fields()));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:BERTBuffers.GraphicsContext)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:BERTBuffers.GraphicsContext)
+  return false;
+#undef DO_
+}
+
+void GraphicsContext::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:BERTBuffers.GraphicsContext)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // .BERTBuffers.Color col = 1;
+  if (this->has_col()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+      1, *this->col_, output);
+  }
+
+  // .BERTBuffers.Color fill = 2;
+  if (this->has_fill()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+      2, *this->fill_, output);
+  }
+
+  // double gamma = 3;
+  if (this->gamma() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteDouble(3, this->gamma(), output);
+  }
+
+  // double lwd = 4;
+  if (this->lwd() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteDouble(4, this->lwd(), output);
+  }
+
+  // int32 lty = 5;
+  if (this->lty() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(5, this->lty(), output);
+  }
+
+  // int32 lend = 6;
+  if (this->lend() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(6, this->lend(), output);
+  }
+
+  // int32 ljoin = 7;
+  if (this->ljoin() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(7, this->ljoin(), output);
+  }
+
+  // double lmitre = 8;
+  if (this->lmitre() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteDouble(8, this->lmitre(), output);
+  }
+
+  // double cex = 9;
+  if (this->cex() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteDouble(9, this->cex(), output);
+  }
+
+  // double ps = 10;
+  if (this->ps() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteDouble(10, this->ps(), output);
+  }
+
+  // double lineheight = 11;
+  if (this->lineheight() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteDouble(11, this->lineheight(), output);
+  }
+
+  // int32 fontface = 12;
+  if (this->fontface() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(12, this->fontface(), output);
+  }
+
+  // string fontfamily = 13;
+  if (this->fontfamily().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->fontfamily().data(), static_cast<int>(this->fontfamily().length()),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "BERTBuffers.GraphicsContext.fontfamily");
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      13, this->fontfamily(), output);
+  }
+
+  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
+    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
+        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
+  }
+  // @@protoc_insertion_point(serialize_end:BERTBuffers.GraphicsContext)
+}
+
+::google::protobuf::uint8* GraphicsContext::InternalSerializeWithCachedSizesToArray(
+    bool deterministic, ::google::protobuf::uint8* target) const {
+  (void)deterministic; // Unused
+  // @@protoc_insertion_point(serialize_to_array_start:BERTBuffers.GraphicsContext)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // .BERTBuffers.Color col = 1;
+  if (this->has_col()) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      InternalWriteMessageToArray(
+        1, *this->col_, deterministic, target);
+  }
+
+  // .BERTBuffers.Color fill = 2;
+  if (this->has_fill()) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      InternalWriteMessageToArray(
+        2, *this->fill_, deterministic, target);
+  }
+
+  // double gamma = 3;
+  if (this->gamma() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteDoubleToArray(3, this->gamma(), target);
+  }
+
+  // double lwd = 4;
+  if (this->lwd() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteDoubleToArray(4, this->lwd(), target);
+  }
+
+  // int32 lty = 5;
+  if (this->lty() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(5, this->lty(), target);
+  }
+
+  // int32 lend = 6;
+  if (this->lend() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(6, this->lend(), target);
+  }
+
+  // int32 ljoin = 7;
+  if (this->ljoin() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(7, this->ljoin(), target);
+  }
+
+  // double lmitre = 8;
+  if (this->lmitre() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteDoubleToArray(8, this->lmitre(), target);
+  }
+
+  // double cex = 9;
+  if (this->cex() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteDoubleToArray(9, this->cex(), target);
+  }
+
+  // double ps = 10;
+  if (this->ps() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteDoubleToArray(10, this->ps(), target);
+  }
+
+  // double lineheight = 11;
+  if (this->lineheight() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteDoubleToArray(11, this->lineheight(), target);
+  }
+
+  // int32 fontface = 12;
+  if (this->fontface() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(12, this->fontface(), target);
+  }
+
+  // string fontfamily = 13;
+  if (this->fontfamily().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->fontfamily().data(), static_cast<int>(this->fontfamily().length()),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "BERTBuffers.GraphicsContext.fontfamily");
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        13, this->fontfamily(), target);
+  }
+
+  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:BERTBuffers.GraphicsContext)
+  return target;
+}
+
+size_t GraphicsContext::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:BERTBuffers.GraphicsContext)
+  size_t total_size = 0;
+
+  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
+    total_size +=
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
+  }
+  // string fontfamily = 13;
+  if (this->fontfamily().size() > 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::StringSize(
+        this->fontfamily());
+  }
+
+  // .BERTBuffers.Color col = 1;
+  if (this->has_col()) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::MessageSize(
+        *this->col_);
+  }
+
+  // .BERTBuffers.Color fill = 2;
+  if (this->has_fill()) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::MessageSize(
+        *this->fill_);
+  }
+
+  // double gamma = 3;
+  if (this->gamma() != 0) {
+    total_size += 1 + 8;
+  }
+
+  // double lwd = 4;
+  if (this->lwd() != 0) {
+    total_size += 1 + 8;
+  }
+
+  // int32 lty = 5;
+  if (this->lty() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->lty());
+  }
+
+  // int32 lend = 6;
+  if (this->lend() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->lend());
+  }
+
+  // double lmitre = 8;
+  if (this->lmitre() != 0) {
+    total_size += 1 + 8;
+  }
+
+  // double cex = 9;
+  if (this->cex() != 0) {
+    total_size += 1 + 8;
+  }
+
+  // int32 ljoin = 7;
+  if (this->ljoin() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->ljoin());
+  }
+
+  // int32 fontface = 12;
+  if (this->fontface() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->fontface());
+  }
+
+  // double ps = 10;
+  if (this->ps() != 0) {
+    total_size += 1 + 8;
+  }
+
+  // double lineheight = 11;
+  if (this->lineheight() != 0) {
+    total_size += 1 + 8;
+  }
+
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void GraphicsContext::MergeFrom(const ::google::protobuf::Message& from) {
+// @@protoc_insertion_point(generalized_merge_from_start:BERTBuffers.GraphicsContext)
+  GOOGLE_DCHECK_NE(&from, this);
+  const GraphicsContext* source =
+      ::google::protobuf::internal::DynamicCastToGenerated<const GraphicsContext>(
+          &from);
+  if (source == NULL) {
+  // @@protoc_insertion_point(generalized_merge_from_cast_fail:BERTBuffers.GraphicsContext)
+    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+  } else {
+  // @@protoc_insertion_point(generalized_merge_from_cast_success:BERTBuffers.GraphicsContext)
+    MergeFrom(*source);
+  }
+}
+
+void GraphicsContext::MergeFrom(const GraphicsContext& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:BERTBuffers.GraphicsContext)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from.fontfamily().size() > 0) {
+
+    fontfamily_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.fontfamily_);
+  }
+  if (from.has_col()) {
+    mutable_col()->::BERTBuffers::Color::MergeFrom(from.col());
+  }
+  if (from.has_fill()) {
+    mutable_fill()->::BERTBuffers::Color::MergeFrom(from.fill());
+  }
+  if (from.gamma() != 0) {
+    set_gamma(from.gamma());
+  }
+  if (from.lwd() != 0) {
+    set_lwd(from.lwd());
+  }
+  if (from.lty() != 0) {
+    set_lty(from.lty());
+  }
+  if (from.lend() != 0) {
+    set_lend(from.lend());
+  }
+  if (from.lmitre() != 0) {
+    set_lmitre(from.lmitre());
+  }
+  if (from.cex() != 0) {
+    set_cex(from.cex());
+  }
+  if (from.ljoin() != 0) {
+    set_ljoin(from.ljoin());
+  }
+  if (from.fontface() != 0) {
+    set_fontface(from.fontface());
+  }
+  if (from.ps() != 0) {
+    set_ps(from.ps());
+  }
+  if (from.lineheight() != 0) {
+    set_lineheight(from.lineheight());
+  }
+}
+
+void GraphicsContext::CopyFrom(const ::google::protobuf::Message& from) {
+// @@protoc_insertion_point(generalized_copy_from_start:BERTBuffers.GraphicsContext)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void GraphicsContext::CopyFrom(const GraphicsContext& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:BERTBuffers.GraphicsContext)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool GraphicsContext::IsInitialized() const {
+  return true;
+}
+
+void GraphicsContext::Swap(GraphicsContext* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void GraphicsContext::InternalSwap(GraphicsContext* other) {
+  using std::swap;
+  fontfamily_.Swap(&other->fontfamily_);
+  swap(col_, other->col_);
+  swap(fill_, other->fill_);
+  swap(gamma_, other->gamma_);
+  swap(lwd_, other->lwd_);
+  swap(lty_, other->lty_);
+  swap(lend_, other->lend_);
+  swap(lmitre_, other->lmitre_);
+  swap(cex_, other->cex_);
+  swap(ljoin_, other->ljoin_);
+  swap(fontface_, other->fontface_);
+  swap(ps_, other->ps_);
+  swap(lineheight_, other->lineheight_);
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  swap(_cached_size_, other->_cached_size_);
+}
+
+::google::protobuf::Metadata GraphicsContext::GetMetadata() const {
+  protobuf_variable_2eproto::protobuf_AssignDescriptorsOnce();
+  return ::protobuf_variable_2eproto::file_level_metadata[kIndexInFileMessages];
+}
+
+
+// ===================================================================
+
 void Console::InitAsDefaultInstance() {
   ::BERTBuffers::_Console_default_instance_.text_.UnsafeSetDefault(
       &::google::protobuf::internal::GetEmptyStringAlreadyInited());
@@ -3681,11 +5601,28 @@ void Console::InitAsDefaultInstance() {
       &::google::protobuf::internal::GetEmptyStringAlreadyInited());
   ::BERTBuffers::_Console_default_instance_.prompt_.UnsafeSetDefault(
       &::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  ::BERTBuffers::_Console_default_instance_.graphics_ = const_cast< ::BERTBuffers::GraphicsCommand*>(
+      ::BERTBuffers::GraphicsCommand::internal_default_instance());
+}
+void Console::set_allocated_graphics(::BERTBuffers::GraphicsCommand* graphics) {
+  ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
+  clear_message();
+  if (graphics) {
+    ::google::protobuf::Arena* submessage_arena = NULL;
+    if (message_arena != submessage_arena) {
+      graphics = ::google::protobuf::internal::GetOwnedMessage(
+          message_arena, graphics, submessage_arena);
+    }
+    set_has_graphics();
+    message_.graphics_ = graphics;
+  }
+  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.Console.graphics)
 }
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int Console::kTextFieldNumber;
 const int Console::kErrFieldNumber;
 const int Console::kPromptFieldNumber;
+const int Console::kGraphicsFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 Console::Console()
@@ -3713,6 +5650,10 @@ Console::Console(const Console& from)
     }
     case kPrompt: {
       set_prompt(from.prompt());
+      break;
+    }
+    case kGraphics: {
+      mutable_graphics()->::BERTBuffers::GraphicsCommand::MergeFrom(from.graphics());
       break;
     }
     case MESSAGE_NOT_SET: {
@@ -3774,6 +5715,10 @@ void Console::clear_message() {
     }
     case kPrompt: {
       message_.prompt_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+      break;
+    }
+    case kGraphics: {
+      delete message_.graphics_;
       break;
     }
     case MESSAGE_NOT_SET: {
@@ -3852,6 +5797,18 @@ bool Console::MergePartialFromCodedStream(
         break;
       }
 
+      // .BERTBuffers.GraphicsCommand graphics = 4;
+      case 4: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(34u /* 34 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
+               input, mutable_graphics()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0) {
@@ -3908,6 +5865,12 @@ void Console::SerializeWithCachedSizes(
       3, this->prompt(), output);
   }
 
+  // .BERTBuffers.GraphicsCommand graphics = 4;
+  if (has_graphics()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+      4, *message_.graphics_, output);
+  }
+
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
@@ -3955,6 +5918,13 @@ void Console::SerializeWithCachedSizes(
         3, this->prompt(), target);
   }
 
+  // .BERTBuffers.GraphicsCommand graphics = 4;
+  if (has_graphics()) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      InternalWriteMessageToArray(
+        4, *message_.graphics_, deterministic, target);
+  }
+
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
@@ -3992,6 +5962,13 @@ size_t Console::ByteSizeLong() const {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::StringSize(
           this->prompt());
+      break;
+    }
+    // .BERTBuffers.GraphicsCommand graphics = 4;
+    case kGraphics: {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSize(
+          *message_.graphics_);
       break;
     }
     case MESSAGE_NOT_SET: {
@@ -4038,6 +6015,10 @@ void Console::MergeFrom(const Console& from) {
     }
     case kPrompt: {
       set_prompt(from.prompt());
+      break;
+    }
+    case kGraphics: {
+      mutable_graphics()->::BERTBuffers::GraphicsCommand::MergeFrom(from.graphics());
       break;
     }
     case MESSAGE_NOT_SET: {

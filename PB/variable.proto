@@ -128,12 +128,64 @@ message CompositeFunctionCall {
   CallTarget target = 6;
 }
 
+/**
+ * we're now adding graphics to support a console graphics device in R.
+ * might extend to julia, although that will probably be based on GR 
+ * and so a little simpler.
+ *
+ * packing in a variety of different parameters here, this may need to 
+ * get streamlined... we can also do some creative reuse.
+ */
+message GraphicsCommand  {
+  string command = 1;
+  repeated double x = 2;
+  repeated double y= 3;
+  double r = 4;
+  double rot = 5;
+  string text = 6;
+  bool filled = 7;
+  double hadj = 8;
+  bytes raster = 9;
+  bool interpolate = 10;
+
+  GraphicsContext context = 15;
+}
+
+message Color {
+  uint32 a = 1;
+  uint32 r = 2;
+  uint32 g = 3;
+  uint32 b = 4;
+}
+
+message GraphicsContext {
+  Color col = 1;
+	Color fill = 2;
+	double gamma = 3;
+	double lwd = 4;
+	int32 lty = 5;
+	int32 lend = 6;
+	int32 ljoin = 7;
+	double lmitre = 8;
+	double cex = 9;
+	double ps = 10;
+	double lineheight = 11;
+	int32 fontface = 12;
+	string fontfamily = 13;
+
+	//bool bold;
+	//bool italic;
+	//double fontsize;
+	//std::string fontname;
+}
+
 /** console message */
 message Console {
   oneof message {
     string text = 1;
     string err = 2;
     string prompt = 3;
+    GraphicsCommand graphics = 4;
   }
 }
 

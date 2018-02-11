@@ -16,6 +16,7 @@ import {Pipe, ConsoleMessage, ConsoleMessageType} from './pipe';
 
 import * as Rx from 'rxjs';
 import { ConnectableObservable } from 'rxjs/observable/ConnectableObservable';
+import { GraphicsDevice } from './graphics_device';
 
 // for julia, replacing backslash entities in the shell like Julia REPL. 
 
@@ -391,7 +392,6 @@ export class TerminalImplementation {
       };
     }
  
-
   }
 
   /**
@@ -602,18 +602,17 @@ export class TerminalImplementation {
   */
 
   InsertGraphic(height:number, node:HTMLElement){
+
+    let buffer = (this.xterm_ as any).buffer;
+    // console.info(buffer);
+
     let row_height = (this.xterm_ as any).renderer.dimensions.scaledCellHeight;
     let rows = Math.ceil( height / row_height ) + 2;
-    let row = (this.xterm_ as any).buffer.y + 1;
-
-    let tmp = document.createElement("div");
-    tmp.className = "xterm-graphic";
-    tmp.style.width = `${height}px`;
-    tmp.style.height = `${height}px`;
+    let row = buffer.y + buffer.ybase + 1;
 
     this.InsertLines(rows);
     (this.xterm_ as any).annotation_manager.AddAnnotation({
-      element: tmp, line: row
+      element: node, line: row
     });
 
   }
@@ -859,6 +858,11 @@ export class TerminalImplementation {
 
     // ensure
     (this.xterm_ as any).annotation_manager.Init();
+
+    // FIXME: this is language-specific, so it should be in the 
+    // language implementation class
+
+    new GraphicsDevice(this, this.language_interface_.pipe_);
 
     this.Resize();
 

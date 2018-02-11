@@ -23,7 +23,8 @@ interface QueuedCommand {
 export enum ConsoleMessageType {
   TEXT,
   ERR,
-  PROMPT
+  PROMPT,
+  GRAPHICS
 }
 
 export interface ConsoleMessage {
@@ -127,6 +128,13 @@ export class Pipe {
     return this.console_messages_;
   }
 
+  /** graphics messages are special - they may have responses */
+  private graphics_message_handler_:Function;
+
+  set graphics_message_handler(handler:Function){
+    this.graphics_message_handler_ = handler;
+  }
+
   /**
    * observable for control messages
    */
@@ -176,8 +184,6 @@ export class Pipe {
   }
 
   private ProcessQueue() {
-
-    // console.info("process queue");
 
     if (this.busy) throw ("busy!");
 
@@ -261,6 +267,33 @@ export class Pipe {
         break;
       case messages.Console.MessageCase.ERR:
         this.console_messages_.next({ id:response.getId(),type: ConsoleMessageType.ERR, text: obj.getErr() });
+        break;
+      case messages.Console.MessageCase.GRAPHICS:
+
+        // graphics messages are specific to R (at least for now), but they
+        // are somewhat special in that they may require a response (usually
+        // for measuring text). [...]
+
+        // we'll start simple.
+        if( this.graphics_message_handler_ ){
+          let response = this.graphics_message_handler_(obj); // obj.toObject().graphics);
+          if( response ){
+
+            // console.info( "TX response" );
+
+            let data = response.serializeBinary();
+            let frame_length = new Int32Array(1);
+            let frame = new Uint8Array(data.length + 4);
+        
+            frame_length[0] = data.length;
+            frame.set(new Uint8Array(frame_length), 0);
+            frame.set(data, 4);
+        
+            this.client_.write(Buffer.from(frame as any)); // ts type is wrong?
+
+          }
+        }
+
         break;
     }
   }

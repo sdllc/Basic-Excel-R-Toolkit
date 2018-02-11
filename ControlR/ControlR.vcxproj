@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\PB\variable.pb.cc" />
+    <ClCompile Include="console_graphics_device.cpp" />
     <ClCompile Include="controlr.cpp" />
     <ClCompile Include="pipe.cpp" />
     <ClCompile Include="rinterface_common.cpp" />
@@ -28,6 +29,7 @@
   <ItemGroup>
     <ClInclude Include="..\PB\message_utilities.h" />
     <ClInclude Include="..\PB\variable.pb.h" />
+    <ClInclude Include="console_graphics_device.h" />
     <ClInclude Include="console_message.h" />
     <ClInclude Include="controlr.hpp" />
     <ClInclude Include="controlr_common.h" />
@@ -94,6 +96,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>

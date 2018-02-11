@@ -144,6 +144,29 @@ int create_device( std::string name, std::string background, int width, int heig
 }
 
 /**
+ * create console graphics device, add to display list 
+ */ 
+int create_console_device( std::string background, int width, int height, int pointsize) 
+{
+    rcolor bg = R_GE_str2col(background.c_str());
+    int device = 0;
+  
+    R_GE_checkVersionOrDie(R_GE_version);
+    R_CheckDeviceAvailable();
+
+    pDevDesc dev = device_new(bg, width, height, pointsize);
+    callback(8103, dev, 0); // this is the old callback. FIXME: change
+
+    pGEDevDesc gd = GEcreateDevDesc(dev);
+    GEaddDevice2(gd, "BERT-console-graphics-device");
+    GEinitDisplayList(gd);
+    device = GEdeviceNumber(gd) + 1; // to match what R says
+
+    return device;
+  
+}
+
+/**
  * release the pointer. this requires a callback to the actual owner,
  * and we don't do any validation. legal to be zero? that just seems 
  * like a problem waiting to happen... so no.
@@ -185,6 +208,12 @@ SEXP BERTModule_create_device( SEXP name, SEXP background, SEXP width, SEXP heig
   return Rf_ScalarInteger(dev);
 }
 
+SEXP BERTModule_console_device( SEXP background, SEXP width, SEXP height, SEXP pointsize ){
+  int dev = create_console_device(CHAR(STRING_ELT(background, 0)),
+    Rf_asReal( width ), Rf_asReal( height ), Rf_asReal( pointsize ));
+  return Rf_ScalarInteger(dev);
+}
+
 SEXP BERTModule_download( SEXP args ){
   SEXP s = callback( 100, args, 0 );
   int result = Rf_asInteger(s);
@@ -213,6 +242,7 @@ extern "C" {
     {
         static R_CallMethodDef methods[]  = {
             { "create_device", (DL_FUNC)&BERTModule_create_device, 5},
+            { "console_device", (DL_FUNC)&BERTModule_console_device, 4},
             { "progress_bar", (DL_FUNC)&BERTModule_progress_bar, 1},
             { "download", (DL_FUNC)&BERTModule_download, 1},
             { "history", (DL_FUNC)&BERTModule_history, 1},
