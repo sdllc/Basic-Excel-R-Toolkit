@@ -1,5 +1,6 @@
 
 import { Pipe } from './pipe';
+import { Metrics, FontMetrics } from './fontmetrics';
 
 // I wanted this to be hidden... we should have a translation library
 import * as messages from "../generated/variable_pb.js";
@@ -29,6 +30,8 @@ export class GraphicsDevice {
   context_:CanvasRenderingContext2D;
   terminal_;
   
+  font_metrics_ = new FontMetrics(); 
+
   constructor( terminal, pipe:Pipe ){
     this.terminal_ = terminal;
     pipe.graphics_message_handler = this.GraphicsCommand.bind(this);
@@ -50,17 +53,15 @@ export class GraphicsDevice {
 
     this.active_canvas_ = canvas;
     this.context_ = canvas.getContext('2d');
-    this.context_.font = "13px consolas";
+    this.context_.font = "14px Calibri";
     this.context_.textAlign = "left"; // "center"; // always
-    //this.context_.imageSmoothingEnabled = true;
-    //this.context_.fillStyle = '#fff';
-    //this.context_.fillRect(0, 0, width, height);
 
+    this.font_metrics_.SetFont("Calibri", "14px");
   }
 
   SetContext(context){
     
-    // console.info("C", context)
+    // FIXME: font, style
 
     this.context_.strokeStyle = `rgba(${context.col.r}, ${context.col.g}, ${context.col.b}, ${context.col.a/255})`;
     this.context_.fillStyle  = `rgba(${context.fill.r}, ${context.fill.g}, ${context.fill.b}, ${context.fill.a/255})`;
@@ -74,6 +75,21 @@ export class GraphicsDevice {
     else if ( context.lend == LineCap.GE_BUTT_CAP ) this.context_.lineCap = "butt";
     else if ( context.lend == LineCap.GE_SQUARE_CAP ) this.context_.lineCap = "square";
     
+  }
+
+  GraphicsResponse(x?:number[], y?:number[]){
+
+    let response = new messages.CallResponse();
+    let consoleMessage = new messages.Console();
+    let graphics = new messages.GraphicsCommand();
+
+    if(x) graphics.setXList(x);
+    if(y) graphics.setYList(y);
+
+    consoleMessage.setGraphics(graphics);
+    response.setConsole(consoleMessage);
+    return response;
+
   }
 
   GraphicsCommand(message){
@@ -95,16 +111,15 @@ export class GraphicsDevice {
       // FIXME: cache? lots of this is repetitive.
 
       this.SetContext(command.context);
-      let response = new messages.CallResponse();
-      let consoleMessage = new messages.Console();
-      let graphics = new messages.GraphicsCommand();
       let tm = this.context_.measureText(command.text);
+      return this.GraphicsResponse([tm.width]);
 
-      graphics.setXList([tm.width]);
-      consoleMessage.setGraphics(graphics);
-      response.setConsole(consoleMessage);
-      return response;
+    case "font-metrics":
 
+      this.SetContext(command.context);
+      let metrics = this.font_metrics_.Measure(command.text);
+      return this.GraphicsResponse([metrics.width], [metrics.ascent, metrics.descent]);
+    
     case "draw-raster":
 
       // this is async. that shouldn't matter, except that there is a 

@@ -130,18 +130,16 @@ double get_strWidth(const char *str, const pGEcontext gc, pDevDesc dd) {
   graphics->set_text(str);
   
   bool success = ConsoleCallback(message, response);
-  if (!success) return 10; // default?
-
-  if (response.operation_case() == BERTBuffers::CallResponse::OperationCase::kConsole) {
-    auto graphics = response.console().graphics();
-    if (graphics.x_size()) {
-      return graphics.x(0);
+  if (success) {
+    if (response.operation_case() == BERTBuffers::CallResponse::OperationCase::kConsole) {
+      auto graphics = response.console().graphics();
+      if (graphics.x_size()) {
+        return graphics.x(0);
+      }
     }
   }
 
-  double w, h;
-  w = 10; // FIXME
-  return w;
+  return 10;
 }
 
 void draw_rect(double x1, double y1, double x2, double y2,
@@ -203,10 +201,7 @@ void get_metric_info(int c, const pGEcontext gc, double* ascent, double* descent
 
   static char str[8];
 
-  std::cout << "get_metric_info" << std::endl;
-  
   // this one can almost certainly do some caching.
-
 
   // Convert to string - negative implies unicode code point
   if (c < 0) {
@@ -214,18 +209,32 @@ void get_metric_info(int c, const pGEcontext gc, double* ascent, double* descent
   }
   else {
     str[0] = (char)c;
-    str[1] = '\0';
+    str[1] = 0;
   }
 
-  double w, h;
+  BERTBuffers::CallResponse message, response;
+  auto graphics = message.mutable_console()->mutable_graphics();
+  SetMessageContext(graphics->mutable_context(), gc);
+  graphics->set_command("font-metrics");
+  graphics->set_text(str);
 
-  w = 10; // FIXME
-  h = 10; // FIXME
+  bool success = ConsoleCallback(message, response);
+  if (success) {
+    if (response.operation_case() == BERTBuffers::CallResponse::OperationCase::kConsole) {
+      auto graphics = response.console().graphics();
+      if (graphics.x_size() && graphics.y_size() > 1 ) {
 
-          // fudging a little
+        *width = graphics.x(0);
+        *ascent = graphics.y(0);
+        *descent = graphics.y(1);
 
-  *width = w;
-  *ascent = h + .5;
+        return;
+      }
+    }
+  }
+
+  *width = 10;
+  *ascent = 10.5;
   *descent = 0;
 }
 
