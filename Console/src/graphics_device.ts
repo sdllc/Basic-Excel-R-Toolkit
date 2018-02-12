@@ -35,6 +35,10 @@ export class GraphicsDevice {
   constructor( terminal, pipe:Pipe ){
     this.terminal_ = terminal;
     pipe.graphics_message_handler = this.GraphicsCommand.bind(this);
+
+    // FIXME: to listen to events we'll need to trap on 
+    // document and then calculate hit targets. (...)
+
   }
 
   CreateGraphicsNode(height, width){

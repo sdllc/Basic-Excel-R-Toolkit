@@ -1,4 +1,15 @@
 
+#
+# NOTE: this changes in Julia > 0.6.2, which will come out soon. this 
+# is a temporary solution only. 
+#
+# this is because the old version of with_output_color checked this 
+# global flag -- more recent versions look up the value of :color in 
+# the IOStream, which we can wrap via IOContext.
+#
+
+Base.eval(:(have_color=true));
+
 # =============================================================================
 #
 # create a module for scoped functions
@@ -10,15 +21,14 @@ module BERT
     Application = nothing
   end
 
+  function ShellHelp(str)
+    Markdown.term(STDOUT, Main.eval(Base.Docs.helpmode(str)));
+    nothing
+  end
+
   # EXCEL = nothing
 
-  #---------------------------------------------------------------------------- 
-  # banner under regular julia banner
-  #---------------------------------------------------------------------------- 
-
-  Banner = function()
-
-    const colors = Base.AnyDict(
+  const colors = Base.AnyDict(
       :black         => "\033[30m",
       :red           => "\033[31m",
       :green         => "\033[32m",
@@ -47,6 +57,13 @@ module BERT
       :hidden        => "\033[8m",
       :nothing       => "",
     );
+
+  #---------------------------------------------------------------------------- 
+  # banner under regular julia banner
+  #---------------------------------------------------------------------------- 
+
+  Banner = function()
+
 
     print("""
 

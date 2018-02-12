@@ -465,29 +465,8 @@ export class TerminalImplementation {
 
       let regex = new RegExp(function_guess.replace(/\$/g, "\\$") + "\\s*\\(", "i");
 
-      /*
-      let m = this.line_info_.buffer.match(regex);
-      let range = document.createRange();
-      let node = cursor_node.previousSibling.firstChild as HTMLElement;
-
-      range.selectNodeContents(node);
-      range.setEnd(node, m.index + this.line_info_.prompt.length);
-
-      // also for scoping, the "message" field (tip) may contain an unscoped 
-      // name, in which case we need to advance it. assume that the range is 
-      // collapsed (one node), we're not handling uncollapsed atm
-
-      let test_text = message.replace( /\s*\(.*$/, "" );
-      let test_index = (range.startContainer.textContent||"").indexOf(test_text);
-      if(test_index > 0){
-        range.setStart(range.startContainer, test_index);
-      }
-
-      let rect = range.getBoundingClientRect();
-      */
-
       let offset_text = message.replace( /\(.*$/, "X" );
-      console.info( offset_text, offset_text.length )
+      // console.info( offset_text, offset_text.length )
 
       this.current_tip_ = message;
       this.dismissed_tip_ = null;
@@ -841,6 +820,7 @@ export class TerminalImplementation {
     let theme_object:ITerminalTheme = {
       background: "#fff", 
       foreground: "#000",
+      selection: "rgba(255, 255, 0, .1)",
       cursor: "#000"
     };
 

@@ -143,14 +143,18 @@ message GraphicsCommand  {
   double r = 4;
   double rot = 5;
   string text = 6;
-  bool filled = 7;
+  bool filled = 7;        // flag -- should go in context?
   double hadj = 8;
   bytes raster = 9;
-  bool interpolate = 10;
+  bool interpolate = 10;  // flag
 
   GraphicsContext context = 15;
 }
 
+/**
+ * although colors are passed as 4x 32-bit, they're 
+ * actually only 8 bits each.
+ */
 message Color {
   uint32 a = 1;
   uint32 r = 2;
@@ -159,17 +163,25 @@ message Color {
 }
 
 message GraphicsContext {
+
   Color col = 1;
 	Color fill = 2;
 	double gamma = 3;
 	double lwd = 4;
-	int32 lty = 5;
+  int32 lty = 5;
 	int32 lend = 6;
-	int32 ljoin = 7;
-	double lmitre = 8;
+
+  // this is a three-value enum (actually defines, but only 3 states)
+  int32 ljoin = 7;
+
+  // also a three-value enum
+  double lmitre = 8;
+  
 	double cex = 9;
 	double ps = 10;
-	double lineheight = 11;
+  double lineheight = 11;
+  
+  // this is another set of flags
 	int32 fontface = 12;
 	string fontfamily = 13;
 

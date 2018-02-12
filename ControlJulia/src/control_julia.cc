@@ -412,6 +412,7 @@ unsigned __stdcall StdioThreadFunction(void *data) {
   while (true) {
     DWORD wait_result = WaitForMultipleObjects(4, handles, FALSE, 1000);
     int index = wait_result - WAIT_OBJECT_0;
+
     if (index == 2) {
       ResetEvent(stdout_pipe.wait_handle_read());
       if (!stdout_pipe.connected()) {
@@ -438,14 +439,20 @@ unsigned __stdcall StdioThreadFunction(void *data) {
         if (stderr_pipe.error()) stderr_pipe.Reset();
       }
     }
+
     else  if (index >= 0 && index < 2) {
       ResetEvent(pipes[index]->wait_handle_read());
       if (!pipes[index]->connected()) {
-        pipes[index]->Connect();
-        //std::cout << "connect stdio pipe " << index << std::endl;
+        pipes[index]->Connect(true);
+        std::cout << "connect stdio pipe " << index << std::endl;
       }
       else {
-        pipes[index]->Read(str, false);
+
+        // FIXME: we're getting a lot of one-byte strings here.
+        // we should implement some minimal amount of buffering
+        // to try to clean this up... could be as small as 10ms
+        
+        DWORD read_result = pipes[index]->Read(str, false);
         pipes[index]->StartRead();
 
         if (index) {
@@ -464,9 +471,8 @@ unsigned __stdcall StdioThreadFunction(void *data) {
             TruncateBuffer(stdout_buffer.append(str));
           }
         }
-        //if (index) std::cerr << "** " << str << std::endl;
-        //else std::cout << "|| " << str << std::endl;
       }
+      
     }
     else if (wait_result == WAIT_TIMEOUT) {
       // std::cerr << "timeout" << std::endl;
@@ -601,6 +607,10 @@ int main(int argc, char **argv) {
 
   std::cout << "pipe: " << pipename << std::endl;
 
+  char buffer[MAX_PATH];
+  sprintf_s(buffer, "%s-M", pipename.c_str());
+  uintptr_t management_thread_handle = _beginthreadex(0, 0, ManagementThreadFunction, buffer, 0, 0);
+
   // for julia, contra R, we are capturing stdio (out and err) 
   // to send to a console client. because writes can happen while
   // we're blocked, we'll need a separate thread to handle stdio 
@@ -620,11 +630,7 @@ int main(int argc, char **argv) {
   std::ofstream console_err(_fdopen(console_stderr_fd, "w"));
   std::cerr.rdbuf(console_err.rdbuf());
 
-  //
-  char buffer[MAX_PATH];
-  sprintf_s(buffer, "%s-M", pipename.c_str());
-  uintptr_t management_thread_handle = _beginthreadex(0, 0, ManagementThreadFunction, buffer, 0, 0);
-  //
+  // these are 
 
   {
     char buf2[MAX_PATH];
@@ -644,8 +650,8 @@ int main(int argc, char **argv) {
   stdio_pipes[1]->Start("stderr", false);
   HANDLE stderr_write_handle = CreateFile(stdio_pipes[1]->full_name().c_str(), FILE_ALL_ACCESS, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
   
-  _dup2(_open_osfhandle((intptr_t)stdout_write_handle, _O_TEXT), 1); // 1 is stdout
-  _dup2(_open_osfhandle((intptr_t)stderr_write_handle, _O_TEXT), 2);
+  _dup2(_open_osfhandle((intptr_t)stdout_write_handle, 0), 1); // _O_TEXT), 1); // stdout
+  _dup2(_open_osfhandle((intptr_t)stderr_write_handle, 0), 2); // _O_TEXT), 2); // stderr
 
   uintptr_t io_thread_handle = _beginthreadex(0, 0, StdioThreadFunction, stdio_pipes, 0, 0);
 

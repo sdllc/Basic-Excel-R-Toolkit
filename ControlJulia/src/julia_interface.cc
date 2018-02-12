@@ -483,23 +483,37 @@ void ReportJuliaException(const char *tag, bool backtrace = false) {
 
 }
 
+void JuliaRunUVLoop(bool until_done) {
+  while (true) {
+    int remaining_handles = uv_run(jl_global_event_loop(), UV_RUN_NOWAIT);
+    if (!remaining_handles) break;
+    if (!until_done) break;
+  }
+}
+
+__inline bool ReportException(const char *tag) {
+  if (jl_exception_occurred()) {
+    std::cout << "* [" << tag << "] EXCEPTION" << std::endl;
+    jl_printf(JL_STDERR, "[%s] error during run:\n", tag);
+    jl_static_show(JL_STDERR, ptls->exception_in_transit);
+    jl_exception_clear();
+    jl_printf(JL_STDERR, "\n\n");
+    return true;
+  }
+  return false;
+}
+
 bool ReadSourceFile(const std::string &file) {
 
   jl_function_t *function_pointer = jl_get_function(jl_main_module, "include");
   if (!function_pointer || jl_is_nothing(function_pointer)) return false;
 
-  jl_value_t *function_result;
+  jl_value_t *function_result = jl_nothing;
   jl_value_t *argument = jl_pchar_to_string(file.c_str(), file.length());
 
   JL_TRY{
     function_result = jl_call1(function_pointer, argument);
-    if (jl_exception_occurred()) {
-      std::cout << "* [RSF] EXCEPTION" << std::endl;
-      jl_printf(JL_STDERR, "[RSF] error during run:\n");
-      jl_static_show(JL_STDERR, ptls->exception_in_transit);
-      jl_exception_clear();
-    }
-    else return true; // success
+    ReportException("read-source-file");
   }
   JL_CATCH{
     std::cout << "* CATCH [RSF]" << std::endl;
@@ -510,9 +524,10 @@ bool ReadSourceFile(const std::string &file) {
     jl_exception_clear();
   }
 
-  return false;
-}
+  JuliaRunUVLoop(true);
 
+  return function_result; // false;
+}
 
 /**
  * shell exec: response is printed to output stream. 
@@ -548,9 +563,9 @@ ExecResult JuliaShellExec(const std::string &command, const std::string &shell_b
   // FIXME: handle this in shell, don't pass through
 
   if (tmp.length() && tmp.c_str()[0] == '?') {
-    std::string help = "eval(Base.Docs.helpmode(\"";
+    std::string help = "BERT.ShellHelp(\"";
     help += tmp.substr(1);
-    help += "\"))";
+    help += "\")";
     tmp = help;
   }
 
@@ -594,7 +609,7 @@ ExecResult JuliaShellExec(const std::string &command, const std::string &shell_b
           // what repl is doing with output.
 
           //jl_static_show(JL_STDOUT, r);
-          jl_call1(jl_get_function(jl_main_module, "print"), r);
+          jl_call1(jl_get_function(jl_main_module, "display"), r);
 
           jl_printf(JL_STDOUT, "\n");
         }
@@ -611,14 +626,12 @@ ExecResult JuliaShellExec(const std::string &command, const std::string &shell_b
     result = ExecResult::Error;
   }
 
-  while( true ){
-    int remaining_handles = uv_run(jl_global_event_loop(), UV_RUN_NOWAIT);
-    if (!remaining_handles) break;
-  }
+  JuliaRunUVLoop(true);
 
   return result;
 
 }
+
 
 // testing
 extern void DumpJSON(const google::protobuf::Message &message, const char *path);
@@ -781,25 +794,6 @@ jl_function_t* ResolveFunction(const std::string &function) {
 
   return function_pointer;
 
-}
-
-__inline bool ReportException(const char *tag) {
-
-  // ASSERT(message); // not zero
-
-  if (jl_exception_occurred()) {
-    std::cout << "* [" << tag << "] EXCEPTION" << std::endl;
-    jl_printf(JL_STDERR, "[%s] error during run:\n", tag);
-    jl_static_show(JL_STDERR, ptls->exception_in_transit);
-    jl_exception_clear();
-    jl_printf(JL_STDOUT, "\n");
-
-    // set err
-    //response.set_err("julia exception");
-    
-    return true;
-  }
-  return false;
 }
 
 bool JuliaPostInit() {

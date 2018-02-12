@@ -57,11 +57,12 @@ int Pipe::NextWrite() {
             case WAIT_TIMEOUT:
             case WAIT_IO_COMPLETION:
             case ERROR_IO_INCOMPLETE:
-                return 0; // write in progress
+              //std::cout << "WIP" << std::endl;
+              return 0; // write in progress
             default:
-                error_ = true;
-                std::cout << "Pipe err " << err << std::endl;
-                return 0; // err (need a flag here)
+              error_ = true;
+              std::cout << "Pipe err " << err << std::endl;
+              return 0; // err (need a flag here)
             }
         }
     }
@@ -82,7 +83,7 @@ int Pipe::NextWrite() {
             writing_ = false;
         }
         else {
-            // std::cout << "write pending" << std::endl;
+            //std::cout << "write pending" << std::endl;
             writing_ = true;
             return 0;
         }
@@ -98,6 +99,22 @@ int Pipe::StartRead() {
 	ReadFile(handle_, read_buffer_, buffer_size_, 0, &read_io_);
 	return 0;
 }
+
+void Pipe::ClearError() {
+  error_ = false;
+}
+
+DWORD Pipe::BlockingRead(std::string &buf) {
+
+  DWORD bytes_read = 0;
+  if (ReadFile(handle_, read_buffer_, buffer_size_, &bytes_read, NULL)) {
+    buf.assign(read_buffer_, bytes_read);
+    return 0;
+  }
+  return GetLastError();
+
+}
+
 
 DWORD Pipe::Read(std::string &buf, bool block) {
 
@@ -139,10 +156,10 @@ DWORD Pipe::Read(std::string &buf, bool block) {
 
 }
 
-void Pipe::Connect() {
+void Pipe::Connect(bool start_read) {
     connected_ = true;
     std::cout << "pipe connected (" << name_ << ")" << std::endl;
-    StartRead();
+    if(start_read) StartRead();
 }
 
 DWORD Pipe::Reset() {

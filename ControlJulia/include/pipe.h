@@ -61,7 +61,10 @@ public:
   DWORD Start(std::string name, bool wait);
 
   /** we have a notification about connection, do any housekeeping */
-  void Connect();
+  void Connect(bool start_read = true);
+
+  DWORD BlockingRead(std::string &buf);
+
 
   DWORD Read(std::string &buffer, bool block = false);
 
@@ -76,6 +79,8 @@ public:
   int NextWrite();
 
   int StartRead();
+
+  void ClearError();
 
   DWORD Reset();
 

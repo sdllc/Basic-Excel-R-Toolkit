@@ -107,7 +107,7 @@ export class FontMetrics {
     let ascent = this.MeasureTop(char);
     let descent = this.MeasureBottom(char);
   
-    console.info("TM", char, baseline, baseline - ascent, descent - baseline, this.cached_font_)
+    //console.info("TM", char, baseline, baseline - ascent, descent - baseline, this.cached_font_)
 
     return {
       ascent: (baseline - ascent),
