@@ -34,12 +34,22 @@ class ConsoleHistory {
   /** language-specific storage key */
   private key_:string;
 
-  constructor(language_label:string){
+  /** 
+   * flag: write history on every new line. better for dev, 
+   * can unwind for production
+   */
+  private always_store_ = false;
+
+  constructor(language_label:string, always_store = false){
     this.key_ = "console-history-" + language_label;
+    this.always_store_ = always_store;
   }
 
   Push(line: string) {
-    if (line.length) this.history_.push(line);
+    if (line.length) {
+      this.history_.push(line);
+      if(this.always_store_) this.Store();
+    }
   }
 
   /**
@@ -365,7 +375,7 @@ export class TerminalImplementation {
 
   constructor(private language_interface_:LanguageInterface, private node_:HTMLElement){
 
-    this.history_ = new ConsoleHistory((language_interface_.label_||"").toLocaleLowerCase());
+    this.history_ = new ConsoleHistory((language_interface_.label_||"").toLocaleLowerCase(), true);
     this.history_.Restore();
 
     if( !TerminalImplementation.function_tip_node_ ){
@@ -440,6 +450,7 @@ export class TerminalImplementation {
         this.autocomplete_.Show(this.CursorClientPosition(), false);
       }
       else {
+        console.info("FT", autocomplete_response);
         this.FunctionTip(autocomplete_response['function.signature'], autocomplete_response.fguess);
       }
     });
@@ -450,6 +461,11 @@ export class TerminalImplementation {
     this.dismissed_tip_ = this.line_info_.cursor_position;
   }
 
+  /**
+   * 
+   * FIXME: either generalize inputs or move into language-specific classes. 
+   * FIXME: support for multiple candidate messages (list, or with up/down?)
+   */
   FunctionTip(message?: string, function_guess?: string) {
     
     if (!message) TerminalImplementation.function_tip_node_.style.opacity = "0";

@@ -4,16 +4,16 @@ import {clipboard, remote} from 'electron';
 
 const {Menu, MenuItem} = remote;
 
-import {PromptMessage, TerminalImplementation, AutocompleteCallbackType, ExecCallbackType} from './terminal_implementation';
-import {RTextFormatter} from './text_formatter';
-import { LanguageInterface, RInterface, JuliaInterface } from './language_interface';
+import { PromptMessage, TerminalImplementation } from './terminal_implementation';
+import { LanguageInterface } from './language_interface';
+import { RInterface } from './language_interface_r';
+import { JuliaInterface } from './language_interface_julia';
 
 import {Splitter, SplitterOrientation, SplitterEvent} from './splitter';
 import {TabPanel, TabJustify, TabEventType} from './tab_panel';
 import {DialogManager, DialogSpec, DialogButton} from './dialog';
 import {PropertyManager} from './properties';
 import {MenuUtilities} from './menu_utilities';
-
 import {MuliplexedTerminal} from './multiplexed_terminal';
 
 import {Editor} from './editor';

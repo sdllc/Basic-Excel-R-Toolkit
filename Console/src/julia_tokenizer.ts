@@ -12,7 +12,7 @@ import ILanguage = monaco.languages.IMonarchLanguage;
 export const conf: IRichLanguageConfiguration = {
 	wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\#%\^\&\*\(\)\=\$\-\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g,
 	comments: {
-		blockComment: ['###', '###'],
+		blockComment: ['#=', '=#'],
 		lineComment: '#'
 	},
 	brackets: [
