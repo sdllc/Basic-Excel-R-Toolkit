@@ -169,12 +169,28 @@ export class MuliplexedTerminal {
     terminal.Init();
 
     child.addEventListener("contextmenu", e => {
-      Menu.buildFromTemplate([
+      
+      // FIXME: use constants for menus
+
+      let menu_template:Electron.MenuItemConstructorOptions[] = [
         { label: "Copy", click: () => { terminal.Copy(); }},
         { label: "Paste", click: () => { terminal.Paste(); }},
         { type: "separator" },
         { label: "Clear Shell", click: () => { terminal.ClearShell(); }}
-      ]).popup();
+      ]
+
+      let tag = e.target['tagName'] || "";
+      let class_name = e.target['className'] || "";
+
+      if( /img/i.test(tag) || (/canvas/i.test(tag) && /xterm-annotation/.test(class_name))){
+        menu_template.unshift(
+          { label: "Save Image As...", click: () => { terminal.SaveImageAs(e.target); }},
+          { type: "separator" }
+        );
+      }
+
+      Menu.buildFromTemplate(menu_template).popup();
+
     });
     
     child.style.display = (activate ? "block": "none");

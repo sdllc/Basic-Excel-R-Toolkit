@@ -87,7 +87,7 @@ export class AnnotationManager {
     (this.terminal_.viewport as any).viewportElement.addEventListener('scroll', e => {
       this.UpdateAnnotations();
     });
-    
+
   }
 
   /** 

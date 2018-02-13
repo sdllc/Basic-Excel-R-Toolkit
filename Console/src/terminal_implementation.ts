@@ -18,8 +18,10 @@ import * as Rx from 'rxjs';
 import { ConnectableObservable } from 'rxjs/observable/ConnectableObservable';
 import { GraphicsDevice } from './graphics_device';
 
-// for julia, replacing backslash entities in the shell like Julia REPL. 
+// for save image dialog
+import { remote } from 'electron';
 
+// for julia, replacing backslash entities in the shell like Julia REPL. 
 const SymbolTable = require('../data/symbol_table.json');
 
 /**
@@ -588,13 +590,41 @@ export class TerminalImplementation {
     this.xterm_.write(text);
   }
 
-  /*
-  PrintLine = function (line: string, lastline = false) {
-    let formatted = this.config_.formatter_.FormatString(line);
-    if (lastline) this.xterm_.write(formatted);
-    else this.xterm_.writeln(formatted);
+  SaveImageAs(target:any){
+    let tag = target.tagName || "";
+    let image_type = "png";
+    
+    /*
+    // FIXME: use constant strings
+
+    let file_name = remote.dialog.showSaveDialog({
+      title: "Save Image As...",
+      filters: [
+        { name: `${image_type.toUpperCase()} Images`, extensions: [image_type] }
+      ]
+    });
+    if (!file_name || !file_name.length) return;
+    */
+   
+    if(/canvas/i.test(tag)){
+
+      let link = document.createElement("a");
+      link.setAttribute("href", target.toDataURL("image/png"));
+      link.setAttribute("download", "image.png");
+      link.click();
+    }
+    else if(/img/i.test(tag)){
+
+      let m = (target.src||"").match(/data\:image\/(.*?)[,;]/);
+      if(/svg/i.test(m[1])) image_type = "svg";
+      else image_type = m[1];
+
+      let link = document.createElement("a");
+      link.setAttribute("href", target.src);
+      link.setAttribute("download", "image." + image_type);
+      link.click();
+    }
   }
-  */
 
   InsertDataImage(height:number, width:number, mime_type:string, data:Uint8Array, text?:string){
 

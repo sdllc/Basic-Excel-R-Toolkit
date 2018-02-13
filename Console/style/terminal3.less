@@ -3,6 +3,14 @@
   border: 1px solid #ccc;
   margin-left: 1em;
   box-shadow: 0px 5px 12px 0px rgba(217,217,217,1);
+
+  // we raise these nodes above the xterm mouse event
+  // layer, so we can get graphics as targets on right
+  // clicks (context menu). not sure what the actual
+  // z-index of the mouse layer is, or if it's constant.
+
+  z-index: 400;
+
 }
 
 .terminal-child {

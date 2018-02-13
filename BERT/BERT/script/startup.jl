@@ -21,6 +21,9 @@ module BERT
     Application = nothing
   end
 
+  # default to text/html. for GR, this generates SVGs. that probably 
+  # stops working well for lots of data -- in that case, switch to png.
+
   DefaultPlotFormat = "text/html"
 
   import Base.Multimedia: Display, display, displayable
