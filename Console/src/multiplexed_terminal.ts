@@ -1,7 +1,7 @@
 
 import {PromptMessage, TerminalImplementation, AutocompleteCallbackType, ExecCallbackType} from './terminal_implementation';
 import {RTextFormatter} from './text_formatter';
-import {LanguageInterface, RInterface, JuliaInterface} from './language_interface';
+import {LanguageInterface} from './language_interface';
 import {TabPanel, TabJustify, TabEventType} from './tab_panel';
 
 import {remote} from 'electron';

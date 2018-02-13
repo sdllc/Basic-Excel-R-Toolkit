@@ -450,7 +450,7 @@ export class TerminalImplementation {
         this.autocomplete_.Show(this.CursorClientPosition(), false);
       }
       else {
-        console.info("FT", autocomplete_response);
+        // console.info("FT", autocomplete_response);
         this.FunctionTip(autocomplete_response['function.signature'], autocomplete_response.fguess);
       }
     });
@@ -595,6 +595,16 @@ export class TerminalImplementation {
     else this.xterm_.writeln(formatted);
   }
   */
+
+  InsertDataImage(height:number, width:number, mime_type:string, data:Uint8Array, text?:string){
+
+    let node = document.createElement("img") as HTMLImageElement;
+    node.className = "xterm-annotation-node xterm-image-node";
+    if(width) node.style.width = width + "px";
+    if(height) node.style.height = height + "px";
+    node.src = `data:${mime_type};base64,` + btoa(text || (String.fromCharCode.apply(null, data)));
+    this.InsertGraphic(height, node);
+  }
 
   InsertGraphic(height:number, node:HTMLElement){
 
@@ -912,6 +922,37 @@ export class TerminalImplementation {
           text: console_message.text,
           push_stack: console_message.id !== 0 // true
         });
+      }
+      else if( console_message.type === ConsoleMessageType.MIME_DATA ){
+        //console.info( "MIME", console_message );
+        //window['mime'] = console_message;
+        if(console_message.mime_data && console_message.mime_data.length){
+          switch( console_message.mime_type ){
+          case "text/html":
+            let html = new TextDecoder("utf-8").decode(console_message.mime_data);
+
+            // this might be svg, in which case we want to display it as 
+            // an image. otherwise it should be html...
+
+
+            // ...
+
+            if( /\/svg>\s*/i.test(html)){
+              this.InsertDataImage(300, 0, "image/svg+xml", null, html);
+            }
+            else {
+              console.info( "UNHANDLED HTML\n", html );
+              window['h'] = html;
+            }
+            break;
+
+          case "image/jpeg":
+          case "image/gif":
+          case "image/png":
+            this.InsertDataImage(300, 0, console_message.mime_type, console_message.mime_data);
+            break;
+          }
+        }
       }
       else {
         this.PrintConsole(console_message.text, !this.language_interface_.pipe_.busy);

@@ -125,10 +125,10 @@ void COMObjectMap::MapInterface(std::string &name, std::vector< MemberFunction >
 
         if (com_function_descriptor->cParams > 0) {
           if (name_count > 1) {
-            std::cout << "names and params" << std::endl;
+            // std::cout << "names and params" << std::endl;
           }
           else if(com_function_descriptor->cParams > 1){
-            std::cout << "no names, params > 1" << std::endl;
+            // std::cout << "no names, params > 1" << std::endl;
           }
           else { 
             // no names, 1 param. add an RHS parameter. FIXME: optional?

@@ -402,6 +402,8 @@ void JlValueToVariable(BERTBuffers::Variable *variable, jl_value_t *value) {
     // irrespective of julia size (e.g. Ptr{UInt32}) report size = 8; so we can treat 
     // them as 64-bit pointers. but let's check anyway, just in case...
 
+    // FIXME: this may have changed in v0.7; check when you switch
+
     jl_datatype_t* value_type = (jl_datatype_t*)(jl_typeof(value));
     if (value_type->size != 8) {
       std::cerr << "warning: pointer size not == 8 (" << value_type->size << ")" << std::endl;
@@ -437,6 +439,11 @@ void JuliaInit() {
   //jl_options.banner = 1;
   jl_options.quiet = 0;
   jl_options.color = JL_OPTIONS_COLOR_ON;
+  jl_options.handle_signals = JL_OPTIONS_HANDLE_SIGNALS_ON;
+
+  jl_options.use_precompiled = JL_OPTIONS_USE_PRECOMPILED_YES;
+  jl_options.use_compilecache = JL_OPTIONS_USE_COMPILECACHE_YES;
+
 
   ptls = jl_get_ptls_states();
 
@@ -611,7 +618,7 @@ ExecResult JuliaShellExec(const std::string &command, const std::string &shell_b
           //jl_static_show(JL_STDOUT, r);
           jl_call1(jl_get_function(jl_main_module, "display"), r);
 
-          jl_printf(JL_STDOUT, "\n");
+          // jl_printf(JL_STDOUT, "\n");
         }
 
         // to match julia REPL, always an extra newline
@@ -638,7 +645,54 @@ extern void DumpJSON(const google::protobuf::Message &message, const char *path)
 
 extern bool Callback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response);
 
+extern void PushConsoleMessage(google::protobuf::Message &message);
+
+void PushConsoleMimeData(const std::string &mime_type, void *data) {
+
+  std::cout << "render: " << mime_type << std::endl;
+
+  BERTBuffers::CallResponse message;
+  auto mime_data = message.mutable_console()->mutable_mime_data();
+
+  if (jl_is_array((jl_value_t*)data)) {
+    jl_array_t* arr = (jl_array_t*)data;
+    std::cout << "is array!" << std::endl;
+    size_t size = jl_array_len(arr);
+    if (size > 0) {
+      std::cout << "len is " << size << std::endl;
+      void* data = jl_array_data(arr);
+      mime_data->set_data(data, size);
+    }
+  }
+
+  //mime_data->set_data()
+  mime_data->set_mime_type(mime_type);
+
+  PushConsoleMessage(message);
+
+}
+
 jl_value_t* Callback2(const char *command, void *data) {
+
+  // local methods
+
+  std::string string_command(command);
+  if (!string_command.compare("render-html")) {
+    PushConsoleMimeData("text/html", data);
+    return jl_nothing;
+  }
+  else if (!string_command.compare("render-png")) {
+    PushConsoleMimeData("image/png", data);
+    return jl_nothing;
+  }
+  else if (!string_command.compare("render-gif")) {
+    PushConsoleMimeData("image/gif", data);
+    return jl_nothing;
+  }
+  else if (!string_command.compare("render-jpeg")) {
+    PushConsoleMimeData("image/jpeg", data);
+    return jl_nothing;
+  }
 
   // FIXME: unify callback functions
 

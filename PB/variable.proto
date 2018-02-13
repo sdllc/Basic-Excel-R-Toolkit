@@ -191,6 +191,11 @@ message GraphicsContext {
 	//std::string fontname;
 }
 
+message MIMEData {
+  string mime_type = 1;
+  bytes data = 2;
+}
+
 /** console message */
 message Console {
   oneof message {
@@ -198,6 +203,7 @@ message Console {
     string err = 2;
     string prompt = 3;
     GraphicsCommand graphics = 4;
+    MIMEData mime_data = 5;
   }
 }
 

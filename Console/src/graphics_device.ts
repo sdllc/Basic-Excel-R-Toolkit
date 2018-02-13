@@ -49,7 +49,7 @@ export class GraphicsDevice {
     let canvas = document.createElement("canvas");
     canvas.setAttribute("height", height);
     canvas.setAttribute("width", width);
-    canvas.className = "xterm-graphics-node";
+    canvas.className = "xterm-annotation-node xterm-graphics-node";
     canvas.style.height = `${height}px`;
     canvas.style.width = `${width}px`;
     

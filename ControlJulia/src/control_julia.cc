@@ -12,8 +12,12 @@
 
 #include <fstream>
 
+// handle for signaling break (ctrl+c); set as first
+// handle in pipe loop set
+HANDLE break_event_handle = CreateEvent(0, TRUE, FALSE, 0);
+std::vector<HANDLE> handles = { break_event_handle };
+
 std::vector<Pipe*> pipes;
-std::vector<HANDLE> handles;
 std::vector<std::string> console_buffer;
 
 std::string pipename;
@@ -22,6 +26,9 @@ int console_client = -1;
 HANDLE prompt_event_handle;
 
 Pipe stdout_pipe, stderr_pipe;
+
+
+extern void JuliaRunUVLoop(bool until_done);
 
 /** debug/util function */
 void DumpJSON(const google::protobuf::Message &message, const char *path = 0) {
@@ -127,13 +134,13 @@ void ConsoleMessage(const char *buf, int len, int flag) {
 }
 */
 
-std::string prompt_string;
+// std::string prompt_string;
 
 void ConsolePrompt(const char *prompt, uint32_t id) {
   BERTBuffers::CallResponse message;
   message.set_id(id);
   message.mutable_console()->set_prompt(prompt);
-  prompt_string = MessageUtilities::Frame(message);
+  // prompt_string = MessageUtilities::Frame(message);
   // SetEvent(prompt_event_handle);
   PushConsoleMessage(message);
 }
@@ -223,15 +230,28 @@ void pipe_loop() {
   uint32_t console_prompt_id = 1;
   std::string message;
 
+  bool executing_command = false;
+
   ConsolePrompt(default_prompt, console_prompt_id++);
 
   while (true) {
 
     result = WaitForMultipleObjects((DWORD)handles.size(), &(handles[0]), FALSE, 100);
 
-    if (result >= WAIT_OBJECT_0 && result - WAIT_OBJECT_0 < 16) {
+    if (result == WAIT_OBJECT_0) {
 
-      int offset = (result - WAIT_OBJECT_0);
+      // this is the break handle
+      std::cout << "break handle set" << std::endl;
+      ::ResetEvent(break_event_handle);
+
+      shell_buffer.clear();
+      JuliaShellExec("\n", shell_buffer);
+      ConsolePrompt(default_prompt, console_prompt_id++);
+
+    }
+    else if (result >= WAIT_OBJECT_0 && result - WAIT_OBJECT_0 < 16) {
+
+      int offset = (result - WAIT_OBJECT_0 - 1); // -1 for break handle at top
       int index = offset / 2;
       bool write = offset % 2;
       auto pipe = pipes[index];
@@ -257,9 +277,7 @@ void pipe_loop() {
 
           if (success) {
 
-            //std::cout << "success" << std::endl;
             response.set_id(call.id());
-            //DumpJSON(call);
 
             switch (call.operation_case()) {
 
@@ -285,73 +303,23 @@ void pipe_loop() {
 
             case BERTBuffers::CallResponse::kShellCommand:
             {
-              // std::cout << "shell command" << std::endl;
               ExecResult exec_result = JuliaShellExec(call.shell_command(), shell_buffer);
-              // if (call.wait()) pipe->PushWrite(MessageUtilities::Frame(response));
               console_prompt_id = call.id();
               if (exec_result == ExecResult::Incomplete) {
-                //shell_buffer.push_back(call.shell_command());
                 shell_buffer += call.shell_command();
                 shell_buffer += "\n";
                 ConsolePrompt(continuation_prompt, console_prompt_id);
               }
               else {
-                //shell_buffer.clear();
                 shell_buffer = "";
                 ConsolePrompt(default_prompt, console_prompt_id);
               }
               break;
             }
-            /*
-            case BERTBuffers::CallResponse::kControlMessage:
-            {
-              std::string command = call.control_message();
-              std::cout << "system command: " << command << std::endl;
-              if (!command.compare("shutdown")) {
-                //ConsoleControlMessage("shutdown");
-                //Shutdown(0);
-                return; // exit
-              }
-              else if (!command.compare("console")) {
-                if (console_client < 0) {
-                  console_client = index;
-                  std::cout << "set console client -> " << index << std::endl;
-                  pipe->QueueWrites(console_buffer);
-                  console_buffer.clear();
-                }
-                else std::cerr << "console client already set" << std::endl;
-              }
-              else if (!command.compare("close")) {
-                CloseClient(index);
-                break; // no response 
-              }
-              else {
-                // ...
-              }
-
-              if (call.wait()) {
-                response.set_id(call.id());
-                //pipe->PushWrite(rsp.SerializeAsString());
-                pipe->PushWrite(MessageUtilities::Frame(response));
-              }
-              else pipe->NextWrite();
-            }
-            break;
-            */
-
+            
             default:
-              // ...
               0;
             }
-
-            /*
-            if (call_depth == 0 && recursive_calls) {
-              cout << "unwind recursive prompt stack" << endl;
-              recursive_calls = false;
-              ConsoleResetPrompt(prompt_transaction_id);
-            }
-            */
-
           }
           else {
             if (pipe->error()) {
@@ -369,14 +337,14 @@ void pipe_loop() {
             std::cerr << "broken pipe (" << index << ")" << std::endl;
             CloseClient(index);
           }
-          //else if (result == ERROR_MORE_DATA) {
-          //    cout << "(more data...)" << endl;
-          //}
         }
       }
     }
     else if (result == WAIT_TIMEOUT) {
       // ...
+
+      // maybe // JuliaRunUVLoop(false);
+
     }
     else {
       std::cerr << "ERR " << result << ": " << GetLastErrorAsString(result) << std::endl;
@@ -485,12 +453,28 @@ unsigned __stdcall StdioThreadFunction(void *data) {
   return 0;
 }
 
+
 void SetBreak() {
   std::cout << "SET BREAK" << std::endl;
-
-  shell_buffer.clear();
+  
+  // this is moved to the event handler
+  // shell_buffer.clear();
 
   GenerateConsoleCtrlEvent(CTRL_C_EVENT, 0);
+
+  // we want to spin the julia uv loop. there may be 
+  // no better way to do this than to wait... actually 
+  // this is the wrong thread. (...)
+
+  // we want julia to actually do something. so we'll
+  // signal the main thread to run a shell command, 
+  // which should fail.
+
+  // NOTE: only do that if we're not currently executing
+  // a command. need some state.
+
+  ::SetEvent(break_event_handle);
+
 }
 
 unsigned __stdcall ManagementThreadFunction(void *data) {

@@ -33,6 +33,7 @@
     "typescript": "^2.7.1"
   },
   "dependencies": {
+    "@types/text-encoding": "^0.0.32",
     "chokidar": "^2.0.1",
     "electron-reload": "^1.2.2",
     "electron-window-state": "^4.1.1",

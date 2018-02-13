@@ -37,7 +37,7 @@ namespace protobuf_variable_2eproto {
 struct TableStruct {
   static const ::google::protobuf::internal::ParseTableField entries[];
   static const ::google::protobuf::internal::AuxillaryParseTableField aux[];
-  static const ::google::protobuf::internal::ParseTable schema[18];
+  static const ::google::protobuf::internal::ParseTable schema[19];
   static const ::google::protobuf::internal::FieldMetadata field_metadata[];
   static const ::google::protobuf::internal::SerializationTable serialization_table[];
   static const ::google::protobuf::uint32 offsets[];
@@ -61,6 +61,8 @@ void InitDefaultsColorImpl();
 void InitDefaultsColor();
 void InitDefaultsGraphicsContextImpl();
 void InitDefaultsGraphicsContext();
+void InitDefaultsMIMEDataImpl();
+void InitDefaultsMIMEData();
 void InitDefaultsConsoleImpl();
 void InitDefaultsConsole();
 void InitDefaultsFunctionListImpl();
@@ -81,6 +83,7 @@ inline void InitDefaults() {
   InitDefaultsGraphicsCommand();
   InitDefaultsColor();
   InitDefaultsGraphicsContext();
+  InitDefaultsMIMEData();
   InitDefaultsConsole();
   InitDefaultsFunctionList();
   InitDefaultsEnumValue();
@@ -137,6 +140,9 @@ extern GraphicsCommandDefaultTypeInternal _GraphicsCommand_default_instance_;
 class GraphicsContext;
 class GraphicsContextDefaultTypeInternal;
 extern GraphicsContextDefaultTypeInternal _GraphicsContext_default_instance_;
+class MIMEData;
+class MIMEDataDefaultTypeInternal;
+extern MIMEDataDefaultTypeInternal _MIMEData_default_instance_;
 class SheetReference;
 class SheetReferenceDefaultTypeInternal;
 extern SheetReferenceDefaultTypeInternal _SheetReference_default_instance_;
@@ -1780,6 +1786,128 @@ class GraphicsContext : public ::google::protobuf::Message /* @@protoc_insertion
 };
 // -------------------------------------------------------------------
 
+class MIMEData : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:BERTBuffers.MIMEData) */ {
+ public:
+  MIMEData();
+  virtual ~MIMEData();
+
+  MIMEData(const MIMEData& from);
+
+  inline MIMEData& operator=(const MIMEData& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  MIMEData(MIMEData&& from) noexcept
+    : MIMEData() {
+    *this = ::std::move(from);
+  }
+
+  inline MIMEData& operator=(MIMEData&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const MIMEData& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const MIMEData* internal_default_instance() {
+    return reinterpret_cast<const MIMEData*>(
+               &_MIMEData_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    10;
+
+  void Swap(MIMEData* other);
+  friend void swap(MIMEData& a, MIMEData& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline MIMEData* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  MIMEData* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CopyFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void MergeFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void CopyFrom(const MIMEData& from);
+  void MergeFrom(const MIMEData& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const PROTOBUF_FINAL;
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const PROTOBUF_FINAL;
+  void InternalSwap(MIMEData* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // string mime_type = 1;
+  void clear_mime_type();
+  static const int kMimeTypeFieldNumber = 1;
+  const ::std::string& mime_type() const;
+  void set_mime_type(const ::std::string& value);
+  #if LANG_CXX11
+  void set_mime_type(::std::string&& value);
+  #endif
+  void set_mime_type(const char* value);
+  void set_mime_type(const char* value, size_t size);
+  ::std::string* mutable_mime_type();
+  ::std::string* release_mime_type();
+  void set_allocated_mime_type(::std::string* mime_type);
+
+  // bytes data = 2;
+  void clear_data();
+  static const int kDataFieldNumber = 2;
+  const ::std::string& data() const;
+  void set_data(const ::std::string& value);
+  #if LANG_CXX11
+  void set_data(::std::string&& value);
+  #endif
+  void set_data(const char* value);
+  void set_data(const void* value, size_t size);
+  ::std::string* mutable_data();
+  ::std::string* release_data();
+  void set_allocated_data(::std::string* data);
+
+  // @@protoc_insertion_point(class_scope:BERTBuffers.MIMEData)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr mime_type_;
+  ::google::protobuf::internal::ArenaStringPtr data_;
+  mutable int _cached_size_;
+  friend struct ::protobuf_variable_2eproto::TableStruct;
+  friend void ::protobuf_variable_2eproto::InitDefaultsMIMEDataImpl();
+};
+// -------------------------------------------------------------------
+
 class Console : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:BERTBuffers.Console) */ {
  public:
   Console();
@@ -1814,6 +1942,7 @@ class Console : public ::google::protobuf::Message /* @@protoc_insertion_point(c
     kErr = 2,
     kPrompt = 3,
     kGraphics = 4,
+    kMimeData = 5,
     MESSAGE_NOT_SET = 0,
   };
 
@@ -1823,7 +1952,7 @@ class Console : public ::google::protobuf::Message /* @@protoc_insertion_point(c
                &_Console_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    10;
+    11;
 
   void Swap(Console* other);
   friend void swap(Console& a, Console& b) {
@@ -1930,6 +2059,15 @@ class Console : public ::google::protobuf::Message /* @@protoc_insertion_point(c
   ::BERTBuffers::GraphicsCommand* mutable_graphics();
   void set_allocated_graphics(::BERTBuffers::GraphicsCommand* graphics);
 
+  // .BERTBuffers.MIMEData mime_data = 5;
+  bool has_mime_data() const;
+  void clear_mime_data();
+  static const int kMimeDataFieldNumber = 5;
+  const ::BERTBuffers::MIMEData& mime_data() const;
+  ::BERTBuffers::MIMEData* release_mime_data();
+  ::BERTBuffers::MIMEData* mutable_mime_data();
+  void set_allocated_mime_data(::BERTBuffers::MIMEData* mime_data);
+
   MessageCase message_case() const;
   // @@protoc_insertion_point(class_scope:BERTBuffers.Console)
  private:
@@ -1937,6 +2075,7 @@ class Console : public ::google::protobuf::Message /* @@protoc_insertion_point(c
   void set_has_err();
   void set_has_prompt();
   void set_has_graphics();
+  void set_has_mime_data();
 
   inline bool has_message() const;
   void clear_message();
@@ -1949,6 +2088,7 @@ class Console : public ::google::protobuf::Message /* @@protoc_insertion_point(c
     ::google::protobuf::internal::ArenaStringPtr err_;
     ::google::protobuf::internal::ArenaStringPtr prompt_;
     ::BERTBuffers::GraphicsCommand* graphics_;
+    ::BERTBuffers::MIMEData* mime_data_;
   } message_;
   mutable int _cached_size_;
   ::google::protobuf::uint32 _oneof_case_[1];
@@ -1993,7 +2133,7 @@ class FunctionElement : public ::google::protobuf::Message /* @@protoc_insertion
                &_FunctionElement_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    11;
+    12;
 
   void Swap(FunctionElement* other);
   friend void swap(FunctionElement& a, FunctionElement& b) {
@@ -2147,7 +2287,7 @@ class FunctionDescriptor : public ::google::protobuf::Message /* @@protoc_insert
                &_FunctionDescriptor_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    12;
+    13;
 
   void Swap(FunctionDescriptor* other);
   friend void swap(FunctionDescriptor& a, FunctionDescriptor& b) {
@@ -2269,7 +2409,7 @@ class FunctionList : public ::google::protobuf::Message /* @@protoc_insertion_po
                &_FunctionList_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    13;
+    14;
 
   void Swap(FunctionList* other);
   friend void swap(FunctionList& a, FunctionList& b) {
@@ -2374,7 +2514,7 @@ class EnumValue : public ::google::protobuf::Message /* @@protoc_insertion_point
                &_EnumValue_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    14;
+    15;
 
   void Swap(EnumValue* other);
   friend void swap(EnumValue& a, EnumValue& b) {
@@ -2488,7 +2628,7 @@ class EnumType : public ::google::protobuf::Message /* @@protoc_insertion_point(
                &_EnumType_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    15;
+    16;
 
   void Swap(EnumType* other);
   friend void swap(EnumType& a, EnumType& b) {
@@ -2608,7 +2748,7 @@ class ExternalPointer : public ::google::protobuf::Message /* @@protoc_insertion
                &_ExternalPointer_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    16;
+    17;
 
   void Swap(ExternalPointer* other);
   friend void swap(ExternalPointer& a, ExternalPointer& b) {
@@ -2759,7 +2899,7 @@ class CallResponse : public ::google::protobuf::Message /* @@protoc_insertion_po
                &_CallResponse_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    17;
+    18;
 
   void Swap(CallResponse* other);
   friend void swap(CallResponse& a, CallResponse& b) {
@@ -4739,6 +4879,116 @@ inline void GraphicsContext::set_allocated_fontfamily(::std::string* fontfamily)
 
 // -------------------------------------------------------------------
 
+// MIMEData
+
+// string mime_type = 1;
+inline void MIMEData::clear_mime_type() {
+  mime_type_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& MIMEData::mime_type() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.MIMEData.mime_type)
+  return mime_type_.GetNoArena();
+}
+inline void MIMEData::set_mime_type(const ::std::string& value) {
+  
+  mime_type_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:BERTBuffers.MIMEData.mime_type)
+}
+#if LANG_CXX11
+inline void MIMEData::set_mime_type(::std::string&& value) {
+  
+  mime_type_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:BERTBuffers.MIMEData.mime_type)
+}
+#endif
+inline void MIMEData::set_mime_type(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  mime_type_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:BERTBuffers.MIMEData.mime_type)
+}
+inline void MIMEData::set_mime_type(const char* value, size_t size) {
+  
+  mime_type_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:BERTBuffers.MIMEData.mime_type)
+}
+inline ::std::string* MIMEData::mutable_mime_type() {
+  
+  // @@protoc_insertion_point(field_mutable:BERTBuffers.MIMEData.mime_type)
+  return mime_type_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* MIMEData::release_mime_type() {
+  // @@protoc_insertion_point(field_release:BERTBuffers.MIMEData.mime_type)
+  
+  return mime_type_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void MIMEData::set_allocated_mime_type(::std::string* mime_type) {
+  if (mime_type != NULL) {
+    
+  } else {
+    
+  }
+  mime_type_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), mime_type);
+  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.MIMEData.mime_type)
+}
+
+// bytes data = 2;
+inline void MIMEData::clear_data() {
+  data_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& MIMEData::data() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.MIMEData.data)
+  return data_.GetNoArena();
+}
+inline void MIMEData::set_data(const ::std::string& value) {
+  
+  data_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:BERTBuffers.MIMEData.data)
+}
+#if LANG_CXX11
+inline void MIMEData::set_data(::std::string&& value) {
+  
+  data_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:BERTBuffers.MIMEData.data)
+}
+#endif
+inline void MIMEData::set_data(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  data_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:BERTBuffers.MIMEData.data)
+}
+inline void MIMEData::set_data(const void* value, size_t size) {
+  
+  data_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:BERTBuffers.MIMEData.data)
+}
+inline ::std::string* MIMEData::mutable_data() {
+  
+  // @@protoc_insertion_point(field_mutable:BERTBuffers.MIMEData.data)
+  return data_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* MIMEData::release_data() {
+  // @@protoc_insertion_point(field_release:BERTBuffers.MIMEData.data)
+  
+  return data_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void MIMEData::set_allocated_data(::std::string* data) {
+  if (data != NULL) {
+    
+  } else {
+    
+  }
+  data_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), data);
+  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.MIMEData.data)
+}
+
+// -------------------------------------------------------------------
+
 // Console
 
 // string text = 1;
@@ -5064,6 +5314,46 @@ inline ::BERTBuffers::GraphicsCommand* Console::mutable_graphics() {
   }
   // @@protoc_insertion_point(field_mutable:BERTBuffers.Console.graphics)
   return message_.graphics_;
+}
+
+// .BERTBuffers.MIMEData mime_data = 5;
+inline bool Console::has_mime_data() const {
+  return message_case() == kMimeData;
+}
+inline void Console::set_has_mime_data() {
+  _oneof_case_[0] = kMimeData;
+}
+inline void Console::clear_mime_data() {
+  if (has_mime_data()) {
+    delete message_.mime_data_;
+    clear_has_message();
+  }
+}
+inline ::BERTBuffers::MIMEData* Console::release_mime_data() {
+  // @@protoc_insertion_point(field_release:BERTBuffers.Console.mime_data)
+  if (has_mime_data()) {
+    clear_has_message();
+      ::BERTBuffers::MIMEData* temp = message_.mime_data_;
+    message_.mime_data_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline const ::BERTBuffers::MIMEData& Console::mime_data() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.Console.mime_data)
+  return has_mime_data()
+      ? *message_.mime_data_
+      : *reinterpret_cast< ::BERTBuffers::MIMEData*>(&::BERTBuffers::_MIMEData_default_instance_);
+}
+inline ::BERTBuffers::MIMEData* Console::mutable_mime_data() {
+  if (!has_mime_data()) {
+    clear_message();
+    set_has_mime_data();
+    message_.mime_data_ = new ::BERTBuffers::MIMEData;
+  }
+  // @@protoc_insertion_point(field_mutable:BERTBuffers.Console.mime_data)
+  return message_.mime_data_;
 }
 
 inline bool Console::has_message() const {
@@ -6157,6 +6447,8 @@ inline CallResponse::OperationCase CallResponse::operation_case() const {
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

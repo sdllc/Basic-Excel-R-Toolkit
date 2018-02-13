@@ -21,53 +21,135 @@ module BERT
     Application = nothing
   end
 
+  DefaultPlotFormat = "text/html"
+
+  import Base.Multimedia: Display, display, displayable
+
+  #
+  # this changes in >0.6.2, the base type becomes "AbstractDisplay"
+  #
+  struct ShellDisplay <: Display
+  end
+
+  #
+  #
+  #
+  function display(d::BERT.ShellDisplay, mime::MIME"text/plain", x)
+    io = STDOUT
+    # write(io, answer_color(d.repl))
+    show(IOContext(io, :limit => true), mime, x)
+    println(io)
+  end
+
+  #
+  #
+  #
+  function display(d::BERT.ShellDisplay, mime::MIME"text/html", x)
+    buffer = IOBuffer()
+    show(buffer, MIME("text/html"), x)
+    BERT.Callback("render-html", buffer.data)
+  end
+  
+  #
+  #
+  #
+  function display(d::BERT.ShellDisplay, mime::MIME"text/markdown", x)
+    io = STDOUT
+    Base.Markdown.term(io, x)
+    println(io) # this might not be necessary for MD
+  end
+
+  #
+  #
+  #
+  function display(d::BERT.ShellDisplay, mime::MIME"image/png", x)
+    buffer = IOBuffer()
+    show(buffer, MIME("image/png"), x)
+    BERT.Callback("render-png", buffer.data)
+  end
+
+  function display(d::BERT.ShellDisplay, mime::MIME"image/jpeg", x)
+    buffer = IOBuffer()
+    show(buffer, MIME("image/jpeg"), x)
+    BERT.Callback("render-jpeg", buffer.data)
+  end
+  
+  function display(d::BERT.ShellDisplay, mime::MIME"image/gif", x)
+    buffer = IOBuffer()
+    show(buffer, MIME("image/gif"), x)
+    BERT.Callback("render-gif", buffer.data)
+  end
+
+  #
+  # 
+  #
+  function displayable(d::BERT.ShellDisplay, M::MIME)
+    mime_string = string(M)
+    return (Base.Multimedia.istextmime(M) 
+      || string(M) == "image/png"
+      || string(M) == "image/jpeg"
+      || string(M) == "image/gif" )
+  end
+
+  #
+  #
+  #
+  display(d::BERT.ShellDisplay, x::Base.Markdown.MD) = display(d, MIME("text/markdown"), x)
+ 
+  #
+  #
+  #
+  function display(d::BERT.ShellDisplay, x) 
+
+    # my understanding is we can't switch on a type that's not loaded,
+    # so this has to use strings. even in a trycatch block? although 
+    # probably string matching is preferable to trycatch anyway.
+
+    if(startswith(string(typeof(x)), "Plots.Plot"))
+      display(d, MIME(BERT.DefaultPlotFormat), x)  
+    else
+      display(d, MIME("text/plain"), x)  
+    end
+  end
+
+  #
+  #
+  #
+  pushdisplay(BERT.ShellDisplay());
+
+  #----------------------------------------------------------------------------
+  #
+  # prints help documentation, as in the julia console. atm we're not 
+  # changing prompts, but it works the same way: `?help`
+  #
+  #----------------------------------------------------------------------------
   function ShellHelp(str)
+
+    # helpmode returns the docs (as markdown), but it also prints
+    # some stuff directly (search, plus maybe something else); so
+    # we want to evaluate it, then print the result. Markdown.term
+    # also has a result, which we want to suppress.
+
     Markdown.term(STDOUT, Main.eval(Base.Docs.helpmode(str)));
     nothing
+
   end
 
   # EXCEL = nothing
 
-  const colors = Base.AnyDict(
-      :black         => "\033[30m",
-      :red           => "\033[31m",
-      :green         => "\033[32m",
-      :yellow        => "\033[33m",
-      :blue          => "\033[34m",
-      :magenta       => "\033[35m",
-      :cyan          => "\033[36m",
-      :white         => "\033[37m",
-      :light_black   => "\033[90m", # gray
-      :light_red     => "\033[91m",
-      :light_green   => "\033[92m",
-      :light_yellow  => "\033[93m",
-      :light_blue    => "\033[94m",
-      :light_magenta => "\033[95m",
-      :light_cyan    => "\033[96m",
-      :red_bg        => "\033[41m",
-      :green_bg      => "\033[42m",
-      :yellow_bg     => "\033[43m",
-      :blue_bg       => "\033[44m",
-      :normal        => "\033[0m",
-      :default       => "\033[39m",
-      :bold          => "\033[1m",
-      :underline     => "\033[4m",
-      :blink         => "\033[5m",
-      :reverse       => "\033[7m",
-      :hidden        => "\033[8m",
-      :nothing       => "",
-    );
-
   #---------------------------------------------------------------------------- 
+  #
   # banner under regular julia banner
+  #
   #---------------------------------------------------------------------------- 
+  function Banner()
 
-  Banner = function()
-
+    normal = "\033[0m";
+    reverse ="\033[7m";
 
     print("""
 
-$(colors[:green])BERT$(colors[:normal]) Julia shell version 0.1 BETA. $(colors[:reverse])This is not the default Julia shell$(colors[:normal]). Many
+BERT Julia shell version 0.1 BETA. $(reverse)This is not the default Julia shell$(normal). Many
 things are similar, but some things are different. Please send feedback if you
 have questions or comments, and save your work often. 
 
@@ -76,14 +158,17 @@ have questions or comments, and save your work often.
 
   end
 
+  #---------------------------------------------------------------------------- 
   #
-  # this function gets a list of all functions in Main, returning function 
-  # name and list of argument names. note that (at least for now) we don't
-  # support named arguments; only ordinal arguments.
+  # returns a list of all functions in Main, formatted as string
+  # arrays: [function name, argument name 1, ...].  note that (at least 
+  # for now) we don't support named arguments; only ordinal arguments.
   #
-  # there may be a faster way to do this from code
-  #
+  #---------------------------------------------------------------------------- 
   ListFunctions = function()
+
+    # watch out for the case where ans is a function
+
     function_list = filter(x -> (x != "ans" && getfield(Main, x) isa Function), names(Main)) 
     map(function(x)
       m = match( r"\(([^\(]*)\) in", string(methods(getfield(Main, x))))
@@ -92,9 +177,11 @@ have questions or comments, and save your work often.
     end, function_list )
   end
 
+  #---------------------------------------------------------------------------- 
   #
+  # AC function. FIXME: normalize AC between R, Julia (&c)
   #
-  #
+  #---------------------------------------------------------------------------- 
   Autocomplete = function(buffer, position)
     try
       return Base.REPLCompletions.completions(buffer, position)[1];
@@ -103,9 +190,11 @@ have questions or comments, and save your work often.
     return nothing;
   end
 
+  #---------------------------------------------------------------------------- 
   #
+  # sets callback pointers
   #
-  #
+  #---------------------------------------------------------------------------- 
   SetCallbacks = function(com_callback::Ptr{Void}, callback::Ptr{Void})
 
     # clearly I don't understand how julia closures work
@@ -115,13 +204,16 @@ have questions or comments, and save your work often.
     nothing
   end
 
+  #---------------------------------------------------------------------------- 
   #
+  # runs code (not COM) callback
   #
-  #
+  #---------------------------------------------------------------------------- 
   Callback = function(command::String, arguments::Any = nothing)
     ccall(BERT.__callback_pointer, Any, (Cstring, Any), command, arguments)
   end
 
+  #---------------------------------------------------------------------------- 
   #
   # calls release on a COM pointer. 
   #
@@ -134,13 +226,16 @@ have questions or comments, and save your work often.
   # it's probably not possible to perfectly lock these, but we might do a 
   # better job of hiding. 
   #
+  #---------------------------------------------------------------------------- 
   FinalizeCOMPointer = function(x)
     Callback("release-pointer", x.p)
   end
 
+  #---------------------------------------------------------------------------- 
   #
   # NOTE: object with finalizer has to be mutable (?)
   #
+  #---------------------------------------------------------------------------- 
   mutable struct FinalizablePointer 
     p::Ptr{UInt64}
     function FinalizablePointer(p)
@@ -150,12 +245,14 @@ have questions or comments, and save your work often.
     end
   end
 
+  #---------------------------------------------------------------------------- 
   #
   # creates a type representing a COM interface. this _creates_
   # types, it does not instantiate them; this should only be 
   # called once per type. after that they can be instantiated 
   # directly.
   #
+  #---------------------------------------------------------------------------- 
   macro CreateCOMTypeInternal(struct_name, descriptor)
 
     local descriptor_ = eval(descriptor)
@@ -183,11 +280,13 @@ have questions or comments, and save your work often.
 
   end
 
+  #---------------------------------------------------------------------------- 
   #
   # creates wrappers for COM pointers. types are generated on the fly
   # and stuffed into this namespace (glad that works, btw). subsequent
   # calls return instances. 
   #
+  #---------------------------------------------------------------------------- 
   CreateCOMType = function(descriptor)
 
     name, pointer, functions_list = descriptor
@@ -206,8 +305,7 @@ have questions or comments, and save your work often.
 
   end
 
-  # ####################################
-
+ 
   #
   # single enum
   #
@@ -284,12 +382,16 @@ have questions or comments, and save your work often.
 
   end
 
+  #---------------------------------------------------------------------------- 
+  # 
+  # creates/installs enums as sets of modules
   #
   # this is pretty fast, even if it's rewriting. it's night and day
   # vis a vis using structs. (also love that you can redefine modules).
   #
   # would like to remove the eval function from each module, though.
   #
+  #---------------------------------------------------------------------------- 
   CreateEnumModules = function(mod, enums_list)
 
     # create all modules 
@@ -306,31 +408,40 @@ have questions or comments, and save your work often.
 
   end
 
+  #---------------------------------------------------------------------------- 
+  #
+  # installs values in a module enum
   #
   # also pretty fast. much better. could probably speed it up by
   # consolidating all the evals. (FIXME: maybe via quote?)
   #
+  #---------------------------------------------------------------------------- 
   CreateEnumValues = function(parent_module, module_name, values)
     mod = getfield(parent_module, Symbol(module_name))
     [eval(mod, :($(Symbol(x[1])) = $(x[2]))) for x in values]
   end
 
+  #---------------------------------------------------------------------------- 
   #
   # installs the root "Application" pointer in the EXCEL module
   #
+  #---------------------------------------------------------------------------- 
   InstallApplicationPointer = function(descriptor)
+
     global ApplicationDescriptor = descriptor # for dev/debug
-   
     local app = CreateCOMType(descriptor)
+
+    # set pointer
     EXCEL.eval(:(Application = $(app)))
 
     # use module system
     CreateEnumModules(EXCEL, descriptor[4])
    
     nothing
+
   end
 
-end
+end # module BERT
 
 #
 # hoist into namespace

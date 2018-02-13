@@ -24,13 +24,16 @@ export enum ConsoleMessageType {
   TEXT,
   ERR,
   PROMPT,
-  GRAPHICS
+  GRAPHICS,
+  MIME_DATA
 }
 
 export interface ConsoleMessage {
   id:number;
-  text:string;
+  text?:string;
   type:ConsoleMessageType;
+  mime_data?:any;
+  mime_type?:string;
 }
 
 export class Pipe {
@@ -262,12 +265,19 @@ export class Pipe {
       case messages.Console.MessageCase.PROMPT:
         this.console_messages_.next({ id:response.getId(), type: ConsoleMessageType.PROMPT, text: obj.getPrompt() });
         break;
+      
       case messages.Console.MessageCase.TEXT:
         this.console_messages_.next({ id:response.getId(),type: ConsoleMessageType.TEXT, text: obj.getText() });
         break;
+      
       case messages.Console.MessageCase.ERR:
         this.console_messages_.next({ id:response.getId(),type: ConsoleMessageType.ERR, text: obj.getErr() });
         break;
+
+      case messages.Console.MessageCase.MIME_DATA:
+        this.console_messages_.next({ id:response.getId(),type: ConsoleMessageType.MIME_DATA, mime_type: obj.getMimeData().getMimeType(), mime_data: obj.getMimeData().getData_asU8() });
+        break;
+
       case messages.Console.MessageCase.GRAPHICS:
 
         // graphics messages are specific to R (at least for now), but they

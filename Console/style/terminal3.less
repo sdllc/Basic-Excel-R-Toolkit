@@ -1,4 +1,10 @@
 
+.xterm-annotation-node {
+  border: 1px solid #ccc;
+  margin-left: 1em;
+  box-shadow: 0px 5px 12px 0px rgba(217,217,217,1);
+}
+
 .terminal-child {
   position: absolute;
   top: 0px;
@@ -9,14 +15,10 @@
 }
 
 .xterm-graphics-node {
-  //border-radius: 3px;
-  border: 1px solid #ccc;
-  margin-left: 1em;
 
   /* 
    * we want to guarantee the size of the canvas, otherwise it will 
    * be scaled and look fuzzy, particularly text
    */
   box-sizing: content-box;
-  box-shadow: 0px 5px 12px 0px rgba(217,217,217,1);
 }
