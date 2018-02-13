@@ -10,7 +10,7 @@ import {AnnotationManager, AnnotationType} from './annotation_addon';
 XTerm.applyAddon(AnnotationManager);
 
 import { TextFormatter, VTESC } from './text_formatter';
-import { clipboard } from 'electron';
+import { shell, clipboard } from 'electron';
 import { LanguageInterface } from './language_interface';
 import {Pipe, ConsoleMessage, ConsoleMessageType} from './pipe';
 
@@ -864,6 +864,11 @@ export class TerminalImplementation {
     window.addEventListener("resize", event => {
       // FIXME: debounce
       this.Resize(); // checks active
+    });
+
+    (this.xterm_ as any).setHypertextLinkHandler((event: MouseEvent, uri: string) => {
+      shell.openExternal(uri);
+      return true;
     });
 
     this.xterm_.on("key", (key, event) => this.KeyDown(key, event));

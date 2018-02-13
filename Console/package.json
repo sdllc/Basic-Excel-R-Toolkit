@@ -39,6 +39,6 @@
     "google-protobuf": "^3.5.0",
     "monaco-editor": "^0.10.1",
     "rxjs": "^5.5.6",
-    "xterm": "^3.0.2"
+    "xterm": "^3.1.0"
   }
 }

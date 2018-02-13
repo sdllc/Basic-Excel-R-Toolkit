@@ -64,6 +64,12 @@ export class Splitter {
   /** children */
   private children_:HTMLElement[] = [];
 
+  /** visibility */
+  private visible_:boolean[] = [true, true];
+
+  /** accessor */
+  public get visible(){ return this.visible_; }
+
   /** splitter */
   private splitter_:HTMLElement;
 
@@ -109,7 +115,7 @@ export class Splitter {
    * @param orientation 
    * @param split as percent of total (e.g. * 100); defaults to 50 (50%)
    */
-  constructor(parent:HTMLElement|string, orientation:SplitterOrientation = SplitterOrientation.Horizontal, split = 50){
+  constructor(parent:HTMLElement|string, orientation:SplitterOrientation = SplitterOrientation.Horizontal, split = 50, visible:boolean[] = [true, true]){
 
     // resolve parent if string
 
@@ -144,6 +150,10 @@ export class Splitter {
       Splitter.overlay_display_ = document.createElement("div");
       Splitter.overlay_.appendChild(Splitter.overlay_display_);
     }
+
+    // set initial visibility
+
+    this.visible_ = visible;
 
     // create subject for split. that subject also is the de-facto
     // accessor for the current split value
@@ -234,6 +244,24 @@ export class Splitter {
     
   }
 
+  /** 
+   * show or hide one of the child panes 
+   */
+  ShowChild(index:number, show=true){
+    if( show === this.visible_[index] ) return;
+    this.visible_[index] = show;
+    this.UpdateClasses();
+  }
+
+  /**
+   * show or hide both
+   */
+  ShowAll(show=true){
+    if(this.visible_[0] === show && this.visible_[1] === show) return;
+    this.visible_ = [ show, show ];
+    this.UpdateClasses();
+  }
+
   /**
    * set split and update layout
    */
@@ -278,10 +306,23 @@ export class Splitter {
    * update layout only (no class changes)
    */
   private Update(key:string, split:number){
-    this.children_[0].style[key] = `${split}%`;
-    this.children_[1].style[key] = `${100-split}%`;
-    Splitter.overlay_display_.textContent = `${split.toFixed(1)}%`;  
+
+    if(this.visible_[0] && this.visible_[1]){
+      this.children_[0].style[key] = `${split}%`;
+      this.children_[1].style[key] = `${100-split}%`;
+      Splitter.overlay_display_.textContent = `${split.toFixed(1)}%`;  
+      //this.children_[0].style.display = this.children_[1].style.display = 
+      this.splitter_.style.display = "";
+    } 
+    else {
+      this.children_[0].style[key] = this.visible_[0] ? "100%" : "0%";
+      this.children_[1].style[key] = this.visible_[1] ? "100%" : "0%";
+      //this.children_[0].style.display = this.visible_[0] ? "" : "none";
+      //this.children_[1].style.display = this.visible_[1] ? "" : "none";
+      this.splitter_.style.display = "none";
+    }
     this.split_.next({split, orientation: this.orientation_});
+
   }
 
 }

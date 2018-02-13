@@ -5,7 +5,7 @@ import { remote } from 'electron';
 const { Menu, MenuItem, dialog } = remote;
 
 import { MenuUtilities } from './menu_utilities';
-import * as JuliaLanguage from './julia_language';
+import * as JuliaLanguage from './julia_tokenizer';
 import { TabPanel, TabJustify, TabEventType, TabSpec } from './tab_panel';
 
 const Constants = require("../data/constants.json");

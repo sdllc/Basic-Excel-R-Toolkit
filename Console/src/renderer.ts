@@ -21,7 +21,7 @@ import {Editor} from './editor';
 import * as Rx from "rxjs";
 import * as path from 'path';
 import { prototype } from 'stream';
-import { language } from './julia_language';
+// import { language } from './julia_tokenizer';
 
 // FIXME: l10n override?
 const MenuTemplate = require("../data/menu.json");
@@ -38,7 +38,13 @@ window['properties'] = properties;
 let splitter = new Splitter(
   document.getElementById("main-window"), 
   properties.terminal.orientation || SplitterOrientation.Horizontal, 
-  properties.terminal.split || 50);
+  properties.terminal.split || 50,
+  [
+    // we want these to be positive values, but have positive defaults.
+    typeof properties.terminal.show_editor === "undefined" || properties.terminal.show_editor, 
+    typeof properties.terminal.show_shell === "undefined" || properties.terminal.show_shell 
+  ]  
+);
 
 // dialogs
 
@@ -169,6 +175,14 @@ splitter.events.filter(x => (x === SplitterEvent.EndDrag||x === SplitterEvent.Up
 
 MenuUtilities.Load(MenuTemplate);
 
+// update to match properties
+
+MenuUtilities.SetCheck("main.view.show-editor", 
+  typeof properties.terminal.show_editor === "undefined" || properties.terminal.show_editor);
+MenuUtilities.SetCheck("main.view.show-shell", 
+  typeof properties.terminal.show_shell === "undefined" || properties.terminal.show_shell);
+
+
 MenuUtilities.events.subscribe(event => {
 
   switch(event.id){
@@ -191,7 +205,22 @@ MenuUtilities.events.subscribe(event => {
     splitter.orientation = SplitterOrientation.Vertical;
     break;
 
-  // prefs is now handled by editor (just loads)
+  case "main.view.show-editor":
+    splitter.ShowChild(0, event.item.checked);
+    properties.terminal.show_editor = event.item.checked;
+    terminals.UpdateLayout();
+    editor.UpdateLayout();
+    break;
+
+  case "main.view.show-shell":
+    splitter.ShowChild(1, event.item.checked);
+    properties.terminal.show_shell = event.item.checked;
+    terminals.UpdateLayout();
+    editor.UpdateLayout();
+    break;
+    
+  // prefs is now handled by editor (just loads). we have 
+  // it here to prevent debug logging
 
   case "main.view.preferences":
     break;
