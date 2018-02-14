@@ -649,17 +649,14 @@ extern void PushConsoleMessage(google::protobuf::Message &message);
 
 void PushConsoleMimeData(const std::string &mime_type, void *data) {
 
-  std::cout << "render: " << mime_type << std::endl;
-
   BERTBuffers::CallResponse message;
   auto mime_data = message.mutable_console()->mutable_mime_data();
 
   if (jl_is_array((jl_value_t*)data)) {
     jl_array_t* arr = (jl_array_t*)data;
-    std::cout << "is array!" << std::endl;
     size_t size = jl_array_len(arr);
     if (size > 0) {
-      std::cout << "len is " << size << std::endl;
+      //std::cout << "array len is " << size << std::endl;
       void* data = jl_array_data(arr);
       mime_data->set_data(data, size);
     }
@@ -672,27 +669,48 @@ void PushConsoleMimeData(const std::string &mime_type, void *data) {
 
 }
 
-jl_value_t* Callback2(const char *command, void *data) {
+jl_value_t* Callback2(const char *command, void *data1, void *data2, void *data3) {
 
   // local methods
 
   std::string string_command(command);
+
+  if (!string_command.compare("render-mime")) {
+  
+    std::string mime_type;
+    jl_value_t *value1 = (jl_value_t*)data1;
+
+    if (jl_typeis(value1, jl_string_type)) {
+      mime_type.assign(jl_string_ptr(value1), jl_string_len(value1));
+      //std::cout << "Render mime type: " << mime_type << std::endl;
+      PushConsoleMimeData(mime_type, data2);
+    }
+
+    // FIXME: report error
+
+    return jl_nothing;
+  }
+
+  /*
+
   if (!string_command.compare("render-html")) {
-    PushConsoleMimeData("text/html", data);
+    PushConsoleMimeData("text/html", data1);
     return jl_nothing;
   }
   else if (!string_command.compare("render-png")) {
-    PushConsoleMimeData("image/png", data);
+    PushConsoleMimeData("image/png", data1);
     return jl_nothing;
   }
   else if (!string_command.compare("render-gif")) {
-    PushConsoleMimeData("image/gif", data);
+    PushConsoleMimeData("image/gif", data1);
     return jl_nothing;
   }
   else if (!string_command.compare("render-jpeg")) {
-    PushConsoleMimeData("image/jpeg", data);
+    PushConsoleMimeData("image/jpeg", data1);
     return jl_nothing;
   }
+
+  */
 
   // FIXME: unify callback functions
 
@@ -719,8 +737,8 @@ jl_value_t* Callback2(const char *command, void *data) {
   auto callback = call->mutable_function_call();
   callback->set_function(command);
 
-  if (data) //SEXPToVariable(callback->add_arguments(), reinterpret_cast<SEXP>(data));
-    JlValueToVariable(callback->add_arguments(), reinterpret_cast<jl_value_t*>(data));
+  if (data1) //SEXPToVariable(callback->add_arguments(), reinterpret_cast<SEXP>(data));
+    JlValueToVariable(callback->add_arguments(), reinterpret_cast<jl_value_t*>(data1));
 
   bool success = Callback(*call, *response);
   // cout << "callback (2) complete (" << success << ")" << endl;

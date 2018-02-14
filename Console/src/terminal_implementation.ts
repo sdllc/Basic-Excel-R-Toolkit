@@ -626,13 +626,33 @@ export class TerminalImplementation {
     }
   }
 
+  /**
+   * thanks to
+   * https://stackoverflow.com/questions/12710001/how-to-convert-uint8-array-to-base64-encoded-string
+   *
+   * FIXME: move to utility library
+   */
+  Uint8ToBase64(data:Uint8Array):string{
+
+    let chunks = [];
+    let block = 0x8000;
+    for( let i = 0; i< data.length; i += block){
+      chunks.push( String.fromCharCode.apply(null, data.subarray(i, i + block)));
+    }
+    return btoa(chunks.join(""));
+
+  }
+
   InsertDataImage(height:number, width:number, mime_type:string, data:Uint8Array, text?:string){
 
     let node = document.createElement("img") as HTMLImageElement;
     node.className = "xterm-annotation-node xterm-image-node";
     if(width) node.style.width = width + "px";
     if(height) node.style.height = height + "px";
-    node.src = `data:${mime_type};base64,` + btoa(text || (String.fromCharCode.apply(null, data)));
+
+    let src = `data:${mime_type};base64,`;
+    if(text) node.src = src + btoa(text);
+    else node.src = src + this.Uint8ToBase64(data);
     this.InsertGraphic(height, node);
   }
 
@@ -979,6 +999,9 @@ export class TerminalImplementation {
           case "image/jpeg":
           case "image/gif":
           case "image/png":
+
+            //console.info("not rendering");
+            window['msg'] = console_message;
             this.InsertDataImage(300, 0, console_message.mime_type, console_message.mime_data);
             break;
           }

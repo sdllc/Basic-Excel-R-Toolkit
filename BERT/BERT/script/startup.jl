@@ -43,15 +43,6 @@ module BERT
     show(IOContext(io, :limit => true), mime, x)
     println(io)
   end
-
-  #
-  #
-  #
-  function display(d::BERT.ShellDisplay, mime::MIME"text/html", x)
-    buffer = IOBuffer()
-    show(buffer, MIME("text/html"), x)
-    BERT.Callback("render-html", buffer.data)
-  end
   
   #
   #
@@ -63,25 +54,29 @@ module BERT
   end
 
   #
+  # unify remote render
   #
-  #
-  function display(d::BERT.ShellDisplay, mime::MIME"image/png", x)
+  function remote_display(mime_type::String, x)
     buffer = IOBuffer()
-    show(buffer, MIME("image/png"), x)
-    BERT.Callback("render-png", buffer.data)
+    show(buffer, MIME(mime_type), x)
+    BERT.Callback("render-mime", mime_type, buffer.data)
   end
 
-  function display(d::BERT.ShellDisplay, mime::MIME"image/jpeg", x)
-    buffer = IOBuffer()
-    show(buffer, MIME("image/jpeg"), x)
-    BERT.Callback("render-jpeg", buffer.data)
-  end
-  
-  function display(d::BERT.ShellDisplay, mime::MIME"image/gif", x)
-    buffer = IOBuffer()
-    show(buffer, MIME("image/gif"), x)
-    BERT.Callback("render-gif", buffer.data)
-  end
+  #
+  # what to do about html? render inline, pass to console? (...)
+  # NOTE: this function was here to support svg graphics, that's now inlined
+  #
+  #function display(d::BERT.ShellDisplay, mime::MIME"text/html", x)
+  #  buffer = IOBuffer()
+  #  show(buffer, MIME("text/html"), x)
+  #  BERT.Callback("render-mime", "text/html", buffer.data)
+  #end
+
+  display(d::BERT.ShellDisplay, mime::MIME"image/png", x) = remote_display(mime(), x)
+  display(d::BERT.ShellDisplay, mime::MIME"image/jpeg", x) = remote_display(mime(), x)
+  display(d::BERT.ShellDisplay, mime::MIME"image/gif", x) = remote_display(mime(), x)
+  display(d::BERT.ShellDisplay, mime::MIME"image/svg+xml", x) = remote_display(mime(), x)
+  display(d::BERT.ShellDisplay, x::Base.Markdown.MD) = display(d, MIME("text/markdown"), x)
 
   #
   # 
@@ -97,11 +92,6 @@ module BERT
   #
   #
   #
-  display(d::BERT.ShellDisplay, x::Base.Markdown.MD) = display(d, MIME("text/markdown"), x)
- 
-  #
-  #
-  #
   function display(d::BERT.ShellDisplay, x) 
 
     # my understanding is we can't switch on a type that's not loaded,
@@ -109,7 +99,8 @@ module BERT
     # probably string matching is preferable to trycatch anyway.
 
     if(startswith(string(typeof(x)), "Plots.Plot"))
-      display(d, MIME(BERT.DefaultPlotFormat), x)  
+      # display(d, MIME(BERT.DefaultPlotFormat), x)  
+      remote_display(BERT.DefaultPlotFormat, x)
     else
       display(d, MIME("text/plain"), x)  
     end
@@ -212,8 +203,11 @@ have questions or comments, and save your work often.
   # runs code (not COM) callback
   #
   #---------------------------------------------------------------------------- 
-  Callback = function(command::String, arguments::Any = nothing)
-    ccall(BERT.__callback_pointer, Any, (Cstring, Any), command, arguments)
+  Callback = function(command::String, 
+    argument1::Any = nothing, argument2::Any = nothing, argument3::Any = nothing)
+    
+    ccall(BERT.__callback_pointer, Any, (Cstring, Any, Any, Any), command, 
+      argument1, argument2, argument3)
   end
 
   #---------------------------------------------------------------------------- 
