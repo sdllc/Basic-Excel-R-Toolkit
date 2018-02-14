@@ -77,6 +77,9 @@ export class AnnotationManager {
   /** top of buffer, in case it overflows */ 
   private top_offset_ = 0;
 
+  /** attach to node */
+  private node_:HTMLElement;
+
   /** constructor is private; use factory (via accessor) */
   private constructor(terminal:Terminal){
     this.terminal_ = terminal;
@@ -110,6 +113,10 @@ export class AnnotationManager {
 
     let buffer = this.terminal_.buffer;
 
+    if(!this.node_){
+      this.node_ = ((this.terminal_ as any).parent as HTMLElement).querySelector(".xterm-screen");
+    }
+
     // update positions
 
     // TODO: remove offscreen annotations from DOM
@@ -122,7 +129,7 @@ export class AnnotationManager {
 
       if(!annotation.attached){
         annotation.element.style.position = "absolute";
-        ((this.terminal_ as any).parent as HTMLElement).appendChild(annotation.element);
+        this.node_.appendChild(annotation.element);
         annotation.attached = true;
       }
 

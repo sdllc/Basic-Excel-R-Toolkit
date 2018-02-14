@@ -726,10 +726,10 @@ export class TerminalImplementation {
     
     if (!text) text = (clipboard.readText() || "");
 
-    // FIXME: cursor pos
+    // FIXME: cursor pos [meaning what?]
 
     let lines = (text || "").split(/\n/).map(x => x.trim());
-    console.info(lines, lines.length);
+    // console.info(lines, lines.length);
 
     lines.reduce((a, line, index) => {
       return new Promise((resolve, reject) => {

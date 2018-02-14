@@ -15,6 +15,9 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as Rx from 'rxjs';
 
+import * as MarkdownIt from 'markdown-it';
+const MD = new MarkdownIt(); // FIXME: opts
+
 const DefaultPreferences = require("../data/default_preferences.json");
 
 // ambient, declared in html
@@ -62,6 +65,15 @@ class Document {
   /** type */
   type_ = DocumentType.File;
 
+  /** rendered: not editable, show rendered content -- md and html? */
+  rendered_ = false;
+
+  /** */
+  rendered_content_:string;
+
+  /** node for rendered content. not preserved. */
+  rendered_content_node_:HTMLElement;
+
   /** override language (optional) */
   overrideLanguage_: string;
 
@@ -73,11 +85,12 @@ class Document {
       view_state: this.view_state_,
       dirty: this.dirty_,
       overrideLanguage: this.overrideLanguage_,
-      uri: this.model_.uri,
+      uri: this.model_ ? this.model_.uri : null,
       type: this.type_,
+      rendered: this.rendered_,
       saved_version: this.saved_version_,
-      alternative_version_id: this.model_.getAlternativeVersionId(),
-      text: this.model_.getValue()
+      alternative_version_id: this.model_ ? this.model_.getAlternativeVersionId() : 0,
+      text: this.model_ ? this.model_.getValue() : this.rendered_content_
     }
   }
 
@@ -119,6 +132,11 @@ class EditorStatusBar {
     }
   }
 
+  /** show/hide position, for rendered documents */
+  public set show_position(show:boolean){
+    this.position_.style.display = show ? "" : "none";
+  }
+  
   constructor() {
 
     this.node_ = document.createElement("div");
@@ -258,6 +276,14 @@ export class Editor {
   private closed_tabs_: UncloseRecord[] = [];
 
   /**
+   * separate nodes for editing documents and viewing "rendered" documents
+   */
+  //private document_view_nodes:{[index:string]:HTMLElement} = {};
+
+  /** editor node. this one is shared (rendered documents have separate nodes) */
+  private editor_node_:HTMLElement;
+
+  /**
    * builds layout, does any necessary initialization and then instantiates 
    * the editor instance
    * 
@@ -279,6 +305,8 @@ export class Editor {
     let editor = document.createElement("div");
     editor.classList.add("editor-editor");
     tabs.appendChild(editor);
+
+    this.editor_node_ = editor;
 
     this.container_.appendChild(this.status_bar_.node);
     this.status_bar_.label = Constants.status.ready;
@@ -563,27 +591,34 @@ export class Editor {
         document.type_ = unserialized.type_;
         document.overrideLanguage_ = unserialized.overrideLanguage;
 
-        if (unserialized.file_path) {
-          if (unserialized.overrideLanguage) {
-            document.model_ = monaco.editor.createModel(unserialized.text,
-              unserialized.overrideLanguage, unserialized.uri || null);
-          }
-          else {
-            document.model_ = monaco.editor.createModel(unserialized.text, undefined,
-              monaco.Uri.parse(Editor.UriFromPath(unserialized.file_path)));
-          }
+        document.rendered_ = unserialized.rendered;
+        document.id_ = entry;
+        
+        if(document.rendered_){
+          document.rendered_content_ = unserialized.text || "";
         }
         else {
-          document.model_ = monaco.editor.createModel(unserialized.text, "plaintext");
+          if (unserialized.file_path) {
+            if (unserialized.overrideLanguage) {
+              document.model_ = monaco.editor.createModel(unserialized.text,
+                unserialized.overrideLanguage, unserialized.uri || null);
+            }
+            else {
+              document.model_ = monaco.editor.createModel(unserialized.text, undefined,
+                monaco.Uri.parse(Editor.UriFromPath(unserialized.file_path)));
+            }
+          }
+          else {
+            document.model_ = monaco.editor.createModel(unserialized.text, "plaintext");
+          }
+          document.model_.updateOptions(this.editor_options_);
+
+          document.saved_version_ = document.model_.getAlternativeVersionId()
+          document.dirty_ = !!unserialized.dirty;
+          document.view_state_ = unserialized.view_state;
+
+          if (document.dirty_) document.saved_version_--;
         }
-        document.model_.updateOptions(this.editor_options_);
-
-        document.saved_version_ = document.model_.getAlternativeVersionId()
-        document.id_ = entry;
-        document.dirty_ = !!unserialized.dirty;
-        document.view_state_ = unserialized.view_state;
-
-        if (document.dirty_) document.saved_version_--;
 
         // max_id = Math.max(max_id, entry);
 
@@ -731,15 +766,27 @@ export class Editor {
     this.tabs_.RemoveTab(tab);
     this.UpdateOpenFiles();
 
-    document.model_.dispose();
+    // document won't have a model if it shows rendered content
+    if(document.model_) document.model_.dispose();
 
+    // but it will have a node we want to discard
+    if(document.rendered_content_node_){
+      document.rendered_content_node_.parentElement.removeChild(document.rendered_content_node_);
+      document.rendered_content_node_ = null;
+    }
   }
 
   /** deactivates tab and saves view state. */
   private DeactivateTab(tab: TabSpec) {
     if (tab.data) {
       let document = tab.data as Document;
-      document.view_state_ = this.editor_.saveViewState();
+      if( document.rendered_ ){
+        console.info( "deactivate rendered document...");
+      }
+      else {
+        document.view_state_ = this.editor_.saveViewState();
+      }
+      if(document.rendered_content_node_) document.rendered_content_node_.style.zIndex = "0";
     }
   }
 
@@ -762,26 +809,46 @@ export class Editor {
     this.active_tab_ = tab;
 
     if (tab.data) {
-      let document = tab.data as Document;
-      this.active_document_ = document;
+      let editor_document = tab.data as Document;
+      this.active_document_ = editor_document;
 
-      if (document.model_) {
-        this.editor_.setModel(document.model_);
-        if (document.view_state_)
-          this.editor_.restoreViewState(document.view_state_);
-        let language = document.model_['_languageIdentifier'].language;
-        switch (language.toLowerCase()) {
-          case "json":
-          case "js":
-            language = language.toUpperCase();
-            break;
-          default:
-            language = language.substr(0, 1).toUpperCase() + language.substr(1);
+      if(editor_document.rendered_){
+        if(!editor_document.rendered_content_node_){
+          editor_document.rendered_content_node_ = document.createElement("div");
+          editor_document.rendered_content_node_.className = "editor-rendered-viewer markdown";
+          editor_document.rendered_content_node_.innerHTML = MD.render(editor_document.rendered_content_);
+          
+          this.tabs_.AppendChildNode(editor_document.rendered_content_node_);
         }
-        this.status_bar_.language = language;
+        editor_document.rendered_content_node_.style.zIndex = "10";
+        this.editor_node_.style.zIndex = "0";
+
+        this.status_bar_.language = "Rendered"; // FIXME: use constant
+        this.status_bar_.show_position = false;
       }
-      this.properties_.active_tab = document.id_;
-      MenuUtilities.SetEnabled("main.file.revert-file", document.dirty_ && !!document.file_path_);
+      else {
+
+        this.status_bar_.show_position = true;
+        this.editor_node_.style.zIndex = "10";
+        
+        if (editor_document.model_) {
+          this.editor_.setModel(editor_document.model_);
+          if (editor_document.view_state_)
+            this.editor_.restoreViewState(editor_document.view_state_);
+          let language = editor_document.model_['_languageIdentifier'].language;
+          switch (language.toLowerCase()) {
+            case "json":
+            case "js":
+              language = language.toUpperCase();
+              break;
+            default:
+              language = language.substr(0, 1).toUpperCase() + language.substr(1);
+          }
+          this.status_bar_.language = language;
+        }
+      }
+      this.properties_.active_tab = editor_document.id_;
+      MenuUtilities.SetEnabled("main.file.revert-file", editor_document.dirty_ && !!editor_document.file_path_);
     }
 
   }
@@ -924,12 +991,14 @@ export class Editor {
   }
 
   /** load a file from a given path */
-  private OpenFileInternal(file_path: string) {
+  private OpenFileInternal(file_path: string, override_label?:string , rendered = false) {
 
     // check if this file is already open (by path), switch to
 
     let current_tab = this.tabs_.tabs.find(tab => {
-      return (tab.data && ((tab.data as Document).file_path_ === file_path));
+      return (tab.data 
+        && (!!(tab.data as Document).rendered_ === rendered)
+        && ((tab.data as Document).file_path_ === file_path));
     });
 
     if (current_tab) {
@@ -984,20 +1053,28 @@ export class Editor {
       fs.readFile(file_path, "utf8", (err, data) => {
         if (err) return reject(err);
 
-        let recent_files = (this.properties_.recent_files || []).slice(0).filter(x => x !== file_path);
-        recent_files.unshift(file_path);
-        this.properties_.recent_files = recent_files;
-        this.UpdateRecentFilesList();
+        if(!rendered){
+          let recent_files = (this.properties_.recent_files || []).slice(0).filter(x => x !== file_path);
+          recent_files.unshift(file_path);
+          this.properties_.recent_files = recent_files;
+          this.UpdateRecentFilesList();
+        }
 
         let document = new Document();
-        document.label_ = path.basename(file_path),
-          document.file_path_ = file_path;
-        document.model_ = monaco.editor.createModel(data, undefined,
-          monaco.Uri.parse(Editor.UriFromPath(file_path)));
-        document.model_.updateOptions(this.editor_options_);
+        document.label_ = override_label ? override_label : path.basename(file_path);
+        document.file_path_ = file_path;
 
-        document.saved_version_ = document.model_.getAlternativeVersionId()
+        if(rendered){
+          document.rendered_content_ = data;
+        }
+        else {
+          document.model_ = monaco.editor.createModel(data, undefined,
+            monaco.Uri.parse(Editor.UriFromPath(file_path)));
+          document.model_.updateOptions(this.editor_options_);
+          document.saved_version_ = document.model_.getAlternativeVersionId()
+        }
         document.id_ = this.document_id_generator++;
+        document.rendered_ = rendered;
 
         let tab: TabSpec = {
           label: document.label_,
