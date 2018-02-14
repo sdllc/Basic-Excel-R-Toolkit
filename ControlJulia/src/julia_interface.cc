@@ -470,21 +470,51 @@ void JuliaShutdown() {
 
 }
 
+jl_function_t* ResolveFunction(const std::string &function) {
+
+  jl_function_t *function_pointer = jl_nothing;
+
+  if (!function.length()) return function_pointer;
+  std::vector<std::string> elements;
+  StringUtilities::Split(function, '.', 1, elements);
+
+  if (elements.size() == 1) function_pointer = jl_get_function(jl_main_module, function.c_str());
+  else {
+    function_pointer = jl_get_global(jl_main_module, jl_symbol(elements[0].c_str()));
+    for (int i = 1; i< elements.size(); i++) function_pointer = jl_get_global((jl_module_t*)function_pointer, jl_symbol(elements[i].c_str()));
+  }
+
+  return function_pointer;
+
+}
+
 void ReportJuliaException(const char *tag, bool backtrace = false) {
 
   std::cout << " * CATCH [" << tag << "]" << std::endl;
 
   if (backtrace) jlbacktrace();
 
-  jl_value_t *jl_stderr = jl_get_global(jl_main_module, jl_symbol("STDERR"));
-  if (jl_stderr == jl_nothing) {
-    jl_static_show(JL_STDERR, ptls->exception_in_transit);
+  // can cache?
+
+  jl_function_t *function_pointer = ResolveFunction("BERT.DisplayError");
+  if (function_pointer) {
+    jl_call1(function_pointer, ptls->exception_in_transit);
+    jl_printf(JL_STDERR, "\n");
   }
   else {
-    jl_call2(jl_get_function(jl_main_module, "showerror"), jl_stderr, ptls->exception_in_transit);
-  }
 
-  jl_printf(JL_STDERR, "\n\n"); // matches julia repl
+    // FIXME: can cache? 
+
+    jl_value_t *jl_stderr = jl_get_global(jl_main_module, jl_symbol("STDERR"));
+    if (jl_stderr == jl_nothing) {
+      jl_static_show(JL_STDERR, ptls->exception_in_transit);
+    }
+    else {
+      jl_call2(jl_get_function(jl_main_module, "showerror"), jl_stderr, ptls->exception_in_transit);
+    }
+
+    jl_printf(JL_STDERR, "\n\n"); // matches julia repl
+  }
 
   jl_exception_clear();
 
@@ -850,23 +880,6 @@ jl_value_t * COMCallback(uint64_t pointer, const char *name, const char *calltyp
 }
 
 
-jl_function_t* ResolveFunction(const std::string &function) {
-
-  jl_function_t *function_pointer = jl_nothing;
-
-  if (!function.length()) return function_pointer;
-  std::vector<std::string> elements;
-  StringUtilities::Split(function, '.', 1, elements);
-
-  if (elements.size() == 1) function_pointer = jl_get_function(jl_main_module, function.c_str());
-  else {
-    function_pointer = jl_get_global(jl_main_module, jl_symbol(elements[0].c_str()));
-    for (int i = 1; i< elements.size(); i++) function_pointer = jl_get_global((jl_module_t*)function_pointer, jl_symbol(elements[i].c_str()));
-  }
-
-  return function_pointer;
-
-}
 
 bool JuliaPostInit() {
   

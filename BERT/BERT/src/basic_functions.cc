@@ -150,7 +150,7 @@ int BERT_SetPointers(ULONG_PTR excel_pointer, ULONG_PTR ribbon_pointer) {
 }
 
 int BERT_Console() {
-    BERT::Instance()->OpenConsole();
+    BERT::Instance()->ShowConsole();
     return 0;
 }
 

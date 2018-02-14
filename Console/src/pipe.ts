@@ -221,7 +221,7 @@ export class Pipe {
       case Channel.SYSCALL:
         function_call = new messages.CompositeFunctionCall;
         function_call.setTarget(messages.CallTarget.SYSTEM);
-        function_call.setFunction("get-language");
+        function_call.setFunction(message.command);
         call.setFunctionCall(function_call);
         break;
       case Channel.CALL:

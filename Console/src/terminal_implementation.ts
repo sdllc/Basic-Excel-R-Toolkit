@@ -395,9 +395,9 @@ export class TerminalImplementation {
     }
     else {
       this.PrintLine = (line:string, lastline = false, flags = ConsolePrintFlags.None) => {
-        if( flags & ConsolePrintFlags.Error ){
-          line = `${VTESC}91m` + line + `${VTESC}0m`;
-        }
+        //if( flags & ConsolePrintFlags.Error ){
+        //  line = `${VTESC}91m` + line + `${VTESC}0m`;
+        //}
         let formatted = line;
         if (lastline) this.xterm_.write(formatted);
         else this.xterm_.writeln(formatted);

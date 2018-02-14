@@ -11,7 +11,6 @@
 #include "com_object_map.h"
 #include "language_service.h"
 #include "callback_info.h"
-
 #include "file_change_watcher.h"
 
 class BERT {
@@ -41,6 +40,9 @@ private:
 
   /** console process */
   DWORD console_process_id_;
+
+  /** pipe name for talking to console */
+  std::string console_pipe_name_;
 
   /** some dev flags that get passed around */
   DWORD dev_flags_;
@@ -85,7 +87,13 @@ private:
    */
   bool LoadLanguageFile(const std::string &file);
 
-private:
+protected:
+
+  /** thread for running console pipe */
+  static unsigned __stdcall ConsoleThreadFunction(void *param);
+
+  /** instance function for console pipe thread */
+  unsigned InstanceConsoleThreadFunction();
 
   /** starts the console process. this can be delayed until needed. */
   int StartConsoleProcess();
@@ -121,8 +129,25 @@ public:
   /** sets COM pointers */
   void SetPointers(ULONG_PTR excel_pointer, ULONG_PTR ribbon_pointer);
 
-  /** opens the console, creating the process if necessary */
-  void OpenConsole();
+  /** 
+   * tail routine for enum windows proc; hides or shows matching windows
+   */
+  static BOOL CALLBACK ShowConsoleWindowCallback(HWND hwnd, LPARAM lParam);
+
+  /** 
+   * opens the console, creating the process if necessary 
+   */
+  void ShowConsole();
+
+  /**
+   * hides the console, without actually closing the process
+   */
+  void HideConsole();
+
+  /**
+   * shutdown console gracefully (ideally)
+   */
+  void ShutdownConsole();
 
   /** initializes; starts R, threads, pipes */
   void Init();

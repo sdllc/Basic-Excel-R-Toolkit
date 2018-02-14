@@ -95,8 +95,8 @@ module BERT
   function display(d::BERT.ShellDisplay, x) 
 
     # my understanding is we can't switch on a type that's not loaded,
-    # so this has to use strings. even in a trycatch block? although 
-    # probably string matching is preferable to trycatch anyway.
+    # so this has to use strings. even in a try/catch block? although 
+    # probably string matching is preferable to try/catch anyway.
 
     if(startswith(string(typeof(x)), "Plots.Plot"))
       # display(d, MIME(BERT.DefaultPlotFormat), x)  
@@ -129,7 +129,14 @@ module BERT
 
   end
 
-  # EXCEL = nothing
+  #---------------------------------------------------------------------------- 
+  #
+  #---------------------------------------------------------------------------- 
+  function DisplayError(err)
+    Base.with_output_color(print, Base.error_color(), STDERR, "ERROR: "; bold=true)
+    showerror(IOContext(STDERR, :limit => true), err, [])
+    println(STDERR)
+  end
 
   #---------------------------------------------------------------------------- 
   #
@@ -142,13 +149,9 @@ module BERT
     reverse ="\033[7m";
 
     print("""
-
-BERT Julia shell version 0.1 BETA. $(reverse)This is not the default Julia shell$(normal). Many
+BERT Julia shell version 0.2 BETA. $(reverse)This is not the default Julia shell$(normal). Many
 things are similar, but some things are different. Please send feedback if you
-have questions or comments, and save your work often. 
-
-
-""");
+have questions or comments, and save your work often. \n\n""");
 
   end
 

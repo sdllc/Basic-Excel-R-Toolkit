@@ -26,6 +26,13 @@ import { prototype } from 'stream';
 // FIXME: l10n override?
 const MenuTemplate = require("../data/menu.json");
 
+// init management pipe for talking to BERT
+let management_pipe = new Pipe();
+if( process.env['BERT_MANAGEMENT_PIPE']){
+  management_pipe.Init({ pipe_name: process.env['BERT_MANAGEMENT_PIPE'] });
+}
+window['pipe'] = management_pipe;
+
 let property_manager = new PropertyManager("console-settings", {
   terminal: {}, editor: {}, console: {}
 });
@@ -70,8 +77,9 @@ let language_interfaces = [];
 // is looking for it. might be better to hide it at the CSS layer.
 
 // handle closing
-
-let allow_close = true; // dev // false;
+let allow_close = false; // true; // dev // false;
+let dev_flags = Number(process.env['BERT_DEV_FLAGS']||0);
+if( dev_flags ) allow_close = true;
 
 /*
 let Close = function(){
@@ -83,14 +91,17 @@ let Close = function(){
     remote.getCurrentWindow().close();
   });
 };
+*/
 
 window.addEventListener("beforeunload", event => {
-  if(!allow_close) event.returnValue = false;
+  if(!allow_close) {
+    event.returnValue = false;
+    management_pipe.SysCall("hide-console");
+  }
   else {
-    Close();
+    // Close();
   }
 });
-*/
 
 // connect/init pipes, languages
 

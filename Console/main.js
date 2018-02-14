@@ -12,6 +12,7 @@ require('electron-reload')(path.join(__dirname,"build"));
 
 let dev_flags = 0;
 let pipe_list = [];
+let management_pipe = "";
 
 process.env['BERT_CONSOLE_ROOT'] = __dirname;
 
@@ -21,13 +22,24 @@ process.env['BERT_CONSOLE_ROOT'] = __dirname;
 // it uses.
 
 for( let i = 0; i< process.argv.length; i++ ){
-  if( process.argv[i] === "-p" && i< process.argv.length-1 ){
+
+  let arg = process.argv[i];
+  let more = (i < (process.argv.length - 1));
+
+  if( arg === "-p" && more ){
     pipe_list.push(process.argv[++i]);
   }
-  else if( process.argv[i] === "-d" ){
+  else if( arg === "-m" && more ){
+    management_pipe = process.argv[++i];
+  }
+  else if( arg === "-d" ){
     dev_flags = Number(process.argv[++i]||1);
     process.env['BERT_DEV_FLAGS'] = dev_flags;
   }
+}
+
+if(management_pipe.length){
+  process.env['BERT_MANAGEMENT_PIPE'] = management_pipe;
 }
 
 if(pipe_list.length){
