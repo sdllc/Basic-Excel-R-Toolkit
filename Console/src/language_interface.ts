@@ -49,19 +49,26 @@ export class LanguageInterface {
   }
 
   Shutdown() : Promise<any> {
+    console.info( "LISD1");
     return new Promise((resolve, reject) => {
       if(this.management_pipe_){
         // this.management_pipe_.Close(); // no close method?
       }
       // if( this.terminal_ ){ this.terminal_.CleanUp(); }
       if( this.pipe_ ){
+        console.info( "LISD1.1");
         this.pipe_.Close().then(() => {
-          resolve();
+          console.info( "LISD2");
+          return resolve();
         }).catch(() => {
-          resolve();
+          console.info( "LISD3");
+          return resolve();
         });
       }
-      else return resolve();
+      else {
+        console.info( "LISD4");
+        return resolve();
+      }
     });
   }
 

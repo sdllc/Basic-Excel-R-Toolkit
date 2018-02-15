@@ -21,6 +21,10 @@ import * as messages from "../generated/variable_pb.js";
  * rendering strings; we never want chrome to have to read these giant
  * node lists. we can do this cleanly, using individual nodes, except 
  * for the container.
+ * 
+ * there's still some resource utitilization for these things, not 
+ * sure exactly where it comes from, but it's livable. there's some 
+ * noticeable scroll jitter when one of the images has thousands of nodes.
  */
 export class SVGGraphicsDevice extends GraphicsDevice {
 

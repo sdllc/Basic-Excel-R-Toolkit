@@ -30,6 +30,10 @@ const MenuTemplate = require("../data/menu.json");
 let management_pipe = new Pipe();
 if( process.env['BERT_MANAGEMENT_PIPE']){
   management_pipe.Init({ pipe_name: process.env['BERT_MANAGEMENT_PIPE'] });
+  management_pipe.control_messages.subscribe(message => {
+    console.info( "MMP", message );
+    if( message == "shutdown-console" ) Shutdown();
+  })
 }
 window['pipe'] = management_pipe;
 
@@ -80,6 +84,23 @@ let language_interfaces = [];
 let allow_close = false; // true; // dev // false;
 let dev_flags = Number(process.env['BERT_DEV_FLAGS']||0);
 if( dev_flags ) allow_close = true;
+
+/** 
+ * this is an explicit shutdown command from the main 
+ * process. allow closing, then trigger.
+ */
+const Shutdown = function(){
+  console.info("Calling terminals cleanup");
+  terminals.CleanUp();  
+  
+  console.info("Waiting for language shutdown");
+  Promise.all(language_interfaces.map(language_interface => 
+    language_interface.Shutdown())).then(() => {
+    allow_close = true;
+    console.info("Calling close");
+    remote.getCurrentWindow().close();
+  });
+}
 
 /*
 let Close = function(){

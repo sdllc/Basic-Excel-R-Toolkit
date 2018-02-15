@@ -44,8 +44,6 @@ export class Pipe {
     switch (x.getValueCase()) {
       case messages.Variable.ValueCase.NIL:
         return null;
-      //case messages.Variable.ValueCase.NUM:
-      //  return x.getNum();
       case messages.Variable.ValueCase.INTEGER:
         return x.getInteger();
       case messages.Variable.ValueCase.REAL:
@@ -251,8 +249,36 @@ export class Pipe {
     frame.set(new Uint8Array(frame_length), 0);
     frame.set(data, 4);
 
-    this.client_.write(Buffer.from(frame as any)); // ts type is wrong?
+    try {
+      this.client_.write(Buffer.from(frame as any)); // ts type is wrong?
+    }
+    catch(e){
+      console.error(e);
+      this.FlushQueueOnError("write error");
+    }
 
+  }
+
+  /**
+   * flush queue and any pending responses. all promises will be rejected.
+   * generally this indicates that a pipe/language went down. 
+   * 
+   * FIXME: support re-establishing languages/pipes/connections. 
+   * NOTE: when you do that, probably best to dump everything for the 
+   * given language and reconnect as if from scratch.
+   */
+  private FlushQueueOnError(error_message = "pipe error"){
+    Object.keys(this.pending_).forEach(key => {
+      if( this.pending_[key] ){
+        this.pending_[key].reject(error_message);
+        this.pending_[key] = null;
+        delete this.pending_[key];
+      }
+    });
+    this.queue_.forEach(item => {
+      item.reject(error_message);
+    })
+    this.queue_ = [];
   }
 
   private ControlMessageCallback(message){
@@ -311,12 +337,14 @@ export class Pipe {
   private Reject(pending:QueuedCommand, message:any){
     let id = pending.id;
     this.pending_[id] = null; // delete?
+    delete this.pending_[id];
     setImmediate(() => pending.reject(message));
   }
 
   private Resolve(pending:QueuedCommand, message:any){
     let id = pending.id;
     this.pending_[id] = null; // delete?
+    delete this.pending_[id];
     setImmediate(() => pending.resolve(message));
   }
 
@@ -424,7 +452,7 @@ export class Pipe {
 
   private HandleError(err: string | Error) {
     console.error(err);
-    // if (this.pending_.resolve) setImmediate(() => this.pending_.reject(err));
+    this.FlushQueueOnError("pipe error");
   }
 
   /** clean shutdown, notify the service */
