@@ -93,6 +93,8 @@ const Shutdown = function(){
   console.info("Calling terminals cleanup");
   terminals.CleanUp();  
   
+  // editor.Shutdown();
+
   console.info("Waiting for language shutdown");
   Promise.all(language_interfaces.map(language_interface => 
     language_interface.Shutdown())).then(() => {
@@ -115,12 +117,14 @@ let Close = function(){
 */
 
 window.addEventListener("beforeunload", event => {
+ 
   if(!allow_close) {
     event.returnValue = false;
     management_pipe.SysCall("hide-console");
   }
   else {
     // Close();
+    editor.Shutdown();
   }
 });
 

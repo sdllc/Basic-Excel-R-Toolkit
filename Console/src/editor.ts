@@ -212,6 +212,7 @@ export class Editor {
   static LoadMonaco(): Promise<void> {
 
     if (this.loaded_) return Promise.resolve();
+
     return new Promise((resolve, reject) => {
 
       this.loaded_ = true;
@@ -297,12 +298,10 @@ export class Editor {
    */
   private closed_tabs_: UncloseRecord[] = [];
 
-  /**
-   * separate nodes for editing documents and viewing "rendered" documents
+  /** 
+   * editor node. we only have one editor, we swap documents in and out
+   * on tab switching. more efficient.
    */
-  //private document_view_nodes:{[index:string]:HTMLElement} = {};
-
-  /** editor node. this one is shared (rendered documents have separate nodes) */
   private editor_node_:HTMLElement;
 
   /** 
@@ -327,6 +326,19 @@ export class Editor {
     if (typeof node === "string") this.container_ = document.querySelector(node);
     else this.container_ = node;
 
+    // if we render markdown (or html), then we'll possibly have links.
+    // we need to handle these so we don't lose the window.
+
+    // TODO: buttons, script, everything else...
+
+    this.container_.addEventListener("click", e => {
+      if(e.srcElement['href']){
+        e.stopPropagation();
+        e.preventDefault();
+        require('electron').shell.openExternal(e.srcElement['href']);
+      }
+  });
+    
     this.container_.classList.add("editor-container");
 
     let tabs = document.createElement("div");
@@ -351,12 +363,6 @@ export class Editor {
     this.tabs_.events.filter(event => event.type === TabEventType.activate).subscribe(event => {
       this.ActivateTab(event.tab);
     });
-
-    /*
-    editor_tabs.events.filter(x => x.type === TabEventType.rightClick ).subscribe(x => {
-      console.info("RC!", x);
-    })
-    */
 
     this.tabs_.events.filter(x => x.type === TabEventType.buttonClick).subscribe(event => {
       this.CloseTab(event.tab);
@@ -612,6 +618,13 @@ export class Editor {
   }
 
   /**
+   * saves all tab, file state on close
+   */
+  public Shutdown(){
+    this.tabs_.data.forEach(document => this.CacheDocument(document));
+  }
+
+  /**
    * notifies the editor that we can execute a particular language.
    * this will add "execute code", "execute buffer" commands to the 
    * context menu for that language.
@@ -735,6 +748,7 @@ export class Editor {
           document.saved_version_ = document.model_.getAlternativeVersionId()
           document.dirty_ = !!unserialized.dirty;
           document.view_state_ = unserialized.view_state;
+          console.info("UVS", unserialized.view_state);
 
           if (document.dirty_) document.saved_version_--;
         }
@@ -904,6 +918,7 @@ export class Editor {
       }
       else {
         document.view_state_ = this.editor_.saveViewState();
+        // this.CacheDocument(document); // maybe unecessary
       }
       if(document.rendered_content_node_) document.rendered_content_node_.style.zIndex = "0";
     }
@@ -1082,6 +1097,8 @@ export class Editor {
   /** 
    * creates a new file. this is like opening a file, except that there's
    * no path, and no initial content. 
+   * 
+   * why is this async? 
    */
   public NewFile() {
     return new Promise((resolve, reject) => {
