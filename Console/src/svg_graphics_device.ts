@@ -217,7 +217,7 @@ export class SVGGraphicsDevice extends GraphicsDevice {
 
     case "draw-text":
 
-      console.info("T", command);
+      // console.info("T", command);
 
       node = document.createElementNS(SVGGraphicsDevice.SVG, "text") as SVGElement;
       node.setAttribute("x", command.xList[0]);

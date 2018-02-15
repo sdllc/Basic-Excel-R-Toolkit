@@ -20,7 +20,7 @@ const MD = new MarkdownIt(); // FIXME: opts
 
 const DefaultPreferences = require("../data/default_preferences.json");
 
-// ambient, declared in html
+// ambient, declared in html. we need this for loading monaco
 declare const amd_require: any;
 
 const PREFERENCES_KEY = "preferences"
@@ -36,8 +36,23 @@ enum DocumentType {
   LocalStorage
 }
 
+export enum EditorEventType {
+  Command = 1,
+  Information = 2,
+  Warning = 3,
+  Error = 4
+}
+
+export interface EditorEvent {
+  type:EditorEventType;
+  message?:string;
+  data?:any;
+}
+
 /**
- * class represents a document in the editor; has content, view state
+ * class represents a document in the editor; has content, view state.
+ * extended to support static (i.e. rendered) documents, which are 
+ * displayed as html.
  */
 class Document {
 
@@ -229,6 +244,7 @@ export class Editor {
 
   }
 
+  /** status bar instance */
   private status_bar_ = new EditorStatusBar();
 
   /** editor instance */
@@ -251,6 +267,12 @@ export class Editor {
 
   /** reference */
   private active_tab_: TabSpec;
+
+  /** event source for editor */
+  private events_ = new Rx.Subject<EditorEvent>();
+
+  /** accessor */
+  public get events(){ return this.events_; } 
 
   /** 
    * editor options. this also includes options passed to models, 
@@ -282,6 +304,15 @@ export class Editor {
 
   /** editor node. this one is shared (rendered documents have separate nodes) */
   private editor_node_:HTMLElement;
+
+  /** 
+   * we make some editor configuration changes for supported languages (that
+   * we can execute). the renderer process reports which languages it has 
+   * loaded. however there may be timing issues where the editor is not yet
+   * loaded when we get notified, so in that case we'll temporarily cache 
+   * them and update when ready.
+   */
+  private pending_active_languages_:string[] = [];
 
   /**
    * builds layout, does any necessary initialization and then instantiates 
@@ -403,6 +434,73 @@ export class Editor {
     });
   }
 
+  /**
+   * add exec actions for a language. I can't figure out how to 
+   * set a precondition with an OR, and it's not clear from the 
+   * sources that that's even a concept. so instead we'll add 
+   * actions separately for each language, which is probably not
+   * the end of the world.
+   */
+  private AddExecActions(language_id){
+
+    if(!this.editor_){
+      this.pending_active_languages_.push(language_id);
+      return;
+    }
+
+    let id = language_id.toLowerCase();
+    let precondition = `editorLangId=='${id}'`;
+
+    // FIXME: (optionally) override keybindings 
+    // FIXME: use constants for labels
+
+    // I think the argument for these actions is the editor instance
+
+    // closure
+    let events = this.events_;
+    
+    this.editor_.addAction({
+      id: `editor.exec_selection.${id}`,
+      label: "Execute Selection", 
+      keybindings: [ monaco.KeyCode.F9 ], 
+      keybindingContext: null, 
+      contextMenuGroupId: '80_exec',
+      contextMenuOrder: 1,
+      precondition, 
+      run: function(editor){
+        events.next({
+          type: EditorEventType.Command, 
+          message: "execute-selection",
+          data: {
+            language: language_id,
+            code: editor.getModel().getValueInRange(editor.getSelection())
+          }
+        })
+      }
+    });
+
+    this.editor_.addAction({
+      id: `editor.exec_buffer.${id}`,
+      label: "Execute Buffer", 
+      keybindings: [ monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.F9 ], 
+      keybindingContext: null, 
+      contextMenuGroupId: '80_exec',
+      contextMenuOrder: 2,
+      precondition,
+      run: function(editor){
+        events.next({
+          type: EditorEventType.Command, 
+          message: "execute-buffer",
+          data: {
+            language: language_id,
+            code: editor.getModel().getValue()
+          }
+        })
+      }
+    });
+
+  }
+
   private async InitEditor(node: HTMLElement) {
 
     await Editor.LoadMonaco();
@@ -415,8 +513,16 @@ export class Editor {
 
     this.editor_ = monaco.editor.create(node, this.editor_options_);
 
-    // TODO: add "execute" actions for execute selection, execute file
-    // ...
+    // update link detector behavior to open externally
+     
+    let linkDetector = this.editor_.getContribution("editor.linkDetector" ) as any;
+    linkDetector.openerService.open = function( resource, options ){ 
+      require('electron').shell.openExternal(resource.toString());
+    };
+
+    // handle any previously registered languages
+
+    this.pending_active_languages_.forEach( id => this.AddExecActions(id));
 
     this.editor_.onContextMenu(e => {
 
@@ -503,6 +609,19 @@ export class Editor {
 
     this.RestoreOpenFiles();
 
+  }
+
+  /**
+   * notifies the editor that we can execute a particular language.
+   * this will add "execute code", "execute buffer" commands to the 
+   * context menu for that language.
+   * 
+   * FIXME: can we pull the default monaco file associations for 
+   * extensions?
+   */
+  public SupportLanguage(language_name:string, language_extensions?:string[]){
+    console.info( "Editor: support language", language_name);
+    this.AddExecActions(language_name);
   }
 
   /** 

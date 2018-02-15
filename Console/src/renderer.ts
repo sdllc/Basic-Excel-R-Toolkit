@@ -16,7 +16,7 @@ import {PropertyManager} from './properties';
 import {MenuUtilities} from './menu_utilities';
 import {MuliplexedTerminal} from './multiplexed_terminal';
 
-import {Editor} from './editor';
+import {Editor, EditorEvent, EditorEventType} from './editor';
 
 import * as Rx from "rxjs";
 import * as path from 'path';
@@ -124,6 +124,25 @@ window.addEventListener("beforeunload", event => {
   }
 });
 
+// construct editor
+
+let editor = new Editor("#editor", properties.editor);
+editor.events.subscribe(event => {
+  if( event.type === EditorEventType.Command ){
+    switch(event.message){
+    case "execute-selection":
+    case "execute-buffer":
+      let terminal = terminals.Get(event.data.language)
+      let code = event.data.code || "";
+      if( code.length ){
+        terminal.Paste(code);
+      }
+      break;     
+    }
+  }
+})
+window['editor'] = editor;
+
 // connect/init pipes, languages
 
 let pipe_list = (process.env['BERT_PIPE_NAME']||"").split(";"); // separator?
@@ -144,15 +163,15 @@ setTimeout(() => {
               if( response ){
                 console.info( "Pipe", pipe_name, "language response:", response );
                 language = response.toString();
+                editor.SupportLanguage(language);
+
                 let found = language_interface_types.some(interface_class => {
                   if(interface_class.language_name_ === response ){
-
                     let instance = new interface_class();
                     instance.label_ = language;
                     language_interfaces.push(instance);
                     instance.InitPipe(pipe, pipe_name);
                     terminals.Add(instance);
-
                     return true;
                   }
                   return false;
@@ -189,11 +208,6 @@ setTimeout(() => {
   })
 
 }, 1 );
-
-// construct editor
-
-let editor = new Editor("#editor", properties.editor);
-window['editor'] = editor;
 
 // deal with splitter change on drag end 
 
@@ -308,5 +322,14 @@ window.addEventListener("keydown", event => {
 
 });
 
-
-
+/** 
+ * was trying to debug something that changed on focus out. this 
+ * allows us to pause javascript execution (via breakpoint) in 
+ * the future, so we can focus and then prevent future events.
+ * /
+window["Pause"] = function(in_seconds){
+  setTimeout(() => {
+    console.info("Pausing!");
+  }, in_seconds * 1000);
+} 
+*/

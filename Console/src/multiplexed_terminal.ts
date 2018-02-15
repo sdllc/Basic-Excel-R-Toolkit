@@ -21,9 +21,16 @@ interface TerminalInstance {
  * tabbed interface for multiple shells, supporting different languages.
  * the actual tab component only handles tabs, not content, so we manage
  * displaying/hiding content on tab changes.
+ * 
+ * somehow we're indexing on label, which should be an arbitrary string.
+ * we want to be able to look up by language name, which should be more
+ * universal. for the time being we have a map, but this needs to get 
+ * sorted out so the language name/id controls.
  */
 export class MuliplexedTerminal {
   
+  // this is even wrong, what's stored in here are tuples.
+  // this whole class needs a rethink
   private terminal_instances_:{[index:string]:TerminalInstance} = {};
 
   /** currently active instance for context menu, layout */
@@ -39,6 +46,9 @@ export class MuliplexedTerminal {
 
   /** accessor for active tab */
   public get active_tab() { return this.active_tab_; }
+
+  /** map of "real" language name/id -> label for lookup purposes */
+  private language_map_:{[index:string]: string} = {};
 
   constructor(tab_node_selector:string){
 
@@ -150,6 +160,21 @@ export class MuliplexedTerminal {
     });
   }
 
+  /** 
+   * get the terminal for a given language ID
+   */
+  Get(language_id:string):TerminalImplementation {
+
+    let label = this.language_map_[language_id];
+    if(!label) return null;
+
+    let tuple = this.terminal_instances_[label];
+    if(!tuple) return null;
+
+    return tuple.terminal;
+
+  }
+
   /**
    * add a terminal for the given language. this method handles creating 
    * a child node, assigning a tab, creating the terminal instance and 
@@ -167,6 +192,8 @@ export class MuliplexedTerminal {
     let label = language_interface.label_;
     let terminal = new TerminalImplementation(language_interface, child);
     terminal.Init();
+
+    this.language_map_[(language_interface.constructor as any).language_name_] = label;
 
     child.addEventListener("contextmenu", e => {
       
