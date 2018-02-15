@@ -883,6 +883,8 @@ jl_value_t * COMCallback(uint64_t pointer, const char *name, const char *calltyp
 
 bool JuliaPostInit() {
   
+  std::cout << "JPI" << std::endl;
+
   jl_function_t *function_pointer = ResolveFunction("BERT.SetCallbacks");
   if (!function_pointer || jl_is_nothing(function_pointer)) return false;
 
@@ -1037,6 +1039,8 @@ inline std::string jl_string(jl_value_t *value){ return std::string(jl_string_pt
 
 void ListScriptFunctions(BERTBuffers::CallResponse &response, const BERTBuffers::CallResponse &call) {
   
+  std::cout << "LSF" << std::endl;
+
   bool success = false;
   response.set_id(call.id());
   
@@ -1115,6 +1119,8 @@ void ListScriptFunctions(BERTBuffers::CallResponse &response, const BERTBuffers:
           auto eltype = jl_array_eltype(val); 
           auto array_length = jl_array->length;
 
+          std::cout << "array length " << array_length << std::endl;
+
           if (jl_array->flags.ptrarray) {
             auto data = (jl_value_t**)(jl_array_data(jl_array));
             for (int i = 0; i < array_length; i++) {
@@ -1130,6 +1136,9 @@ void ListScriptFunctions(BERTBuffers::CallResponse &response, const BERTBuffers:
       else {
         // success, but list length is zero
         // ...
+
+        std::cout << "success, but length is zero" << std::endl;
+
       }
     }
 

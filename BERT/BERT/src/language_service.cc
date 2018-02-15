@@ -314,15 +314,6 @@ void LanguageService::Call(BERTBuffers::CallResponse &response, BERTBuffers::Cal
         DWORD rslt = GetOverlappedResultEx(pipe_handle_, &io_, &bytes, INFINITE, FALSE);
         if (rslt) {
           if (!MessageUtilities::Unframe(response, buffer_, bytes)) {
-
-            int32_t xbytes;
-            memcpy(reinterpret_cast<void*>(&xbytes), buffer_, sizeof(int32_t));
-            std::cout << "WR" << write_result << "XB " << xbytes << std::endl;
-
-            unsigned char bxx[32];
-            memcpy(bxx, buffer_, 32);
-            std::cout << "bxx " << bxx[0] << ", " << bxx[1] << ", " << bxx[2] << std::endl;
-
             DebugOut("parse err!\n");
             response.set_err("parse error (0x10)");
             break;
@@ -333,8 +324,8 @@ void LanguageService::Call(BERTBuffers::CallResponse &response, BERTBuffers::Cal
           switch (response.operation_case()) {
           case BERTBuffers::CallResponse::OperationCase::kFunctionCall: // callback
 
-                                                                        // temp, use existing
-                                                                        //callback_info_.callback_call_.CopyFrom(response);
+            // temp, use existing
+            //callback_info_.callback_call_.CopyFrom(response);
             bert->HandleCallbackOnThread(&response);
 
             // write
