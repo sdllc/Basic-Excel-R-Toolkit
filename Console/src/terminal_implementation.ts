@@ -17,9 +17,13 @@ import {Pipe, ConsoleMessage, ConsoleMessageType} from './pipe';
 import * as Rx from 'rxjs';
 import { ConnectableObservable } from 'rxjs/observable/ConnectableObservable';
 import { GraphicsDevice } from './graphics_device';
+import { SVGGraphicsDevice } from './svg_graphics_device';
+import { PNGGraphicsDevice } from './png_graphics_device';
 
 // for save image dialog
 import { remote } from 'electron';
+
+import * as fs from 'fs';
 
 // for julia, replacing backslash entities in the shell like Julia REPL. 
 const SymbolTable = require('../data/symbol_table.json');
@@ -607,7 +611,6 @@ export class TerminalImplementation {
     */
    
     if(/canvas/i.test(tag)){
-
       let link = document.createElement("a");
       link.setAttribute("href", target.toDataURL("image/png"));
       link.setAttribute("download", "image.png");
@@ -619,10 +622,24 @@ export class TerminalImplementation {
       if(/svg/i.test(m[1])) image_type = "svg";
       else image_type = m[1];
 
+      /*
       let link = document.createElement("a");
       link.setAttribute("href", target.src);
       link.setAttribute("download", "image." + image_type);
       link.click();
+      */
+
+      let file_name = remote.dialog.showSaveDialog({
+        title: "Save Image As...",
+        filters: [
+          { name: `${image_type.toUpperCase()} Images`, extensions: [image_type] }
+        ]
+      });
+      if(file_name){
+        let src = target.src.replace(/^.*?,/, "");
+        fs.writeFile(file_name, atob(src), () => {});
+      }
+
     }
   }
 
@@ -918,7 +935,8 @@ export class TerminalImplementation {
     // FIXME: this is language-specific, so it should be in the 
     // language implementation class
 
-    new GraphicsDevice(this, this.language_interface_.pipe_);
+    new SVGGraphicsDevice(this, this.language_interface_.pipe_);
+    //new PNGGraphicsDevice(this, this.language_interface_.pipe_);
 
     this.Resize();
 

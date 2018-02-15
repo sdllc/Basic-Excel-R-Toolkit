@@ -27,7 +27,6 @@ export class FontMetrics {
   canvas_:HTMLCanvasElement;
   context_:CanvasRenderingContext2D;
   padding_ = 0;
-  font_size_ = 0;
   cached_font_:string;
 
   public get context() { return this.context_ }
@@ -37,24 +36,14 @@ export class FontMetrics {
     this.context_ = this.canvas_.getContext("2d");
   }
 
-  SetFont(font_family, font_size:number|string, font_weight = 400) {
+  SetFont(font_family, font_size_px:number, font_weight = 400) {
 
-    let font = `${font_weight} ${font_size} ${font_family}`;
-    if( this.cached_font_ === font ){
-      // console.info("font match");
-      return;
-    }
+    let font = `${font_weight} ${font_size_px}px ${font_family}`;
+    if( this.cached_font_ === font ) return;
 
-    if( typeof font_size === "number" ){
-      this.font_size_ = font_size;
-    }
-    else {
-      this.font_size_ = Number(font_size.replace(/[^\d\.]/g, ""))
-    }
-
-    this.padding_ = this.font_size_ * 0.5;
-    this.canvas_.width = this.font_size_ * 2;
-    this.canvas_.height = this.font_size_ * 2 + this.padding_;
+    this.padding_ = font_size_px * 0.5;
+    this.canvas_.width = font_size_px * 2;
+    this.canvas_.height = font_size_px * 2 + this.padding_;
     this.context_.textBaseline = 'top'
     this.context_.textAlign = 'center'
     this.context_.font = font;
@@ -95,6 +84,10 @@ export class FontMetrics {
     return Math.round(this.GetLastIndex(this.GetPixels(char)) / this.canvas_.width) - this.padding_;
   }
  
+  Width(text) : number {
+    return this.context_.measureText(text).width;
+  }
+
   Measure(char) : Metrics {
 
     // use for width
