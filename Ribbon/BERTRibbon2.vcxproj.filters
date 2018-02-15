@@ -60,4 +60,7 @@
   <ItemGroup>
     <Xml Include="ribbon_ui.xml" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="images\console.png" />
+  </ItemGroup>
 </Project>

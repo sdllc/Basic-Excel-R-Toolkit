@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<customUI xmlns="http://schemas.microsoft.com/office/2006/01/customui" onLoad="RibbonLoaded">
+<customUI xmlns="http://schemas.microsoft.com/office/2006/01/customui" onLoad="RibbonLoaded" loadImage="GetImage">
 
   <!-- add to, don't replace, the whole ribbon -->
   <ribbon startFromScratch="false">
     <tabs>
 
       <tab idMso="TabAddIns">
-        <group id="g1" label="Basic Excel R Toolkit">
-          <button id="b1" label="BERT Console" size="large" onAction="ShowConsole" imageMso="CreateStoredProcedure" supertip="Open the BERT console"/>
+        <group id="g1">
+          <button id="b1" getLabel="GetLabel" size="large" onAction="ShowConsole" image="console" supertip="Open the BERT console to change settings, write code or run in real time"/>
+          <!--
+          <button id="b1" getLabel="GetLabel" size="large" onAction="ShowConsole" imageMso="CreateStoredProcedure" supertip="Open the BERT console to change settings, write code or run in real time"/>
+          -->
         </group>
       </tab>
 
