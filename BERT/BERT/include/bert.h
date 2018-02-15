@@ -41,6 +41,12 @@ private:
   /** console process */
   DWORD console_process_id_;
 
+  /** */
+  HANDLE console_notification_handle_;
+
+  /** FIXME: synchronize */
+  std::vector <std::string> console_notifications_;
+
   /** pipe name for talking to console */
   std::string console_pipe_name_;
 
@@ -98,6 +104,13 @@ protected:
   /** starts the console process. this can be delayed until needed. */
   int StartConsoleProcess();
 
+  /** 
+   * asks the console process to stop. it will stop when Excel closes regardless, 
+   * because it's part of the same process job object. this will send a message to
+   * the console asking it to shut down cleanly.
+   */
+  void ShutdownConsole();
+
 public:
 
   /** 
@@ -143,11 +156,6 @@ public:
    * hides the console, without actually closing the process
    */
   void HideConsole();
-
-  /**
-   * shutdown console gracefully (ideally)
-   */
-  void ShutdownConsole();
 
   /** initializes; starts R, threads, pipes */
   void Init();

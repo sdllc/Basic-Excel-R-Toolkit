@@ -291,7 +291,12 @@ void LanguageService::Call(BERTBuffers::CallResponse &response, BERTBuffers::Cal
   std::string framed_message = MessageUtilities::Frame(call);
 
   ResetEvent(io_.hEvent);
-  WriteFile(pipe_handle_, framed_message.c_str(), (int32_t)framed_message.length(), NULL, &io_);
+  bool write_result = WriteFile(pipe_handle_, framed_message.c_str(), (int32_t)framed_message.length(), NULL, &io_);
+
+  // wait for the write to complete. FIXME: there's no need to wait if we don't need a 
+  // result, but in that case we will need to make sure it's clear before we send another message.
+
+  GetOverlappedResultEx(pipe_handle_, &io_, &bytes, INFINITE, false);
 
   if (call.wait()) {
 
@@ -309,6 +314,15 @@ void LanguageService::Call(BERTBuffers::CallResponse &response, BERTBuffers::Cal
         DWORD rslt = GetOverlappedResultEx(pipe_handle_, &io_, &bytes, INFINITE, FALSE);
         if (rslt) {
           if (!MessageUtilities::Unframe(response, buffer_, bytes)) {
+
+            int32_t xbytes;
+            memcpy(reinterpret_cast<void*>(&xbytes), buffer_, sizeof(int32_t));
+            std::cout << "WR" << write_result << "XB " << xbytes << std::endl;
+
+            unsigned char bxx[32];
+            memcpy(bxx, buffer_, 32);
+            std::cout << "bxx " << bxx[0] << ", " << bxx[1] << ", " << bxx[2] << std::endl;
+
             DebugOut("parse err!\n");
             response.set_err("parse error (0x10)");
             break;
@@ -364,6 +378,9 @@ void LanguageService::Call(BERTBuffers::CallResponse &response, BERTBuffers::Cal
 
 }
 
+extern void DumpJSON(const google::protobuf::Message &message, const char *path );
+
+
 FUNCTION_LIST LanguageService::MapLanguageFunctions(uint32_t key) {
 
   FUNCTION_LIST function_list;
@@ -378,6 +395,8 @@ FUNCTION_LIST LanguageService::MapLanguageFunctions(uint32_t key) {
   call.set_wait(true);
 
   Call(rsp, call);
+
+  DumpJSON(rsp, "c:\\temp\\dumped.json");
 
   if (rsp.operation_case() == BERTBuffers::CallResponse::OperationCase::kErr) return function_list; // error: no functions
   else if (rsp.operation_case() == BERTBuffers::CallResponse::OperationCase::kFunctionList) {
