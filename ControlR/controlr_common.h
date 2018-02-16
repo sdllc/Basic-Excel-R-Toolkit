@@ -71,7 +71,7 @@
 #undef clear
 #undef length
 
-SEXP ExternalCallback(int, void*, void *);
+//SEXP ExternalCallback(int, void*, void *);
 SEXP RCallback(SEXP, SEXP);
 SEXP COMCallback(SEXP, SEXP, SEXP, SEXP, SEXP);
 

@@ -3474,7 +3474,7 @@ if (goog.DEBUG && !COMPILED) {
  * @private {!Array<!Array<number>>}
  * @const
  */
-proto.BERTBuffers.Console.oneofGroups_ = [[1,2,3,4,5]];
+proto.BERTBuffers.Console.oneofGroups_ = [[1,2,3,4,5,6]];
 
 /**
  * @enum {number}
@@ -3485,7 +3485,8 @@ proto.BERTBuffers.Console.MessageCase = {
   ERR: 2,
   PROMPT: 3,
   GRAPHICS: 4,
-  MIME_DATA: 5
+  MIME_DATA: 5,
+  HISTORY: 6
 };
 
 /**
@@ -3528,7 +3529,8 @@ proto.BERTBuffers.Console.toObject = function(includeInstance, msg) {
     err: jspb.Message.getFieldWithDefault(msg, 2, ""),
     prompt: jspb.Message.getFieldWithDefault(msg, 3, ""),
     graphics: (f = msg.getGraphics()) && proto.BERTBuffers.GraphicsCommand.toObject(includeInstance, f),
-    mimeData: (f = msg.getMimeData()) && proto.BERTBuffers.MIMEData.toObject(includeInstance, f)
+    mimeData: (f = msg.getMimeData()) && proto.BERTBuffers.MIMEData.toObject(includeInstance, f),
+    history: (f = msg.getHistory()) && proto.BERTBuffers.Variable.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -3586,6 +3588,11 @@ proto.BERTBuffers.Console.deserializeBinaryFromReader = function(msg, reader) {
       var value = new proto.BERTBuffers.MIMEData;
       reader.readMessage(value,proto.BERTBuffers.MIMEData.deserializeBinaryFromReader);
       msg.setMimeData(value);
+      break;
+    case 6:
+      var value = new proto.BERTBuffers.Variable;
+      reader.readMessage(value,proto.BERTBuffers.Variable.deserializeBinaryFromReader);
+      msg.setHistory(value);
       break;
     default:
       reader.skipField();
@@ -3651,6 +3658,14 @@ proto.BERTBuffers.Console.serializeBinaryToWriter = function(message, writer) {
       5,
       f,
       proto.BERTBuffers.MIMEData.serializeBinaryToWriter
+    );
+  }
+  f = message.getHistory();
+  if (f != null) {
+    writer.writeMessage(
+      6,
+      f,
+      proto.BERTBuffers.Variable.serializeBinaryToWriter
     );
   }
 };
@@ -3800,6 +3815,36 @@ proto.BERTBuffers.Console.prototype.clearMimeData = function() {
  */
 proto.BERTBuffers.Console.prototype.hasMimeData = function() {
   return jspb.Message.getField(this, 5) != null;
+};
+
+
+/**
+ * optional Variable history = 6;
+ * @return {?proto.BERTBuffers.Variable}
+ */
+proto.BERTBuffers.Console.prototype.getHistory = function() {
+  return /** @type{?proto.BERTBuffers.Variable} */ (
+    jspb.Message.getWrapperField(this, proto.BERTBuffers.Variable, 6));
+};
+
+
+/** @param {?proto.BERTBuffers.Variable|undefined} value */
+proto.BERTBuffers.Console.prototype.setHistory = function(value) {
+  jspb.Message.setOneofWrapperField(this, 6, proto.BERTBuffers.Console.oneofGroups_[0], value);
+};
+
+
+proto.BERTBuffers.Console.prototype.clearHistory = function() {
+  this.setHistory(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {!boolean}
+ */
+proto.BERTBuffers.Console.prototype.hasHistory = function() {
+  return jspb.Message.getField(this, 6) != null;
 };
 
 

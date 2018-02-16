@@ -4,7 +4,7 @@
 \alias{history}
 \title{History implementation for the BERT console}
 \usage{
-history(max.show = 25, reverse = FALSE, pattern = "")
+history(max.show = 25, reverse = FALSE, pattern, ...)
 }
 \description{
 History implementation for the BERT console

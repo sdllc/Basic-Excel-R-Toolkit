@@ -50,7 +50,7 @@
 using namespace std;
 
 typedef SEXP COM_CALLBACK_FN( SEXP, SEXP, SEXP, SEXP, SEXP );
-typedef SEXP CALLBACK_FN( int, void*, void* );
+//typedef SEXP CALLBACK_FN( int, void*, void* );
 
 // new style
 typedef SEXP CALLBACK_FUNCTION( SEXP, SEXP );
@@ -61,11 +61,13 @@ SEXP Callback2(SEXP command, SEXP data){
   else return R_NilValue;
 }
 
+/*
 SEXP callback( int cmd, void * data, void * data2 ){
   static CALLBACK_FN *fn = (CALLBACK_FN*)R_GetCCallable( "BERTControlR", "ExternalCallback" );
   if( fn ) return fn( cmd, data, data2 );
   else return R_NilValue;
 }
+*/
 
 /**
  * constructor, sets default options.  see [1]
@@ -129,7 +131,8 @@ int create_device( std::string name, std::string background, int width, int heig
     R_CheckDeviceAvailable();
 
     pDevDesc dev = device_new(bg, width, height, pointsize);
-    callback( 1, (void*)name.c_str(), dev );
+    //callback( 1, (void*)name.c_str(), dev );
+    Callback2(Rf_mkString("create-device"), R_MakeExternalPtr(dev, R_NilValue, R_NilValue)); 
 
     pGEDevDesc gd = GEcreateDevDesc(dev);
     GEaddDevice2(gd, name.c_str());
@@ -155,7 +158,7 @@ int create_console_device( std::string background, int width, int height, int po
     R_CheckDeviceAvailable();
 
     pDevDesc dev = device_new(bg, width, height, pointsize);
-    callback(8103, dev, 0); // this is the old callback. FIXME: change
+    Callback2(Rf_mkString("console-device"), R_MakeExternalPtr(dev, R_NilValue, R_NilValue)); 
 
     pGEDevDesc gd = GEcreateDevDesc(dev);
     GEaddDevice2(gd, "BERT-console-graphics-device");
@@ -214,6 +217,7 @@ SEXP BERTModule_console_device( SEXP background, SEXP width, SEXP height, SEXP p
   return Rf_ScalarInteger(dev);
 }
 
+/*
 SEXP BERTModule_download( SEXP args ){
   SEXP s = callback( 100, args, 0 );
   int result = Rf_asInteger(s);
@@ -224,13 +228,16 @@ SEXP BERTModule_download( SEXP args ){
 SEXP BERTModule_progress_bar( SEXP args ){
   return callback( 200, args, 0 );
 }
+*/
 
 void BERTModule_close_console(){
-  callback( 300, 0, 0 );
+  // callback( 300, 0, 0 );
+  Callback2(Rf_mkString("close-console"), 0);
 }
 
 SEXP BERTModule_history( SEXP args ){
-  return callback( 400, args, 0 );
+  //return callback( 400, args, 0 );
+  return Callback2(Rf_mkString("console-history"), args);
 }
 
 SEXP BERTModule_Callback(SEXP command, SEXP data){
@@ -241,10 +248,10 @@ extern "C" {
     void R_init_BERTModule(DllInfo *info)
     {
         static R_CallMethodDef methods[]  = {
-            { "create_device", (DL_FUNC)&BERTModule_create_device, 5},
+          //  { "create_device", (DL_FUNC)&BERTModule_create_device, 5},
             { "console_device", (DL_FUNC)&BERTModule_console_device, 4},
-            { "progress_bar", (DL_FUNC)&BERTModule_progress_bar, 1},
-            { "download", (DL_FUNC)&BERTModule_download, 1},
+          //  { "progress_bar", (DL_FUNC)&BERTModule_progress_bar, 1},
+          //  { "download", (DL_FUNC)&BERTModule_download, 1},
             { "history", (DL_FUNC)&BERTModule_history, 1},
             { "InstallPointer", (DL_FUNC)&InstallPointer, 1},
             { "Callback", (DL_FUNC)&BERTModule_Callback, 2},

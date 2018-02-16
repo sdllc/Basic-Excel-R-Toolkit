@@ -29,13 +29,17 @@
 
 #include "console_graphics_device.h"
 
-extern unsigned long long GetTimeMs64();
+// extern unsigned long long GetTimeMs64();
 
 // std::vector< std::string > cmdBuffer;
 
 // try to store fuel now, you jerks
 #undef clear
 #undef length
+
+extern bool ConsoleCallback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response);
+
+extern void DumpJSON(const google::protobuf::Message &message, const char *path);
 
 /*
 #include <google\protobuf\util\json_util.h>
@@ -91,9 +95,6 @@ SEXP VariableToSEXP(const BERTBuffers::Variable &var) {
   case BERTBuffers::Variable::ValueCase::kStr:
     return Rf_mkString(var.str().c_str());
 
-//  case BERTBuffers::Variable::ValueCase::kNum:
-//    return Rf_ScalarReal(var.num());
-
   case BERTBuffers::Variable::ValueCase::kInteger:
     return Rf_ScalarInteger(var.integer());
 
@@ -145,11 +146,22 @@ SEXP VariableToSEXP(const BERTBuffers::Variable &var) {
 
     bool is_numeric = true;
     bool is_integer = true;
+    bool is_logical = true;
+    bool is_string = true;
 
-    for (int i = 0; i < count && is_numeric; i++) {
+    // FIXME: other simple type? complex?
+    // FIXME: treat NAs as part of generic type? (...yes) 
+
+    // we're treating BOTH nil and missing as NAs here. we get slightly different
+    // values from excel/COM, and we want reasonable behavior in each case.
+
+    for (int i = 0; i < count && (is_numeric || is_logical || is_string); i++) {
       BERTBuffers::Variable::ValueCase value_case = arr.data(i).value_case();
-      is_integer = is_integer && (value_case == BERTBuffers::Variable::ValueCase::kInteger);
-      is_numeric = is_numeric && (value_case == BERTBuffers::Variable::ValueCase::kReal || value_case == BERTBuffers::Variable::ValueCase::kInteger);
+      bool is_na = ((value_case == BERTBuffers::Variable::ValueCase::kNil) || (value_case == BERTBuffers::Variable::ValueCase::kMissing));
+      is_integer = is_integer && (is_na || (value_case == BERTBuffers::Variable::ValueCase::kInteger));
+      is_numeric = is_numeric && (is_na || (value_case == BERTBuffers::Variable::ValueCase::kReal) || (value_case == BERTBuffers::Variable::ValueCase::kInteger));
+      is_logical = is_logical && (is_na || (value_case == BERTBuffers::Variable::ValueCase::kBoolean));
+      is_string = is_string && (is_na || (value_case == BERTBuffers::Variable::ValueCase::kStr));
     }
 
     bool has_names = false;
@@ -158,7 +170,7 @@ SEXP VariableToSEXP(const BERTBuffers::Variable &var) {
       has_names = has_names || arr.data(i).name().length();
     }
 
-    // FIXME: like numeric, use typed list for single-type fields (string, int, bool, ...?)
+    //  FIXME: can merge int and logical? (...)
 
     SEXP list;
     if (is_numeric) {
@@ -166,15 +178,44 @@ SEXP VariableToSEXP(const BERTBuffers::Variable &var) {
         if (!cols) list = Rf_allocVector(INTSXP, count);
         else list = Rf_allocMatrix(INTSXP, rows, cols);
         int *p = INTEGER(list);
-        for (int i = 0; i < count; i++) p[i] = arr.data(i).integer();
+        for (int i = 0; i < count; i++) {
+          auto value_case = arr.data(i).value_case();
+          if((value_case == BERTBuffers::Variable::ValueCase::kNil) || (value_case == BERTBuffers::Variable::ValueCase::kMissing)) p[i] = NA_INTEGER;
+          else p[i] = arr.data(i).integer();
+        }
       }
       else {
         if (!cols) list = Rf_allocVector(REALSXP, count);
         else list = Rf_allocMatrix(REALSXP, rows, cols);
         double *p = REAL(list);
         for (int i = 0; i < count; i++) {
-          if( arr.data(i).value_case() == BERTBuffers::Variable::ValueCase::kInteger) p[i] = arr.data(i).integer();
+          auto value_case = arr.data(i).value_case();
+          if ((value_case == BERTBuffers::Variable::ValueCase::kNil) || (value_case == BERTBuffers::Variable::ValueCase::kMissing)) p[i] = NA_REAL;
+          else if( value_case == BERTBuffers::Variable::ValueCase::kInteger) p[i] = arr.data(i).integer();
           else p[i] = arr.data(i).real();
+        }
+      }
+    }
+    else if (is_logical) {
+      if (!cols) list = Rf_allocVector(LGLSXP, count);
+      else list = Rf_allocMatrix(LGLSXP, rows, cols);
+      int *p = LOGICAL(list);
+      for (int i = 0; i < count; i++) {
+        auto value_case = arr.data(i).value_case();
+        if ((value_case == BERTBuffers::Variable::ValueCase::kNil) || (value_case == BERTBuffers::Variable::ValueCase::kMissing)) p[i] = NA_LOGICAL;
+        else p[i] = arr.data(i).boolean() ? -1 : 0;
+      }
+    }
+    else if (is_string) {
+      if (!cols) list = Rf_allocVector(STRSXP, count);
+      else list = Rf_allocMatrix(STRSXP, rows, cols);
+      for (int i = 0; i < count; i++) {
+        auto value_case = arr.data(i).value_case();
+        if ((value_case == BERTBuffers::Variable::ValueCase::kNil) || (value_case == BERTBuffers::Variable::ValueCase::kMissing)) {
+          SET_STRING_ELT(list, i, NA_STRING);
+        }
+        else {
+          SET_STRING_ELT(list, i, Rf_mkChar(arr.data(i).str().c_str()));
         }
       }
     }
@@ -707,18 +748,42 @@ SEXP RCallback(SEXP command, SEXP data) {
     string_command = (CHAR(Rf_asChar(STRING_ELT(command, 0))));
   }
 
-  // FIXME: support numeric commands, convert?
-
-  // ...
-
   if (!string_command.length()) {
+    return R_NilValue;
+  }
+
+  // some commands are handled here. others are sent to BERT as callbacks.
+
+  if (!string_command.compare("console-device")) {
+    if (data && TYPEOF(data) == EXTPTRSXP) {
+      void *pointer = R_ExternalPtrAddr(data);
+      InitConsoleGraphicsDevice("bert-console-device", pointer);
+      return Rf_ScalarLogical(1);
+    }
+    return Rf_ScalarLogical(0);
+  }
+  else if (!string_command.compare("create-device")) {
+    std::cerr << "ENOTIMPL: " << string_command << std::endl;
+    return Rf_ScalarLogical(0);
+  }
+  else if (!string_command.compare("console-history")) {
+    
+    BERTBuffers::CallResponse message, response;
+    auto history = message.mutable_console()->mutable_history();
+    SEXPToVariable(history, data);
+    bool success = ConsoleCallback(message, response);
+    if (success) {
+      if (response.operation_case() == BERTBuffers::CallResponse::OperationCase::kResult) {
+        return VariableToSEXP(response.result());
+      }
+    }
     return R_NilValue;
   }
 
   BERTBuffers::CallResponse *call = new BERTBuffers::CallResponse;
   BERTBuffers::CallResponse *response = new BERTBuffers::CallResponse;
 
-  call->set_id(callback_id);
+  call->set_id(callback_id++);
   call->set_wait(true);
   auto callback = call->mutable_function_call();
   callback->set_function(string_command);
@@ -726,9 +791,6 @@ SEXP RCallback(SEXP command, SEXP data) {
   if (data) SEXPToVariable(callback->add_arguments(), reinterpret_cast<SEXP>(data));
 
   bool success = Callback(*call, *response);
-
-  // cout << "callback (2) complete (" << success << ")" << endl;
-
   if (success) sexp_result = VariableToSEXP(response->result());
 
   delete call;
@@ -742,13 +804,13 @@ SEXP RCallback(SEXP command, SEXP data) {
 }
 
 void ReleaseExternalPointer(SEXP external_pointer) {
-  //int key = (int)((intptr_t)R_ExternalPtrAddr(pointer));
-
   RCallback(Rf_mkString("release-pointer"), external_pointer);
-
 }
 
+/*
 SEXP ExternalCallback(int command_id, void* a, void* b) {
+
+  std::cerr << " * EXTERNAL CALLBACK *" << std::endl;
 
   static uint32_t callback_id = 1;
   SEXP sexp_result = R_NilValue;
@@ -795,3 +857,4 @@ SEXP ExternalCallback(int command_id, void* a, void* b) {
   return sexp_result;
 }
 
+*/

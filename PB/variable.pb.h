@@ -1943,6 +1943,7 @@ class Console : public ::google::protobuf::Message /* @@protoc_insertion_point(c
     kPrompt = 3,
     kGraphics = 4,
     kMimeData = 5,
+    kHistory = 6,
     MESSAGE_NOT_SET = 0,
   };
 
@@ -2068,6 +2069,15 @@ class Console : public ::google::protobuf::Message /* @@protoc_insertion_point(c
   ::BERTBuffers::MIMEData* mutable_mime_data();
   void set_allocated_mime_data(::BERTBuffers::MIMEData* mime_data);
 
+  // .BERTBuffers.Variable history = 6;
+  bool has_history() const;
+  void clear_history();
+  static const int kHistoryFieldNumber = 6;
+  const ::BERTBuffers::Variable& history() const;
+  ::BERTBuffers::Variable* release_history();
+  ::BERTBuffers::Variable* mutable_history();
+  void set_allocated_history(::BERTBuffers::Variable* history);
+
   MessageCase message_case() const;
   // @@protoc_insertion_point(class_scope:BERTBuffers.Console)
  private:
@@ -2076,6 +2086,7 @@ class Console : public ::google::protobuf::Message /* @@protoc_insertion_point(c
   void set_has_prompt();
   void set_has_graphics();
   void set_has_mime_data();
+  void set_has_history();
 
   inline bool has_message() const;
   void clear_message();
@@ -2089,6 +2100,7 @@ class Console : public ::google::protobuf::Message /* @@protoc_insertion_point(c
     ::google::protobuf::internal::ArenaStringPtr prompt_;
     ::BERTBuffers::GraphicsCommand* graphics_;
     ::BERTBuffers::MIMEData* mime_data_;
+    ::BERTBuffers::Variable* history_;
   } message_;
   mutable int _cached_size_;
   ::google::protobuf::uint32 _oneof_case_[1];
@@ -5354,6 +5366,46 @@ inline ::BERTBuffers::MIMEData* Console::mutable_mime_data() {
   }
   // @@protoc_insertion_point(field_mutable:BERTBuffers.Console.mime_data)
   return message_.mime_data_;
+}
+
+// .BERTBuffers.Variable history = 6;
+inline bool Console::has_history() const {
+  return message_case() == kHistory;
+}
+inline void Console::set_has_history() {
+  _oneof_case_[0] = kHistory;
+}
+inline void Console::clear_history() {
+  if (has_history()) {
+    delete message_.history_;
+    clear_has_message();
+  }
+}
+inline ::BERTBuffers::Variable* Console::release_history() {
+  // @@protoc_insertion_point(field_release:BERTBuffers.Console.history)
+  if (has_history()) {
+    clear_has_message();
+      ::BERTBuffers::Variable* temp = message_.history_;
+    message_.history_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline const ::BERTBuffers::Variable& Console::history() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.Console.history)
+  return has_history()
+      ? *message_.history_
+      : *reinterpret_cast< ::BERTBuffers::Variable*>(&::BERTBuffers::_Variable_default_instance_);
+}
+inline ::BERTBuffers::Variable* Console::mutable_history() {
+  if (!has_history()) {
+    clear_message();
+    set_has_history();
+    message_.history_ = new ::BERTBuffers::Variable;
+  }
+  // @@protoc_insertion_point(field_mutable:BERTBuffers.Console.history)
+  return message_.history_;
 }
 
 inline bool Console::has_message() const {

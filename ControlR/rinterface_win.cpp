@@ -53,7 +53,7 @@ int R_ReadConsole(const char *prompt, char *buf, int len, int addtohistory)
 		final_init = true;
         R_RegisterCCallable("BERTControlR", "Callback", (DL_FUNC)RCallback);
         R_RegisterCCallable("BERTControlR", "COMCallback", (DL_FUNC)COMCallback);
-        R_RegisterCCallable("BERTControlR", "ExternalCallback", (DL_FUNC)ExternalCallback);
+        // R_RegisterCCallable("BERTControlR", "ExternalCallback", (DL_FUNC)ExternalCallback);
     }
 
 	const char *cprompt = CHAR(STRING_ELT(GetOption1(install("continue")), 0));

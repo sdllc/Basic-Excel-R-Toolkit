@@ -31,7 +31,6 @@ let management_pipe = new Pipe();
 if( process.env['BERT_MANAGEMENT_PIPE']){
   management_pipe.Init({ pipe_name: process.env['BERT_MANAGEMENT_PIPE'] });
   management_pipe.control_messages.subscribe(message => {
-    console.info( "MMP", message );
     if( message == "shutdown-console" ) Shutdown();
   })
 }

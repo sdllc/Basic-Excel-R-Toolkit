@@ -4,6 +4,8 @@ import * as net from "net";
 import * as messages from "../generated/variable_pb.js";
 import * as Rx from "rxjs";
 
+import { MessageUtilities } from './message_utilities';
+
 enum Channel {
   INTERNAL,
   CALL,
@@ -36,63 +38,9 @@ export interface ConsoleMessage {
   mime_type?:string;
 }
 
+export interface HistoryCallbackType { (options?:any): Promise<string[]> }
+
 export class Pipe {
-
-  /** Variable (protobuf type) to js object */
-  VariableToObject(x) {
-
-    switch (x.getValueCase()) {
-      case messages.Variable.ValueCase.NIL:
-        return null;
-      case messages.Variable.ValueCase.INTEGER:
-        return x.getInteger();
-      case messages.Variable.ValueCase.REAL:
-        return x.getReal();
-      case messages.Variable.ValueCase.STR:
-        return x.getStr();
-      case messages.Variable.ValueCase.BOOLEAN:
-        return x.getBoolean();
-      case messages.Variable.ValueCase.ARR:
-
-        let list = x.getArr().getDataList();
-
-        // check for names. if no names, return an array
-        let names = list.some(element => element.getName());
-        if (!names) return list.map(x => this.VariableToObject(x));
-
-        // if names, return an object. there may be unnamed items, use $X
-        let object = {};
-        list.forEach((entry, i) => {
-          object[entry.getName() || `$${i}`] = this.VariableToObject(entry);
-        });
-        return object;
-
-      default:
-        console.info(`UNTRANSLATED (${x.getValueCase()})\n`, x.toObject());
-        return null;
-    }
-  }
-
-  /** js intrinsic or object to protobuf Variable */
-  ObjectToVariable(x) {
-    let type = typeof (x);
-    let v = new messages.Variable();
-    if (null === x) v.setNil(true);
-    else {
-      switch (type) {
-        case "number":
-          v.setReal(x);
-          break;
-        case "string":
-          v.setStr(x);
-          break;
-        case "boolean":
-          v.setBoolean(x);
-          break;
-      }
-    }
-    return v;
-  }
 
   /** id for transactions */
   private transaction_id_ = 1;
@@ -134,6 +82,13 @@ export class Pipe {
 
   set graphics_message_handler(handler:Function){
     this.graphics_message_handler_ = handler;
+  }
+
+  /** queries history. has a default implementation. */
+  private history_callback_:HistoryCallbackType = async (options:any = {}) => [];
+
+  set history_callback(callback:HistoryCallbackType){
+    this.history_callback_ = callback;
   }
 
   /**
@@ -246,7 +201,7 @@ export class Pipe {
     let frame = new Uint8Array(data.length + 4);
 
     frame_length[0] = data.length;
-    frame.set(new Uint8Array(frame_length), 0);
+    frame.set(new Uint8Array(frame_length.buffer), 0);
     frame.set(data, 4);
 
     try {
@@ -304,6 +259,27 @@ export class Pipe {
         this.console_messages_.next({ id:response.getId(),type: ConsoleMessageType.MIME_DATA, mime_type: obj.getMimeData().getMimeType(), mime_data: obj.getMimeData().getData_asU8() });
         break;
 
+      case messages.Console.MessageCase.HISTORY:
+        if( this.history_callback_ ){
+          this.history_callback_(obj.toObject()).then( history => {
+
+            let response = new messages.CallResponse();
+            let variable = MessageUtilities.ObjectToVariable(history);
+            response.setResult(variable);
+
+            let data = response.serializeBinary();
+            let frame_length = new Int32Array(1);
+            let frame = new Uint8Array(data.length + 4);
+        
+            frame_length[0] = data.length;
+            frame.set(new Uint8Array(frame_length.buffer), 0);
+            frame.set(data, 4);
+        
+            this.client_.write(Buffer.from(frame as any)); // ts type is wrong?
+          });
+        };            
+        break;
+
       case messages.Console.MessageCase.GRAPHICS:
 
         // graphics messages are specific to R (at least for now), but they
@@ -322,7 +298,7 @@ export class Pipe {
             let frame = new Uint8Array(data.length + 4);
         
             frame_length[0] = data.length;
-            frame.set(new Uint8Array(frame_length), 0);
+            frame.set(new Uint8Array(frame_length.buffer), 0);
             frame.set(data, 4);
         
             this.client_.write(Buffer.from(frame as any)); // ts type is wrong?
@@ -426,7 +402,7 @@ export class Pipe {
             break;
 
           case messages.CallResponse.OperationCase.RESULT:
-            let result = this.VariableToObject(response.getResult());
+            let result = MessageUtilities.VariableToObject(response.getResult());
             if(pending) this.Resolve(pending, result);
             resolve = true;
             break;

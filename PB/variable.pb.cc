@@ -95,6 +95,7 @@ class ConsoleDefaultTypeInternal {
   ::google::protobuf::internal::ArenaStringPtr prompt_;
   const ::BERTBuffers::GraphicsCommand* graphics_;
   const ::BERTBuffers::MIMEData* mime_data_;
+  const ::BERTBuffers::Variable* history_;
 } _Console_default_instance_;
 class FunctionElementDefaultTypeInternal {
  public:
@@ -391,6 +392,7 @@ void InitDefaultsConsoleImpl() {
 #endif  // GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
   protobuf_variable_2eproto::InitDefaultsGraphicsCommand();
   protobuf_variable_2eproto::InitDefaultsMIMEData();
+  protobuf_variable_2eproto::InitDefaultsArray();
   {
     void* ptr = &::BERTBuffers::_Console_default_instance_;
     new (ptr) ::BERTBuffers::Console();
@@ -628,6 +630,7 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   offsetof(::BERTBuffers::ConsoleDefaultTypeInternal, prompt_),
   offsetof(::BERTBuffers::ConsoleDefaultTypeInternal, graphics_),
   offsetof(::BERTBuffers::ConsoleDefaultTypeInternal, mime_data_),
+  offsetof(::BERTBuffers::ConsoleDefaultTypeInternal, history_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::Console, message_),
   ~0u,  // no _has_bits_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::FunctionElement, _internal_metadata_),
@@ -705,13 +708,13 @@ static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROT
   { 94, -1, sizeof(::BERTBuffers::GraphicsContext)},
   { 112, -1, sizeof(::BERTBuffers::MIMEData)},
   { 119, -1, sizeof(::BERTBuffers::Console)},
-  { 130, -1, sizeof(::BERTBuffers::FunctionElement)},
-  { 140, -1, sizeof(::BERTBuffers::FunctionDescriptor)},
-  { 148, -1, sizeof(::BERTBuffers::FunctionList)},
-  { 154, -1, sizeof(::BERTBuffers::EnumValue)},
-  { 161, -1, sizeof(::BERTBuffers::EnumType)},
-  { 168, -1, sizeof(::BERTBuffers::ExternalPointer)},
-  { 177, -1, sizeof(::BERTBuffers::CallResponse)},
+  { 131, -1, sizeof(::BERTBuffers::FunctionElement)},
+  { 141, -1, sizeof(::BERTBuffers::FunctionDescriptor)},
+  { 149, -1, sizeof(::BERTBuffers::FunctionList)},
+  { 155, -1, sizeof(::BERTBuffers::EnumValue)},
+  { 162, -1, sizeof(::BERTBuffers::EnumType)},
+  { 169, -1, sizeof(::BERTBuffers::ExternalPointer)},
+  { 178, -1, sizeof(::BERTBuffers::CallResponse)},
 };
 
 static ::google::protobuf::Message const * const file_default_instances[] = {
@@ -794,43 +797,44 @@ void AddDescriptorsImpl() {
       "\005ljoin\030\007 \001(\005\022\016\n\006lmitre\030\010 \001(\001\022\013\n\003cex\030\t \001("
       "\001\022\n\n\002ps\030\n \001(\001\022\022\n\nlineheight\030\013 \001(\001\022\020\n\010fon"
       "tface\030\014 \001(\005\022\022\n\nfontfamily\030\r \001(\t\"+\n\010MIMED"
-      "ata\022\021\n\tmime_type\030\001 \001(\t\022\014\n\004data\030\002 \001(\014\"\243\001\n"
+      "ata\022\021\n\tmime_type\030\001 \001(\t\022\014\n\004data\030\002 \001(\014\"\315\001\n"
       "\007Console\022\016\n\004text\030\001 \001(\tH\000\022\r\n\003err\030\002 \001(\tH\000\022"
       "\020\n\006prompt\030\003 \001(\tH\000\0220\n\010graphics\030\004 \001(\0132\034.BE"
       "RTBuffers.GraphicsCommandH\000\022*\n\tmime_data"
-      "\030\005 \001(\0132\025.BERTBuffers.MIMEDataH\000B\t\n\007messa"
-      "ge\"\204\001\n\017FunctionElement\022\014\n\004name\030\001 \001(\t\022\021\n\t"
-      "type_name\030\002 \001(\t\022,\n\rdefault_value\030\003 \001(\0132\025"
-      ".BERTBuffers.Variable\022\023\n\013description\030\004 \001"
-      "(\t\022\r\n\005index\030\005 \001(\r\"\237\001\n\022FunctionDescriptor"
-      "\022.\n\010function\030\001 \001(\0132\034.BERTBuffers.Functio"
-      "nElement\022(\n\tcall_type\030\002 \001(\0162\025.BERTBuffer"
-      "s.CallType\022/\n\targuments\030\003 \003(\0132\034.BERTBuff"
-      "ers.FunctionElement\"B\n\014FunctionList\0222\n\tf"
-      "unctions\030\001 \003(\0132\037.BERTBuffers.FunctionDes"
-      "criptor\"(\n\tEnumValue\022\014\n\004name\030\001 \001(\t\022\r\n\005va"
-      "lue\030\002 \001(\005\"@\n\010EnumType\022\014\n\004name\030\001 \001(\t\022&\n\006v"
-      "alues\030\002 \003(\0132\026.BERTBuffers.EnumValue\"\224\001\n\017"
-      "ExternalPointer\022\026\n\016interface_name\030\001 \001(\t\022"
-      "\017\n\007pointer\030\002 \001(\004\0222\n\tfunctions\030\003 \003(\0132\037.BE"
-      "RTBuffers.FunctionDescriptor\022$\n\005enums\030\004 "
-      "\003(\0132\025.BERTBuffers.EnumType\"\303\002\n\014CallRespo"
-      "nse\022\n\n\002id\030\001 \001(\r\022\014\n\004wait\030\002 \001(\010\022\r\n\003err\030\003 \001"
-      "(\tH\000\022\'\n\006result\030\004 \001(\0132\025.BERTBuffers.Varia"
-      "bleH\000\022\'\n\007console\030\005 \001(\0132\024.BERTBuffers.Con"
-      "soleH\000\022!\n\004code\030\006 \001(\0132\021.BERTBuffers.CodeH"
-      "\000\022\027\n\rshell_command\030\007 \001(\tH\000\022;\n\rfunction_c"
-      "all\030\010 \001(\0132\".BERTBuffers.CompositeFunctio"
-      "nCallH\000\0222\n\rfunction_list\030\t \001(\0132\031.BERTBuf"
-      "fers.FunctionListH\000B\013\n\toperation*N\n\tErro"
-      "rType\022\013\n\007GENERIC\020\000\022\006\n\002NA\020\001\022\007\n\003INF\020\002\022\t\n\005P"
-      "ARSE\020\003\022\r\n\tEXECUTION\020\004\022\t\n\005OTHER\020\017*(\n\010Call"
-      "Type\022\n\n\006method\020\000\022\007\n\003get\020\001\022\007\n\003put\020\002*/\n\nCa"
-      "llTarget\022\014\n\010language\020\000\022\007\n\003COM\020\001\022\n\n\006syste"
-      "m\020\002B\002H\001b\006proto3"
+      "\030\005 \001(\0132\025.BERTBuffers.MIMEDataH\000\022(\n\007histo"
+      "ry\030\006 \001(\0132\025.BERTBuffers.VariableH\000B\t\n\007mes"
+      "sage\"\204\001\n\017FunctionElement\022\014\n\004name\030\001 \001(\t\022\021"
+      "\n\ttype_name\030\002 \001(\t\022,\n\rdefault_value\030\003 \001(\013"
+      "2\025.BERTBuffers.Variable\022\023\n\013description\030\004"
+      " \001(\t\022\r\n\005index\030\005 \001(\r\"\237\001\n\022FunctionDescript"
+      "or\022.\n\010function\030\001 \001(\0132\034.BERTBuffers.Funct"
+      "ionElement\022(\n\tcall_type\030\002 \001(\0162\025.BERTBuff"
+      "ers.CallType\022/\n\targuments\030\003 \003(\0132\034.BERTBu"
+      "ffers.FunctionElement\"B\n\014FunctionList\0222\n"
+      "\tfunctions\030\001 \003(\0132\037.BERTBuffers.FunctionD"
+      "escriptor\"(\n\tEnumValue\022\014\n\004name\030\001 \001(\t\022\r\n\005"
+      "value\030\002 \001(\005\"@\n\010EnumType\022\014\n\004name\030\001 \001(\t\022&\n"
+      "\006values\030\002 \003(\0132\026.BERTBuffers.EnumValue\"\224\001"
+      "\n\017ExternalPointer\022\026\n\016interface_name\030\001 \001("
+      "\t\022\017\n\007pointer\030\002 \001(\004\0222\n\tfunctions\030\003 \003(\0132\037."
+      "BERTBuffers.FunctionDescriptor\022$\n\005enums\030"
+      "\004 \003(\0132\025.BERTBuffers.EnumType\"\303\002\n\014CallRes"
+      "ponse\022\n\n\002id\030\001 \001(\r\022\014\n\004wait\030\002 \001(\010\022\r\n\003err\030\003"
+      " \001(\tH\000\022\'\n\006result\030\004 \001(\0132\025.BERTBuffers.Var"
+      "iableH\000\022\'\n\007console\030\005 \001(\0132\024.BERTBuffers.C"
+      "onsoleH\000\022!\n\004code\030\006 \001(\0132\021.BERTBuffers.Cod"
+      "eH\000\022\027\n\rshell_command\030\007 \001(\tH\000\022;\n\rfunction"
+      "_call\030\010 \001(\0132\".BERTBuffers.CompositeFunct"
+      "ionCallH\000\0222\n\rfunction_list\030\t \001(\0132\031.BERTB"
+      "uffers.FunctionListH\000B\013\n\toperation*N\n\tEr"
+      "rorType\022\013\n\007GENERIC\020\000\022\006\n\002NA\020\001\022\007\n\003INF\020\002\022\t\n"
+      "\005PARSE\020\003\022\r\n\tEXECUTION\020\004\022\t\n\005OTHER\020\017*(\n\010Ca"
+      "llType\022\n\n\006method\020\000\022\007\n\003get\020\001\022\007\n\003put\020\002*/\n\n"
+      "CallTarget\022\014\n\010language\020\000\022\007\n\003COM\020\001\022\n\n\006sys"
+      "tem\020\002B\002H\001b\006proto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 2775);
+      descriptor, 2817);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "variable.proto", &protobuf_RegisterTypes);
 }
@@ -5946,6 +5950,8 @@ void Console::InitAsDefaultInstance() {
       ::BERTBuffers::GraphicsCommand::internal_default_instance());
   ::BERTBuffers::_Console_default_instance_.mime_data_ = const_cast< ::BERTBuffers::MIMEData*>(
       ::BERTBuffers::MIMEData::internal_default_instance());
+  ::BERTBuffers::_Console_default_instance_.history_ = const_cast< ::BERTBuffers::Variable*>(
+      ::BERTBuffers::Variable::internal_default_instance());
 }
 void Console::set_allocated_graphics(::BERTBuffers::GraphicsCommand* graphics) {
   ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
@@ -5975,12 +5981,27 @@ void Console::set_allocated_mime_data(::BERTBuffers::MIMEData* mime_data) {
   }
   // @@protoc_insertion_point(field_set_allocated:BERTBuffers.Console.mime_data)
 }
+void Console::set_allocated_history(::BERTBuffers::Variable* history) {
+  ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
+  clear_message();
+  if (history) {
+    ::google::protobuf::Arena* submessage_arena = NULL;
+    if (message_arena != submessage_arena) {
+      history = ::google::protobuf::internal::GetOwnedMessage(
+          message_arena, history, submessage_arena);
+    }
+    set_has_history();
+    message_.history_ = history;
+  }
+  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.Console.history)
+}
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int Console::kTextFieldNumber;
 const int Console::kErrFieldNumber;
 const int Console::kPromptFieldNumber;
 const int Console::kGraphicsFieldNumber;
 const int Console::kMimeDataFieldNumber;
+const int Console::kHistoryFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 Console::Console()
@@ -6016,6 +6037,10 @@ Console::Console(const Console& from)
     }
     case kMimeData: {
       mutable_mime_data()->::BERTBuffers::MIMEData::MergeFrom(from.mime_data());
+      break;
+    }
+    case kHistory: {
+      mutable_history()->::BERTBuffers::Variable::MergeFrom(from.history());
       break;
     }
     case MESSAGE_NOT_SET: {
@@ -6085,6 +6110,10 @@ void Console::clear_message() {
     }
     case kMimeData: {
       delete message_.mime_data_;
+      break;
+    }
+    case kHistory: {
+      delete message_.history_;
       break;
     }
     case MESSAGE_NOT_SET: {
@@ -6187,6 +6216,18 @@ bool Console::MergePartialFromCodedStream(
         break;
       }
 
+      // .BERTBuffers.Variable history = 6;
+      case 6: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(50u /* 50 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
+               input, mutable_history()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0) {
@@ -6255,6 +6296,12 @@ void Console::SerializeWithCachedSizes(
       5, *message_.mime_data_, output);
   }
 
+  // .BERTBuffers.Variable history = 6;
+  if (has_history()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+      6, *message_.history_, output);
+  }
+
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
@@ -6316,6 +6363,13 @@ void Console::SerializeWithCachedSizes(
         5, *message_.mime_data_, deterministic, target);
   }
 
+  // .BERTBuffers.Variable history = 6;
+  if (has_history()) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      InternalWriteMessageToArray(
+        6, *message_.history_, deterministic, target);
+  }
+
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
@@ -6367,6 +6421,13 @@ size_t Console::ByteSizeLong() const {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::MessageSize(
           *message_.mime_data_);
+      break;
+    }
+    // .BERTBuffers.Variable history = 6;
+    case kHistory: {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSize(
+          *message_.history_);
       break;
     }
     case MESSAGE_NOT_SET: {
@@ -6421,6 +6482,10 @@ void Console::MergeFrom(const Console& from) {
     }
     case kMimeData: {
       mutable_mime_data()->::BERTBuffers::MIMEData::MergeFrom(from.mime_data());
+      break;
+    }
+    case kHistory: {
+      mutable_history()->::BERTBuffers::Variable::MergeFrom(from.history());
       break;
     }
     case MESSAGE_NOT_SET: {

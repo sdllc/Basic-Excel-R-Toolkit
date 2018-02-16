@@ -383,7 +383,12 @@ public:
       var->set_boolean(x->val.xbool ? true : false);
     }
     else if (x->xltype & xltypeMissing) {
+      //var->set_nil(true);
+      var->set_missing(true);
+    }
+    else if (x->xltype & xltypeNil) {
       var->set_nil(true);
+      //var->set_missing(true);
     }
     else if (x->xltype & xltypeMulti) {
 

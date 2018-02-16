@@ -748,7 +748,6 @@ export class Editor {
           document.saved_version_ = document.model_.getAlternativeVersionId()
           document.dirty_ = !!unserialized.dirty;
           document.view_state_ = unserialized.view_state;
-          console.info("UVS", unserialized.view_state);
 
           if (document.dirty_) document.saved_version_--;
         }

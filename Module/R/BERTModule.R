@@ -247,7 +247,7 @@ close.js.client.progress.bar <- function( pb ){
 #' Print console history
 #'
 #' @export
-print.history.list <- function(h){
+print.ordered.history <- function(h){
 	len <- length(h);
 	pattern <- paste( "  %s\n", sep="" );
 	cat( "\n" );
@@ -257,8 +257,15 @@ print.history.list <- function(h){
 
 #' History implementation for the BERT console
 #' 
-history <- function( max.show=25, reverse=FALSE, pattern="" ){
-  .Call( "history", list(max.show, reverse, pattern), PACKAGE="BERTModule" );
+history <- function( max.show=25, reverse=FALSE, pattern, ... ){
+  lines <- .Call( "history", list(max.show, reverse, pattern), PACKAGE="BERTModule" );
+  if(missing(pattern)){ indexes = 1:(length(lines)); }
+  else { indexes = grep(pattern, lines, ...); }
+  indexes = tail(indexes, max.show);
+  if(reverse) indexes = rev(indexes);
+  result = list(indexes=indexes, lines=lines);
+  class(result) <- "ordered.history";
+  result;
 }
 
 #==============================================================================
@@ -611,7 +618,7 @@ ncol.xlReference <- function(x){
 
   #-----------------------------------------------------------------------------
   # xlReference: s4 class type representing an Excel cell reference.  this 
-  # was more useful before we added the COM interface, but it still might 
+  # was more useful before we added the COM interface, but it  might 
   # be handy.
   #-----------------------------------------------------------------------------
 

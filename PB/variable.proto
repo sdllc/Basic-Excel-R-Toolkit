@@ -204,6 +204,7 @@ message Console {
     string prompt = 3;
     GraphicsCommand graphics = 4;
     MIMEData mime_data = 5;
+    Variable history = 6;
   }
 }
 
