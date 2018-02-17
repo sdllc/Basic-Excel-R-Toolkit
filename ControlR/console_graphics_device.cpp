@@ -46,6 +46,8 @@ void set_clip(double x0, double x1, double y0, double y1, pDevDesc dd) {
  
   BERTBuffers::CallResponse message;
   auto graphics = message.mutable_console()->mutable_graphics();
+  graphics->set_device_type(((std::string*)(dd->deviceSpecific))->c_str());
+
   // SetMessageContext(graphics->mutable_context(), gc);
 
   graphics->set_command("set-clip");
@@ -62,6 +64,7 @@ void new_page(const pGEcontext gc, pDevDesc dd) {
   // std::cout << "g: new page: " << dd->right << ", " << dd->bottom << std::endl;
   BERTBuffers::CallResponse message;
   auto graphics = message.mutable_console()->mutable_graphics();
+  graphics->set_device_type(((std::string*)(dd->deviceSpecific))->c_str());
   SetMessageContext(graphics->mutable_context(), gc);
 
   graphics->set_command("new-page");
@@ -71,13 +74,11 @@ void new_page(const pGEcontext gc, pDevDesc dd) {
   PushConsoleMessage(message);
 }
 
-void close_device(pDevDesc dd) {
-}
-
 void draw_line(double x1, double y1, double x2, double y2, const pGEcontext gc, pDevDesc dd) {
   // std::cout << "g: draw line" << std::endl;
   BERTBuffers::CallResponse message;
   auto graphics = message.mutable_console()->mutable_graphics();
+  graphics->set_device_type(((std::string*)(dd->deviceSpecific))->c_str());
   SetMessageContext(graphics->mutable_context(), gc);
 
   graphics->set_command("draw-line");
@@ -92,6 +93,7 @@ void draw_poly(int n, double *x, double *y, bool filled, const pGEcontext gc, pD
 
   BERTBuffers::CallResponse message;
   auto graphics = message.mutable_console()->mutable_graphics();
+  graphics->set_device_type(((std::string*)(dd->deviceSpecific))->c_str());
   SetMessageContext(graphics->mutable_context(), gc);
 
   graphics->set_command("draw-polyline");
@@ -125,6 +127,7 @@ double get_strWidth(const char *str, const pGEcontext gc, pDevDesc dd) {
 
   BERTBuffers::CallResponse message, response;
   auto graphics = message.mutable_console()->mutable_graphics();
+  graphics->set_device_type(((std::string*)(dd->deviceSpecific))->c_str());
   SetMessageContext(graphics->mutable_context(), gc);
   graphics->set_command("measure-text"); 
   graphics->set_text(str);
@@ -147,6 +150,7 @@ void draw_rect(double x1, double y1, double x2, double y2,
   //std::cout << "g: draw rect" << std::endl;
   BERTBuffers::CallResponse message;
   auto graphics = message.mutable_console()->mutable_graphics();
+  graphics->set_device_type(((std::string*)(dd->deviceSpecific))->c_str());
   SetMessageContext(graphics->mutable_context(), gc);
 
   graphics->set_command("draw-rect");
@@ -162,6 +166,7 @@ void draw_circle(double x, double y, double r, const pGEcontext gc,
   //std::cout << "g: draw circle" << std::endl;
   BERTBuffers::CallResponse message;
   auto graphics = message.mutable_console()->mutable_graphics();
+  graphics->set_device_type(((std::string*)(dd->deviceSpecific))->c_str());
   SetMessageContext(graphics->mutable_context(), gc);
 
   graphics->set_command("draw-circle");
@@ -176,6 +181,7 @@ void draw_text(double x, double y, const char *str, double rot,
   //std::cout << "g: draw text" << std::endl;
   BERTBuffers::CallResponse message;
   auto graphics = message.mutable_console()->mutable_graphics();
+  graphics->set_device_type(((std::string*)(dd->deviceSpecific))->c_str());
   SetMessageContext(graphics->mutable_context(), gc);
 
   graphics->set_command("draw-text");
@@ -214,6 +220,7 @@ void get_metric_info(int c, const pGEcontext gc, double* ascent, double* descent
 
   BERTBuffers::CallResponse message, response;
   auto graphics = message.mutable_console()->mutable_graphics();
+  graphics->set_device_type(((std::string*)(dd->deviceSpecific))->c_str());
   SetMessageContext(graphics->mutable_context(), gc);
   graphics->set_command("font-metrics");
   graphics->set_text(str);
@@ -249,6 +256,7 @@ void draw_raster(unsigned int *raster,
   std::cout << "draw raster" << std::endl;
   BERTBuffers::CallResponse message;
   auto graphics = message.mutable_console()->mutable_graphics();
+  graphics->set_device_type(((std::string*)(dd->deviceSpecific))->c_str());
   SetMessageContext(graphics->mutable_context(), gc);
 
   graphics->set_command("draw-raster");
@@ -277,18 +285,24 @@ void draw_raster(unsigned int *raster,
   PushConsoleMessage(message);
 }
 
-void InitConsoleGraphicsDevice(const std::string &name, void *p) {
+void close_device(pDevDesc dd) {
+  if (dd->deviceSpecific) delete (dd->deviceSpecific);
+  dd->deviceSpecific = 0;
+}
 
-  pDevDesc dd = (pDevDesc)p;
+SEXP CreateConsoleDevice(void *device_pointer, const std::string &type) {
+
+  pDevDesc dd = (pDevDesc)device_pointer;
+ 
+  dd->cra[0] = 0.9 * dd->startps;
+  dd->cra[1] = 1.2 * dd->startps;
 
   dd->newPage = &new_page;
   dd->close = &close_device;
   dd->clip = &set_clip;
-
   dd->size = &get_size;
   dd->metricInfo = &get_metric_info;
   dd->strWidth = &get_strWidth;
-
   dd->line = &draw_line;
   dd->text = &draw_text;
   dd->rect = &draw_rect;
@@ -297,33 +311,14 @@ void InitConsoleGraphicsDevice(const std::string &name, void *p) {
   dd->polyline = &draw_polyline;
   dd->path = &draw_path;
   dd->raster = &draw_raster;
-
   dd->textUTF8 = &draw_text;
   dd->strWidthUTF8 = &get_strWidth;
+ 
+  std::cout << "init device: " << type << ": " << std::dec << dd->right << ", " << dd->bottom << std::endl;
+  dd->deviceSpecific = new std::string(type);
 
-  // testing
-
-  dd->cra[1] = 1.1 * dd->startps; // pointsize
-
-                                  /*
-                                  dd->cra[0] = 0.9 * pointsize;
-                                  dd->cra[1] = 1.2 * pointsize;
-                                  dd->xCharOffset = 0.4900;
-                                  dd->yCharOffset = 0.3333;
-                                  dd->yLineBias = 0.2;
-                                  */
-
-                                  // ok
-
-  double width = dd->right;
-  double height = dd->bottom;
-
-  std::cout << "init device: " << width << ", " << height << std::endl;
-
-  if (!width) width = 400;
-  if (!height) height = 400;
-
-  dd->deviceSpecific = 0; //
+  return Rf_ScalarLogical(true);
 
 }
+
 

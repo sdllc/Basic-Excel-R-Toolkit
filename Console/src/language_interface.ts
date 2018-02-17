@@ -2,6 +2,7 @@
 import {Pipe, ConsoleMessage, ConsoleMessageType} from './pipe';
 import {Pipe2} from './pipe2';
 import {StdIOPipe} from './stdio_pipe';
+import { TerminalImplementation } from './terminal_implementation';
 
 /** generic language interface */
 export class LanguageInterface {
@@ -47,6 +48,11 @@ export class LanguageInterface {
     });
 
   }
+
+  /** 
+   * stub for subclasses. we're introducing circular dependencies.
+   */
+  AttachTerminal(terminal:TerminalImplementation){}
 
   Shutdown() : Promise<any> {
     console.info( "LISD1");

@@ -2,6 +2,9 @@
 import { Pipe } from './pipe';
 import { Metrics, FontMetrics } from './fontmetrics';
 
+import * as Rx from 'rxjs';
+import { AnnotationInfo } from './annotation_addon';
+
 // I wanted this to be hidden... we should have a translation library
 import * as messages from "../generated/variable_pb.js";
 
@@ -22,17 +25,17 @@ export class GraphicsDevice {
     GE_SQUARE_CAP: 3
   };
 
-  font_metrics_ = new FontMetrics(); 
+  static font_metrics_ = new FontMetrics(); 
 
   height_:number;
-
   width_:number;
 
-  protected terminal_;
+  private static new_graphic_:Rx.Subject<AnnotationInfo> = new Rx.Subject<AnnotationInfo>();
 
-  constructor(terminal, pipe:Pipe){
-    this.terminal_ = terminal;
-    pipe.graphics_message_handler = this.GraphicsCommand.bind(this);
+  public static get new_graphic() { return this.new_graphic_; }
+
+  InsertGraphic(height:number, element:HTMLElement){
+    GraphicsDevice.new_graphic_.next({ height, element });
   }
 
   static PointsToPixels(point_size:number){
@@ -77,6 +80,6 @@ export class GraphicsDevice {
   }
 
   // stub
-  GraphicsCommand(message){}
+  GraphicsCommand(message, command){}
 
 }

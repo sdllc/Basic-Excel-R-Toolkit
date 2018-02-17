@@ -148,6 +148,8 @@ message GraphicsCommand  {
   bytes raster = 9;
   bool interpolate = 10;  // flag
 
+  // device type
+  string device_type = 14;
   GraphicsContext context = 15;
 }
 
@@ -185,10 +187,11 @@ message GraphicsContext {
 	int32 fontface = 12;
 	string fontfamily = 13;
 
+
 	//bool bold;
 	//bool italic;
 	//double fontsize;
-	//std::string fontname;
+  //std::string fontname;
 }
 
 message MIMEData {

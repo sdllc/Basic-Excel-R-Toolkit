@@ -16,9 +16,6 @@ import {Pipe, ConsoleMessage, ConsoleMessageType} from './pipe';
 
 import * as Rx from 'rxjs';
 import { ConnectableObservable } from 'rxjs/observable/ConnectableObservable';
-import { GraphicsDevice } from './graphics_device';
-import { SVGGraphicsDevice } from './svg_graphics_device';
-import { PNGGraphicsDevice } from './png_graphics_device';
 
 // for save image dialog
 import { remote } from 'electron';
@@ -411,6 +408,8 @@ export class TerminalImplementation {
       };
     }
  
+    language_interface_.AttachTerminal(this);
+
   }
 
   /**
@@ -476,7 +475,7 @@ export class TerminalImplementation {
    * FIXME: support for multiple candidate messages (list, or with up/down?)
    */
   FunctionTip(message?: string, function_guess?: string) {
-    
+
     if (!message) TerminalImplementation.function_tip_node_.style.opacity = "0";
     else {
 
@@ -934,12 +933,6 @@ export class TerminalImplementation {
 
     // ensure
     (this.xterm_ as any).annotation_manager.Init();
-
-    // FIXME: this is language-specific, so it should be in the 
-    // language implementation class
-
-    new SVGGraphicsDevice(this, this.language_interface_.pipe_);
-    //new PNGGraphicsDevice(this, this.language_interface_.pipe_);
 
     this.language_interface_.pipe_.history_callback = async (options?:any) => {
       return this.history_.history || [];

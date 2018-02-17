@@ -46,7 +46,7 @@ export class SVGGraphicsDevice extends GraphicsDevice {
     this.node_.style.height = `${height}px`;
     this.node_.style.width = `${width}px`;
 
-    (this.terminal_ as any).InsertGraphic(height, this.node_);
+    this.InsertGraphic(height, this.node_);
   
   }
 
@@ -75,13 +75,13 @@ export class SVGGraphicsDevice extends GraphicsDevice {
     if(this.node_) this.node_.src = "data:image/svg+xml;base64," + btoa(svg + "</svg>");
   }
 
-  GraphicsCommand(message){
+  GraphicsCommand(message, command){
 
     // we need access to the message to get the raw raster data
     // (if it's a raster). in this case maybe we should restructure
     // to skip conversion, as it's probably unecessary?
 
-    let command = message.toObject().graphics;
+    // let command = message.toObject().graphics;
     let node:SVGElement;
 
     // handle these messages first; they all return immediately.
@@ -92,18 +92,18 @@ export class SVGGraphicsDevice extends GraphicsDevice {
     case "measure-text":
       {
         let weight = (command.context.fontface === 2 || command.context.fontface === 4) ? 600 : 400;
-        this.font_metrics_.SetFont(GraphicsDevice.FontFamily(command.context), 
+        GraphicsDevice.font_metrics_.SetFont(GraphicsDevice.FontFamily(command.context), 
           GraphicsDevice.PointsToPixels(command.context.ps * command.context.cex), weight);
-        let width = this.font_metrics_.Width(command.text);
+        let width = GraphicsDevice.font_metrics_.Width(command.text);
         return this.GraphicsResponse([width]);
       }
 
     case "font-metrics":
       {
         let weight = (command.context.fontface === 2 || command.context.fontface === 4) ? 600 : 400;
-        this.font_metrics_.SetFont(GraphicsDevice.FontFamily(command.context), 
+        GraphicsDevice.font_metrics_.SetFont(GraphicsDevice.FontFamily(command.context), 
           GraphicsDevice.PointsToPixels(command.context.ps * command.context.cex), weight);
-        let metrics = this.font_metrics_.Measure(command.text);
+        let metrics = GraphicsDevice.font_metrics_.Measure(command.text);
         return this.GraphicsResponse([metrics.width], [metrics.ascent, metrics.descent]);
       }
 

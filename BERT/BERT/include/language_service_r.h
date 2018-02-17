@@ -58,11 +58,10 @@ public:
 
     if (connected_) {
       uintptr_t callback_thread_ptr = _beginthreadex(0, 0, CallbackThreadFunction, this, 0, 0);
-
+      
       std::string library_path;
       APIFunctions::GetRegistryString(library_path, "BERT2.LibraryPath");
       library_path = StringUtilities::EscapeBackslashes(library_path);
-
       std::string library_command = "library(BERTModule, lib.loc = \"";
       library_command += library_path;
       library_command += "\")";

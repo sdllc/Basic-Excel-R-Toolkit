@@ -36,6 +36,11 @@ type Terminal = any;
  * 
  */
 
+export interface AnnotationInfo {
+  height:number;
+  element:HTMLElement;
+}
+
 export interface AnnotationType {
 
   /** insert at line (required) */

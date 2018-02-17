@@ -160,22 +160,15 @@ BERT.graphics.device <- function( name="BERT-default", bgcolor="white", width=40
 #' renders to the shell.
 #'
 #' @export 
-BERT.console.graphics.device <- function( bgcolor="white", width=400, height=300, pointsize=14, scale=Sys.getenv("BERTGraphicsScale")){
+BERT.console.graphics.device <- function( bgcolor="white", width=400, height=300, pointsize=14, type="svg"){
 
-  scale <- as.numeric(scale);
-  if(is.na(scale) | is.null(scale)){ scale = 1; }
-
-  width = round( width * scale ); 
-  height = round( height * scale ); 
-  pointsize = round( pointsize * scale ); 
-
-  name <- "BERT-console-device";
-
-  x <- dev.list();
-  if((length(x) > 0) & (name %in% names(x))){ dev.set( x[[name]]) }
-  else {
-    .Call( "console_device", bgcolor, width, height, pointsize, PACKAGE='BERTModule' );
-  }
+  #name <- "BERT-console-device";
+  #
+  #x <- dev.list();
+  #if((length(x) > 0) & (name %in% names(x))){ dev.set( x[[name]]) }
+  #else {
+    .Call( "console_device", bgcolor, width, height, pointsize, type, PACKAGE='BERTModule' );
+  #}
 }
 
 #==============================================================================
@@ -258,7 +251,7 @@ print.ordered.history <- function(h){
 #' History implementation for the BERT console
 #' 
 history <- function( max.show=25, reverse=FALSE, pattern, ... ){
-  lines <- .Call( "history", list(max.show, reverse, pattern), PACKAGE="BERTModule" );
+  lines <- .Call( "history", list(), PACKAGE="BERTModule" );
   if(missing(pattern)){ indexes = 1:(length(lines)); }
   else { indexes = grep(pattern, lines, ...); }
   indexes = tail(indexes, max.show);

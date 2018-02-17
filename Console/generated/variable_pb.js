@@ -2104,6 +2104,7 @@ proto.BERTBuffers.GraphicsCommand.toObject = function(includeInstance, msg) {
     hadj: +jspb.Message.getFieldWithDefault(msg, 8, 0.0),
     raster: msg.getRaster_asB64(),
     interpolate: jspb.Message.getFieldWithDefault(msg, 10, false),
+    deviceType: jspb.Message.getFieldWithDefault(msg, 14, ""),
     context: (f = msg.getContext()) && proto.BERTBuffers.GraphicsContext.toObject(includeInstance, f)
   };
 
@@ -2180,6 +2181,10 @@ proto.BERTBuffers.GraphicsCommand.deserializeBinaryFromReader = function(msg, re
     case 10:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setInterpolate(value);
+      break;
+    case 14:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setDeviceType(value);
       break;
     case 15:
       var value = new proto.BERTBuffers.GraphicsContext;
@@ -2282,6 +2287,13 @@ proto.BERTBuffers.GraphicsCommand.serializeBinaryToWriter = function(message, wr
   if (f) {
     writer.writeBool(
       10,
+      f
+    );
+  }
+  f = message.getDeviceType();
+  if (f.length > 0) {
+    writer.writeString(
+      14,
       f
     );
   }
@@ -2499,6 +2511,21 @@ proto.BERTBuffers.GraphicsCommand.prototype.getInterpolate = function() {
 /** @param {boolean} value */
 proto.BERTBuffers.GraphicsCommand.prototype.setInterpolate = function(value) {
   jspb.Message.setProto3BooleanField(this, 10, value);
+};
+
+
+/**
+ * optional string device_type = 14;
+ * @return {string}
+ */
+proto.BERTBuffers.GraphicsCommand.prototype.getDeviceType = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 14, ""));
+};
+
+
+/** @param {string} value */
+proto.BERTBuffers.GraphicsCommand.prototype.setDeviceType = function(value) {
+  jspb.Message.setProto3StringField(this, 14, value);
 };
 
 

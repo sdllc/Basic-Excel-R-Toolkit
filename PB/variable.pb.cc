@@ -585,6 +585,7 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsCommand, hadj_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsCommand, raster_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsCommand, interpolate_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsCommand, device_type_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsCommand, context_),
   ~0u,  // no _has_bits_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::Color, _internal_metadata_),
@@ -704,17 +705,17 @@ static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROT
   { 52, -1, sizeof(::BERTBuffers::Code)},
   { 58, -1, sizeof(::BERTBuffers::CompositeFunctionCall)},
   { 69, -1, sizeof(::BERTBuffers::GraphicsCommand)},
-  { 85, -1, sizeof(::BERTBuffers::Color)},
-  { 94, -1, sizeof(::BERTBuffers::GraphicsContext)},
-  { 112, -1, sizeof(::BERTBuffers::MIMEData)},
-  { 119, -1, sizeof(::BERTBuffers::Console)},
-  { 131, -1, sizeof(::BERTBuffers::FunctionElement)},
-  { 141, -1, sizeof(::BERTBuffers::FunctionDescriptor)},
-  { 149, -1, sizeof(::BERTBuffers::FunctionList)},
-  { 155, -1, sizeof(::BERTBuffers::EnumValue)},
-  { 162, -1, sizeof(::BERTBuffers::EnumType)},
-  { 169, -1, sizeof(::BERTBuffers::ExternalPointer)},
-  { 178, -1, sizeof(::BERTBuffers::CallResponse)},
+  { 86, -1, sizeof(::BERTBuffers::Color)},
+  { 95, -1, sizeof(::BERTBuffers::GraphicsContext)},
+  { 113, -1, sizeof(::BERTBuffers::MIMEData)},
+  { 120, -1, sizeof(::BERTBuffers::Console)},
+  { 132, -1, sizeof(::BERTBuffers::FunctionElement)},
+  { 142, -1, sizeof(::BERTBuffers::FunctionDescriptor)},
+  { 150, -1, sizeof(::BERTBuffers::FunctionList)},
+  { 156, -1, sizeof(::BERTBuffers::EnumValue)},
+  { 163, -1, sizeof(::BERTBuffers::EnumType)},
+  { 170, -1, sizeof(::BERTBuffers::ExternalPointer)},
+  { 179, -1, sizeof(::BERTBuffers::CallResponse)},
 };
 
 static ::google::protobuf::Message const * const file_default_instances[] = {
@@ -783,58 +784,58 @@ void AddDescriptorsImpl() {
       "(\n\targuments\030\002 \003(\0132\025.BERTBuffers.Variabl"
       "e\022\017\n\007pointer\030\003 \001(\004\022\r\n\005index\030\004 \001(\r\022#\n\004typ"
       "e\030\005 \001(\0162\025.BERTBuffers.CallType\022\'\n\006target"
-      "\030\006 \001(\0162\027.BERTBuffers.CallTarget\"\320\001\n\017Grap"
+      "\030\006 \001(\0162\027.BERTBuffers.CallTarget\"\345\001\n\017Grap"
       "hicsCommand\022\017\n\007command\030\001 \001(\t\022\t\n\001x\030\002 \003(\001\022"
       "\t\n\001y\030\003 \003(\001\022\t\n\001r\030\004 \001(\001\022\013\n\003rot\030\005 \001(\001\022\014\n\004te"
       "xt\030\006 \001(\t\022\016\n\006filled\030\007 \001(\010\022\014\n\004hadj\030\010 \001(\001\022\016"
-      "\n\006raster\030\t \001(\014\022\023\n\013interpolate\030\n \001(\010\022-\n\007c"
-      "ontext\030\017 \001(\0132\034.BERTBuffers.GraphicsConte"
-      "xt\"3\n\005Color\022\t\n\001a\030\001 \001(\r\022\t\n\001r\030\002 \001(\r\022\t\n\001g\030\003"
-      " \001(\r\022\t\n\001b\030\004 \001(\r\"\375\001\n\017GraphicsContext\022\037\n\003c"
-      "ol\030\001 \001(\0132\022.BERTBuffers.Color\022 \n\004fill\030\002 \001"
-      "(\0132\022.BERTBuffers.Color\022\r\n\005gamma\030\003 \001(\001\022\013\n"
-      "\003lwd\030\004 \001(\001\022\013\n\003lty\030\005 \001(\005\022\014\n\004lend\030\006 \001(\005\022\r\n"
-      "\005ljoin\030\007 \001(\005\022\016\n\006lmitre\030\010 \001(\001\022\013\n\003cex\030\t \001("
-      "\001\022\n\n\002ps\030\n \001(\001\022\022\n\nlineheight\030\013 \001(\001\022\020\n\010fon"
-      "tface\030\014 \001(\005\022\022\n\nfontfamily\030\r \001(\t\"+\n\010MIMED"
-      "ata\022\021\n\tmime_type\030\001 \001(\t\022\014\n\004data\030\002 \001(\014\"\315\001\n"
-      "\007Console\022\016\n\004text\030\001 \001(\tH\000\022\r\n\003err\030\002 \001(\tH\000\022"
-      "\020\n\006prompt\030\003 \001(\tH\000\0220\n\010graphics\030\004 \001(\0132\034.BE"
-      "RTBuffers.GraphicsCommandH\000\022*\n\tmime_data"
-      "\030\005 \001(\0132\025.BERTBuffers.MIMEDataH\000\022(\n\007histo"
-      "ry\030\006 \001(\0132\025.BERTBuffers.VariableH\000B\t\n\007mes"
-      "sage\"\204\001\n\017FunctionElement\022\014\n\004name\030\001 \001(\t\022\021"
-      "\n\ttype_name\030\002 \001(\t\022,\n\rdefault_value\030\003 \001(\013"
-      "2\025.BERTBuffers.Variable\022\023\n\013description\030\004"
-      " \001(\t\022\r\n\005index\030\005 \001(\r\"\237\001\n\022FunctionDescript"
-      "or\022.\n\010function\030\001 \001(\0132\034.BERTBuffers.Funct"
-      "ionElement\022(\n\tcall_type\030\002 \001(\0162\025.BERTBuff"
-      "ers.CallType\022/\n\targuments\030\003 \003(\0132\034.BERTBu"
-      "ffers.FunctionElement\"B\n\014FunctionList\0222\n"
-      "\tfunctions\030\001 \003(\0132\037.BERTBuffers.FunctionD"
-      "escriptor\"(\n\tEnumValue\022\014\n\004name\030\001 \001(\t\022\r\n\005"
-      "value\030\002 \001(\005\"@\n\010EnumType\022\014\n\004name\030\001 \001(\t\022&\n"
-      "\006values\030\002 \003(\0132\026.BERTBuffers.EnumValue\"\224\001"
-      "\n\017ExternalPointer\022\026\n\016interface_name\030\001 \001("
-      "\t\022\017\n\007pointer\030\002 \001(\004\0222\n\tfunctions\030\003 \003(\0132\037."
-      "BERTBuffers.FunctionDescriptor\022$\n\005enums\030"
-      "\004 \003(\0132\025.BERTBuffers.EnumType\"\303\002\n\014CallRes"
-      "ponse\022\n\n\002id\030\001 \001(\r\022\014\n\004wait\030\002 \001(\010\022\r\n\003err\030\003"
-      " \001(\tH\000\022\'\n\006result\030\004 \001(\0132\025.BERTBuffers.Var"
-      "iableH\000\022\'\n\007console\030\005 \001(\0132\024.BERTBuffers.C"
-      "onsoleH\000\022!\n\004code\030\006 \001(\0132\021.BERTBuffers.Cod"
-      "eH\000\022\027\n\rshell_command\030\007 \001(\tH\000\022;\n\rfunction"
-      "_call\030\010 \001(\0132\".BERTBuffers.CompositeFunct"
-      "ionCallH\000\0222\n\rfunction_list\030\t \001(\0132\031.BERTB"
-      "uffers.FunctionListH\000B\013\n\toperation*N\n\tEr"
-      "rorType\022\013\n\007GENERIC\020\000\022\006\n\002NA\020\001\022\007\n\003INF\020\002\022\t\n"
-      "\005PARSE\020\003\022\r\n\tEXECUTION\020\004\022\t\n\005OTHER\020\017*(\n\010Ca"
-      "llType\022\n\n\006method\020\000\022\007\n\003get\020\001\022\007\n\003put\020\002*/\n\n"
-      "CallTarget\022\014\n\010language\020\000\022\007\n\003COM\020\001\022\n\n\006sys"
-      "tem\020\002B\002H\001b\006proto3"
+      "\n\006raster\030\t \001(\014\022\023\n\013interpolate\030\n \001(\010\022\023\n\013d"
+      "evice_type\030\016 \001(\t\022-\n\007context\030\017 \001(\0132\034.BERT"
+      "Buffers.GraphicsContext\"3\n\005Color\022\t\n\001a\030\001 "
+      "\001(\r\022\t\n\001r\030\002 \001(\r\022\t\n\001g\030\003 \001(\r\022\t\n\001b\030\004 \001(\r\"\375\001\n"
+      "\017GraphicsContext\022\037\n\003col\030\001 \001(\0132\022.BERTBuff"
+      "ers.Color\022 \n\004fill\030\002 \001(\0132\022.BERTBuffers.Co"
+      "lor\022\r\n\005gamma\030\003 \001(\001\022\013\n\003lwd\030\004 \001(\001\022\013\n\003lty\030\005"
+      " \001(\005\022\014\n\004lend\030\006 \001(\005\022\r\n\005ljoin\030\007 \001(\005\022\016\n\006lmi"
+      "tre\030\010 \001(\001\022\013\n\003cex\030\t \001(\001\022\n\n\002ps\030\n \001(\001\022\022\n\nli"
+      "neheight\030\013 \001(\001\022\020\n\010fontface\030\014 \001(\005\022\022\n\nfont"
+      "family\030\r \001(\t\"+\n\010MIMEData\022\021\n\tmime_type\030\001 "
+      "\001(\t\022\014\n\004data\030\002 \001(\014\"\315\001\n\007Console\022\016\n\004text\030\001 "
+      "\001(\tH\000\022\r\n\003err\030\002 \001(\tH\000\022\020\n\006prompt\030\003 \001(\tH\000\0220"
+      "\n\010graphics\030\004 \001(\0132\034.BERTBuffers.GraphicsC"
+      "ommandH\000\022*\n\tmime_data\030\005 \001(\0132\025.BERTBuffer"
+      "s.MIMEDataH\000\022(\n\007history\030\006 \001(\0132\025.BERTBuff"
+      "ers.VariableH\000B\t\n\007message\"\204\001\n\017FunctionEl"
+      "ement\022\014\n\004name\030\001 \001(\t\022\021\n\ttype_name\030\002 \001(\t\022,"
+      "\n\rdefault_value\030\003 \001(\0132\025.BERTBuffers.Vari"
+      "able\022\023\n\013description\030\004 \001(\t\022\r\n\005index\030\005 \001(\r"
+      "\"\237\001\n\022FunctionDescriptor\022.\n\010function\030\001 \001("
+      "\0132\034.BERTBuffers.FunctionElement\022(\n\tcall_"
+      "type\030\002 \001(\0162\025.BERTBuffers.CallType\022/\n\targ"
+      "uments\030\003 \003(\0132\034.BERTBuffers.FunctionEleme"
+      "nt\"B\n\014FunctionList\0222\n\tfunctions\030\001 \003(\0132\037."
+      "BERTBuffers.FunctionDescriptor\"(\n\tEnumVa"
+      "lue\022\014\n\004name\030\001 \001(\t\022\r\n\005value\030\002 \001(\005\"@\n\010Enum"
+      "Type\022\014\n\004name\030\001 \001(\t\022&\n\006values\030\002 \003(\0132\026.BER"
+      "TBuffers.EnumValue\"\224\001\n\017ExternalPointer\022\026"
+      "\n\016interface_name\030\001 \001(\t\022\017\n\007pointer\030\002 \001(\004\022"
+      "2\n\tfunctions\030\003 \003(\0132\037.BERTBuffers.Functio"
+      "nDescriptor\022$\n\005enums\030\004 \003(\0132\025.BERTBuffers"
+      ".EnumType\"\303\002\n\014CallResponse\022\n\n\002id\030\001 \001(\r\022\014"
+      "\n\004wait\030\002 \001(\010\022\r\n\003err\030\003 \001(\tH\000\022\'\n\006result\030\004 "
+      "\001(\0132\025.BERTBuffers.VariableH\000\022\'\n\007console\030"
+      "\005 \001(\0132\024.BERTBuffers.ConsoleH\000\022!\n\004code\030\006 "
+      "\001(\0132\021.BERTBuffers.CodeH\000\022\027\n\rshell_comman"
+      "d\030\007 \001(\tH\000\022;\n\rfunction_call\030\010 \001(\0132\".BERTB"
+      "uffers.CompositeFunctionCallH\000\0222\n\rfuncti"
+      "on_list\030\t \001(\0132\031.BERTBuffers.FunctionList"
+      "H\000B\013\n\toperation*N\n\tErrorType\022\013\n\007GENERIC\020"
+      "\000\022\006\n\002NA\020\001\022\007\n\003INF\020\002\022\t\n\005PARSE\020\003\022\r\n\tEXECUTI"
+      "ON\020\004\022\t\n\005OTHER\020\017*(\n\010CallType\022\n\n\006method\020\000\022"
+      "\007\n\003get\020\001\022\007\n\003put\020\002*/\n\nCallTarget\022\014\n\010langu"
+      "age\020\000\022\007\n\003COM\020\001\022\n\n\006system\020\002B\002H\001b\006proto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 2817);
+      descriptor, 2838);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "variable.proto", &protobuf_RegisterTypes);
 }
@@ -3880,6 +3881,7 @@ const int GraphicsCommand::kFilledFieldNumber;
 const int GraphicsCommand::kHadjFieldNumber;
 const int GraphicsCommand::kRasterFieldNumber;
 const int GraphicsCommand::kInterpolateFieldNumber;
+const int GraphicsCommand::kDeviceTypeFieldNumber;
 const int GraphicsCommand::kContextFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
@@ -3910,6 +3912,10 @@ GraphicsCommand::GraphicsCommand(const GraphicsCommand& from)
   if (from.raster().size() > 0) {
     raster_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.raster_);
   }
+  device_type_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.device_type().size() > 0) {
+    device_type_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.device_type_);
+  }
   if (from.has_context()) {
     context_ = new ::BERTBuffers::GraphicsContext(*from.context_);
   } else {
@@ -3925,6 +3931,7 @@ void GraphicsCommand::SharedCtor() {
   command_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   text_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   raster_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  device_type_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   ::memset(&context_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&interpolate_) -
       reinterpret_cast<char*>(&context_)) + sizeof(interpolate_));
@@ -3940,6 +3947,7 @@ void GraphicsCommand::SharedDtor() {
   command_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   text_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   raster_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  device_type_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (this != internal_default_instance()) delete context_;
 }
 
@@ -3977,6 +3985,7 @@ void GraphicsCommand::Clear() {
   command_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   text_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   raster_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  device_type_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (GetArenaNoVirtual() == NULL && context_ != NULL) {
     delete context_;
   }
@@ -4149,6 +4158,22 @@ bool GraphicsCommand::MergePartialFromCodedStream(
         break;
       }
 
+      // string device_type = 14;
+      case 14: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(114u /* 114 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_device_type()));
+          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+            this->device_type().data(), static_cast<int>(this->device_type().length()),
+            ::google::protobuf::internal::WireFormatLite::PARSE,
+            "BERTBuffers.GraphicsCommand.device_type"));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       // .BERTBuffers.GraphicsContext context = 15;
       case 15: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
@@ -4256,6 +4281,16 @@ void GraphicsCommand::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteBool(10, this->interpolate(), output);
   }
 
+  // string device_type = 14;
+  if (this->device_type().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->device_type().data(), static_cast<int>(this->device_type().length()),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "BERTBuffers.GraphicsCommand.device_type");
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      14, this->device_type(), output);
+  }
+
   // .BERTBuffers.GraphicsContext context = 15;
   if (this->has_context()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
@@ -4356,6 +4391,17 @@ void GraphicsCommand::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(10, this->interpolate(), target);
   }
 
+  // string device_type = 14;
+  if (this->device_type().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->device_type().data(), static_cast<int>(this->device_type().length()),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "BERTBuffers.GraphicsCommand.device_type");
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        14, this->device_type(), target);
+  }
+
   // .BERTBuffers.GraphicsContext context = 15;
   if (this->has_context()) {
     target = ::google::protobuf::internal::WireFormatLite::
@@ -4433,6 +4479,13 @@ size_t GraphicsCommand::ByteSizeLong() const {
         this->raster());
   }
 
+  // string device_type = 14;
+  if (this->device_type().size() > 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::StringSize(
+        this->device_type());
+  }
+
   // .BERTBuffers.GraphicsContext context = 15;
   if (this->has_context()) {
     total_size += 1 +
@@ -4508,6 +4561,10 @@ void GraphicsCommand::MergeFrom(const GraphicsCommand& from) {
 
     raster_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.raster_);
   }
+  if (from.device_type().size() > 0) {
+
+    device_type_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.device_type_);
+  }
   if (from.has_context()) {
     mutable_context()->::BERTBuffers::GraphicsContext::MergeFrom(from.context());
   }
@@ -4557,6 +4614,7 @@ void GraphicsCommand::InternalSwap(GraphicsCommand* other) {
   command_.Swap(&other->command_);
   text_.Swap(&other->text_);
   raster_.Swap(&other->raster_);
+  device_type_.Swap(&other->device_type_);
   swap(context_, other->context_);
   swap(r_, other->r_);
   swap(rot_, other->rot_);

@@ -31,12 +31,12 @@ export class PNGGraphicsDevice extends GraphicsDevice {
     canvas.className = "xterm-annotation-node xterm-graphics-node";
     canvas.style.height = `${height}px`;
     canvas.style.width = `${width}px`;
-    
-    (this.terminal_ as any).InsertGraphic(height, canvas);
 
     this.active_canvas_ = canvas;
     this.context_ = canvas.getContext('2d');
     this.context_.textAlign = "left"; 
+    
+    this.InsertGraphic(height, canvas);
     
   }
 
@@ -56,13 +56,13 @@ export class PNGGraphicsDevice extends GraphicsDevice {
     
   }
 
-  GraphicsCommand(message){
+  GraphicsCommand(message, command){
 
     // we need access to the message to get the raw raster data
     // (if it's a raster). in this case maybe we should restructure
     // to skip conversion, as it's probably unecessary?
 
-    let command = message.toObject().graphics;
+    // let command = message.toObject().graphics;
 
     // the parameter here is a passed-through PB message. we could 
     // probably simplify.
@@ -72,18 +72,18 @@ export class PNGGraphicsDevice extends GraphicsDevice {
     case "measure-text":
     {
       let weight = (command.context.fontface === 2 || command.context.fontface === 4) ? 600 : 400;
-      this.font_metrics_.SetFont(GraphicsDevice.FontFamily(command.context), 
+      GraphicsDevice.font_metrics_.SetFont(GraphicsDevice.FontFamily(command.context), 
         GraphicsDevice.PointsToPixels(command.context.ps * command.context.cex), weight);
-      let width = this.font_metrics_.Width(command.text);
+      let width = GraphicsDevice.font_metrics_.Width(command.text);
       return this.GraphicsResponse([width]);
     }
 
     case "font-metrics":
     {
       let weight = (command.context.fontface === 2 || command.context.fontface === 4) ? 600 : 400;
-      this.font_metrics_.SetFont(GraphicsDevice.FontFamily(command.context), 
+      GraphicsDevice.font_metrics_.SetFont(GraphicsDevice.FontFamily(command.context), 
         GraphicsDevice.PointsToPixels(command.context.ps * command.context.cex), weight);
-      let metrics = this.font_metrics_.Measure(command.text);
+      let metrics = GraphicsDevice.font_metrics_.Measure(command.text);
       return this.GraphicsResponse([metrics.width], [metrics.ascent, metrics.descent]);
     }
     

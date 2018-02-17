@@ -754,12 +754,23 @@ SEXP RCallback(SEXP command, SEXP data) {
 
   // some commands are handled here. others are sent to BERT as callbacks.
 
+  /*
   if (!string_command.compare("console-device")) {
-    if (data && TYPEOF(data) == EXTPTRSXP) {
-      void *pointer = R_ExternalPtrAddr(data);
-      InitConsoleGraphicsDevice("bert-console-device", pointer);
-      return Rf_ScalarLogical(1);
+    return CreateConsoleDevice(data);
+  }
+  */
+  if (!string_command.compare("console-device-png")) {
+    if (TYPEOF(data) == EXTPTRSXP) {
+      return CreateConsoleDevice(R_ExternalPtrAddr(data), "png");
     }
+    std::cerr << "invalid argument" << std::endl;
+    return Rf_ScalarLogical(0);
+  }
+  if (!string_command.compare("console-device-svg")) {
+    if (TYPEOF(data) == EXTPTRSXP) {
+      return CreateConsoleDevice(R_ExternalPtrAddr(data), "svg");
+    }
+    std::cerr << "invalid argument" << std::endl;
     return Rf_ScalarLogical(0);
   }
   else if (!string_command.compare("create-device")) {

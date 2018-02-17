@@ -31,8 +31,7 @@
 #include <sstream>
 #include <string>
 
-void InitConsoleGraphicsDevice(const std::string &name, void *p);
-
+SEXP CreateConsoleDevice(void *p, const std::string &type);
 
 #endif // #ifndef __CONSOLE_GRAPHICS_DEVICE_H
 

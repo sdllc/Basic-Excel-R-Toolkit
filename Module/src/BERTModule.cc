@@ -72,7 +72,7 @@ SEXP callback( int cmd, void * data, void * data2 ){
 /**
  * constructor, sets default options.  see [1]
  */
-pDevDesc device_new( rcolor bg, double width, double height, int pointsize) {
+pDevDesc device_new( rcolor bg, double width, double height, int pointsize ) {
 
     pDevDesc dd = (DevDesc*) calloc(1, sizeof(DevDesc));
     if (dd == NULL) return dd;
@@ -95,6 +95,8 @@ pDevDesc device_new( rcolor bg, double width, double height, int pointsize) {
     
     dd->cra[0] = 0.9 * pointsize;
     dd->cra[1] = 1.2 * pointsize;
+    //dd->cra[1] = 1.1 * dd->startps; // ??
+   
     dd->xCharOffset = 0.4900;
     dd->yCharOffset = 0.3333;
     dd->yLineBias = 0.2;
@@ -107,7 +109,7 @@ pDevDesc device_new( rcolor bg, double width, double height, int pointsize) {
     dd->displayListOn = TRUE;
     dd->haveTransparency = 2;
     dd->haveTransparentBg = 2;
-    
+
     dd->haveRaster = 3; // yes, except for missing values
 
     return dd;
@@ -149,7 +151,7 @@ int create_device( std::string name, std::string background, int width, int heig
 /**
  * create console graphics device, add to display list 
  */ 
-int create_console_device( std::string background, int width, int height, int pointsize) 
+int create_console_device( std::string background, int width, int height, int pointsize, std::string type) 
 {
     rcolor bg = R_GE_str2col(background.c_str());
     int device = 0;
@@ -157,11 +159,20 @@ int create_console_device( std::string background, int width, int height, int po
     R_GE_checkVersionOrDie(R_GE_version);
     R_CheckDeviceAvailable();
 
+    if(type.compare("svg")) type = "png";
+
+    std::string command = "console-device-";
+    command.append(type);
+
     pDevDesc dev = device_new(bg, width, height, pointsize);
-    Callback2(Rf_mkString("console-device"), R_MakeExternalPtr(dev, R_NilValue, R_NilValue)); 
+    Callback2(Rf_mkString(command.c_str()), R_MakeExternalPtr(dev, R_NilValue, R_NilValue)); 
+
+    std::string name = "BERT Console (";
+    name.append(type);
+    name.append(")");
 
     pGEDevDesc gd = GEcreateDevDesc(dev);
-    GEaddDevice2(gd, "BERT-console-graphics-device");
+    GEaddDevice2(gd, name.c_str());
     GEinitDisplayList(gd);
     device = GEdeviceNumber(gd) + 1; // to match what R says
 
@@ -211,9 +222,10 @@ SEXP BERTModule_create_device( SEXP name, SEXP background, SEXP width, SEXP heig
   return Rf_ScalarInteger(dev);
 }
 
-SEXP BERTModule_console_device( SEXP background, SEXP width, SEXP height, SEXP pointsize ){
+SEXP BERTModule_console_device( SEXP background, SEXP width, SEXP height, SEXP pointsize, SEXP type ){
   int dev = create_console_device(CHAR(STRING_ELT(background, 0)),
-    Rf_asReal( width ), Rf_asReal( height ), Rf_asReal( pointsize ));
+    Rf_asReal( width ), Rf_asReal( height ), Rf_asReal( pointsize ),
+    CHAR(STRING_ELT(type, 0)));
   return Rf_ScalarInteger(dev);
 }
 
@@ -249,7 +261,7 @@ extern "C" {
     {
         static R_CallMethodDef methods[]  = {
           //  { "create_device", (DL_FUNC)&BERTModule_create_device, 5},
-            { "console_device", (DL_FUNC)&BERTModule_console_device, 4},
+            { "console_device", (DL_FUNC)&BERTModule_console_device, 5},
           //  { "progress_bar", (DL_FUNC)&BERTModule_progress_bar, 1},
           //  { "download", (DL_FUNC)&BERTModule_download, 1},
             { "history", (DL_FUNC)&BERTModule_history, 1},
