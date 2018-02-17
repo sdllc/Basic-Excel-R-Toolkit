@@ -49,7 +49,7 @@ public:
     child_path_ = child_path;
     julia_home_ = julia_home;
 
-    language_prefix_ = "Jl";
+    language_prefix_ = "JL";
     language_name_ = "Julia";
     file_extensions_ = { "jl", "julia" };
 
