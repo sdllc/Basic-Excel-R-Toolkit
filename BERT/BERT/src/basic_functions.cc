@@ -7,6 +7,7 @@
 #include "bert.h"
 #include "basic_functions.h"
 #include "type_conversions.h"
+#include "string_utilities.h"
 
 LPXLOPER12 BERTFunctionCall(
 	int index
@@ -82,7 +83,13 @@ LPXLOPER12 BERT_Exec_Generic(uint32_t language_key, LPXLOPER12 code) {
 
   BERTBuffers::CallResponse call, response;
   call.set_wait(true);
-  call.mutable_code()->add_line(Convert::XLOPERToString(code));
+
+  std::string code_string = Convert::XLOPERToString(code);
+  std::vector < std::string > lines;
+  StringUtilities::Split(code_string, '\n', 0, lines, true);
+
+  auto message = call.mutable_code();
+  for (auto line : lines) message->add_line(line);
 
   BERT::Instance()->CallLanguage(language_key, response, call);
 
