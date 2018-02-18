@@ -161,14 +161,7 @@ BERT.graphics.device <- function( name="BERT-default", bgcolor="white", width=40
 #'
 #' @export 
 BERT.console.graphics.device <- function( bgcolor="white", width=400, height=300, pointsize=14, type="svg"){
-
-  #name <- "BERT-console-device";
-  #
-  #x <- dev.list();
-  #if((length(x) > 0) & (name %in% names(x))){ dev.set( x[[name]]) }
-  #else {
-    .Call( "console_device", bgcolor, width, height, pointsize, type, PACKAGE='BERTModule' );
-  #}
+  .Call( "console_device", bgcolor, width, height, pointsize, type, PACKAGE='BERTModule' );
 }
 
 #==============================================================================
@@ -233,7 +226,8 @@ close.js.client.progress.bar <- function( pb ){
 
 #==============================================================================
 #
-# history (just calls into BERT; but we have a special print generic)
+# history calls back into console, which maintains history. we return this 
+# as a list, and we have a special print generic
 #
 #==============================================================================
 
@@ -241,11 +235,9 @@ close.js.client.progress.bar <- function( pb ){
 #'
 #' @export
 print.ordered.history <- function(h){
-	len <- length(h);
-	pattern <- paste( "  %s\n", sep="" );
-	cat( "\n" );
-	for( i in 1:len ){ cat( sprintf( pattern, h[i] )); }
-	cat( "\n" );
+	cat("", sapply(h$indexes, function(index){
+    paste(formatC(index, width=6), " ", h$lines[index]);
+  }), "", sep="\n");
 }
 
 #' History implementation for the BERT console
@@ -266,65 +258,9 @@ history <- function( max.show=25, reverse=FALSE, pattern, ... ){
 # dev
 #
 #==============================================================================
-.Callback <- function( command, data ){
-  .Call("Callback", command, data, PACKAGE="BERTModule");
-}
-
-#==============================================================================
-#
-# functions for using the Excel COM interface 
-#
-#==============================================================================
-
-#' create a wrapper for a dispatch pointer
-.WrapDispatch <- function( class.name = NULL ){
-	
-	obj <- new.env();
-	if( is.null( class.name )){ class(obj) <- "IDispatch"; }
-	else { class(obj) <- c( class.name, "IDispatch" ) };
-	return(obj);
-
-}
-
-#' create a wrapper for a dispatch pointer (2)
-.WrapDispatch2 <- function( key, class.name = NULL ){
-	
-	obj <- new.env();
-	if( is.null( class.name )){ class(obj) <- "IDispatch"; }
-	else { class(obj) <- c( class.name, "IDispatch" ) };
-
-  pointer <- .Call("InstallPointer", key, PACKAGE="BERTModule");
-  assign( ".p", pointer, env=obj );
-
-	return(obj);
-
-}
-
-.WrapDispatch3 <- function( pointer, class.name = NULL ){
-	env <- new.env();
-	if( is.null( class.name )){ class(env) <- "IDispatch"; }
-	else { class(env) <- c( class.name, "IDispatch" ) };
-  assign( ".p", pointer, env=env );
-	return(env);
-}
-
-#' callback function for handling com calls 
-.DefineCOMFunc <- function( func.name, base.name, func.type, func.index, func.args, target.env ){
-
-	if( missing( func.args ) || length(func.args) == 0 ){
-		target.env[[func.name]] <- function(...){ 
-      .Call("COMCallback", base.name, func.type, func.index, target.env$.p, list(...), PACKAGE="BERTModule" );
-		}
-	}
-	else {
-		target.env[[func.name]] <- function(){ 
-			.Call("COMCallback", base.name, func.type, func.index, target.env$.p, c(as.list(environment())), PACKAGE="BERTModule" );
-		}
-		aexp <- paste( "alist(", paste( sapply( func.args, function(x){ paste( x, "=", sep="" )}), collapse=", " ), ")" );
-		formals(target.env[[func.name]]) <- eval(parse(text=aexp));
-	}
-}
-
+#.Callback <- function( command, data ){
+#  .Call("Callback", command, data, PACKAGE="BERTModule");
+#}
 
 #==============================================================================
 #
@@ -349,163 +285,6 @@ history <- function( max.show=25, reverse=FALSE, pattern, ... ){
 
 	ac;
 }
-
-#
-# this is a monkeypatch for the existing R autocomplete # functionality. we are making two 
-# changes: (1) for functions, store the signagure for use as a call tip. (2) for functions 
-# within environments, resolve and get parameters.
-#
-# update: now delegating file completion to C (probably more to come).
-#
-.CustomCompleter <- function(.CompletionEnv){
-
-	.fqFunc <- function (line, cursor=-1) 
-	{
-		localBreakRE <- "[^\\.\\w\\$\\@\\:]";
-
-		if( cursor == -1 ){ cursor = nchar(line); }
-
-	    parens <- sapply(c("(", ")"), function(s) gregexpr(s, substr(line, 
-		1L, cursor), fixed = TRUE)[[1L]], simplify = FALSE)
-	    parens <- lapply(parens, function(x) x[x > 0])
-	       
-	    
-	    temp <- data.frame(i = c(parens[["("]], parens[[")"]]), c = rep(c(1, 
-		-1), lengths(parens)))
-	    if (nrow(temp) == 0) 
-		return(character())
-		
-	    temp <- temp[order(-temp$i), , drop = FALSE]
-	    wp <- which(cumsum(temp$c) > 0)
-
-	    if (length(wp)) {
-		index <- temp$i[wp[1L]]
-		prefix <- substr(line, 1L, index - 1L)
-		suffix <- substr(line, index + 1L, cursor + 1L)
-		
-		if ((length(grep("=", suffix, fixed = TRUE)) == 0L) && 
-		    (length(grep(",", suffix, fixed = TRUE)) == 0L)) 
-		    utils:::setIsFirstArg(TRUE)
-		if ((length(grep("=", suffix, fixed = TRUE))) && (length(grep(",", 
-		    substr(suffix, utils:::tail.default(gregexpr("=", suffix, 
-			fixed = TRUE)[[1L]], 1L), 1000000L), fixed = TRUE)) == 
-		    0L)) {
-		    return(character())
-		}
-		else {
-		    possible <- suppressWarnings(strsplit(prefix, localBreakRE, 
-			perl = TRUE))[[1L]]
-		    possible <- possible[nzchar(possible)]
-		    if (length(possible)) 
-			return(utils:::tail.default(possible, 1))
-		    else return(character())
-		}
-	    }
-	    else {
-		return(character())
-	    }
-	}
-
-	.fqFunctionArgs <- function (fun, text, S3methods = utils:::.CompletionEnv$settings[["S3"]], 
-	    S4methods = FALSE, add.args = rc.getOption("funarg.suffix")) 
-	{
-	
-		.resolveObject <- function( name ){
-
-			p <- environment();
-			n <- unlist( strsplit( name, "[^\\w\\.,]", F, T ));
-			 while( length( n ) > 1 ){
-				if( n == "" || !exists( n[1], where=p )) return( NULL );
-				p <- get( n[1], envir=p );
-				n <- n[-1];
-			}
-			if( n == "" || !exists( n[1], where=p )) return( NULL );
-			list( name=n[1], fun=get( n[1], envir=p ));
-		}
-	
-		.function.signature <- function(fun){
-			x <- capture.output( args(fun));
-			paste(trimws(x[-length(x)]), collapse=" ");
-		}
-	
-		.fqArgNames <- function (fname, use.arg.db = utils:::.CompletionEnv$settings[["argdb"]]) 
-		{
-			funlist <- .resolveObject( fname );
-			fun <- funlist$fun;
-			if( !is.null(fun) && is.function(fun )) { 
-				env <- utils:::.CompletionEnv;
-				env$function.signature <- sub( '^function ', paste0( funlist$name, ' ' ), .function.signature(fun));
-				return(names( formals( fun ))); 
-			}
-			return( character());
-		};
-
-		if (length(fun) < 1L || any(fun == "")) 
-			return(character())
-		    specialFunArgs <- utils:::specialFunctionArgs(fun, text)
-		if (S3methods && exists(fun, mode = "function")) 
-			fun <- c(fun, tryCatch(methods(fun), warning = function(w) {
-			}, error = function(e) {
-			}))
-		if (S4methods) 
-			warning("cannot handle S4 methods yet")
-		allArgs <- unique(unlist(lapply(fun, .fqArgNames)))
-		ans <- utils:::findMatches(sprintf("^%s", utils:::makeRegexpSafe(text)), 
-			allArgs)
-		if (length(ans) && !is.null(add.args)) 
-			ans <- sprintf("%s%s", ans, add.args)
-		c(specialFunArgs, ans)
-	}
-
-	.CompletionEnv[["function.signature"]] <- "";
-	.CompletionEnv[["in.quotes"]] <- F;
-
-	    text <- .CompletionEnv[["token"]]
-	    if (utils:::isInsideQuotes()) {
-		{
-		    .CompletionEnv[["comps"]] <- character()
-			.CompletionEnv[["in.quotes"]] <- T;
-		    utils:::.setFileComp(TRUE)
-		}
-	    }
-	    else {
-		utils:::.setFileComp(FALSE)
-		utils:::setIsFirstArg(FALSE)
-		guessedFunction <- if (.CompletionEnv$settings[["args"]]) 
-		    .fqFunc(.CompletionEnv[["linebuffer"]], .CompletionEnv[["start"]])
-		else ""
-		
-		.CompletionEnv[["fguess"]] <- guessedFunction
-		fargComps <- .fqFunctionArgs(guessedFunction, text)
-		
-		if (utils:::getIsFirstArg() && length(guessedFunction) && guessedFunction %in% 
-		    c("library", "require", "data")) {
-		    .CompletionEnv[["comps"]] <- fargComps
-		    return()
-		}
-		lastArithOp <- utils:::tail.default(gregexpr("[\"'^/*+-]", text)[[1L]], 
-		    1)
-		if (haveArithOp <- (lastArithOp > 0)) {
-		    prefix <- substr(text, 1L, lastArithOp)
-		    text <- substr(text, lastArithOp + 1L, 1000000L)
-		}
-		spl <- utils:::specialOpLocs(text)
-		comps <- if (length(spl)) 
-		    utils:::specialCompletions(text, spl)
-		else {
-		    appendFunctionSuffix <- !any(guessedFunction %in% 
-			c("help", "args", "formals", "example", "do.call", 
-			  "environment", "page", "apply", "sapply", "lapply", 
-			  "tapply", "mapply", "methods", "fix", "edit"))
-		    utils:::normalCompletions(text, check.mode = appendFunctionSuffix)
-		}
-		if (haveArithOp && length(comps)) {
-		    comps <- paste0(prefix, comps)
-		}
-		comps <- c(fargComps, comps)
-		.CompletionEnv[["comps"]] <- comps
-	    }
-};
 
 #==============================================================================
 #
@@ -606,6 +385,164 @@ ncol.xlReference <- function(x){
   #-----------------------------------------------------------------------------
   # autocomplete
   #-----------------------------------------------------------------------------
+
+
+  #
+  # this is a monkeypatch for the existing R autocomplete # functionality. we are making two 
+  # changes: (1) for functions, store the signagure for use as a call tip. (2) for functions 
+  # within environments, resolve and get parameters.
+  #
+  # update: now delegating file completion to C (probably more to come).
+  #
+  .CustomCompleter <- function(.CompletionEnv){
+
+    .fqFunc <- function (line, cursor=-1) 
+    {
+      localBreakRE <- "[^\\.\\w\\$\\@\\:]";
+
+      if( cursor == -1 ){ cursor = nchar(line); }
+
+        parens <- sapply(c("(", ")"), function(s) gregexpr(s, substr(line, 
+      1L, cursor), fixed = TRUE)[[1L]], simplify = FALSE)
+        parens <- lapply(parens, function(x) x[x > 0])
+          
+        
+        temp <- data.frame(i = c(parens[["("]], parens[[")"]]), c = rep(c(1, 
+      -1), lengths(parens)))
+        if (nrow(temp) == 0) 
+      return(character())
+      
+        temp <- temp[order(-temp$i), , drop = FALSE]
+        wp <- which(cumsum(temp$c) > 0)
+
+        if (length(wp)) {
+      index <- temp$i[wp[1L]]
+      prefix <- substr(line, 1L, index - 1L)
+      suffix <- substr(line, index + 1L, cursor + 1L)
+      
+      if ((length(grep("=", suffix, fixed = TRUE)) == 0L) && 
+          (length(grep(",", suffix, fixed = TRUE)) == 0L)) 
+          utils:::setIsFirstArg(TRUE)
+      if ((length(grep("=", suffix, fixed = TRUE))) && (length(grep(",", 
+          substr(suffix, utils:::tail.default(gregexpr("=", suffix, 
+        fixed = TRUE)[[1L]], 1L), 1000000L), fixed = TRUE)) == 
+          0L)) {
+          return(character())
+      }
+      else {
+          possible <- suppressWarnings(strsplit(prefix, localBreakRE, 
+        perl = TRUE))[[1L]]
+          possible <- possible[nzchar(possible)]
+          if (length(possible)) 
+        return(utils:::tail.default(possible, 1))
+          else return(character())
+      }
+        }
+        else {
+      return(character())
+        }
+    }
+
+    .fqFunctionArgs <- function (fun, text, S3methods = utils:::.CompletionEnv$settings[["S3"]], 
+        S4methods = FALSE, add.args = rc.getOption("funarg.suffix")) 
+    {
+    
+      .resolveObject <- function( name ){
+
+        p <- environment();
+        n <- unlist( strsplit( name, "[^\\w\\.,]", F, T ));
+        while( length( n ) > 1 ){
+          if( n == "" || !exists( n[1], where=p )) return( NULL );
+          p <- get( n[1], envir=p );
+          n <- n[-1];
+        }
+        if( n == "" || !exists( n[1], where=p )) return( NULL );
+        list( name=n[1], fun=get( n[1], envir=p ));
+      }
+    
+      .function.signature <- function(fun){
+        x <- capture.output( args(fun));
+        paste(trimws(x[-length(x)]), collapse=" ");
+      }
+    
+      .fqArgNames <- function (fname, use.arg.db = utils:::.CompletionEnv$settings[["argdb"]]) 
+      {
+        funlist <- .resolveObject( fname );
+        fun <- funlist$fun;
+        if( !is.null(fun) && is.function(fun )) { 
+          env <- utils:::.CompletionEnv;
+          env$function.signature <- sub( '^function ', paste0( funlist$name, ' ' ), .function.signature(fun));
+          return(names( formals( fun ))); 
+        }
+        return( character());
+      };
+
+      if (length(fun) < 1L || any(fun == "")) 
+        return(character())
+          specialFunArgs <- utils:::specialFunctionArgs(fun, text)
+      if (S3methods && exists(fun, mode = "function")) 
+        fun <- c(fun, tryCatch(methods(fun), warning = function(w) {
+        }, error = function(e) {
+        }))
+      if (S4methods) 
+        warning("cannot handle S4 methods yet")
+      allArgs <- unique(unlist(lapply(fun, .fqArgNames)))
+      ans <- utils:::findMatches(sprintf("^%s", utils:::makeRegexpSafe(text)), 
+        allArgs)
+      if (length(ans) && !is.null(add.args)) 
+        ans <- sprintf("%s%s", ans, add.args)
+      c(specialFunArgs, ans)
+    }
+
+    .CompletionEnv[["function.signature"]] <- "";
+    .CompletionEnv[["in.quotes"]] <- F;
+
+        text <- .CompletionEnv[["token"]]
+        if (utils:::isInsideQuotes()) {
+      {
+          .CompletionEnv[["comps"]] <- character()
+        .CompletionEnv[["in.quotes"]] <- T;
+          utils:::.setFileComp(TRUE)
+      }
+        }
+        else {
+      utils:::.setFileComp(FALSE)
+      utils:::setIsFirstArg(FALSE)
+      guessedFunction <- if (.CompletionEnv$settings[["args"]]) 
+          .fqFunc(.CompletionEnv[["linebuffer"]], .CompletionEnv[["start"]])
+      else ""
+      
+      .CompletionEnv[["fguess"]] <- guessedFunction
+      fargComps <- .fqFunctionArgs(guessedFunction, text)
+      
+      if (utils:::getIsFirstArg() && length(guessedFunction) && guessedFunction %in% 
+          c("library", "require", "data")) {
+          .CompletionEnv[["comps"]] <- fargComps
+          return()
+      }
+      lastArithOp <- utils:::tail.default(gregexpr("[\"'^/*+-]", text)[[1L]], 
+          1)
+      if (haveArithOp <- (lastArithOp > 0)) {
+          prefix <- substr(text, 1L, lastArithOp)
+          text <- substr(text, lastArithOp + 1L, 1000000L)
+      }
+      spl <- utils:::specialOpLocs(text)
+      comps <- if (length(spl)) 
+          utils:::specialCompletions(text, spl)
+      else {
+          appendFunctionSuffix <- !any(guessedFunction %in% 
+        c("help", "args", "formals", "example", "do.call", 
+          "environment", "page", "apply", "sapply", "lapply", 
+          "tapply", "mapply", "methods", "fix", "edit"))
+          utils:::normalCompletions(text, check.mode = appendFunctionSuffix)
+      }
+      if (haveArithOp && length(comps)) {
+          comps <- paste0(prefix, comps)
+      }
+      comps <- c(fargComps, comps)
+      .CompletionEnv[["comps"]] <- comps
+        }
+  };
 
   rc.options( custom.completer=.CustomCompleter );
 

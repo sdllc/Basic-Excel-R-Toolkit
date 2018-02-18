@@ -32,6 +32,7 @@
 #include <string>
 
 SEXP CreateConsoleDevice(void *p, const std::string &type);
+SEXP CreateConsoleDevice2(const std::string &background, double width, double height, double pointsize, const std::string &type, void * pointer);
 
 #endif // #ifndef __CONSOLE_GRAPHICS_DEVICE_H
 

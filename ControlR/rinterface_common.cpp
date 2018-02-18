@@ -754,19 +754,33 @@ SEXP RCallback(SEXP command, SEXP data) {
 
   // some commands are handled here. others are sent to BERT as callbacks.
 
-  /*
   if (!string_command.compare("console-device")) {
-    return CreateConsoleDevice(data);
+
+    // validate args?
+    if (TYPEOF(data) != VECSXP) return Rf_ScalarLogical(0);
+    if (Rf_length(data) != 6) return Rf_ScalarLogical(0);
+
+    std::string background, type;
+    double width, height, pointsize;
+    void *pointer;
+
+    background = CHAR(Rf_asChar(VECTOR_ELT(data, 0)));
+    width = Rf_asReal(VECTOR_ELT(data, 1));
+    height = Rf_asReal(VECTOR_ELT(data, 2));
+    pointsize = Rf_asReal(VECTOR_ELT(data, 3));
+    type = CHAR(Rf_asChar(VECTOR_ELT(data, 4)));
+    pointer = R_ExternalPtrAddr(VECTOR_ELT(data, 5));
+
+    return CreateConsoleDevice2(background, width, height, pointsize, type, pointer);
   }
-  */
-  if (!string_command.compare("console-device-png")) {
+  else if (!string_command.compare("console-device-png")) {
     if (TYPEOF(data) == EXTPTRSXP) {
       return CreateConsoleDevice(R_ExternalPtrAddr(data), "png");
     }
     std::cerr << "invalid argument" << std::endl;
     return Rf_ScalarLogical(0);
   }
-  if (!string_command.compare("console-device-svg")) {
+  else if (!string_command.compare("console-device-svg")) {
     if (TYPEOF(data) == EXTPTRSXP) {
       return CreateConsoleDevice(R_ExternalPtrAddr(data), "svg");
     }

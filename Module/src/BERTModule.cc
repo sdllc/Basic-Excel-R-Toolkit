@@ -50,9 +50,6 @@
 using namespace std;
 
 typedef SEXP COM_CALLBACK_FN( SEXP, SEXP, SEXP, SEXP, SEXP );
-//typedef SEXP CALLBACK_FN( int, void*, void* );
-
-// new style
 typedef SEXP CALLBACK_FUNCTION( SEXP, SEXP );
 
 SEXP Callback2(SEXP command, SEXP data){
@@ -61,18 +58,13 @@ SEXP Callback2(SEXP command, SEXP data){
   else return R_NilValue;
 }
 
-/*
-SEXP callback( int cmd, void * data, void * data2 ){
-  static CALLBACK_FN *fn = (CALLBACK_FN*)R_GetCCallable( "BERTControlR", "ExternalCallback" );
-  if( fn ) return fn( cmd, data, data2 );
-  else return R_NilValue;
-}
-*/
-
 /**
  * constructor, sets default options.  see [1]
  */
 pDevDesc device_new( rcolor bg, double width, double height, int pointsize ) {
+
+    // this is the only part we need in the module. everything
+    // else can move to the implementation.
 
     pDevDesc dd = (DevDesc*) calloc(1, sizeof(DevDesc));
     if (dd == NULL) return dd;
@@ -91,15 +83,23 @@ pDevDesc device_new( rcolor bg, double width, double height, int pointsize ) {
     dd->right = width;
     dd->bottom = height;
 
-    // straight up from [1]
+    // straight up from [1]. these are "character size in rasters", 
+    // whatever that means.
     
     dd->cra[0] = 0.9 * pointsize;
     dd->cra[1] = 1.2 * pointsize;
     //dd->cra[1] = 1.1 * dd->startps; // ??
    
+    // according to 
+    // include\R_ext\GraphicsDevice.h
+    // xCharOffset is unused. not sure what that means for the others.
+
     dd->xCharOffset = 0.4900;
     dd->yCharOffset = 0.3333;
     dd->yLineBias = 0.2;
+
+    // inches per raster; this should change for high DPI screens
+
     dd->ipr[0] = 1.0 / 72.0;
     dd->ipr[1] = 1.0 / 72.0;
 
@@ -114,6 +114,21 @@ pDevDesc device_new( rcolor bg, double width, double height, int pointsize ) {
 
     return dd;
 }
+
+
+/**
+ * constructor
+ */
+pDevDesc device_new_simple() {
+
+    // this is the only part we need in the module. everything
+    // else can move to the implementation.
+
+    pDevDesc dd = (DevDesc*) calloc(1, sizeof(DevDesc));
+    return dd;
+
+}
+
 
 //=============================================================================
 //
@@ -133,7 +148,6 @@ int create_device( std::string name, std::string background, int width, int heig
     R_CheckDeviceAvailable();
 
     pDevDesc dev = device_new(bg, width, height, pointsize);
-    //callback( 1, (void*)name.c_str(), dev );
     Callback2(Rf_mkString("create-device"), R_MakeExternalPtr(dev, R_NilValue, R_NilValue)); 
 
     pGEDevDesc gd = GEcreateDevDesc(dev);
@@ -141,7 +155,6 @@ int create_device( std::string name, std::string background, int width, int heig
     GEinitDisplayList(gd);
     device = GEdeviceNumber(gd) + 1; // to match what R says
 
-//    ((JSGraphicsDevice*)(dev->deviceSpecific))->setDevice(device);
     cout << "device number: " << device << endl;
 
     return device;
@@ -149,71 +162,51 @@ int create_device( std::string name, std::string background, int width, int heig
 }
 
 /**
- * create console graphics device, add to display list 
+ * creates and initializes console graphics device. parameters 
+ * are set in the control process, we just need to do memory 
+ * allocations here.
+ *
+ * FIXME: maybe do some advance parameter validation?
  */ 
-int create_console_device( std::string background, int width, int height, int pointsize, std::string type) 
-{
-    rcolor bg = R_GE_str2col(background.c_str());
-    int device = 0;
+SEXP CreateConsoleDevice(SEXP background, SEXP width, SEXP height, SEXP pointsize, SEXP type){
+
+  R_GE_checkVersionOrDie(R_GE_version);
+
+  // this will raise an error. there's an alternative which 
+  // returns boolean, which might allow more graceful failure.
+
+  R_CheckDeviceAvailable(); 
+
+  // create the device. we'll need to wrap this in an EXTPTR 
+  // struct in case it's a 64 bit pointer
+
+  pDevDesc dev = device_new_simple(); // bg, width, height, pointsize);
+  if(!dev) return R_NilValue;
+
+  // this is another calloc we need to leave on this 
+  // side of the wall
+
+  pGEDevDesc gd = GEcreateDevDesc(dev);
+
+  SEXP argument_list = PROTECT(Rf_allocVector(VECSXP, 6));
+  SET_VECTOR_ELT(argument_list, 0, background);
+  SET_VECTOR_ELT(argument_list, 1, width);
+  SET_VECTOR_ELT(argument_list, 2, height);
+  SET_VECTOR_ELT(argument_list, 3, pointsize);
+  SET_VECTOR_ELT(argument_list, 4, type);
+
+  // note we're now passing the pGEDevDesc instead of the inner 
+  // pDevDesc, because we need both and we can access the one 
+  // from the other
+
+  SET_VECTOR_ELT(argument_list, 5, PROTECT(R_MakeExternalPtr(gd, R_NilValue, R_NilValue)));
+
+  SEXP device = Callback2(Rf_mkString("console-device"), argument_list); 
+
+  UNPROTECT(2);
+
+  return device;
   
-    R_GE_checkVersionOrDie(R_GE_version);
-    R_CheckDeviceAvailable();
-
-    if(type.compare("svg")) type = "png";
-
-    std::string command = "console-device-";
-    command.append(type);
-
-    pDevDesc dev = device_new(bg, width, height, pointsize);
-    Callback2(Rf_mkString(command.c_str()), R_MakeExternalPtr(dev, R_NilValue, R_NilValue)); 
-
-    std::string name = "BERT Console (";
-    name.append(type);
-    name.append(")");
-
-    pGEDevDesc gd = GEcreateDevDesc(dev);
-    GEaddDevice2(gd, name.c_str());
-    GEinitDisplayList(gd);
-    device = GEdeviceNumber(gd) + 1; // to match what R says
-
-    return device;
-  
-}
-
-/**
- * release the pointer. this requires a callback to the actual owner,
- * and we don't do any validation. legal to be zero? that just seems 
- * like a problem waiting to happen... so no.
- */
-void ReleasePointer(SEXP pointer) {
-  int key = (int)((intptr_t)R_ExternalPtrAddr(pointer));
-	if (key) {
-    Callback2(Rf_mkString("release-pointer"), Rf_ScalarInteger(key));
-	}
-}
-
-/**
- * create an external pointer and register a finalizer. key is not necessarily
- * the pointer address, it could use a mapping. although for practical purposes
- * I think it will usually be the pointer address.
- *
- * actually, that's not correct: because R only has 32-bit integers, it might
- * be easier to use a map. if we're getting called from R, anything else will
- * require constructing and destructing 64-bit values from lists, like we do
- * in the excel reference type. using a map may  be preferable.
- *
- * although this requires some nasty casting.
- */
-SEXP InstallPointer(SEXP key){
-  SEXP pointer = R_MakeExternalPtr((void*)((intptr_t)(Rf_asInteger(key))), install("COM dispatch pointer"), R_NilValue);
-	R_RegisterCFinalizerEx(pointer, (R_CFinalizer_t)ReleasePointer, TRUE);
-  return pointer;
-}
-
-SEXP BERTModule_COM_Callback( SEXP name, SEXP calltype, SEXP index, SEXP p, SEXP args ){
-  static COM_CALLBACK_FN *fn = (COM_CALLBACK_FN*)R_GetCCallable( "BERTControlR", "COMCallback" );
-  if( fn ) return fn( name, calltype, index, p, args );
-  else return R_NilValue;
 }
 
 SEXP BERTModule_create_device( SEXP name, SEXP background, SEXP width, SEXP height, SEXP pointsize ){
@@ -222,53 +215,21 @@ SEXP BERTModule_create_device( SEXP name, SEXP background, SEXP width, SEXP heig
   return Rf_ScalarInteger(dev);
 }
 
-SEXP BERTModule_console_device( SEXP background, SEXP width, SEXP height, SEXP pointsize, SEXP type ){
-  int dev = create_console_device(CHAR(STRING_ELT(background, 0)),
-    Rf_asReal( width ), Rf_asReal( height ), Rf_asReal( pointsize ),
-    CHAR(STRING_ELT(type, 0)));
-  return Rf_ScalarInteger(dev);
-}
-
-/*
-SEXP BERTModule_download( SEXP args ){
-  SEXP s = callback( 100, args, 0 );
-  int result = Rf_asInteger(s);
-  if( result < 0 ) Rf_error("Download failed");
-  return s;
-}
-
-SEXP BERTModule_progress_bar( SEXP args ){
-  return callback( 200, args, 0 );
-}
-*/
-
-void BERTModule_close_console(){
-  // callback( 300, 0, 0 );
+void CloseConsole(){
   Callback2(Rf_mkString("close-console"), 0);
 }
 
-SEXP BERTModule_history( SEXP args ){
-  //return callback( 400, args, 0 );
+SEXP History( SEXP args ){
   return Callback2(Rf_mkString("console-history"), args);
-}
-
-SEXP BERTModule_Callback(SEXP command, SEXP data){
-  return Callback2(command, data);
 }
 
 extern "C" {
     void R_init_BERTModule(DllInfo *info)
     {
         static R_CallMethodDef methods[]  = {
-          //  { "create_device", (DL_FUNC)&BERTModule_create_device, 5},
-            { "console_device", (DL_FUNC)&BERTModule_console_device, 5},
-          //  { "progress_bar", (DL_FUNC)&BERTModule_progress_bar, 1},
-          //  { "download", (DL_FUNC)&BERTModule_download, 1},
-            { "history", (DL_FUNC)&BERTModule_history, 1},
-            { "InstallPointer", (DL_FUNC)&InstallPointer, 1},
-            { "Callback", (DL_FUNC)&BERTModule_Callback, 2},
-            { "COMCallback", (DL_FUNC)&BERTModule_COM_Callback, 5},
-            { "close_console", (DL_FUNC)&BERTModule_close_console, 0},
+            { "console_device", (DL_FUNC)&CreateConsoleDevice, 5},
+            { "history", (DL_FUNC)&History, 1},
+            { "close_console", (DL_FUNC)&CloseConsole, 0},
             { NULL, NULL, 0 }
         };
         R_registerRoutines( info, NULL, methods, NULL, NULL);

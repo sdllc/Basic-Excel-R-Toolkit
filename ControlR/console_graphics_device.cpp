@@ -290,6 +290,92 @@ void close_device(pDevDesc dd) {
   dd->deviceSpecific = 0;
 }
 
+SEXP CreateConsoleDevice2(const std::string &background, double width, double height, double pointsize, const std::string &type, void * pointer) {
+
+  pGEDevDesc gd = (pGEDevDesc)pointer;
+  pDevDesc dd = gd->dev;
+
+  dd->startfill = R_GE_str2col(background.c_str());
+  dd->startcol = R_RGB(0, 0, 0);
+  dd->startps = pointsize;
+  dd->startlty = 0;
+  dd->startfont = 1;
+  dd->startgamma = 1;
+  dd->wantSymbolUTF8 = (Rboolean)1;
+  dd->hasTextUTF8 = (Rboolean)1;
+
+  // size
+
+  dd->left = 0;
+  dd->top = 0;
+  dd->right = width;
+  dd->bottom = height;
+
+  // straight up from [1]. these are "character size in rasters", whatever that means.
+
+  dd->cra[0] = 0.9 * pointsize;
+  dd->cra[1] = 1.2 * pointsize;
+
+  // according to 
+  // include\R_ext\GraphicsDevice.h
+  // xCharOffset is unused. not sure what that means for the others.
+
+  dd->xCharOffset = 0.4900;
+  dd->yCharOffset = 0.3333;
+  dd->yLineBias = 0.2;
+
+  // inches per raster; this should change for high DPI screens
+
+  dd->ipr[0] = 1.0 / 72.0;
+  dd->ipr[1] = 1.0 / 72.0;
+
+  dd->canClip = FALSE;
+  dd->canHAdj = 0;
+  dd->canChangeGamma = FALSE;
+  dd->displayListOn = TRUE;
+  dd->haveTransparency = 2;
+  dd->haveTransparentBg = 2;
+  dd->haveRaster = 3; // yes, except for missing values
+
+  // now functions, at least the ones we're implementing
+  
+  dd->newPage = &new_page;
+  dd->close = &close_device;
+  dd->clip = &set_clip;
+  dd->size = &get_size;
+  dd->metricInfo = &get_metric_info;
+  dd->strWidth = &get_strWidth;
+  dd->line = &draw_line;
+  dd->text = &draw_text;
+  dd->rect = &draw_rect;
+  dd->circle = &draw_circle;
+  dd->polygon = &draw_polygon;
+  dd->polyline = &draw_polyline;
+  dd->path = &draw_path;
+  dd->raster = &draw_raster;
+  dd->textUTF8 = &draw_text;
+  dd->strWidthUTF8 = &get_strWidth;
+
+  // force svg or png
+
+  std::string *normalized_type = new std::string("svg");
+  if (!type.compare("png")) (*normalized_type) = "png";
+
+  std::cout << "init device (" << (*normalized_type) << "): " << std::dec << dd->right << ", " << dd->bottom << std::endl;
+  dd->deviceSpecific = normalized_type;
+
+  std::string name = "BERT Console (";
+  name.append(normalized_type->c_str());
+  name.append(")");
+
+  GEaddDevice2(gd, name.c_str());
+  GEinitDisplayList(gd);
+  int device = GEdeviceNumber(gd) + 1; // to match what R says
+
+  return Rf_ScalarInteger(device);
+
+}
+
 SEXP CreateConsoleDevice(void *device_pointer, const std::string &type) {
 
   pDevDesc dd = (pDevDesc)device_pointer;
