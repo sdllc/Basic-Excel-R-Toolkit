@@ -773,20 +773,6 @@ SEXP RCallback(SEXP command, SEXP data) {
 
     return CreateConsoleDevice2(background, width, height, pointsize, type, pointer);
   }
-  else if (!string_command.compare("console-device-png")) {
-    if (TYPEOF(data) == EXTPTRSXP) {
-      return CreateConsoleDevice(R_ExternalPtrAddr(data), "png");
-    }
-    std::cerr << "invalid argument" << std::endl;
-    return Rf_ScalarLogical(0);
-  }
-  else if (!string_command.compare("console-device-svg")) {
-    if (TYPEOF(data) == EXTPTRSXP) {
-      return CreateConsoleDevice(R_ExternalPtrAddr(data), "svg");
-    }
-    std::cerr << "invalid argument" << std::endl;
-    return Rf_ScalarLogical(0);
-  }
   else if (!string_command.compare("create-device")) {
     std::cerr << "ENOTIMPL: " << string_command << std::endl;
     return Rf_ScalarLogical(0);

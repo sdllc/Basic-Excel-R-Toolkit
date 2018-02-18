@@ -253,7 +253,7 @@ void draw_raster(unsigned int *raster,
   Rboolean interpolate,
   const pGEcontext gc, pDevDesc dd) {
 
-  std::cout << "draw raster" << std::endl;
+  // std::cout << "draw raster" << std::endl;
   BERTBuffers::CallResponse message;
   auto graphics = message.mutable_console()->mutable_graphics();
   graphics->set_device_type(((std::string*)(dd->deviceSpecific))->c_str());
@@ -274,8 +274,6 @@ void draw_raster(unsigned int *raster,
 
   graphics->set_rot(rot);
   graphics->set_interpolate(interpolate);
-
-  std::cout << "raster: " << std::dec << pixel_width << " x " << pixel_height << " * 4 = " << pixel_width*pixel_height * 4 << std::endl;
 
   // if we want to do any bit/byte/format conversion, we should do 
   // it here rather than on the client, we should be more efficient.
@@ -375,36 +373,4 @@ SEXP CreateConsoleDevice2(const std::string &background, double width, double he
   return Rf_ScalarInteger(device);
 
 }
-
-SEXP CreateConsoleDevice(void *device_pointer, const std::string &type) {
-
-  pDevDesc dd = (pDevDesc)device_pointer;
- 
-  dd->cra[0] = 0.9 * dd->startps;
-  dd->cra[1] = 1.2 * dd->startps;
-
-  dd->newPage = &new_page;
-  dd->close = &close_device;
-  dd->clip = &set_clip;
-  dd->size = &get_size;
-  dd->metricInfo = &get_metric_info;
-  dd->strWidth = &get_strWidth;
-  dd->line = &draw_line;
-  dd->text = &draw_text;
-  dd->rect = &draw_rect;
-  dd->circle = &draw_circle;
-  dd->polygon = &draw_polygon;
-  dd->polyline = &draw_polyline;
-  dd->path = &draw_path;
-  dd->raster = &draw_raster;
-  dd->textUTF8 = &draw_text;
-  dd->strWidthUTF8 = &get_strWidth;
- 
-  std::cout << "init device: " << type << ": " << std::dec << dd->right << ", " << dd->bottom << std::endl;
-  dd->deviceSpecific = new std::string(type);
-
-  return Rf_ScalarLogical(true);
-
-}
-
 
