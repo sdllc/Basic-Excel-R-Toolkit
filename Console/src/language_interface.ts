@@ -38,7 +38,7 @@ export class LanguageInterface {
     // pass through observables via accessors
 
     this.pipe_.control_messages.subscribe(message => {
-      console.info( "CM (${this.name_})", message );
+      console.info( `CM (${this.constructor().language_name_})`, message );
       if( message === "shutdown" ){
         //this.terminal_.CleanUp();
         //allow_close = true; // global
