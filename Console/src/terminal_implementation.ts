@@ -15,7 +15,6 @@ import { LanguageInterface } from './language_interface';
 import {Pipe, ConsoleMessage, ConsoleMessageType} from './pipe';
 
 import * as Rx from 'rxjs';
-import { ConnectableObservable } from 'rxjs/observable/ConnectableObservable';
 
 // for save image dialog
 import { remote } from 'electron';
@@ -611,26 +610,26 @@ export class TerminalImplementation {
     });
     if (!file_name || !file_name.length) return;
     */
-   
+
+    let src = null;
+
     if(/canvas/i.test(tag)){
-      let link = document.createElement("a");
-      link.setAttribute("href", target.toDataURL("image/png"));
-      link.setAttribute("download", "image.png");
-      link.click();
+      src = target.toDataURL("image/png");
     }
     else if(/img/i.test(tag)){
-
       let m = (target.src||"").match(/data\:image\/(.*?)[,;]/);
-      if(/svg/i.test(m[1])) image_type = "svg";
-      else image_type = m[1];
+      if(/svg/i.test(m[1])) {
+        image_type = "svg";
+        src = target.src;
+      }
+      else {
+        console.info(target);
+        image_type = m[1];
+        src = target.src;
+      }
+    }
 
-      /*
-      let link = document.createElement("a");
-      link.setAttribute("href", target.src);
-      link.setAttribute("download", "image." + image_type);
-      link.click();
-      */
-
+    if(src){
       let file_name = remote.dialog.showSaveDialog({
         title: "Save Image As...",
         filters: [
@@ -638,11 +637,12 @@ export class TerminalImplementation {
         ]
       });
       if(file_name){
-        let src = target.src.replace(/^.*?,/, "");
-        fs.writeFile(file_name, atob(src), () => {});
+        src = src.replace(/^.*?,/, "");
+        if( image_type === "svg" ) fs.writeFile(file_name, atob(src), "utf8", () => { console.info("image write complete") });
+        else fs.writeFile(file_name, atob(src), "binary", () => { console.info("image write complete") });
       }
-
     }
+    
   }
 
   /**
