@@ -1,4 +1,6 @@
 
+import {MenuUtilities} from './menu_utilities';
+
 /**
  * class for showing dialogs, along the lines of bootstrap's modals 
  */
@@ -128,6 +130,7 @@ export class DialogManager {
       DialogManager.container_node_.removeEventListener("click", this.click_listener_);
     }
     this.current_dialog_spec_ = null;
+    MenuUtilities.Enable();
   }
 
   DelayResolution(resolve:Function, data:any){
@@ -139,12 +142,7 @@ export class DialogManager {
 
   Show(spec:DialogSpec){
     
-    /*
-    if(!spec) {
-      this.Hide();
-      return Promise.resolve(null);
-    }
-    */
+   MenuUtilities.Disable();
 
     return new Promise((resolve, reject) => {
 
