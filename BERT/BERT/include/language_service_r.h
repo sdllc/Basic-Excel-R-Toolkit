@@ -8,16 +8,6 @@ public:
   std::string r_home_;
 
 public:
-  /*
-  LanguageServiceR( CallbackInfo &callback_info, COMObjectMap &object_map, DWORD dev_flags, 
-                    const std::string &pipe_name, const std::string &child_path, const std::string &r_home)
-    : LanguageService( LANGUAGE_R, callback_info, object_map, dev_flags, pipe_name, child_path, "R", "R" ) 
-    , r_home_(r_home) {
-
-    // set extensions we want to handle
-    file_extensions_ = { "r", "rscript", "rsrc" };
-  }
-  */
 
   LanguageServiceR(CallbackInfo &callback_info, COMObjectMap &object_map, DWORD dev_flags)
     : LanguageService(callback_info, object_map, dev_flags)
@@ -97,6 +87,9 @@ public:
     // append; this is architecture-specific
     std::stringstream r_path;
     r_path << r_home_ << "\\";
+
+    // we're not officially supporting 32-bit windows (or 32-bit R) anymore,
+    // so this can drop (or rather get hardcoded to 64).
 
 #ifdef _WIN64
     r_path << "bin\\x64";

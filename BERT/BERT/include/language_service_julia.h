@@ -8,17 +8,6 @@ private:
   std::string julia_home_;
 
 public:
-  /*
-  LanguageServiceJulia(CallbackInfo &callback_info, COMObjectMap &object_map, DWORD dev_flags,
-    const std::string &pipe_name, const std::string &child_path, const std::string &julia_home)
-    : LanguageService(LANGUAGE_JULIA, callback_info, object_map, dev_flags, pipe_name, child_path, "Jl", "Julia")
-    , julia_home_(julia_home)
-  {
-
-    // set extensions we want to handle
-    file_extensions_ = { "jl", "julia" };
-  }
-  */
   LanguageServiceJulia(CallbackInfo &callback_info, COMObjectMap &object_map, DWORD dev_flags)
     : LanguageService(callback_info, object_map, dev_flags)
   {
