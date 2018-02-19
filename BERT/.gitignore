@@ -10,6 +10,7 @@ BERT/x64
 *.iobj
 *.ipdb
 *.aps
+*.tmp
 
 *.vcxproj.user
 
