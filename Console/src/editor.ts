@@ -5,6 +5,12 @@ import { remote } from 'electron';
 const { Menu, MenuItem, dialog } = remote;
 
 import { MenuUtilities } from './menu_utilities';
+
+// note elsewhere we're trying to be very generic about languages
+// in the editor (notwithstanding that we know which languages we
+// actually support). this is our language tokenizer/lexer, which 
+// is independent of that (there's no native julia support in monaco).
+
 import * as JuliaLanguage from './julia_tokenizer';
 import { TabPanel, TabJustify, TabEventType, TabSpec } from './tab_panel';
 
@@ -15,8 +21,12 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as Rx from 'rxjs';
 
+// md for static rendering. FIXME: options, tune
+// [adding task lists]
+
 import * as MarkdownIt from 'markdown-it';
-const MD = new MarkdownIt(); // FIXME: opts
+import * as MarkdownItTasks from 'markdown-it-task-lists';
+const MD = new MarkdownIt().use(MarkdownItTasks); 
 
 const DefaultPreferences = require("../data/default_preferences.json");
 
@@ -53,6 +63,10 @@ export interface EditorEvent {
  * class represents a document in the editor; has content, view state.
  * extended to support static (i.e. rendered) documents, which are 
  * displayed as html.
+ * 
+ * FIXME: base type, subtypes for rendered/editor documents
+ * FIXME: rendered documents should retain source, re-render 
+ *        [actually it already does that]
  */
 class Document {
 
@@ -337,7 +351,7 @@ export class Editor {
         e.preventDefault();
         require('electron').shell.openExternal(e.srcElement['href']);
       }
-  });
+    });
     
     this.container_.classList.add("editor-container");
 
@@ -530,6 +544,8 @@ export class Editor {
 
     this.pending_active_languages_.forEach( id => this.AddExecActions(id));
 
+    // override context menu so it matches regular menus, other context menus
+
     this.editor_.onContextMenu(e => {
 
       let contribution = this.editor_.getContribution("editor.contrib.contextmenu") as any;
@@ -573,6 +589,9 @@ export class Editor {
         MenuUtilities.SetEnabled("main.file.revert-file", this.active_document_.dirty_ && !!this.active_document_.file_path_);
       }
 
+      // FIXME: every time? no. use a set of short/long timeouts
+      // and save periodically (like 5/30 or 7/40 or something)
+
       this.CacheDocument();
 
     });
@@ -580,7 +599,7 @@ export class Editor {
     // FIXME: demand load
 
     // schema for preferences. also it allows comments (we still 
-    // have to scrub these before parsing).
+    // have to scrub these before parsing). 
 
     monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
       validate: true, allowComments: true,
@@ -655,11 +674,18 @@ export class Editor {
     return hash;
   }
 
+  /**
+   * writes document to local storage. document here includes content and
+   * presentation metadata from the editor
+   */
   private CacheDocument(document: Document = this.active_document_) {
     localStorage.setItem(`cached-document-${document.id_}`, JSON.stringify(document));
   }
 
-  /** focus the editor, on the active tab */
+  /** 
+   * focus the editor, on the active tab 
+   * FIXME: what happens if we're viewing a rendered document?
+   */
   public Focus() {
     this.editor_.focus();
   }
@@ -696,7 +722,6 @@ export class Editor {
     this.properties_.open_files = new_list;
 
     let enable_items = (new_list.length > 0);
-    // MenuUtilities.SetEnabled("main.file.revert-file", enable_items);
     MenuUtilities.SetEnabled("main.file.close-file", enable_items);
 
   }
@@ -834,11 +859,15 @@ export class Editor {
     }));
   }
 
+  /** 
+   * handles the menu command "unclose tab", which should restore 
+   * the most-recently-closed buffer. session storage only, does not
+   * survive restarts.
+   */
   private UncloseTab() {
     if (this.closed_tabs_.length === 0) throw ("no closed tabs");
     let unclosed_tab = this.closed_tabs_.shift();
 
-    console.info("UC", unclosed_tab);
     let [document, tab] = this.LoadStoredDocument(unclosed_tab.id, unclosed_tab.position);
     if (tab) {
       this.tabs_.UpdateLayout();
@@ -848,6 +877,9 @@ export class Editor {
 
   }
 
+  /** 
+   * loads preferences, either from storage or from defaults. 
+   */
   private ReadPreferences() {
 
     let data = {};
@@ -1007,6 +1039,15 @@ export class Editor {
 
     if (force_dialog || !file_path) {
 
+      // FIXME: get languages from config or something for better 
+      // extensibility, we don't want to have to edit this if we add
+      // a language.
+
+      // actually, more broadly, it should be based on the known or 
+      // assumed language, and then use any/all if we don't know      
+
+      // tip: use monaco.languages 
+
       // dialog
       let dialog_result = remote.dialog.showSaveDialog({
         title: "Save File",
@@ -1125,7 +1166,7 @@ export class Editor {
     });
   }
 
-  /** load a file from a given path */
+  /** loads a file from a given path */
   private OpenFileInternal(file_path: string, override_label?:string , rendered = false) {
 
     // check if this file is already open (by path), switch to
@@ -1144,6 +1185,9 @@ export class Editor {
     // not found, open
 
     return new Promise((resolve, reject) => {
+
+      // special handling for documents in local storage, which
+      // (atm) is just preferences. should be a little more generic
 
       let match = file_path.match(/^localStorage:\/\/(.*)$/);
       if (match) {
@@ -1232,6 +1276,9 @@ export class Editor {
 
   /** 
    * select and open file. if no path is passed, show a file chooser.
+   * FIXME: use registered languages for selecting what to open?
+   * FIXME: actually since monaco can open almost anything, why not just
+   *        default to that? 
    */
   public OpenFile(file_path?: string) {
     if (file_path) return this.OpenFileInternal(file_path);
@@ -1239,8 +1286,8 @@ export class Editor {
       title: "Open File",
       properties: ["openFile"],
       filters: [
-        { name: 'R source files', extensions: ['r', 'rsrc', 'rscript'] },
-        { name: 'Julia source files', extensions: ['jl', 'julia'] },
+        //{ name: 'R source files', extensions: ['r', 'rsrc', 'rscript'] },
+        //{ name: 'Julia source files', extensions: ['jl', 'julia'] },
         { name: 'All Files', extensions: ['*'] }
       ]
     });
