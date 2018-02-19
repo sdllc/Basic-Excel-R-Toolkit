@@ -12,13 +12,25 @@
   z-index: 4;
 }
 
+// sigh
+
 .terminal-child {
   position: absolute;
   top: 0px;
-  left: .5em; // this bumps up against the separator. 
+  left: 0px; // left: .5em; // this bumps up against the separator. 
   right: 0px;
   bottom: 0px;
   overflow: hidden;
+
+  &>div {
+    position: absolute;
+    top: 0px;
+    left: .5em; // this bumps up against the separator. 
+    right: 0px;
+    bottom: 0px;
+    overflow: hidden;
+  }
+
 }
 
 .xterm-graphics-node {

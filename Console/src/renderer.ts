@@ -1,6 +1,6 @@
 
 import {Pipe, ConsoleMessage, ConsoleMessageType} from './pipe';
-import {clipboard, remote} from 'electron';
+import {clipboard, remote, dialog} from 'electron';
 
 const {Menu, MenuItem} = remote;
 
@@ -17,6 +17,7 @@ import {MenuUtilities} from './menu_utilities';
 import {MuliplexedTerminal} from './multiplexed_terminal';
 
 import {Editor, EditorEvent, EditorEventType} from './editor';
+import {Preferences} from './preferences';
 
 import * as Rx from "rxjs";
 import * as path from 'path';
@@ -59,6 +60,7 @@ let splitter = new Splitter(
 // dialogs
 
 let dialog_manager = new DialogManager();
+window['dm'] = dialog_manager;
 
 // terminals and tabs
 
@@ -127,12 +129,27 @@ window.addEventListener("beforeunload", event => {
   }
 });
 
+/**
+ * 
+ */
+const ApplyPreferences = function(preferences:any = {}){
+  if(preferences.shell){
+    terminals.Terminals().forEach(terminal => {
+      terminal.ApplyPreferences(preferences.shell);
+    });
+  }
+}
+
 // construct editor
 
 let editor = new Editor("#editor", properties.editor);
 editor.events.subscribe(event => {
   if( event.type === EditorEventType.Command ){
     switch(event.message){
+    case "update-preferences":
+      ApplyPreferences(event.data);
+      break;
+
     case "execute-selection":
     case "execute-buffer":
       let terminal = terminals.Get(event.data.language)
@@ -152,6 +169,9 @@ let pipe_list = (process.env['BERT_PIPE_NAME']||"").split(";"); // separator?
 
 setTimeout(() => {
   
+  let preferences:any = Preferences.ReadPreferences() || {};
+  let shell_preferences = preferences.shell || {};
+
   // FIXME: after languages/tabs are initialized, select tab
   // based on stored preferences (is this going to be a long
   // delay? UX)
@@ -174,7 +194,7 @@ setTimeout(() => {
                     instance.label_ = language;
                     language_interfaces.push(instance);
                     instance.InitPipe(pipe, pipe_name);
-                    terminals.Add(instance);
+                    terminals.Add(instance, shell_preferences);
                     return true;
                   }
                   return false;

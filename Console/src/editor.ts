@@ -15,7 +15,7 @@ import * as JuliaLanguage from './julia_tokenizer';
 import { TabPanel, TabJustify, TabEventType, TabSpec } from './tab_panel';
 
 const Constants = require("../data/constants.json");
-const PreferencesSchema = require("../data/schemas/preferences_schema.json");
+// const PreferencesSchema = require("../data/schemas/preferences_schema.json");
 
 import * as path from 'path';
 import * as fs from 'fs';
@@ -28,13 +28,15 @@ import * as MarkdownIt from 'markdown-it';
 import * as MarkdownItTasks from 'markdown-it-task-lists';
 const MD = new MarkdownIt().use(MarkdownItTasks); 
 
-const DefaultPreferences = require("../data/default_preferences.json");
+// const DefaultPreferences = require("../data/default_preferences.json");
 
 // ambient, declared in html. we need this for loading monaco
 declare const amd_require: any;
 
-const PREFERENCES_KEY = "preferences"
-const PREFERENCES_URI = "localStorage://" + PREFERENCES_KEY;
+// const PREFERENCES_KEY = "preferences"
+// const PREFERENCES_URI = "localStorage://" + PREFERENCES_KEY;
+
+import { Preferences, PreferencesSchema } from './preferences';
 
 interface UncloseRecord {
   id: number;
@@ -211,15 +213,6 @@ export class Editor {
     return encodeURI('file://' + pathName);
   }
 
-  /** 
-   * utility function: strip comments, c style and c++ style.
-   * for json w/ comments
-   */
-  static StripComments(text:string) : string {
-    return text.replace( /\/\*[\s\S]+\*\//g, "").split(/\n/).map( 
-      line => line.replace( /\/\/.*$/m, "" )).join("\n");
-  }
-
   /**
    * finish loading monaco
    */
@@ -388,7 +381,7 @@ export class Editor {
 
     // prefs is no longer async
 
-    let prefs = this.ReadPreferences();
+    let prefs = Preferences.ReadPreferences();
     this.editor_options_ = prefs ? prefs['editor'] || {} : {};
 
     this.InitEditor(editor);
@@ -521,6 +514,10 @@ export class Editor {
 
   }
 
+  /**
+   * sets up editor. monaco needs to load asynchronously, then 
+   * once it's loaded we do some additional configuration.
+   */
   private async InitEditor(node: HTMLElement) {
 
     await Editor.LoadMonaco();
@@ -605,7 +602,7 @@ export class Editor {
       validate: true, allowComments: true,
       schemas: [{
         uri: "http://bert-toolkit.org/preferences-schema",
-        fileMatch: [PREFERENCES_URI],
+        fileMatch: [Preferences.PREFERENCES_URI],
         schema: PreferencesSchema
       }, {
         uri: "http://bert-toolkit.org/generic-schema",
@@ -877,41 +874,12 @@ export class Editor {
 
   }
 
-  /** 
-   * loads preferences, either from storage or from defaults. 
-   */
-  private ReadPreferences() {
-
-    let data = {};
-
-    // if prefs does not exist, create from defaults and save first.
-    // UPDATE: why save defaults? (...)
-
-    let json = localStorage.getItem(PREFERENCES_KEY);
-
-    if (json) {
-      try {
-        data = JSON.parse(Editor.StripComments(json));
-      }
-      catch (e) {
-
-        // FIXME: notify user, set defaults
-        console.error(e);
-      }
-      return data;
-    }
-
-    data = DefaultPreferences;
-    // localStorage.setItem(PREFERENCES_KEY, JSON.stringify(data));
-    return data;
-
-  }
 
   /**
    * opens preferences in an editor tab. 
    */
   public OpenPreferences() {
-    this.OpenFile(PREFERENCES_URI);
+    this.OpenFile(Preferences.PREFERENCES_URI);
   }
 
   /** close tab (called on button click) */
@@ -1074,10 +1042,10 @@ export class Editor {
         localStorage.setItem(key, contents);
 
         // special case
-        if (document.file_path_ === PREFERENCES_URI) {
+        if (document.file_path_ === Preferences.PREFERENCES_URI) {
           try {
 
-            contents = Editor.StripComments(contents);
+            contents = Preferences.StripComments(contents);
 
             let data = JSON.parse(contents);
             let editor_options = data.editor || {};
@@ -1099,14 +1067,21 @@ export class Editor {
             // set
             this.editor_.updateOptions(editor_options);
 
-            console.info("EO", editor_options );
-            
             // this.active_document_.model_.updateOptions(editor_options);
             this.tabs_.data.forEach(document => {
               if (document.model_) {
                 document.model_.updateOptions(editor_options);
               }
-            })
+            });
+
+            // notify listeners about property changes. FIXME: is this 
+            // the best way to manage this? (by which I mean this is not
+            // the best way to manage this).
+            this.events_.next({
+              type: EditorEventType.Command,
+              message: "update-preferences",
+              data: data || {}
+            });
 
           }
           catch (e) {
@@ -1199,7 +1174,7 @@ export class Editor {
 
         let document = new Document();
 
-        if (key === PREFERENCES_KEY) document.label_ = Constants.files.preferences;
+        if (key === Preferences.PREFERENCES_KEY) document.label_ = Constants.files.preferences;
         else document.label_ = key;
 
         document.file_path_ = file_path;

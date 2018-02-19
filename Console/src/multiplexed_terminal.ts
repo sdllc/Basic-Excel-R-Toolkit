@@ -175,6 +175,16 @@ export class MuliplexedTerminal {
 
   }
 
+  /** 
+   * returns a list of all terminal instances.
+   * FIXME: property?
+   */
+  Terminals():TerminalImplementation[] {
+    return Object.keys(this.terminal_instances_).map(key => 
+      this.terminal_instances_[key].terminal
+    );
+  }
+
   /**
    * add a terminal for the given language. this method handles creating 
    * a child node, assigning a tab, creating the terminal instance and 
@@ -183,7 +193,7 @@ export class MuliplexedTerminal {
    * FIXME: we should share context menu/event handler.
    * FIXME: context menu should be parameterized (per-language)
    */
-  Add(language_interface:LanguageInterface, activate = false){
+  Add(language_interface:LanguageInterface, preferences:any = {}, activate = false){
 
     let child = document.createElement("div");
     child.classList.add("terminal-child");
@@ -191,7 +201,7 @@ export class MuliplexedTerminal {
 
     let label = language_interface.label_;
     let terminal = new TerminalImplementation(language_interface, child);
-    terminal.Init();
+    terminal.Init(preferences);
 
     this.language_map_[(language_interface.constructor as any).language_name_] = label;
 

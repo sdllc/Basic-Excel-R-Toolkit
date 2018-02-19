@@ -24,6 +24,21 @@ import * as fs from 'fs';
 // for julia, replacing backslash entities in the shell like Julia REPL. 
 const SymbolTable = require('../data/symbol_table.json');
 
+const BaseTheme:ITerminalTheme = {
+  background: "#fff", 
+  foreground: "#000",
+  selection: "rgba(255, 255, 0, .1)",
+  cursor: "#000"
+};
+
+const BaseOptions:ITerminalOptions = {
+  cols: 80, 
+  cursorBlink: true,
+  theme: BaseTheme,
+  fontFamily: 'consolas',
+  fontSize: 13
+};
+
 /**
  * 
  */
@@ -364,6 +379,9 @@ export class TerminalImplementation {
 
   private PrintLine:PrintLineFunction;
 
+  /** options is constructed from base, then preferences are overlaid */
+  private options_:ITerminalOptions; 
+
   /**
    * we use a static event source for events that are application-global,
    * which may arise out of any existing terminal.
@@ -411,6 +429,25 @@ export class TerminalImplementation {
 
   }
 
+  ApplyPreferences(preferences){
+
+    // FIXME: would be nice to have deltas here
+    // FIXME: this will change layout? (...)
+
+    this.OverlayOptions(this.options_, preferences);
+
+    // Q: what does xterm do with _this_ option object? we know that in the 
+    // init methods it takes ownership and modifies it (specifically, it
+    // nulls out theme for some reason)
+
+    Object.keys(this.options_).forEach(key => {
+      this.xterm_.setOption(key, this.options_[key]);
+    });
+
+    this.UpdateContainerBackground();
+
+  }
+
   /**
    * returns the theoretical rect around the cursor. 
    * offset is in chars, for pushing back function tips.
@@ -423,21 +460,6 @@ export class TerminalImplementation {
 
   /** focus */
   Focus(){ this.xterm_.focus(); window['term'] = this }
-
-  TestAnnotation(x=2, y=12, text="SOZB"){
-    let annotation_manager:AnnotationManager = (this.xterm_ as any).annotation_manager;
-
-    let element = document.createElement("div");
-    element.classList.add( "xterm-annotation" );
-    element.style.color = "green";
-    element.style.fontWeight = "600";
-    element.style.border = "2px solid orange";
-    element.style.borderRadius = "2px";
-    element.innerText = text;
-    
-    annotation_manager.AddAnnotation({element, line: y, column: x});
-
-  }
 
    /**
    * any housekeeping before closing
@@ -910,27 +932,89 @@ export class TerminalImplementation {
     (this.xterm_ as any).fit();
   }
 
-  Init() {
+  /** 
+   * the way xterm lays itself out, it will set height to the number of 
+   * visible rows * row height. that means there may be a gap at the bottom.
+   * if the xterm theme is setting a background color, that gap won't match.
+   * 
+   * we are creating another gap on the side, via margin, to give some space 
+   * between the edge of the window and the text. we could maybe change that
+   * but since we have to repair the other gap anyway, we can resolve both 
+   * gaps by copying the background color.
+   * 
+   * note that here we're interrogating xterm rather than using our options,
+   * so it should happen after options are set.
+   *  
+   */
+  UpdateContainerBackground(){
 
-    let theme_object:ITerminalTheme = {
-      background: "#fff", 
-      foreground: "#000",
-      selection: "rgba(255, 255, 0, .1)",
-      cursor: "#000"
-    };
+    // NOTE that theme is not a property of options. that seems like 
+    // an error, and one which may get fixed (watch out). also it's not
+    // on the interface.
 
-    let terminal_options:ITerminalOptions = {
-      cols: 80, 
-      cursorBlink: true,
-      theme: theme_object,
-      fontFamily: 'consolas',
-      fontSize: 13
-    };
+    // UPDATE: well that doesn't work, because if you update theme, the
+    // .theme property is not changed. so use ours.
 
-    this.xterm_ = new XTerm(terminal_options);
-    this.xterm_.open(this.node_); //, { focus: true });
+    let obj = this.xterm_ as any;
+    let background = ( this.options_.theme && this.options_.theme.background ) ? this.options_.theme.background : "";
+
+    console.info( "UCB", background);
+    this.node_.style.background = background;
+
+  }
+
+  /**
+   * overlay options from preferences. based on current xterm (and this 
+   * could of course change), the structure is one-level deep of 
+   * key:value, with a single exception for theme; theme is one-level 
+   * deep of key:value.
+   */
+  OverlayOptions(target:any, src:any){
+    Object.keys(src).forEach(key => {
+      let target_key_type = typeof(target[key]);
+      let src_key_type = typeof(src[key]);
+      if( target_key_type === "object" ){
+        if( src_key_type === "object" ) {
+          this.OverlayOptions(target[key], src[key]);
+        }
+        else {
+          console.warn( "warning: not overlaying target object with src scalar: ", src[key]);
+        }
+      }
+      else { 
+        // target is undefined or scalar, overlay
+        target[key] = JSON.parse(JSON.stringify(src[key])); 
+      }
+    });
+  }
+
+  Init(preferences:any = {}) {
+
+    // see benchmarks; this is the fastest deep copy. 
+    
+    // we need local options so they don't overlap (for now they're 
+    // going to be the same, but in the future we may want to support 
+    // per-shell options)
+
+    this.options_ = JSON.parse(JSON.stringify(BaseOptions));
+    this.OverlayOptions(this.options_, preferences);
+
+    // NOTE that xterm takes ownership of the options object, and modifies
+    // it. that's not necessarily useful to us if we want to keep track.
+    // so make another copy.
+
+    this.xterm_ = new XTerm(JSON.parse(JSON.stringify(this.options_)));
+
+    // so this is for layout. unfortunate.
+    let inner_node = document.createElement("div");
+    this.node_.appendChild(inner_node);
+
+//    this.xterm_.open(this.node_); //, { focus: true });
+    this.xterm_.open(inner_node); //, { focus: true });
     this.xterm_.focus();
 
+    this.UpdateContainerBackground();
+    
     // ensure
     (this.xterm_ as any).annotation_manager.Init();
 
@@ -953,7 +1037,8 @@ export class TerminalImplementation {
       this.RunAutocomplete();
     };
 
-    this.autocomplete_ = new Autocomplete(ac_accept, this.node_);
+    //this.autocomplete_ = new Autocomplete(ac_accept, this.node_);
+    this.autocomplete_ = new Autocomplete(ac_accept, inner_node);
 
     window.addEventListener("resize", event => {
       // FIXME: debounce
