@@ -9,6 +9,19 @@ BERT <- new.env();
 with( BERT, {
 
   #
+  # calls Excel API. this is the programmatic (i.e. non-COM) API. command
+  # is an integer, arguments are dependent on the command. see (e.g.) the 
+  # HowBig function.
+  #
+  # this function should move to the module, but we're leaving it here 
+  # (temporarily) for backwards compatibility. TODO: deprecate.
+  #
+  .Excel <- function(command, ...) {
+    .Call("BERT.Callback", "excel", list(command, ...), PACKAGE="(embedding)");
+  }
+
+
+  #
   # autocomplete for the console/shell. we add a custom completer later.
   #
   .Autocomplete <- function(...){
