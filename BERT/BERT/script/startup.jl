@@ -17,6 +17,30 @@ Base.eval(:(have_color=true));
 # =============================================================================
 module BERT
 
+  """
+  EXCEL is the base module for the Excel scripting (COM) interface.
+  In the EXCEL module, the `Application` object represents the running
+  instance of Excel.
+
+  The EXCEL module also includes enumerations provided by the Application
+  object. These are usually used as parameters to functions.
+
+  # Examples
+  ```julia-repl
+  > EXCEL.Application.get_ActiveSheet()
+  COM interface _Worksheet Ptr{UInt64} @0x0000028f380ce350
+  ```
+  
+  ```julia-repl
+  > EXCEL.Application.get_ActiveSheet().get_Name()  
+  "Sheet1"
+  ```    
+
+  ```julia-repl
+  > EXCEL.XlBorderWeight.xlThick
+  4
+  ```
+  """
   module EXCEL
     Application = nothing
   end
@@ -148,10 +172,12 @@ module BERT
     normal = "\033[0m";
     reverse ="\033[7m";
 
+    version = ENV["BERT_VERSION"];
+
     print("""
-BERT Julia shell version 0.2 BETA. $(reverse)This is not the default Julia shell$(normal). Many
-things are similar, but some things are different. Please send feedback if you
-have questions or comments, and save your work often. \n\n""");
+BERT version $(version). $(reverse)This is not the default Julia REPL$(normal). Many things
+are similar, but some things are different. Please send feedback if
+you have questions or comments, and save your work often. \n\n""");
 
   end
 

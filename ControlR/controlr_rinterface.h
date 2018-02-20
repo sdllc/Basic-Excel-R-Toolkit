@@ -78,6 +78,9 @@ void RSetUserBreak( const char *msg = 0 );
  */
 void RTick();
 
+void RGetVersion(int32_t *major, int32_t *minor, int32_t *patch);
+
+
 /**
  * periodically test the connection
  */

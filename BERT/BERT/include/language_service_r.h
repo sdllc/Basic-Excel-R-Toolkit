@@ -20,6 +20,9 @@ public:
     APIFunctions::GetRegistryString(child_path, "BERT2.ControlRCommand");
     APIFunctions::GetRegistryString(pipe_name, "BERT2.OverrideRPipeName");
     
+    this->configured_ = r_home.length();
+    if (!this->configured_) return;
+
     std::string bin_path;
     APIFunctions::GetRegistryString(bin_path, "BERT2.BinDir");
 

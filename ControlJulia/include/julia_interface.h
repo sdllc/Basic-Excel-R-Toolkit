@@ -2,6 +2,8 @@
 
 void JuliaInit();
 void JuliaShutdown();
+void JuliaGetVersion(int32_t *major, int32_t *minor, int32_t *patch);
+
 // void julia_exec();
 
 typedef enum {

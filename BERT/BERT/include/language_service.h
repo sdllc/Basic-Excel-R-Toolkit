@@ -8,6 +8,7 @@
 #include <string>
 
 #include "windows_api_functions.h"
+#include "process_exit_codes.h"
 
 /**
  * class abstracts common language service features
@@ -35,6 +36,9 @@ protected:
   
 protected:
 
+  /** hold on to process handles, we can check for exit (and exit values) */
+  PROCESS_INFORMATION process_info_;
+
   /** pipe name. FIXME: we don't need this to persist? */
   std::string pipe_name_;
 
@@ -55,9 +59,12 @@ protected:
 
   /** child process */
   DWORD child_process_id_;
-
-  /** flag (used? FIXME) */
+    
+  /** flag */
   bool connected_;
+
+  /** flag */
+  bool configured_;
 
   /** read/write buffer */
   char *buffer_;
@@ -79,6 +86,8 @@ public:
     : callback_info_(callback_info)
     , object_map_(object_map)
     , dev_flags_(dev_flags)
+    , connected_(false)
+    , configured_(false)
   {
     memset(&io_, 0, sizeof(io_));
   }
@@ -87,6 +96,17 @@ public:
   ~LanguageService() {}
 
 public:
+
+  /** 
+   * wrapper for the WIN32 api function. returns true if the function succeeds 
+   * or false; usually that means invalid handle, if the process was never created.
+   * you can test that with GetLastError().
+   */
+  bool ProcessExitCode(DWORD *exit_code);
+
+  bool configured() { return configured_; }
+
+  bool connected() { return connected_; }
 
   /** accessor */
   std::string prefix() { return language_prefix_;  }

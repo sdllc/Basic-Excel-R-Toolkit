@@ -3,6 +3,7 @@
 #include "control_julia.h"
 #include "julia_interface.h"
 #include "pipe.h"
+#include "process_exit_codes.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -578,6 +579,26 @@ bool Callback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &
 
 int main(int argc, char **argv) {
 
+  int32_t major = 0;
+  int32_t minor = 0;
+  int32_t patch = 0;
+
+  JuliaGetVersion(&major, &minor, &patch);
+  std::cout << "Julia version reports " << major << "." << minor << "." << patch << std::endl;
+
+  // FIXME: constants for version checks, return values
+  // we can probably use ranges as well, at least for minor.
+  // major versions may require specific versions of this controller
+
+  if (major != 0) {
+    std::cerr << "invalid major version" << std::endl;
+    return PROCESS_ERROR_UNSUPPORTED_VERSION;
+  }
+  if (minor != 6) {
+    std::cerr << "invalid minor version" << std::endl;
+    return PROCESS_ERROR_UNSUPPORTED_VERSION;
+  }
+
   for (int i = 0; i < argc; i++) {
     if (!strncmp(argv[i], "-p", 2) && i < argc - 1) {
       pipename = argv[++i];
@@ -586,7 +607,7 @@ int main(int argc, char **argv) {
 
   if (!pipename.length()) {
     std::cerr << "call with -p pipename" << std::endl;
-    return -1;
+    return PROCESS_ERROR_CONFIGURATION_ERROR;
   }
 
   std::cout << "pipe: " << pipename << std::endl;

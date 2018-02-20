@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Common\process_exit_codes.h" />
     <ClInclude Include="..\..\PB\variable.pb.h" />
     <ClInclude Include="ExcelLib\XLCALL.H" />
     <ClInclude Include="include\callback_info.h" />

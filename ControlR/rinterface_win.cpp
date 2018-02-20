@@ -110,6 +110,33 @@ void RSetUserBreak(const char *msg) {
 
 }
 
+int PartialVersion(const char **ptr) {
+
+  char buffer[32];
+  memset(buffer, 0, 32);
+
+  for (int i = 0; i < 32; i++, (*ptr)++) {
+    char c = **ptr;
+    if (!c || c == '.') break;
+    buffer[i] = c;
+  }
+
+  return atoi(buffer);
+}
+
+void RGetVersion(int32_t *major, int32_t *minor, int32_t *patch) {
+
+  *major = *minor = *patch = 0;
+
+  const char *version = getDLLVersion();
+  if (!version) return;
+
+  if (*version) *major = PartialVersion(&version);
+  if (*version && *(++version)) *minor = PartialVersion(&version);
+  if (*version && *(++version)) *patch = PartialVersion(&version);
+
+}
+
 int RLoop(const char *rhome, const char *ruser, int argc, char ** argv) {
 
   structRstart rp;

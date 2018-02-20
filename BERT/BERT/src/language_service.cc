@@ -13,16 +13,20 @@ uint32_t LanguageService::transaction_id_ = 1;
 /** default implementation probably not usable */
 int LanguageService::StartChildProcess(HANDLE job_handle) {
 
-  char *args = new char[1024];
-  sprintf_s(args, 1024, "\"%s\"", child_path_.c_str());
+  int length = child_path_.length() + 16;
+  char *command_line = new char[length];
+  sprintf_s(command_line, length, "\"%s\"", child_path_.c_str());
+  int result = LaunchProcess(job_handle, command_line);
+  delete[] command_line;
+  return result;
 
+  /*
   STARTUPINFOA si;
-  PROCESS_INFORMATION pi;
 
   ZeroMemory(&si, sizeof(si));
   si.cb = sizeof(si);
 
-  ZeroMemory(&pi, sizeof(pi));
+  ZeroMemory(&process_info_, sizeof(process_info_));
 
   int rslt = 0;
 
@@ -30,15 +34,15 @@ int LanguageService::StartChildProcess(HANDLE job_handle) {
 
   if (dev_flags_ & 0x01) creation_flags = 0;
 
-  if (!CreateProcessA(0, args, 0, 0, FALSE, creation_flags, 0, 0, &si, &pi))
+  if (!CreateProcessA(0, args, 0, 0, FALSE, creation_flags, 0, 0, &si, &process_info_))
   {
     DebugOut("CreateProcess failed (%d).\n", GetLastError());
     rslt = GetLastError();
   }
   else {
-    child_process_id_ = pi.dwProcessId;
+    child_process_id_ = process_info_.dwProcessId;
     if (job_handle) {
-      if (!AssignProcessToJobObject(job_handle, pi.hProcess))
+      if (!AssignProcessToJobObject(job_handle, process_info_.hProcess))
       {
         DebugOut("Could not AssignProcessToObject\n");
       }
@@ -47,6 +51,9 @@ int LanguageService::StartChildProcess(HANDLE job_handle) {
 
   delete[] args;
   return rslt;
+
+  */
+
 }
 
 void LanguageService::SetApplicationPointer(LPDISPATCH application_pointer) {
@@ -74,7 +81,7 @@ void LanguageService::RunCallbackThread() {
   HANDLE callback_pipe_handle = CreateFileA(ss.str().c_str(), GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, 0);
   if (!callback_pipe_handle || callback_pipe_handle == INVALID_HANDLE_VALUE) {
     DWORD err = GetLastError();
-    DebugOut("ERR opening pipe: %d\n", err);
+    DebugOut("err opening pipe [1]: %d\n", err);
   }
   else {
 
@@ -151,27 +158,26 @@ void LanguageService::RunCallbackThread() {
 int LanguageService::LaunchProcess(HANDLE job_handle, char *command_line) {
 
   STARTUPINFOA si;
-  PROCESS_INFORMATION pi;
 
   ZeroMemory(&si, sizeof(si));
   si.cb = sizeof(si);
 
-  ZeroMemory(&pi, sizeof(pi));
+  ZeroMemory(&process_info_, sizeof(process_info_));
 
   int result = 0;
 
   DWORD creation_flags = CREATE_NO_WINDOW;
   if (dev_flags_ & 0x01) creation_flags = 0;
 
-  if (!CreateProcessA(0, command_line, 0, 0, FALSE, creation_flags, 0, 0, &si, &pi))
+  if (!CreateProcessA(0, command_line, 0, 0, FALSE, creation_flags, 0, 0, &si, &process_info_))
   {
     DebugOut("CreateProcess failed (%d).\n", GetLastError());
     result = GetLastError();
   }
   else {
-    child_process_id_ = pi.dwProcessId;
+    child_process_id_ = process_info_.dwProcessId;
     if (job_handle) {
-      if (!AssignProcessToJobObject(job_handle, pi.hProcess))
+      if (!AssignProcessToJobObject(job_handle, process_info_.hProcess))
       {
         DebugOut("Could not AssignProcessToObject\n");
       }
@@ -179,6 +185,10 @@ int LanguageService::LaunchProcess(HANDLE job_handle, char *command_line) {
   }
 
   return result;
+}
+
+bool LanguageService::ProcessExitCode(DWORD *exit_code) {
+  return GetExitCodeProcess(process_info_.hProcess, exit_code) ? true : false;
 }
 
 void LanguageService::Connect(HANDLE job_handle) {
@@ -197,8 +207,18 @@ void LanguageService::Connect(HANDLE job_handle) {
     while (1) {
       pipe_handle_ = CreateFileA(full_name.c_str(), GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, 0);
       if (!pipe_handle_ || pipe_handle_ == INVALID_HANDLE_VALUE) {
+
+        DWORD exit_code = 0;
+        if (!GetExitCodeProcess(process_info_.hProcess, &exit_code)) {
+          std::cerr << "error calling get exit code process: " << GetLastError() << std::endl;
+        }
+        else if (exit_code != STILL_ACTIVE) {
+          std::cerr << "process exited with exit code " << exit_code << std::endl;
+          break;
+        }
+
         DWORD err = GetLastError();
-        DebugOut("ERR opening pipe: %d\n", err);
+        DebugOut("err opening pipe [2]: %d\n", err);
         if (errs++ > 10) break;
         Sleep(100);
       }

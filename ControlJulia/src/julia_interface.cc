@@ -432,6 +432,12 @@ void JlValueToVariable(BERTBuffers::Variable *variable, jl_value_t *value) {
 
 }
 
+void JuliaGetVersion(int32_t *major, int32_t *minor, int32_t *patch) {
+  *major = jl_ver_major();
+  *minor = jl_ver_minor();
+  *patch = jl_ver_patch();
+}
+
 void JuliaInit() {
 
   //memset(&jl_options, 0, sizeof(jl_options));
@@ -883,8 +889,6 @@ jl_value_t * COMCallback(uint64_t pointer, const char *name, const char *calltyp
 
 bool JuliaPostInit() {
   
-  std::cout << "JPI" << std::endl;
-
   jl_function_t *function_pointer = ResolveFunction("BERT.SetCallbacks");
   if (!function_pointer || jl_is_nothing(function_pointer)) return false;
 
@@ -1039,8 +1043,6 @@ inline std::string jl_string(jl_value_t *value){ return std::string(jl_string_pt
 
 void ListScriptFunctions(BERTBuffers::CallResponse &response, const BERTBuffers::CallResponse &call) {
   
-  std::cout << "LSF" << std::endl;
-
   bool success = false;
   response.set_id(call.id());
   

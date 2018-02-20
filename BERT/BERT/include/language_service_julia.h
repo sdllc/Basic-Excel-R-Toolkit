@@ -19,7 +19,7 @@ public:
     APIFunctions::GetRegistryString(julia_home, "BERT2.JuliaHome");
     APIFunctions::GetRegistryString(child_path, "BERT2.ControlJuliaCommand");
     APIFunctions::GetRegistryString(pipe_name, "BERT2.OverrideJuliaPipeName");
-
+    
     std::string bin_path;
     APIFunctions::GetRegistryString(bin_path, "BERT2.BinDir");
 
@@ -27,6 +27,8 @@ public:
     bin_path.append(child_path);
     child_path = bin_path;
 
+    this->configured_ = julia_home.length();
+    if (!this->configured_) return;
 
     if (!pipe_name.length()) {
       std::stringstream ss;

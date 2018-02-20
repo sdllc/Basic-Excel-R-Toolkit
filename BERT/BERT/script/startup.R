@@ -125,3 +125,13 @@ with( BERT, {
   }
 
 });
+
+#
+# banner
+#
+
+cat(paste0("---
+
+BERT ", Sys.getenv("BERT_VERSION"), "
+
+"));

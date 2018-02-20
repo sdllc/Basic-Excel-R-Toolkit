@@ -82,6 +82,9 @@
     <ClInclude Include="include\debug_functions.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Common\process_exit_codes.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\PB\variable.proto">
