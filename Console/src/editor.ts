@@ -426,6 +426,7 @@ export class Editor {
 
   }
 
+  /*
   private LoadThemes(): Promise<any> {
     return new Promise((resolve, reject) => {
       let dir = path.resolve("data/themes");
@@ -446,6 +447,7 @@ export class Editor {
       });
     });
   }
+  */
 
   /**
    * add exec actions for a language. I can't figure out how to 
@@ -521,7 +523,7 @@ export class Editor {
   private async InitEditor(node: HTMLElement) {
 
     await Editor.LoadMonaco();
-    await this.LoadThemes();
+    // await this.LoadThemes();
 
     // sanity check
     this.editor_options_.model = null;

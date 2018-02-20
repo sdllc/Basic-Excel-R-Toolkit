@@ -379,6 +379,10 @@ export class TerminalImplementation {
 
   private PrintLine:PrintLineFunction;
 
+  private at_prompt_ = true; // for various reasons // false;
+
+  private pending_exec_list_:string[] = [];
+
   /** options is constructed from base, then preferences are overlaid */
   private options_:ITerminalOptions; 
 
@@ -587,6 +591,8 @@ export class TerminalImplementation {
 
   Prompt(prompt:PromptMessage) {
 
+    this.at_prompt_ = true;
+
     let text = prompt.text;
 
     if( prompt.push_stack ){
@@ -599,18 +605,38 @@ export class TerminalImplementation {
       this.MoveCursor(-this.line_info_.full_text.length);
       this.ClearRight();
     }
-    
+
+    // there may be something pending to do
+
+    let exec_immediately = false;
+
     if( prompt.pop_stack ){
       this.line_info_ = this.prompt_stack_.shift();
     }
     else {
       this.line_info_ = new LineInfo(prompt.text);
+      if( this.pending_exec_list_.length ){
+        this.line_info_.append(this.pending_exec_list_.shift());
+        exec_immediately = true;
+      }
     }
 
     this.xterm_.write(this.line_info_.full_text);
     if( this.line_info_.offset_from_end ) this.MoveCursor(-this.line_info_.offset_from_end);
-
     this.history_.NewLine();
+
+    // handle command if we've been typing while system was busy
+
+    if(exec_immediately){ 
+      this.xterm_.write('\r\n');
+      let line = this.line_info_.buffer;
+      this.line_info_.set(""); 
+      this.at_prompt_ = false;
+      this.language_interface_.ExecCallback(line).then(x => {
+        this.history_.Push(line);
+        this.Prompt(x);
+      });
+    }
   }
 
   Write(text: string) {
@@ -799,8 +825,9 @@ export class TerminalImplementation {
             this.xterm_.writeln(line);
             if (!index) line = this.line_info_.buffer + line;
             this.line_info_.set("");
-            this.history_.Push(line);
+            this.at_prompt_ = false;
             this.language_interface_.ExecCallback(line).then(x => {
+              this.history_.Push(line);
               this.Prompt(x);
               resolve(x);
             });
@@ -834,6 +861,7 @@ export class TerminalImplementation {
           break;
         case "c":
           this.language_interface_.BreakCallback();
+          this.pending_exec_list_ = []; // just in case
           break;
         default:
           console.info("ctrl (unhandled):", event);
@@ -912,8 +940,38 @@ export class TerminalImplementation {
           case "Enter":
             if (this.autocomplete_.visible_) { this.autocomplete_.Accept(); return; }
             this.xterm_.write('\r\n');
-            this.history_.Push(this.line_info_.buffer);
-            this.language_interface_.ExecCallback(this.line_info_.buffer).then(x => this.Prompt(x));
+            {
+              // some updates to exec: (1) we clear buffer immediately. that 
+              // way if you type something, it doesn't accidentally get appended
+              // to the previous line. (2) we push history _after_ exec, basically
+              // only so that history doesn't return itself. 
+
+              // NEW: we want this to work intuitively if you type something
+              // while a command is running. with the above fix (1) that works;
+              // but it doesn't render to the next prompt before running. I'd 
+              // like to do that as well. we can base that on whether we are 
+              // currently at prompt. if not, push to a stack. make sure to 
+              // flush on break.
+
+              let line = this.line_info_.buffer;
+              this.line_info_.set(""); 
+
+              if(!this.at_prompt_){
+
+                // so now we don't exec here, but wait until the next prompt.
+                // that works as desired (above). be sure to dump this stack
+                // on an interrupt.
+
+                this.pending_exec_list_.push(line);
+                return; 
+              }
+
+              this.at_prompt_ = false;
+              this.language_interface_.ExecCallback(line).then(x => {
+                this.history_.Push(line);
+                this.Prompt(x);
+              });
+            }
             this.dismissed_tip_ = null;
             break;
 
@@ -1070,15 +1128,12 @@ export class TerminalImplementation {
     
     this.language_interface_.pipe_.console_messages.subscribe(console_message => {
       if( console_message.type === ConsoleMessageType.PROMPT ){
-        // console.info(`(${this.language_interface_.label_}) Prompt (${console_message.id})`, console_message.text);
         this.Prompt({
           text: console_message.text,
           push_stack: console_message.id !== 0 // true
         });
       }
       else if( console_message.type === ConsoleMessageType.MIME_DATA ){
-        //console.info( "MIME", console_message );
-        //window['mime'] = console_message;
         if(console_message.mime_data && console_message.mime_data.length){
           switch( console_message.mime_type ){
           case "text/html":
@@ -1086,7 +1141,6 @@ export class TerminalImplementation {
 
             // this might be svg, in which case we want to display it as 
             // an image. otherwise it should be html...
-
 
             // ...
 
@@ -1111,7 +1165,10 @@ export class TerminalImplementation {
         }
       }
       else {
-        this.PrintConsole(console_message.text, !this.language_interface_.pipe_.busy);
+        // console.info( "console message; busy =", this.language_interface_.pipe_.busy, "ip =", this.initial_prompt_, console_message.text);
+        // let offset = (!this.language_interface_.pipe_.busy || !this.initial_prompt_);
+        // let offset = (!this.language_interface_.pipe_.busy); // || !this.initial_prompt_);
+        this.PrintConsole(console_message.text, this.at_prompt_);
       }
     });
 
