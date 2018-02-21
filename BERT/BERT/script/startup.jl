@@ -169,19 +169,13 @@ module BERT
   #---------------------------------------------------------------------------- 
   function Banner()
 
-    normal = "\033[0m";
-    reverse ="\033[7m";
-
     version = ENV["BERT_VERSION"];
 
     print("""
-BERT version $(version). http://bert-toolkit.com. 
-$(reverse)This is not the default Julia REPL$(normal). Many things are similar, 
-but some things are different. Please send feedback if you have questions or 
+BERT version $(version) (http://bert-toolkit.com).\n
+$(Base.text_colors[:light_blue])This is not the default Julia REPL$(Base.text_colors[:normal]). Many things are similar, but some 
+things are different. Please send feedback if you have questions or 
 comments, and save your work often. \n\n""");
-
-This is not the default Julia REPL. Many things are similar, but some things are different. Please send feedback if
-you have questions or comments, and save your work often. \n\n""");
 
 
   end

@@ -139,5 +139,5 @@ with( BERT, {
 #
 
 cat(paste0("---\n
-BERT Version ", Sys.getenv("BERT_VERSION"), ". http://bert-toolkit.com\n
+BERT Version ", Sys.getenv("BERT_VERSION"), " (http://bert-toolkit.com).\n
 "));
