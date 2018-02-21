@@ -1,0 +1,15 @@
+
+console
+module
+
+*.exp
+*.exe
+*.xll
+*.dll
+*.ilk
+*.pdb
+*.lib
+
+bert-config.json
+
+
