@@ -58,9 +58,6 @@
     <ClInclude Include="include\excel_com_type_libraries.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\string_utilities.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="include\message_utilities.h">
       <Filter>PB</Filter>
     </ClInclude>
@@ -83,6 +80,12 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Common\process_exit_codes.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\json11\json11.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\string_utilities.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
@@ -132,6 +135,9 @@
       <Filter>language-services</Filter>
     </ClCompile>
     <ClCompile Include="src\file_change_watcher.cc">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\json11\json11.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

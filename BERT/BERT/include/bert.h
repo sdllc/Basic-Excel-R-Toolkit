@@ -8,10 +8,14 @@
 
 #include <unordered_map>
 
+#include "json11/json11.hpp"
+
 #include "com_object_map.h"
 #include "language_service.h"
 #include "callback_info.h"
 #include "file_change_watcher.h"
+
+#define CONFIG_FILE_NAME "bert-config.json"
 
 class BERT {
 
@@ -21,6 +25,13 @@ private:
 
 private:
 
+  /** home directory comes from registry (for the time being) */
+  std::string home_directory_;
+
+  /** config data root */
+  json11::Json config_;
+
+  /** generated object map */
   COMObjectMap object_map_;
 
   /** marshalled excel pointer for calls from separate threads */
@@ -110,6 +121,11 @@ protected:
    * the console asking it to shut down cleanly.
    */
   void ShutdownConsole();
+
+  /**
+   * 
+   */
+  void ReadConfigFile();
 
 public:
 

@@ -10,6 +10,8 @@
 #include "windows_api_functions.h"
 #include "process_exit_codes.h"
 
+#include "json11/json11.hpp"
+
 /**
  * class abstracts common language service features
  */

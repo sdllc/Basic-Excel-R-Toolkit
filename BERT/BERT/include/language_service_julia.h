@@ -2,47 +2,48 @@
 
 #include "language_service.h"
 
+#define JULIA_LANGUAGE_NAME   "Julia"
+#define JULIA_EXECUTABLE      "controljulia.exe"
+#define JULIA_LANGUAGE_PREFIX "JL"
+#define JULIA_EXTENSIONS      "jl", "julia"
+
 class LanguageServiceJulia : public LanguageService {
 
 private:
   std::string julia_home_;
 
 public:
-  LanguageServiceJulia(CallbackInfo &callback_info, COMObjectMap &object_map, DWORD dev_flags)
+  LanguageServiceJulia(CallbackInfo &callback_info, COMObjectMap &object_map, DWORD dev_flags, const json11::Json &config, const std::string &home_directory)
     : LanguageService(callback_info, object_map, dev_flags)
   {
 
-    std::string julia_home;
-    std::string child_path;
-    std::string pipe_name;
+    std::string julia_home = config["BERT"]["Julia"]["home"].string_value();
+    // APIFunctions::GetRegistryString(julia_home, "BERT2.JuliaHome");
 
-    APIFunctions::GetRegistryString(julia_home, "BERT2.JuliaHome");
-    APIFunctions::GetRegistryString(child_path, "BERT2.ControlJuliaCommand");
+    std::string pipe_name;
     APIFunctions::GetRegistryString(pipe_name, "BERT2.OverrideJuliaPipeName");
     
-    std::string bin_path;
-    APIFunctions::GetRegistryString(bin_path, "BERT2.BinDir");
+    std::string bin_path = home_directory;
 
     bin_path.append("/");
-    bin_path.append(child_path);
-    child_path = bin_path;
+    bin_path.append(JULIA_EXECUTABLE);
 
     this->configured_ = julia_home.length();
     if (!this->configured_) return;
 
     if (!pipe_name.length()) {
       std::stringstream ss;
-      ss << "BERT2-PIPE-JL-" << _getpid();
+      ss << "BERT2-PIPE-" << JULIA_LANGUAGE_PREFIX << "-" << _getpid();
       pipe_name = ss.str();
     }
 
     pipe_name_ = pipe_name;
-    child_path_ = child_path;
+    child_path_ = bin_path;
     julia_home_ = julia_home;
 
-    language_prefix_ = "JL";
-    language_name_ = "Julia";
-    file_extensions_ = { "jl", "julia" };
+    language_prefix_ = JULIA_LANGUAGE_PREFIX; 
+    language_name_ = JULIA_LANGUAGE_NAME; 
+    file_extensions_ = { JULIA_EXTENSIONS }; 
 
   }
 
@@ -51,6 +52,8 @@ public:
   void Initialize() {
     if(connected_)
       uintptr_t callback_thread_ptr = _beginthreadex(0, 0, CallbackThreadFunction, this, 0, 0);
+
+    // FIXME: move startup code to control process
 
     // startup code
     std::string startup_code = APIFunctions::ReadResource(MAKEINTRESOURCE(IDR_RCDATA2));
@@ -64,6 +67,8 @@ public:
       for (auto line : lines) code->add_line(line);
       Call(response, call);
     }
+
+    // FIXME: make this (the post init call) generic so we can normalize
 
     // part two
     {

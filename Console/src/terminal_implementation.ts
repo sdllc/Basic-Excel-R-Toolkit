@@ -374,7 +374,6 @@ export class TerminalImplementation {
 
   private static function_tip_node_:HTMLElement;
 
-  // private prompt_stack_: string[] = [];
   private prompt_stack_:LineInfo[] = [];
 
   private PrintLine:PrintLineFunction;
@@ -1016,7 +1015,6 @@ export class TerminalImplementation {
     let obj = this.xterm_ as any;
     let background = ( this.options_.theme && this.options_.theme.background ) ? this.options_.theme.background : "";
 
-    console.info( "UCB", background);
     this.node_.style.background = background;
 
   }

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <Windows.h>
+#include <Shlwapi.h>
+
 #include <string>
 #include <vector>
 
@@ -40,5 +42,8 @@ public:
 
   /** sets path (for uncaching) */
   static void SetPath(const std::string &path);
+
+  /** get the path of the current module (not containing process) */
+  static std::string ModulePath();
 
 };

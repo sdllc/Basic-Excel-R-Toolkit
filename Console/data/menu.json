@@ -21,7 +21,12 @@
       {
         "label": "Edit", "id": "edit",
         "items": [
-
+          { "label": "Cut", "id": "cut" },
+          { "label": "Copy", "id": "copy"  },
+          { "label": "Paste", "id": "paste"  },
+          { "type": "separator" },
+          { "label": "Find", "id": "find"  },
+          { "label": "Replace", "id": "replace"  }
         ]
       },
       {
@@ -36,12 +41,16 @@
               { "label": "Top/Bottom", "type": "radio", "id": "layout-vertical" }
             ]
           },
-          {
-            "label": "Preferences", "id": "preferences"
-          },
+          { "label": "Preferences", "id": "preferences" }, 
+          { "label": "User Stylesheet", "id": "user-stylesheet" },
           { "type": "separator" },
           { "label": "Reload", "accelerator": "Ctrl+R", "id": "reload" },
           { "label": "Toggle Developer Tools", "accelerator": "Ctrl+Shift+I", "id": "toggle-developer-tools" }
+        ]
+      },
+      {
+        "label": "BERT", "id": "bert", "items": [
+          
         ]
       }
     ]

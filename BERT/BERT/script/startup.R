@@ -1,4 +1,12 @@
 
+
+#===============================================================================
+#
+# load module. moved from code.
+#
+#===============================================================================
+library(BERTModule, lib.loc=paste0(Sys.getenv("BERT2_HOME_DIRECTORY"), "module"));
+
 #===============================================================================
 #
 # first we create the BERT environment with utility functions
@@ -130,8 +138,6 @@ with( BERT, {
 # banner
 #
 
-cat(paste0("---
-
-BERT ", Sys.getenv("BERT_VERSION"), "
-
+cat(paste0("---\n
+BERT Version ", Sys.getenv("BERT_VERSION"), ". http://bert-toolkit.com\n
 "));

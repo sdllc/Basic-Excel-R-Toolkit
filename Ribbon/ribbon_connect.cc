@@ -37,18 +37,19 @@ STDMETHODIMP CConnect::GetCustomUI(BSTR RibbonID, BSTR *pbstrRibbonXML)
   }
   return S_OK;
 }
+ 
+void __stdcall BERTRibbon2_LookupFunction(void) {}
 
 // CConnect
 STDMETHODIMP CConnect::OnConnection(IDispatch *pApplication, AddInDesignerObjects::ext_ConnectMode /*ConnectMode*/, IDispatch *pAddInInst, SAFEARRAY ** /*custom*/)
 {
-  const char path_separator[] = "\\";
+  char path[MAX_PATH];
 
-  std::string xll_path;
-  GetRegistryString(xll_path, HKEY_CURRENT_USER, "Software\\BERT", "BERT2.BinDir");
+  GetModuleFileNameA(_AtlBaseModule.m_hInst, path, sizeof(path));
+  PathRemoveFileSpecA(path); // deprecated, but the replacement is windows 8+ only
 
-  if (xll_path.length() && xll_path.compare(xll_path.length() - 1, 1, path_separator)) {
-    xll_path.append(path_separator);
-  }
+  std::string xll_path = path;
+  xll_path.append("\\"); // is there a win32 constant for path separator?
 
 #ifdef _DEBUG 
 #ifdef _WIN64

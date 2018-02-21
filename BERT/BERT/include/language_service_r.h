@@ -2,6 +2,11 @@
 
 #include "language_service.h"
 
+#define R_LANGUAGE_NAME   "R"
+#define R_EXECUTABLE      "controlr.exe"
+#define R_LANGUAGE_PREFIX "R"
+#define R_EXTENSIONS      "r", "rsrc", "rscript"
+
 class LanguageServiceR : public LanguageService {
 
 public:
@@ -9,40 +14,36 @@ public:
 
 public:
 
-  LanguageServiceR(CallbackInfo &callback_info, COMObjectMap &object_map, DWORD dev_flags)
+  LanguageServiceR(CallbackInfo &callback_info, COMObjectMap &object_map, DWORD dev_flags, const json11::Json &config, const std::string &home_directory)
     : LanguageService(callback_info, object_map, dev_flags)
   {
-    std::string r_home;
-    std::string child_path;
-    std::string pipe_name;
+    std::string r_home = config["BERT"]["R"]["home"].string_value();
 
-    APIFunctions::GetRegistryString(r_home, "BERT2.RHome");
-    APIFunctions::GetRegistryString(child_path, "BERT2.ControlRCommand");
+    std::string pipe_name;
     APIFunctions::GetRegistryString(pipe_name, "BERT2.OverrideRPipeName");
     
     this->configured_ = r_home.length();
     if (!this->configured_) return;
 
-    std::string bin_path;
-    APIFunctions::GetRegistryString(bin_path, "BERT2.BinDir");
+    std::string bin_path = home_directory;
 
     bin_path.append("/");
-    bin_path.append(child_path);
-    child_path = bin_path;
+    bin_path.append(R_EXECUTABLE);
+    //child_path = bin_path;
 
     if (!pipe_name.length()) {
       std::stringstream ss;
-      ss << "BERT2-PIPE-R-" << _getpid();
+      ss << "BERT2-PIPE-" << R_LANGUAGE_PREFIX << "-" << _getpid();
       pipe_name = ss.str();
     }
 
     pipe_name_ = pipe_name;
-    child_path_ = child_path;
+    child_path_ = bin_path;
     r_home_ = r_home;
     
-    file_extensions_ = { "r", "rscript", "rsrc" };
-    language_prefix_ = "R";
-    language_name_ = "R";
+    file_extensions_ = { R_EXTENSIONS };
+    language_prefix_ = R_LANGUAGE_PREFIX;
+    language_name_ = R_LANGUAGE_NAME;
   }
 
 public:
@@ -52,13 +53,6 @@ public:
     if (connected_) {
       uintptr_t callback_thread_ptr = _beginthreadex(0, 0, CallbackThreadFunction, this, 0, 0);
       
-      std::string library_path;
-      APIFunctions::GetRegistryString(library_path, "BERT2.LibraryPath");
-      library_path = StringUtilities::EscapeBackslashes(library_path);
-      std::string library_command = "library(BERTModule, lib.loc = \"";
-      library_command += library_path;
-      library_command += "\")";
-
       // get embedded startup code, split into lines
       // FIXME: why do we require that this be in multiple lines?
 
@@ -73,9 +67,7 @@ public:
 
       call.set_wait(false);
       auto code = call.mutable_code();
-      code->add_line(library_command);
       for (auto line : lines) code->add_line(line);
-
       Call(response, call);
     }
 

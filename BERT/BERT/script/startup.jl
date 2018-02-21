@@ -175,9 +175,14 @@ module BERT
     version = ENV["BERT_VERSION"];
 
     print("""
-BERT version $(version). $(reverse)This is not the default Julia REPL$(normal). Many things
-are similar, but some things are different. Please send feedback if
+BERT version $(version). http://bert-toolkit.com. 
+$(reverse)This is not the default Julia REPL$(normal). Many things are similar, 
+but some things are different. Please send feedback if you have questions or 
+comments, and save your work often. \n\n""");
+
+This is not the default Julia REPL. Many things are similar, but some things are different. Please send feedback if
 you have questions or comments, and save your work often. \n\n""");
+
 
   end
 

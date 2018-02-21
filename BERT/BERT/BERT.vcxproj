@@ -19,7 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Common\json11\json11.hpp" />
     <ClInclude Include="..\..\Common\process_exit_codes.h" />
+    <ClInclude Include="..\..\Common\string_utilities.h" />
     <ClInclude Include="..\..\PB\variable.pb.h" />
     <ClInclude Include="ExcelLib\XLCALL.H" />
     <ClInclude Include="include\callback_info.h" />
@@ -39,7 +41,6 @@
     <ClInclude Include="include\function_descriptor.h" />
     <ClInclude Include="include\stdafx.h" />
     <ClInclude Include="include\targetver.h" />
-    <ClInclude Include="include\string_utilities.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
@@ -49,6 +50,7 @@
     <None Include="src\bert.def" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Common\json11\json11.cpp" />
     <ClCompile Include="..\..\PB\variable.pb.cc" />
     <ClCompile Include="ExcelLib\XLCALL.CPP" />
     <ClCompile Include="src\com_object_map.cc" />
@@ -123,7 +125,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <TargetExt>.xll</TargetExt>
-    <OutDir>$(SolutionDir)</OutDir>
+    <OutDir>$(SolutionDir)..\Build\</OutDir>
     <TargetName>$(ProjectName)64D</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -134,7 +136,7 @@
     <LinkIncremental>false</LinkIncremental>
     <TargetExt>.xll</TargetExt>
     <TargetName>$(ProjectName)64</TargetName>
-    <OutDir>$(SolutionDir)</OutDir>
+    <OutDir>$(SolutionDir)..\Build\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

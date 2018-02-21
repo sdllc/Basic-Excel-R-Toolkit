@@ -3,6 +3,18 @@
 
 extern HMODULE global_module_handle;
 
+std::string APIFunctions::ModulePath() {
+
+  char path[MAX_PATH];
+  GetModuleFileNameA(global_module_handle, path, sizeof(path));
+  PathRemoveFileSpecA(path); // deprecated, but the replacement is windows 8+ only
+
+  std::string module_path(path);
+  module_path.append("\\");
+  return module_path;
+
+}
+
 std::vector<std::pair<std::string, FILETIME>> APIFunctions::ListDirectory(const std::string &directory){
   
   char path[MAX_PATH];
