@@ -141,7 +141,6 @@ int RLoop(const char *rhome, const char *ruser, int argc, char ** argv) {
 
   structRstart rp;
   Rstart Rp = &rp;
-  char Rversion[25];
 
   char RHome[MAX_PATH];
   char RUser[MAX_PATH];
@@ -150,14 +149,6 @@ int RLoop(const char *rhome, const char *ruser, int argc, char ** argv) {
 
   if (rhome) strcpy_s(RHome, rhome);
   if (ruser) strcpy_s(RUser, ruser);
-
-  /*
-  sprintf_s(Rversion, 25, "%s.%s", R_MAJOR, R_MINOR);
-  if (strcmp(getDLLVersion(), Rversion) != 0) {
-    cerr << "Error: R.DLL version does not match" << endl;
-    return -1;
-  }
-  */
 
   R_setStartTime();
   R_DefParams(Rp);

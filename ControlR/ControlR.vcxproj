@@ -170,7 +170,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);WIN32;_WIN32</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\PB;..\..\protobuf-3.5.0\src;E:\BERT\R-3.4.1\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\common;..\PB;..\..\protobuf-3.5.0\src;E:\BERT\R-3.4.1\include</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4146</DisableSpecificWarnings>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
