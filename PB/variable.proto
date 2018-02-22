@@ -93,6 +93,11 @@ message Variable {
 /** why not have a single string and then split on the RX side? */
 message Code {
   repeated string line = 1;
+
+  // flag indicates this is startup code; run and then take any
+  // post-init actions. saves a roundtrip transaction.
+  
+  bool startup = 2;
 }
 
 /** distinction between calls and accessors (and accesor type) */

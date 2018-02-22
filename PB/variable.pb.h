@@ -1100,11 +1100,18 @@ class Code : public ::google::protobuf::Message /* @@protoc_insertion_point(clas
   const ::google::protobuf::RepeatedPtrField< ::std::string>& line() const;
   ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_line();
 
+  // bool startup = 2;
+  void clear_startup();
+  static const int kStartupFieldNumber = 2;
+  bool startup() const;
+  void set_startup(bool value);
+
   // @@protoc_insertion_point(class_scope:BERTBuffers.Code)
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
   ::google::protobuf::RepeatedPtrField< ::std::string> line_;
+  bool startup_;
   mutable int _cached_size_;
   friend struct ::protobuf_variable_2eproto::TableStruct;
   friend void ::protobuf_variable_2eproto::InitDefaultsCodeImpl();
@@ -4059,6 +4066,20 @@ inline ::google::protobuf::RepeatedPtrField< ::std::string>*
 Code::mutable_line() {
   // @@protoc_insertion_point(field_mutable_list:BERTBuffers.Code.line)
   return &line_;
+}
+
+// bool startup = 2;
+inline void Code::clear_startup() {
+  startup_ = false;
+}
+inline bool Code::startup() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.Code.startup)
+  return startup_;
+}
+inline void Code::set_startup(bool value) {
+  
+  startup_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.Code.startup)
 }
 
 // -------------------------------------------------------------------
