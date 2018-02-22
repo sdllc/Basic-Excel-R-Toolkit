@@ -219,7 +219,6 @@ Preferences.preferences.first(x => x).subscribe(preferences => {
     // subscribe to preference changes
 
     Preferences.preferences.subscribe(prefs => {
-      console.info("terminals prefs update");
       let shell_preferences = prefs.shell || {}
       terminals.Terminals().forEach(terminal => {
         terminal.ApplyPreferences(shell_preferences);
