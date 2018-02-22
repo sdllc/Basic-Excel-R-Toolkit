@@ -1628,7 +1628,8 @@ proto.BERTBuffers.Code.prototype.toObject = function(opt_includeInstance) {
  */
 proto.BERTBuffers.Code.toObject = function(includeInstance, msg) {
   var f, obj = {
-    lineList: jspb.Message.getRepeatedField(msg, 1)
+    lineList: jspb.Message.getRepeatedField(msg, 1),
+    startup: jspb.Message.getFieldWithDefault(msg, 2, false)
   };
 
   if (includeInstance) {
@@ -1669,6 +1670,10 @@ proto.BERTBuffers.Code.deserializeBinaryFromReader = function(msg, reader) {
       var value = /** @type {string} */ (reader.readString());
       msg.addLine(value);
       break;
+    case 2:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setStartup(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -1705,6 +1710,13 @@ proto.BERTBuffers.Code.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getStartup();
+  if (f) {
+    writer.writeBool(
+      2,
+      f
+    );
+  }
 };
 
 
@@ -1734,6 +1746,23 @@ proto.BERTBuffers.Code.prototype.addLine = function(value, opt_index) {
 
 proto.BERTBuffers.Code.prototype.clearLineList = function() {
   this.setLineList([]);
+};
+
+
+/**
+ * optional bool startup = 2;
+ * Note that Boolean fields may be set to 0/1 when serialized from a Java server.
+ * You should avoid comparisons like {@code val === true/false} in those cases.
+ * @return {boolean}
+ */
+proto.BERTBuffers.Code.prototype.getStartup = function() {
+  return /** @type {boolean} */ (jspb.Message.getFieldWithDefault(this, 2, false));
+};
+
+
+/** @param {boolean} value */
+proto.BERTBuffers.Code.prototype.setStartup = function(value) {
+  jspb.Message.setProto3BooleanField(this, 2, value);
 };
 
 
