@@ -67,12 +67,6 @@
     <ClInclude Include="include\language_service.h">
       <Filter>language-services</Filter>
     </ClInclude>
-    <ClInclude Include="include\language_service_julia.h">
-      <Filter>language-services</Filter>
-    </ClInclude>
-    <ClInclude Include="include\language_service_r.h">
-      <Filter>language-services</Filter>
-    </ClInclude>
     <ClInclude Include="include\file_change_watcher.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -87,6 +81,9 @@
     </ClInclude>
     <ClInclude Include="..\..\Common\string_utilities.h">
       <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\language_desc.h">
+      <Filter>language-services</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -28,10 +28,9 @@
     <ClInclude Include="include\com_object_map.h" />
     <ClInclude Include="include\debug_functions.h" />
     <ClInclude Include="include\file_change_watcher.h" />
-    <ClInclude Include="include\language_service_julia.h" />
+    <ClInclude Include="include\language_desc.h" />
     <ClInclude Include="include\language_service.h" />
     <ClInclude Include="include\message_utilities.h" />
-    <ClInclude Include="include\language_service_r.h" />
     <ClInclude Include="include\windows_api_functions.h" />
     <ClInclude Include="include\basic_functions.h" />
     <ClInclude Include="include\bert.h" />

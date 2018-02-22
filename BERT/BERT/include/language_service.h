@@ -12,6 +12,7 @@
 #include "process_exit_codes.h"
 
 #include "json11/json11.hpp"
+#include "language_desc.h"
 
 #define PIPE_BUFFER_SIZE (1024*8)
 
@@ -102,6 +103,9 @@ protected:
 
 public:
 
+  LanguageService(CallbackInfo &callback_info, COMObjectMap &object_map, DWORD dev_flags, const json11::Json &config, const std::string &home_directory, const LanguageDescriptor &descriptor);
+
+  /*
   LanguageService(CallbackInfo &callback_info, COMObjectMap &object_map, DWORD dev_flags)
     : callback_info_(callback_info)
     , object_map_(object_map)
@@ -112,6 +116,7 @@ public:
   {
     memset(&io_, 0, sizeof(io_));
   }
+  */
 
   /** preferentially use the shutdown method instead of destructor */
   ~LanguageService() {}
@@ -210,6 +215,6 @@ public:
   /**
    * replace tokens in string. FIXME: make more generic
    */
-  void ParameterizeString(std::string &str);
+  void InterpolateString(std::string &str);
 
 };

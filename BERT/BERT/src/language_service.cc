@@ -10,49 +10,41 @@
 // this may cause a problem if it rolls over.
 uint32_t LanguageService::transaction_id_ = 1;
 
-/** default implementation probably not usable */
-int LanguageService::StartChildProcess(HANDLE job_handle) {
+LanguageService::LanguageService(CallbackInfo &callback_info, COMObjectMap &object_map, DWORD dev_flags, const json11::Json &config, const std::string &home_directory, const LanguageDescriptor &descriptor)
+  : callback_info_(callback_info)
+  , object_map_(object_map)
+  , dev_flags_(dev_flags)
+  , connected_(false)
+  , configured_(false)
+  , resource_id_(0)
+{
+  memset(&io_, 0, sizeof(io_));
 
-  size_t length = child_path_.length() + 16;
-  char *command_line = new char[length];
-  sprintf_s(command_line, length, "\"%s\"", child_path_.c_str());
-  int result = LaunchProcess(job_handle, command_line);
-  delete[] command_line;
-  return result;
+  language_home_ = config["BERT"][descriptor.name_]["home"].string_value();
+  this->configured_ = language_home_.length();
+  if (!this->configured_) return;
 
-  /*
-  STARTUPINFOA si;
+  file_extensions_ = descriptor.extensions_;
+  language_prefix_ = descriptor.prefix_;
+  language_name_ = descriptor.name_;
 
-  ZeroMemory(&si, sizeof(si));
-  si.cb = sizeof(si);
+  resource_id_ = descriptor.startup_resource_;
+  prepend_path_ = descriptor.prepend_path_;
+  command_line_arguments_ = descriptor.command_arguments_;
 
-  ZeroMemory(&process_info_, sizeof(process_info_));
+  child_path_ = home_directory;
+  child_path_.append("\\");
+  child_path_.append(descriptor.executable_);
 
-  int rslt = 0;
+  std::string override_key = "BERT2.Override$NAMEPipeName";
+  InterpolateString(override_key);
+  APIFunctions::GetRegistryString(pipe_name_, override_key.c_str());
 
-  DWORD creation_flags = CREATE_NO_WINDOW;
-
-  if (dev_flags_ & 0x01) creation_flags = 0;
-
-  if (!CreateProcessA(0, args, 0, 0, FALSE, creation_flags, 0, 0, &si, &process_info_))
-  {
-    DebugOut("CreateProcess failed (%d).\n", GetLastError());
-    rslt = GetLastError();
+  if (!pipe_name_.length()) {
+    std::stringstream ss;
+    ss << "BERT2-PIPE-" << descriptor.prefix_ << "-" << _getpid();
+    pipe_name_ = ss.str();
   }
-  else {
-    child_process_id_ = process_info_.dwProcessId;
-    if (job_handle) {
-      if (!AssignProcessToJobObject(job_handle, process_info_.hProcess))
-      {
-        DebugOut("Could not AssignProcessToObject\n");
-      }
-    }
-  }
-
-  delete[] args;
-  return rslt;
-
-  */
 
 }
 
@@ -278,10 +270,25 @@ void LanguageService::ReadSourceFile(const std::string &file) {
   Call(response, call);
 }
 
-void LanguageService::ParameterizeString(std::string &str) {
+void LanguageService::InterpolateString(std::string &str) {
 
+  auto replace_function = [](std::string &haystack, std::string needle, std::string replacement) {
+    for (std::string::size_type i = 0; (i = haystack.find(needle, i)) != std::string::npos;)
+    {
+      haystack.replace(i, needle.length(), replacement);
+      i += replacement.length();
+    }
+  };
+  
+#ifdef _WIN64
+  const char arch[] = "x64";
+#else
+  const char arch[] = "i386";
+#endif
 
-
+  replace_function(str, "$HOME", language_home_);
+  replace_function(str, "$ARCH", arch);
+  replace_function(str, "$NAME", language_name_);
 
 }
 
@@ -448,9 +455,6 @@ void LanguageService::Call(BERTBuffers::CallResponse &response, BERTBuffers::Cal
 
 }
 
-extern void DumpJSON(const google::protobuf::Message &message, const char *path );
-
-
 FUNCTION_LIST LanguageService::MapLanguageFunctions(uint32_t key) {
 
   FUNCTION_LIST function_list;
@@ -466,7 +470,7 @@ FUNCTION_LIST LanguageService::MapLanguageFunctions(uint32_t key) {
 
   Call(rsp, call);
 
-  DumpJSON(rsp, "c:\\temp\\dumped.json");
+  // DumpJSON(rsp, "c:\\temp\\dumped.json");
 
   if (rsp.operation_case() == BERTBuffers::CallResponse::OperationCase::kErr) return function_list; // error: no functions
   else if (rsp.operation_case() == BERTBuffers::CallResponse::OperationCase::kFunctionList) {
@@ -499,4 +503,37 @@ FUNCTION_LIST LanguageService::MapLanguageFunctions(uint32_t key) {
   return function_list;
 }
 
+int LanguageService::StartChildProcess(HANDLE job_handle) {
+
+  // cache
+  std::string old_path = APIFunctions::GetPath();
+
+  std::string prepend = prepend_path_;
+  InterpolateString(prepend);
+
+  // NOTE: this doesn't work when appending path -- only prepending. why?
+  APIFunctions::PrependPath(prepend);
+
+  std::string arguments = command_line_arguments_;
+  InterpolateString(arguments);
+
+  std::stringstream command;
+  command << "\"" << child_path_ << "\" -p " << pipe_name_ << " " << arguments;
+
+  // construct shell command and launch process
+  int len = command.str().length();
+  char *args = new char[len + 1];
+  memcpy_s(args, len, command.str().c_str(), len);
+  args[len] = 0;
+
+  int result = LaunchProcess(job_handle, args);
+
+  // clean up
+  delete[] args;
+
+  // restore
+  APIFunctions::SetPath(old_path);
+
+  return result;
+}
 
