@@ -277,6 +277,9 @@ void JlValueToVariable(BERTBuffers::Variable *variable, jl_value_t *value) {
     int nrows = jl_array->nrows;
     int len = jl_array->length;
 
+    results_array->set_cols(ncols);
+    results_array->set_rows(nrows);
+
     // std::cout << "arr: " << ncols << ", " << nrows << ", " << len << "; p? " << (jl_array->flags.ptrarray != 0) << std::endl;
 
     if (jl_array->flags.ptrarray) {
