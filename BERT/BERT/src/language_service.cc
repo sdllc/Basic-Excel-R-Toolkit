@@ -13,7 +13,7 @@ uint32_t LanguageService::transaction_id_ = 1;
 /** default implementation probably not usable */
 int LanguageService::StartChildProcess(HANDLE job_handle) {
 
-  int length = child_path_.length() + 16;
+  size_t length = child_path_.length() + 16;
   char *command_line = new char[length];
   sprintf_s(command_line, length, "\"%s\"", child_path_.c_str());
   int result = LaunchProcess(job_handle, command_line);
@@ -53,6 +53,38 @@ int LanguageService::StartChildProcess(HANDLE job_handle) {
   return rslt;
 
   */
+
+}
+
+void LanguageService::Initialize() {
+
+  if (connected_) {
+    uintptr_t callback_thread_ptr = _beginthreadex(0, 0, CallbackThreadFunction, this, 0, 0);
+
+    // get embedded startup code, split into lines
+    // FIXME: why do we require that this be in multiple lines?
+
+    if (resource_id_) {
+
+      std::string startup_code = APIFunctions::ReadResource(MAKEINTRESOURCE(resource_id_));
+      std::vector<std::string> lines;
+      StringUtilities::Split(startup_code, '\n', 1, lines, true);
+
+      BERTBuffers::CallResponse call, response;
+
+      // should maybe wait on this, so we know it's complete before we do next steps?
+      // A: no, the R process will queue it anyway (implicitly), all this does is avoid wire traffic
+
+      call.set_wait(false);
+      auto code = call.mutable_code();
+      for (auto line : lines) code->add_line(line);
+
+      // added this flag to support post-init, without requiring a separate transaction
+
+      code->set_startup(true);
+      Call(response, call);
+    }
+  }
 
 }
 
@@ -196,7 +228,7 @@ void LanguageService::Connect(HANDLE job_handle) {
   int rslt = StartChildProcess(job_handle);
   int errs = 0;
 
-  buffer_ = new char[8192];
+  buffer_ = new char[PIPE_BUFFER_SIZE];
   io_.hEvent = CreateEvent(0, TRUE, TRUE, 0); // FIXME: clean this up
 
   if (!rslt) {
@@ -246,13 +278,20 @@ void LanguageService::ReadSourceFile(const std::string &file) {
   Call(response, call);
 }
 
+void LanguageService::ParameterizeString(std::string &str) {
+
+
+
+
+}
+
 bool LanguageService::ValidFile(const std::string &file) {
 
   // path functions can't operate on const strings
 
   static char path[MAX_PATH];
 
-  int len = file.length();
+  size_t len = file.length();
   if (len > MAX_PATH - 2) len = MAX_PATH - 2;
   memcpy(path, file.c_str(), len);
   path[len] = 0;
@@ -324,7 +363,9 @@ void LanguageService::Call(BERTBuffers::CallResponse &response, BERTBuffers::Cal
     HANDLE handles[2] = { io_.hEvent, callback_info_.default_unsignaled_event_ };
 
     ResetEvent(io_.hEvent);
-    ReadFile(pipe_handle_, buffer_, 8192, 0, &io_);
+    ReadFile(pipe_handle_, buffer_, PIPE_BUFFER_SIZE, 0, &io_);
+
+    std::string message_buffer;
 
     while (true) {
       ResetEvent(callback_info_.default_signaled_event_); // set unsignaled
@@ -333,10 +374,21 @@ void LanguageService::Call(BERTBuffers::CallResponse &response, BERTBuffers::Cal
 
         DWORD rslt = GetOverlappedResultEx(pipe_handle_, &io_, &bytes, INFINITE, FALSE);
         if (rslt) {
-          if (!MessageUtilities::Unframe(response, buffer_, bytes)) {
-            DebugOut("parse err!\n");
-            response.set_err("parse error (0x10)");
-            break;
+
+          if (message_buffer.length()) {
+            message_buffer.append(buffer_, bytes);
+            if (!MessageUtilities::Unframe(response, message_buffer)) {
+              DebugOut("parse err [2]!\n");
+              response.set_err("parse error (0x10)");
+              break;
+            }
+          }
+          else {
+            if (!MessageUtilities::Unframe(response, buffer_, bytes)) {
+              DebugOut("parse err [1]!\n");
+              response.set_err("parse error (0x11)");
+              break;
+            }
           }
 
           // check for callback
@@ -358,7 +410,7 @@ void LanguageService::Call(BERTBuffers::CallResponse &response, BERTBuffers::Cal
 
             // ok
             ResetEvent(io_.hEvent);
-            ReadFile(pipe_handle_, buffer_, 8192, 0, &io_);
+            ReadFile(pipe_handle_, buffer_, PIPE_BUFFER_SIZE, 0, &io_);
 
             break;
           default:
@@ -370,10 +422,17 @@ void LanguageService::Call(BERTBuffers::CallResponse &response, BERTBuffers::Cal
         }
         else {
           DWORD err = GetLastError();
-          std::stringstream ss;
-          ss << "pipe error " << err;
-          response.set_err(ss.str());
-          break;
+          if (err == ERROR_MORE_DATA) {
+            message_buffer.append(buffer_, bytes);
+            ResetEvent(io_.hEvent);
+            ReadFile(pipe_handle_, buffer_, PIPE_BUFFER_SIZE, 0, &io_);
+          }
+          else {
+            std::stringstream ss;
+            ss << "pipe error " << err;
+            response.set_err(ss.str());
+            break;
+          }
         }
       }
       else {
