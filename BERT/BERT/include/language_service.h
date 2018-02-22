@@ -6,11 +6,14 @@
 #include "callback_info.h"
 #include <vector>
 #include <string>
+#include <regex>
 
 #include "windows_api_functions.h"
 #include "process_exit_codes.h"
 
 #include "json11/json11.hpp"
+
+#define PIPE_BUFFER_SIZE (1024*8)
 
 /**
  * class abstracts common language service features
@@ -82,6 +85,21 @@ protected:
 
   COMObjectMap &object_map_;
 
+  /** 
+   * resource ID of startup code 
+   * (TEMP, FIXME: move startup code to control processes)
+   */
+  int32_t resource_id_;
+
+  /** extra command-line arguments (parameterized) */
+  std::string command_line_arguments_;
+
+  /** home directory */
+  std::string language_home_;
+
+  /** will be prepended to the path; parameterized */
+  std::string prepend_path_;
+
 public:
 
   LanguageService(CallbackInfo &callback_info, COMObjectMap &object_map, DWORD dev_flags)
@@ -90,6 +108,7 @@ public:
     , dev_flags_(dev_flags)
     , connected_(false)
     , configured_(false)
+    , resource_id_(0)
   {
     memset(&io_, 0, sizeof(io_));
   }
@@ -153,8 +172,9 @@ public:
 
   /** 
    * second of two-part connect/initialize. abstract. 
+   * UPDATE: not abstract. parameterized.
    */
-  virtual void Initialize() = 0;
+  void Initialize();
 
   /**
    * clean up processes, pipes, resources
@@ -186,5 +206,10 @@ public:
    * function call is based on class fields only, so the default should be generally usable.
    */
   void Call(BERTBuffers::CallResponse &response, BERTBuffers::CallResponse &call);
+
+  /**
+   * replace tokens in string. FIXME: make more generic
+   */
+  void ParameterizeString(std::string &str);
 
 };

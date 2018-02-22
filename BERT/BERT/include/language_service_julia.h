@@ -6,11 +6,12 @@
 #define JULIA_EXECUTABLE      "controljulia.exe"
 #define JULIA_LANGUAGE_PREFIX "JL"
 #define JULIA_EXTENSIONS      "jl", "julia"
+#define JULIA_STARTUP_RSRC    IDR_RCDATA2
+
+#define JULIA_EXTRA_ARGUMENTS ""
+#define JULIA_PREPEND_PATH    "$HOME\\bin"
 
 class LanguageServiceJulia : public LanguageService {
-
-private:
-  std::string julia_home_;
 
 public:
   LanguageServiceJulia(CallbackInfo &callback_info, COMObjectMap &object_map, DWORD dev_flags, const json11::Json &config, const std::string &home_directory)
@@ -39,50 +40,18 @@ public:
 
     pipe_name_ = pipe_name;
     child_path_ = bin_path;
-    julia_home_ = julia_home;
+    language_home_ = julia_home;
 
     language_prefix_ = JULIA_LANGUAGE_PREFIX; 
     language_name_ = JULIA_LANGUAGE_NAME; 
     file_extensions_ = { JULIA_EXTENSIONS }; 
 
+    resource_id_ = JULIA_STARTUP_RSRC;
+
   }
 
 public:
 
-  void Initialize() {
-    if(connected_)
-      uintptr_t callback_thread_ptr = _beginthreadex(0, 0, CallbackThreadFunction, this, 0, 0);
-
-    // FIXME: move startup code to control process
-
-    // startup code
-    std::string startup_code = APIFunctions::ReadResource(MAKEINTRESOURCE(IDR_RCDATA2));
-    std::vector<std::string> lines;
-    StringUtilities::Split(startup_code, '\n', 1, lines, true);
-
-    {
-      BERTBuffers::CallResponse call, response;
-      call.set_wait(false);
-      auto code = call.mutable_code();
-      for (auto line : lines) code->add_line(line);
-      Call(response, call);
-    }
-
-    // FIXME: make this (the post init call) generic so we can normalize
-
-    // part two
-    {
-      BERTBuffers::CallResponse call, response;
-      auto function_call = call.mutable_function_call();
-      function_call->set_function("post-init"); 
-      function_call->set_target(BERTBuffers::CallTarget::system);
-      Call(response, call);
-    }
-
-
-
-  }
-  
   int StartChildProcess(HANDLE job_handle) {
     
     // cache
@@ -90,7 +59,7 @@ public:
 
     // update (NOTE: if you're just concatenating strings, you can string.append)
     std::stringstream path;
-    path << julia_home_ << "\\bin";
+    path << language_home_ << "\\bin";
     APIFunctions::PrependPath(path.str());
 
     // set command line, start child process

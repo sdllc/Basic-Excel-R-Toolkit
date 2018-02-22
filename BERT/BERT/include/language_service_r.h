@@ -6,11 +6,13 @@
 #define R_EXECUTABLE      "controlr.exe"
 #define R_LANGUAGE_PREFIX "R"
 #define R_EXTENSIONS      "r", "rsrc", "rscript"
+#define R_STARTUP_RSRC    IDR_RCDATA1
+
+#define R_EXTRA_ARGUMENTS "-r $HOME"
+#define R_PREPEND_PATH    "$HOME\\bin\\$ARCH"
 
 class LanguageServiceR : public LanguageService {
 
-public:
-  std::string r_home_;
 
 public:
 
@@ -39,41 +41,18 @@ public:
 
     pipe_name_ = pipe_name;
     child_path_ = bin_path;
-    r_home_ = r_home;
+    language_home_ = r_home;
     
     file_extensions_ = { R_EXTENSIONS };
     language_prefix_ = R_LANGUAGE_PREFIX;
     language_name_ = R_LANGUAGE_NAME;
+
+    resource_id_ = R_STARTUP_RSRC;
+
   }
 
 public:
   
-  void Initialize() {
-
-    if (connected_) {
-      uintptr_t callback_thread_ptr = _beginthreadex(0, 0, CallbackThreadFunction, this, 0, 0);
-      
-      // get embedded startup code, split into lines
-      // FIXME: why do we require that this be in multiple lines?
-
-      std::string startup_code = APIFunctions::ReadResource(MAKEINTRESOURCE(IDR_RCDATA1));
-      std::vector<std::string> lines;
-      StringUtilities::Split(startup_code, '\n', 1, lines, true);
-
-      BERTBuffers::CallResponse call, response;
-
-      // should maybe wait on this, so we know it's complete before we do next steps?
-      // A: no, the R process will queue it anyway (implicitly), all this does is avoid wire traffic
-
-      call.set_wait(false);
-      auto code = call.mutable_code();
-      for (auto line : lines) code->add_line(line);
-      Call(response, call);
-    }
-
-  }
-
-
   int StartChildProcess(HANDLE job_handle){
 
     // cache
@@ -81,7 +60,7 @@ public:
 
     // append; this is architecture-specific
     std::stringstream r_path;
-    r_path << r_home_ << "\\";
+    r_path << language_home_ << "\\";
 
     // we're not officially supporting 32-bit windows (or 32-bit R) anymore,
     // so this can drop (or rather get hardcoded to 64).
@@ -97,7 +76,7 @@ public:
 
     // construct shell command and launch process
     char *args = new char[1024];
-    sprintf_s(args, 1024, "\"%s\" -p %s -r %s", child_path_.c_str(), pipe_name_.c_str(), r_home_.c_str());
+    sprintf_s(args, 1024, "\"%s\" -p %s -r %s", child_path_.c_str(), pipe_name_.c_str(), language_home_.c_str());
 
     int result = LaunchProcess(job_handle, args);
 
