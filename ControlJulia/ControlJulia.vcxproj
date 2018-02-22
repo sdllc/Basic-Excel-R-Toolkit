@@ -136,13 +136,12 @@
     <ClInclude Include="include\control_julia.h" />
     <ClInclude Include="include\include_common.h" />
     <ClInclude Include="include\julia_interface.h" />
-    <ClInclude Include="include\pipe.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\Common\pipe_common.cc" />
     <ClCompile Include="..\PB\variable.pb.cc" />
     <ClCompile Include="src\control_julia.cc" />
     <ClCompile Include="src\julia_interface.cc" />
-    <ClCompile Include="src\pipe.cc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

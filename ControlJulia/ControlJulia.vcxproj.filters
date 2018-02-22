@@ -21,9 +21,6 @@
     <ClInclude Include="include\julia_interface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\pipe.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\control_julia.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -41,14 +38,14 @@
     <ClCompile Include="src\julia_interface.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\pipe.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\control_julia.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\PB\variable.pb.cc">
       <Filter>PB</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\pipe_common.cc">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

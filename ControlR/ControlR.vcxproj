@@ -19,10 +19,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\Common\pipe_common.cc" />
     <ClCompile Include="..\PB\variable.pb.cc" />
     <ClCompile Include="console_graphics_device.cpp" />
     <ClCompile Include="controlr.cpp" />
-    <ClCompile Include="pipe.cpp" />
     <ClCompile Include="rinterface_common.cpp" />
     <ClCompile Include="rinterface_win.cpp" />
   </ItemGroup>
@@ -35,7 +35,6 @@
     <ClInclude Include="controlr_common.h" />
     <ClInclude Include="controlr_rinterface.h" />
     <ClInclude Include="controlr_version.h" />
-    <ClInclude Include="pipe.hpp" />
     <ClInclude Include="util.hpp" />
   </ItemGroup>
   <ItemGroup>

@@ -1,5 +1,15 @@
 #pragma once
 
+#include <deque>
+#include <string>
+#include <vector>
+#include <sstream>
+#include <iostream>
+
+#include <SDKDDKVer.h>
+#include <windows.h>
+#include <process.h>
+
 /**
  * FIXME:
  *
@@ -24,8 +34,6 @@ private:
   OVERLAPPED write_io_;
   DWORD buffer_size_;
   std::string name_;
-
-  CRITICAL_SECTION critical_section;
 
   /** read buffer is a single read, limited to pipe buffer size */
   char *read_buffer_;
@@ -63,7 +71,7 @@ public:
   /** we have a notification about connection, do any housekeeping */
   void Connect(bool start_read = true);
 
-  DWORD BlockingRead(std::string &buf);
+  //DWORD BlockingRead(std::string &buf);
 
 
   DWORD Read(std::string &buffer, bool block = false);

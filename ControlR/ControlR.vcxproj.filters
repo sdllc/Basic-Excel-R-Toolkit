@@ -21,9 +21,6 @@
     <ClCompile Include="controlr.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="pipe.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="rinterface_common.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -31,6 +28,9 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="console_graphics_device.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\pipe_common.cc">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
@@ -51,9 +51,6 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="controlr_version.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="pipe.hpp">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="util.hpp">
