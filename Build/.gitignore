@@ -9,6 +9,9 @@ module
 *.ilk
 *.pdb
 *.lib
+*.tmp
+*.iobj
+*.ipdb
 
 bert-config.json
 
