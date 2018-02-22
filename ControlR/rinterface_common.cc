@@ -316,6 +316,57 @@ bool ReadSourceFile(const std::string &file) {
   return !err;
 }
 
+__inline bool HandleSimpleTypes(SEXP sexp, int len, int rtype, BERTBuffers::Array *arr, BERTBuffers::Variable *var, const std::vector<std::string> &levels = {}) {
+
+  if (Rf_isLogical(sexp) || rtype == LGLSXP)
+  {
+    for (int i = 0; i < len; i++) {
+      auto ptr = arr ? arr->add_data() : var;
+      int lgl = (INTEGER(sexp))[i];
+      if (lgl == NA_LOGICAL) {
+        ptr->mutable_err()->set_type(BERTBuffers::ErrorType::NA);
+      }
+      else {
+        ptr->set_boolean(lgl ? true : false);
+      }
+    }
+  }
+  else if (Rf_isFactor(sexp)) {
+    int levels_size = levels.size();
+    for (int i = 0; i < len; i++) {
+      auto ptr = arr ? arr->add_data() : var;
+      int level = INTEGER(sexp)[i];
+      if (level > 0 && levels_size >= level) ptr->set_str(levels[level-1]); // factors are 1-based
+      else ptr->set_integer(level);
+    }
+  }
+  else if (Rf_isInteger(sexp) || rtype == INTSXP)
+  {
+    for (int i = 0; i < len; i++) {
+      auto ptr = arr ? arr->add_data() : var;
+      ptr->set_integer(INTEGER(sexp)[i]);
+    }
+  }
+  else if (isReal(sexp) || Rf_isNumber(sexp) || rtype == REALSXP)
+  {
+    for (int i = 0; i < len; i++) {
+      auto ptr = arr ? arr->add_data() : var;
+      ptr->set_real(REAL(sexp)[i]);
+    }
+  }
+  else if (isString(sexp) || rtype == STRSXP)
+  {
+    for (int i = 0; i < len; i++) {
+      auto ptr = arr ? arr->add_data() : var;
+      SEXP strsxp = STRING_ELT(sexp, i);
+      ptr->set_str(CHAR(Rf_asChar(strsxp)));
+    }
+  }
+  else return false;
+
+  return true; // handled
+}
+
 void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector <SEXP> envir_list = std::vector<SEXP>()) {
 
   if (!sexp || Rf_isNull(sexp)) {
@@ -353,13 +404,80 @@ void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector <SEXP> en
 
     int nrow = len;
     int ncol = 1;
+    BERTBuffers::Array *arr = 0;
+        
+    if (Rf_isFrame(sexp) && rtype == VECSXP) {
 
+      // this is a list of lists; we want to flatten it and we don't want nested 
+      // arrays. for this one, columns is the number of entries in the outer 
+      // list, and then we need to look at an inner list to check rows.
+  
+      ncol = len;
+      if (len > 0) {
+        SEXP first_list = VECTOR_ELT(sexp, 0);
+        nrow = Rf_length(first_list);
+      }
+      arr = var->mutable_arr();
+      arr->set_rows(nrow);
+      arr->set_cols(ncol);
+
+      // do we need to change direction?
+
+      int column_count = len; // we're going to reuse that var
+      for (int col = 0; col < column_count; col++) {
+
+        SEXP column_list = VECTOR_ELT(sexp, col);
+        int column_type = TYPEOF(column_list);
+        int column_len = Rf_length(column_list);
+
+        std::vector<std::string> level_strings;
+
+        if (Rf_isFactor(column_list)) {
+          SEXP levels = getAttrib(column_list, R_LevelsSymbol);
+          if (levels && Rf_isString(levels)) {
+            int level_count = Rf_length(levels);
+            for (int level = 0; level < level_count; level++) {
+              SEXP strsxp = STRING_ELT(levels, level);
+              level_strings.push_back(CHAR(Rf_asChar(strsxp)));
+            }
+          }
+        }
+
+        HandleSimpleTypes(column_list, column_len, column_type, arr, var, level_strings);
+
+      }
+
+      {
+        // column names
+        SEXP names = getAttrib(sexp, R_NamesSymbol);
+        int names_len = Rf_length(names);
+        if (names && names_len && isString(names)) {
+          for (int i = 0; i < names_len; i++) {
+            arr->add_colnames()->assign(CHAR(Rf_asChar(STRING_ELT(names, i))));
+          }
+        }
+      }
+
+      {
+        // row names
+        SEXP names = getAttrib(sexp, R_RowNamesSymbol);
+        int names_len = Rf_length(names);
+        if (names && names_len && isString(names)) {
+          for (int i = 0; i < names_len; i++) {
+            arr->add_rownames()->assign(CHAR(Rf_asChar(STRING_ELT(names, i))));
+          }
+        }
+      }
+
+      return;
+
+    }
+    
     if (Rf_isMatrix(sexp)) {
       nrow = Rf_nrows(sexp);
       ncol = Rf_ncols(sexp);
     }
 
-    BERTBuffers::Array *arr = 0;
     if (len > 1 || rtype == VECSXP) {
       arr = var->mutable_arr();
       arr->set_rows(nrow);
@@ -367,7 +485,7 @@ void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector <SEXP> en
     }
 
     // FIXME: should be able to template some of this 
-
+    /*
     if (Rf_isLogical(sexp))
     {
       for (int i = 0; i < len; i++) {
@@ -388,6 +506,14 @@ void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector <SEXP> en
         ptr->set_integer(INTEGER(sexp)[i]);
       }
     }
+    else if (rtype == INTSXP) { // wtf?
+
+      for (int i = 0; i < len; i++) {
+        auto ptr = arr ? arr->add_data() : var;
+        ptr->set_integer(INTEGER(sexp)[i]);
+      }
+
+    }
     else if (isReal(sexp) || Rf_isNumber(sexp))
     {
       for (int i = 0; i < len; i++) {
@@ -402,6 +528,10 @@ void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector <SEXP> en
         SEXP strsxp = STRING_ELT(sexp, i);
         ptr->set_str(CHAR(Rf_asChar(strsxp)));
       }
+    }
+    */
+    if (HandleSimpleTypes(sexp, len, rtype, arr, var)) {
+      // ...
     }
     else if (rtype == EXTPTRSXP) {
 

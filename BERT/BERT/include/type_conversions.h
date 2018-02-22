@@ -329,23 +329,48 @@ public:
       int count = rows * cols;
       int len = arr.data_size();
 
+      bool col_names = (cols && arr.colnames_size() == cols);
+      bool row_names = (rows && arr.rownames_size() == rows);
+
       if (len > 0 && count == 0) {
         count = len;
         cols = len;
         rows = 1;
       }
+      else if (count > len) {
+        x->xltype = xltypeErr;
+        x->val.err = xlerrValue;
+        std::cerr << "ERROR: invalid count/length" << std::endl;
+        return x;
+      }
 
       if (count > 0) {
+
+        if (col_names) rows++;
+        if (row_names) cols++;
 
         x->xltype = xltypeMulti | xlbitDLLFree;
         x->val.array.columns = cols;
         x->val.array.rows = rows;
-        x->val.array.lparray = new XLOPER12[count];
+        x->val.array.lparray = new XLOPER12[rows * cols];
 
         int index = 0;
         for (int c = 0; c < cols; c++) {
-          for (int r = 0; r < rows; r++) {
-            VariableToXLOPER(&(x->val.array.lparray[r * cols + c]), arr.data(index++));
+          if (row_names && c == 0) {
+            StringToXLOPER(&(x->val.array.lparray[0]), "");
+            for (int r = 1; r < rows; r++) {
+              StringToXLOPER(&(x->val.array.lparray[r * cols + c]), arr.rownames(r - 1));
+            }
+          }
+          else {
+            for (int r = 0; r < rows; r++) {
+              if (col_names && r == 0) {
+                StringToXLOPER(&(x->val.array.lparray[r * cols + c]), arr.colnames(c - 1));
+              }
+              else {
+                VariableToXLOPER(&(x->val.array.lparray[r * cols + c]), arr.data(index++));
+              }
+            }
           }
         }
 
