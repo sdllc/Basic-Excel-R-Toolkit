@@ -1,79 +1,15 @@
-/*
- * controlR
- * Copyright (C) 2016 Structured Data, LLC
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- */
 
-#include "variable.pb.h"
 
-#include "controlr_rinterface.h"
+#include "controlr.h"
 #include "controlr_common.h"
-#include "util.hpp"
-
 #include "console_graphics_device.h"
-
-// extern unsigned long long GetTimeMs64();
-
-// std::vector< std::string > cmdBuffer;
 
 // try to store fuel now, you jerks
 #undef clear
 #undef length
 
-extern bool ConsoleCallback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response);
-
-extern void DumpJSON(const google::protobuf::Message &message, const char *path);
-
-/*
-#include <google\protobuf\util\json_util.h>
-
-/ ** debug/util function * /
-void DumpJSON(const google::protobuf::Message &message, const char *path = 0) {
-  std::string str;
-  google::protobuf::util::JsonOptions opts;
-  opts.add_whitespace = true;
-  google::protobuf::util::MessageToJsonString(message, &str, opts);
-  if (path) {
-    FILE *f;
-    fopen_s(&f, path, "w");
-    if (f) {
-      fwrite(str.c_str(), sizeof(char), str.length(), f);
-      fflush(f);
-    }
-    fclose(f);
-  }
-  else std::cout << str << std::endl;
-}
-*/
-
-extern bool Callback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response);
-
-// forward
-void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector < SEXP > envir_list = std::vector < SEXP >());
-
-// forward
-void ReleaseExternalPointer(SEXP external_pointer);
-
-extern "C" {
-  extern void Rf_PrintWarnings();
-  extern Rboolean R_Visible;
+void ReleaseExternalPointer(SEXP external_pointer) {
+  RCallback(Rf_mkString("release-pointer"), external_pointer);
 }
 
 void SetNames(SEXP variable, const std::vector<std::string> &names) {
@@ -348,7 +284,7 @@ SEXP RCallSEXP(const BERTBuffers::CompositeFunctionCall &fc, bool wait, int &err
 
   SEXP env = R_GlobalEnv;
   std::vector<std::string> parts;
-  Util::split(fc.function().c_str(), '$', 0, parts, true);
+  StringUtilities::Split(fc.function().c_str(), '$', 0, parts, true);
 
   // resolve qualified name
 
@@ -378,6 +314,143 @@ bool ReadSourceFile(const std::string &file) {
   R_tryEval(Rf_lang2(Rf_install("source"), Rf_mkString(file.c_str())), R_GlobalEnv, &err);
   return !err;
 }
+
+void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector <SEXP> envir_list = std::vector<SEXP>()) {
+
+  if (!sexp || Rf_isNull(sexp)) {
+    var->set_nil(true);
+    return;
+  }
+
+  int len = Rf_length(sexp);
+  int rtype = TYPEOF(sexp);
+
+  if (rtype == SYMSXP) {
+
+    // we see this when we have a named value (usually a function argument)
+    // that has no value. we want to treat this as missing for COM functions,
+    // to leave a space.
+
+    // not sure if this comes up in other contexts, though, in which case
+    // we may be causing trouble. on the other hand, prior to this we were
+    // not handling it at all; which would result in nil/NULL (the default 
+    // variable value case)
+
+    if (len > 1) std::cerr << "WARNING: SYMSXP len > 1" << std::endl;
+
+    var->set_missing(true);
+    return;
+  }
+
+  if (len == 0) {
+    var->set_nil(true);
+    return;
+  }
+
+  if (Rf_isEnvironment(sexp)) {} // ...
+  else {
+
+    int nrow = len;
+    int ncol = 1;
+
+    if (Rf_isMatrix(sexp)) {
+      nrow = Rf_nrows(sexp);
+      ncol = Rf_ncols(sexp);
+    }
+
+    BERTBuffers::Array *arr = 0;
+    if (len > 1 || rtype == VECSXP) {
+      arr = var->mutable_arr();
+      arr->set_rows(nrow);
+      arr->set_cols(ncol);
+    }
+
+    // FIXME: should be able to template some of this 
+
+    if (Rf_isLogical(sexp))
+    {
+      for (int i = 0; i < len; i++) {
+        auto ptr = arr ? arr->add_data() : var;
+        int lgl = (INTEGER(sexp))[i];
+        if (lgl == NA_LOGICAL) {
+          ptr->mutable_err()->set_type(BERTBuffers::ErrorType::NA);
+        }
+        else {
+          ptr->set_boolean(lgl ? true : false);
+        }
+      }
+    }
+    else if (Rf_isInteger(sexp))
+    {
+      for (int i = 0; i < len; i++) {
+        auto ptr = arr ? arr->add_data() : var;
+        ptr->set_integer(INTEGER(sexp)[i]);
+      }
+    }
+    else if (isReal(sexp) || Rf_isNumber(sexp))
+    {
+      for (int i = 0; i < len; i++) {
+        auto ptr = arr ? arr->add_data() : var;
+        ptr->set_real(REAL(sexp)[i]);
+      }
+    }
+    else if (isString(sexp))
+    {
+      for (int i = 0; i < len; i++) {
+        auto ptr = arr ? arr->add_data() : var;
+        SEXP strsxp = STRING_ELT(sexp, i);
+        ptr->set_str(CHAR(Rf_asChar(strsxp)));
+      }
+    }
+    else if (rtype == EXTPTRSXP) {
+
+      auto com_pointer = var->mutable_com_pointer();
+      com_pointer->set_pointer(reinterpret_cast<uint64_t>(R_ExternalPtrAddr(sexp)));
+      std::cout << "read external pointer: " << std::hex << com_pointer->pointer() << std::endl;
+
+    }
+    else if (rtype == VECSXP) {
+      for (int i = 0; i < len; i++) {
+        SEXPToVariable(arr->add_data(), VECTOR_ELT(sexp, i));
+      }
+    }
+
+    /*
+    else if (rtype == SYMSXP) {
+
+    if (symbol_as_missing) {
+
+    // we see symbol types for empty arguments in constructed
+    // COM functions. however I'm not sure that's the _only_
+    // time we see symbols, so this is problematic.
+
+    // on the other hand, we were not handling this before at
+    // all, so it's not going to be any more broken.
+
+    for (int i = 0; i < len; i++) {
+    arr->add_data()->set_missing(true);
+    }
+
+    }
+    }
+    */
+
+    SEXP names = getAttrib(sexp, R_NamesSymbol);
+    if (names && TYPEOF(names) != 0) {
+      int nameslen = Rf_length(names);
+      for (int i = 0; i < len && i < nameslen; i++) {
+        auto ref = arr ? arr->mutable_data(i) : var;
+        SEXP name = STRING_ELT(names, i);
+        std::string str(CHAR(Rf_asChar(name)));
+        if (str.length()) { ref->set_name(str); }
+      }
+
+    }
+
+  }
+
+}
+
 
 BERTBuffers::CallResponse& ListScriptFunctions(BERTBuffers::CallResponse &response, const BERTBuffers::CallResponse &call) {
 
@@ -510,144 +583,6 @@ BERTBuffers::CallResponse& RExec(BERTBuffers::CallResponse &rsp, const BERTBuffe
   return rsp;
 }
 
-void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector < SEXP > envir_list) {
-
-  if (!sexp || Rf_isNull(sexp)) {
-    var->set_nil(true);
-    return;
-  }
-
-  int len = Rf_length(sexp);
-  int rtype = TYPEOF(sexp);
-
-  if (rtype == SYMSXP) {
-
-    // we see this when we have a named value (usually a function argument)
-    // that has no value. we want to treat this as missing for COM functions,
-    // to leave a space.
-
-    // not sure if this comes up in other contexts, though, in which case
-    // we may be causing trouble. on the other hand, prior to this we were
-    // not handling it at all; which would result in nil/NULL (the default 
-    // variable value case)
-
-    if (len > 1) std::cerr << "WARNING: SYMSXP len > 1" << std::endl;
-
-    var->set_missing(true);
-    return;
-  }
-
-  if (len == 0) {
-    var->set_nil(true);
-    return;
-  }
-
-  if (Rf_isEnvironment(sexp)) {} // ...
-  else {
-
-    int nrow = len;
-    int ncol = 1;
-
-    if (Rf_isMatrix(sexp)) {
-      nrow = Rf_nrows(sexp);
-      ncol = Rf_ncols(sexp);
-    }
-
-    BERTBuffers::Array *arr = 0;
-    if (len > 1 || rtype == VECSXP) {
-      arr = var->mutable_arr();
-      arr->set_rows(nrow);
-      arr->set_cols(ncol);
-    }
-
-    // FIXME: should be able to template some of this 
-
-    if (Rf_isLogical(sexp))
-    {
-      for (int i = 0; i < len; i++) {
-        auto ptr = arr ? arr->add_data() : var;
-        int lgl = (INTEGER(sexp))[i];
-        if (lgl == NA_LOGICAL) {
-          ptr->mutable_err()->set_type(BERTBuffers::ErrorType::NA);
-        }
-        else {
-          ptr->set_boolean(lgl ? true : false);
-        }
-      }
-    }
-    else if (Rf_isInteger(sexp))
-    {
-      for (int i = 0; i < len; i++) {
-        auto ptr = arr ? arr->add_data() : var;
-        ptr->set_integer(INTEGER(sexp)[i]);
-      }
-    }
-    else if (isReal(sexp) || Rf_isNumber(sexp))
-    {
-      for (int i = 0; i < len; i++) {
-        auto ptr = arr ? arr->add_data() : var;
-        ptr->set_real(REAL(sexp)[i]);
-      }
-    }
-    else if (isString(sexp))
-    {
-      for (int i = 0; i < len; i++) {
-        auto ptr = arr ? arr->add_data() : var;
-        SEXP strsxp = STRING_ELT(sexp, i);
-        ptr->set_str(CHAR(Rf_asChar(strsxp)));
-      }
-    }
-    else if (rtype == EXTPTRSXP) {
-      //var->set_external_pointer(reinterpret_cast<uint64_t>(R_ExternalPtrAddr(sexp)));
-      //std::cout << "read external pointer: " << std::hex << var->external_pointer() << std::endl;
-
-      auto com_pointer = var->mutable_com_pointer();
-      com_pointer->set_pointer(reinterpret_cast<uint64_t>(R_ExternalPtrAddr(sexp)));
-      std::cout << "read external pointer: " << std::hex << com_pointer->pointer() << std::endl;
-
-    }
-    else if (rtype == VECSXP) {
-      for (int i = 0; i < len; i++) {
-        SEXPToVariable(arr->add_data(), VECTOR_ELT(sexp, i));
-      }
-    }
-
-    /*
-    else if (rtype == SYMSXP) {
-
-        if (symbol_as_missing) {
-
-            // we see symbol types for empty arguments in constructed
-            // COM functions. however I'm not sure that's the _only_
-            // time we see symbols, so this is problematic.
-
-            // on the other hand, we were not handling this before at
-            // all, so it's not going to be any more broken.
-
-            for (int i = 0; i < len; i++) {
-                arr->add_data()->set_missing(true);
-            }
-
-        }
-    }
-    */
-
-    SEXP names = getAttrib(sexp, R_NamesSymbol);
-    if (names && TYPEOF(names) != 0) {
-      int nameslen = Rf_length(names);
-      for (int i = 0; i < len && i < nameslen; i++) {
-        auto ref = arr ? arr->mutable_data(i) : var;
-        SEXP name = STRING_ELT(names, i);
-        std::string str(CHAR(Rf_asChar(name)));
-        if (str.length()) { ref->set_name(str); }
-      }
-
-    }
-
-  }
-
-}
-
 SEXP COMCallback(SEXP function_name, SEXP call_type, SEXP index, SEXP pointer_key, SEXP arguments) {
 
   static uint32_t callback_id = 1;
@@ -679,8 +614,6 @@ SEXP COMCallback(SEXP function_name, SEXP call_type, SEXP index, SEXP pointer_ke
   else if (Rf_isReal(index)) call_index = (uint32_t)((REAL(index))[0]);
   callback->set_index(call_index);
 
-  //int key = (int)((intptr_t)R_ExternalPtrAddr(pointer_key));
-  //if (key) callback->set_pointer(key);
   callback->set_pointer(reinterpret_cast<uint64_t>(R_ExternalPtrAddr(pointer_key)));
 
   if (!string_type.compare("get")) callback->set_type(BERTBuffers::CallType::get);
@@ -771,7 +704,7 @@ SEXP RCallback(SEXP command, SEXP data) {
     type = CHAR(Rf_asChar(VECTOR_ELT(data, 4)));
     pointer = R_ExternalPtrAddr(VECTOR_ELT(data, 5));
 
-    return CreateConsoleDevice2(background, width, height, pointsize, type, pointer);
+    return CreateConsoleDevice(background, width, height, pointsize, type, pointer);
   }
   else if (!string_command.compare("create-device")) {
     std::cerr << "ENOTIMPL: " << string_command << std::endl;
@@ -813,59 +746,3 @@ SEXP RCallback(SEXP command, SEXP data) {
 
   return sexp_result;
 }
-
-void ReleaseExternalPointer(SEXP external_pointer) {
-  RCallback(Rf_mkString("release-pointer"), external_pointer);
-}
-
-/*
-SEXP ExternalCallback(int command_id, void* a, void* b) {
-
-  std::cerr << " * EXTERNAL CALLBACK *" << std::endl;
-
-  static uint32_t callback_id = 1;
-  SEXP sexp_result = R_NilValue;
-
-  if (command_id == 8103) {
-    InitConsoleGraphicsDevice("bert-console-device", a);
-    return Rf_ScalarLogical(1);
-  }
-
-  // it looks like we pass SEXPs as these arguments. not sure for 
-  // the rationale having them as void*, although it should be fine
-
-  std::stringstream ss;
-  ss << command_id;
-
-  BERTBuffers::CallResponse *call = new BERTBuffers::CallResponse;
-  BERTBuffers::CallResponse *response = new BERTBuffers::CallResponse;
-
-  call->set_id(callback_id);
-  call->set_wait(true);
-  auto callback = call->mutable_function_call();
-  callback->set_function(ss.str());
-
-  // allow two arguments but not null, argument
-  if (a) {
-    SEXPToVariable(callback->add_arguments(), reinterpret_cast<SEXP>(a));
-    if (b) SEXPToVariable(callback->add_arguments(), reinterpret_cast<SEXP>(b));
-  }
-
-  bool success = Callback(*call, *response);
-
-  // cout << "callback complete (" << success << ")" << endl;
-
-  if (success) sexp_result = VariableToSEXP(response->result());
-
-
-  delete call;
-  delete response;
-
-  if (!success) {
-    error_return("internal method failed");
-  }
-
-  return sexp_result;
-}
-
-*/

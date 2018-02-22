@@ -1,45 +1,6 @@
-/*
- * controlR
- * Copyright (C) 2016 Structured Data, LLC
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- */
 
+#include "controlr.h"
 #include "controlr_common.h"
-#include "controlr_rinterface.h"
-
-extern "C" {
-
-  // instead of the "dlldo1" loop -- this one seems to be more stable
-  extern void Rf_mainloop(void);
-
-  extern void setup_Rmainloop();
-  extern void run_Rmainloop();
-
-  // in case we want to call these programatically (TODO)
-  extern void R_RestoreGlobalEnvFromFile(const char *, Rboolean);
-  extern void R_SaveGlobalEnvToFile(const char *);
-
-  // for win32
-  extern void R_ProcessEvents(void);
-
-};
 
 /**
  * we're now basing "exec" commands on the standard repl; otherwise
@@ -47,18 +8,7 @@ extern "C" {
  */
 int R_ReadConsole(const char *prompt, char *buf, int len, int addtohistory) {
 
-  /*
-  static bool final_init = false;
-  if (!final_init) {
-    final_init = true;
-    R_RegisterCCallable("BERTControlR", "Callback", (DL_FUNC)RCallback);
-    R_RegisterCCallable("BERTControlR", "COMCallback", (DL_FUNC)COMCallback);
-
-   }
-   */
-
   // every time?
-
   const char *cprompt = CHAR(STRING_ELT(GetOption1(install("continue")), 0));
   bool is_continuation = (!strcmp(cprompt, prompt));
 
@@ -76,6 +26,8 @@ void R_WriteConsoleEx(const char *buf, int len, int flag) {
 /**
  * "ask ok" has no return value.  I guess that means "ask, then press OK",
  * not "ask if this is ok".
+ *
+ * FIXME: incorporate console client 
  */
 void R_AskOk(const char *info) {
   ::MessageBoxA(0, info, "Message from R", MB_OK);
@@ -83,6 +35,8 @@ void R_AskOk(const char *info) {
 
 /**
  * 1 (yes) or -1 (no), I believe (based on #defines)
+ *
+ * FIXME: incorporate console client
  */
 int R_AskYesNoCancel(const char *question) {
   return (IDYES == ::MessageBoxA(0, question, "Message from R", MB_YESNOCANCEL)) ? 1 : -1;
@@ -105,11 +59,18 @@ void RSetUserBreak(const char *msg) {
   std::cout << "r-set-user-break" << std::endl;
 
   UserBreak = 1;
+
   //if( msg ) ConsoleMessage( msg, 0, 1 );
   //else ConsoleMessage("user break", 0, 1);
 
 }
 
+/** call periodically to handle queued events / window messages */
+void RTick() {
+  R_ProcessEvents();
+}
+
+/** read a number from a version string (e.g. 3.4.1) */
 int PartialVersion(const char **ptr) {
 
   char buffer[32];
@@ -124,6 +85,7 @@ int PartialVersion(const char **ptr) {
   return atoi(buffer);
 }
 
+
 void RGetVersion(int32_t *major, int32_t *minor, int32_t *patch) {
 
   *major = *minor = *patch = 0;
@@ -137,24 +99,26 @@ void RGetVersion(int32_t *major, int32_t *minor, int32_t *patch) {
 
 }
 
+/**
+ * runs the main R loop; the rest of the code interacts via callbacks
+ */
 int RLoop(const char *rhome, const char *ruser, int argc, char ** argv) {
 
-  structRstart rp;
-  Rstart Rp = &rp;
+  Rstart Rp = new structRstart;
 
-  char RHome[MAX_PATH];
-  char RUser[MAX_PATH];
+  char *local_rhome = new char[MAX_PATH];
+  if(rhome) strcpy_s(local_rhome, MAX_PATH, rhome);
+  else local_rhome[0] = 0;
 
-  DWORD dwPreserve = 0;
-
-  if (rhome) strcpy_s(RHome, rhome);
-  if (ruser) strcpy_s(RUser, ruser);
+  char *local_ruser = new char[MAX_PATH];
+  if(ruser) strcpy_s(local_ruser, MAX_PATH, ruser);
+  else local_ruser[0] = 0;
 
   R_setStartTime();
   R_DefParams(Rp);
 
-  Rp->rhome = RHome;
-  Rp->home = RUser;
+  Rp->rhome = local_rhome;
+  Rp->home = local_ruser;
 
   // typedef enum {RGui, RTerm, LinkDLL} UImode;
   Rp->CharacterMode = LinkDLL;
@@ -178,8 +142,6 @@ int RLoop(const char *rhome, const char *ruser, int argc, char ** argv) {
   FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
   GA_initapp(0, 0);
 
-  //Rf_mainloop();
-
   // call setup separately so we can install functions
   setup_Rmainloop();
 
@@ -192,19 +154,21 @@ int RLoop(const char *rhome, const char *ruser, int argc, char ** argv) {
   };
   R_registerRoutines(R_getEmbeddingDllInfo(), NULL, methods, NULL, NULL);
 
-  // also c-callable (FIXME: don't need this for com? */
+  // also c-callable (FIXME: don't need this for com?) */
   R_RegisterCCallable("BERTControlR", "Callback", (DL_FUNC)RCallback);
   R_RegisterCCallable("BERTControlR", "COMCallback", (DL_FUNC)COMCallback);
 
   // now run the loop
   run_Rmainloop();
 
+  // clean up
+  delete[] local_ruser;
+  delete[] local_rhome;
+
+  delete Rp;
+
   Rf_endEmbeddedR(0);
 
   return 0;
 
-}
-
-void RTick() {
-  R_ProcessEvents();
 }

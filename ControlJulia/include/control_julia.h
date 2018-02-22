@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../../PB/variable.pb.h"
-#include "../../PB/message_utilities.h"
+#include "variable.pb.h"
+#include "message_utilities.h"
 
 #include <string>
 #include <deque>

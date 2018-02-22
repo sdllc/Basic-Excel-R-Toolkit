@@ -2,7 +2,10 @@
 
 #include <string>
 #include <sstream>
-#include <google\protobuf\util\json_util.h>
+
+#ifdef INCLUDE_DUMP_JSON
+  #include <google\protobuf\util\json_util.h>
+#endif
 
 /**
  * common utilities for protocol buffer messages
@@ -34,5 +37,27 @@ public:
         message.SerializeToOstream(dynamic_cast<std::ostream*>(&stream));
         return stream.str();
     }
+
+#ifdef INCLUDE_DUMP_JSON
+
+    /** debug/util function */
+    static void DumpJSON(const google::protobuf::Message &message, const char *path = 0) {
+      std::string str;
+      google::protobuf::util::JsonOptions opts;
+      opts.add_whitespace = true;
+      google::protobuf::util::MessageToJsonString(message, &str, opts);
+      if (path) {
+        FILE *f;
+        fopen_s(&f, path, "w");
+        if (f) {
+          fwrite(str.c_str(), sizeof(char), str.length(), f);
+          fflush(f);
+        }
+        fclose(f);
+      }
+      else std::cout << str << std::endl;
+    }
+
+#endif
 
 };

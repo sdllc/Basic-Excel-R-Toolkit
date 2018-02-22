@@ -13,24 +13,27 @@
     <Filter Include="R">
       <UniqueIdentifier>{aa31411f-55c6-4bff-a7d1-b840cf200be4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Common">
+      <UniqueIdentifier>{d7221d55-a44b-4131-952c-de4b56a561f6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\PB\variable.pb.cc">
       <Filter>PB</Filter>
     </ClCompile>
-    <ClCompile Include="controlr.cpp">
+    <ClCompile Include="console_graphics_device.cc">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="rinterface_common.cpp">
+    <ClCompile Include="..\Common\pipe.cc">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="controlr.cc">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="rinterface_win.cpp">
+    <ClCompile Include="rinterface_win.cc">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="console_graphics_device.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Common\pipe_common.cc">
+    <ClCompile Include="rinterface_common.cc">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
@@ -38,28 +41,25 @@
     <ClInclude Include="..\PB\variable.pb.h">
       <Filter>PB</Filter>
     </ClInclude>
-    <ClInclude Include="console_message.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="controlr.hpp">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="controlr_common.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="controlr_rinterface.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="controlr_version.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="util.hpp">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\PB\message_utilities.h">
-      <Filter>PB</Filter>
-    </ClInclude>
     <ClInclude Include="console_graphics_device.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\pipe.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\process_exit_codes.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\string_utilities.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\message_utilities.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="controlr.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>

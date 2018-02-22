@@ -80,7 +80,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\Common\;E:\BERT2\protobuf-3.5.0\src;C:\Users\duncan\AppData\Local\Julia-0.6.2\include\julia;./include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Common;..\PB;E:\BERT2\protobuf-3.5.0\src;C:\Users\duncan\AppData\Local\Julia-0.6.2\include\julia;./include</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4146</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -131,6 +131,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\Common\pipe.h" />
+    <ClInclude Include="..\Common\process_exit_codes.h" />
+    <ClInclude Include="..\Common\string_utilities.h" />
     <ClInclude Include="..\PB\message_utilities.h" />
     <ClInclude Include="..\PB\variable.pb.h" />
     <ClInclude Include="include\control_julia.h" />
@@ -138,7 +141,7 @@
     <ClInclude Include="include\julia_interface.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\Common\pipe_common.cc" />
+    <ClCompile Include="..\Common\pipe.cc" />
     <ClCompile Include="..\PB\variable.pb.cc" />
     <ClCompile Include="src\control_julia.cc" />
     <ClCompile Include="src\julia_interface.cc" />

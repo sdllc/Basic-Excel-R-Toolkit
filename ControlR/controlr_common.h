@@ -1,30 +1,3 @@
-/*
- * controlR
- * Copyright (C) 2016 Structured Data, LLC
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation 
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, 
- * and/or sell copies of the Software, and to permit persons to whom the 
- * Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included 
- * in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- */
-
-/**
- * this header is for R code common to linux and win32 implmentations, but 
- * which is shielded from the non-R portion of the code (using R types or APIs).
- */
  
 #ifndef __CONTROLR_COMMON_H
 #define __CONTROLR_COMMON_H
@@ -71,9 +44,26 @@
 #undef clear
 #undef length
 
-//SEXP ExternalCallback(int, void*, void *);
 SEXP RCallback(SEXP, SEXP);
 SEXP COMCallback(SEXP, SEXP, SEXP, SEXP, SEXP);
+
+extern "C" {
+
+  // loop functions
+  extern void setup_Rmainloop();
+  extern void run_Rmainloop();
+
+  // in case we want to call these programatically (TODO)
+  extern void R_RestoreGlobalEnvFromFile(const char *, Rboolean);
+  extern void R_SaveGlobalEnvToFile(const char *);
+
+  // for win32
+  extern void R_ProcessEvents(void);
+
+  extern void Rf_PrintWarnings();
+  extern Rboolean R_Visible;
+
+};
 
 #endif // #ifndef __CONTROLR_COMMON_H
 

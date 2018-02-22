@@ -1,20 +1,25 @@
 
+#include "controlr.h"
 #include "console_graphics_device.h"
-#include "variable.pb.h"
 
-extern void PushConsoleMessage(google::protobuf::Message &message);
-extern bool ConsoleCallback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response);
+// FIXME: some of the R internals use functions that windows declares
+// deprecated for security. move this into an isolated lib so we don't
+// have to deal with that.
+
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
+// we may be able to redefine these interfaces, as long as they're the
+// same shape. probably fragile but still maybe preferable.
+
+#include <R_ext/GraphicsEngine.h>
+
+#ifdef length
+#undef length
+#endif
 
 void SetMessageContext(BERTBuffers::GraphicsContext *target, const pGEcontext gc) {
-
-  //target->set_col(gc->col);
-  //target->set_fill(gc->fill);
-
-  /*
-    inline Gdiplus::ARGB RColor2ARGB(int color) {
-    return (color & 0xff00ff00) | ((color >> 16) & 0x000000ff) | ((color << 16) & 0x00ff0000);
-  }
-  */
 
   auto color = target->mutable_col();
   color->set_a(((gc->col >> 24) & 0xff));
@@ -288,7 +293,7 @@ void close_device(pDevDesc dd) {
   dd->deviceSpecific = 0;
 }
 
-SEXP CreateConsoleDevice2(const std::string &background, double width, double height, double pointsize, const std::string &type, void * pointer) {
+SEXP CreateConsoleDevice(const std::string &background, double width, double height, double pointsize, const std::string &type, void * pointer) {
 
   pGEDevDesc gd = (pGEDevDesc)pointer;
   pDevDesc dd = gd->dev;
@@ -327,10 +332,10 @@ SEXP CreateConsoleDevice2(const std::string &background, double width, double he
   dd->ipr[0] = 1.0 / 72.0;
   dd->ipr[1] = 1.0 / 72.0;
 
-  dd->canClip = FALSE;
+  dd->canClip = (Rboolean)FALSE;
   dd->canHAdj = 0;
-  dd->canChangeGamma = FALSE;
-  dd->displayListOn = TRUE;
+  dd->canChangeGamma = (Rboolean)FALSE;
+  dd->displayListOn = (Rboolean)TRUE;
   dd->haveTransparency = 2;
   dd->haveTransparentBg = 2;
   dd->haveRaster = 3; // yes, except for missing values

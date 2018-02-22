@@ -28,26 +28,8 @@ HANDLE prompt_event_handle;
 
 Pipe stdout_pipe, stderr_pipe;
 
-
 extern void JuliaRunUVLoop(bool until_done);
 
-/** debug/util function */
-void DumpJSON(const google::protobuf::Message &message, const char *path = 0) {
-  std::string str;
-  google::protobuf::util::JsonOptions opts;
-  opts.add_whitespace = true;
-  google::protobuf::util::MessageToJsonString(message, &str, opts);
-  if (path) {
-    FILE *f;
-    fopen_s(&f, path, "w");
-    if (f) {
-      fwrite(str.c_str(), sizeof(char), str.length(), f);
-      fflush(f);
-    }
-    fclose(f);
-  }
-  else std::cout << str << std::endl;
-}
 
 void NextPipeInstance(bool block, std::string &name) {
   Pipe *pipe = new Pipe;

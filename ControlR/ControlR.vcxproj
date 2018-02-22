@@ -19,23 +19,22 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\Common\pipe_common.cc" />
+    <ClCompile Include="..\Common\pipe.cc" />
     <ClCompile Include="..\PB\variable.pb.cc" />
-    <ClCompile Include="console_graphics_device.cpp" />
-    <ClCompile Include="controlr.cpp" />
-    <ClCompile Include="rinterface_common.cpp" />
-    <ClCompile Include="rinterface_win.cpp" />
+    <ClCompile Include="console_graphics_device.cc" />
+    <ClCompile Include="controlr.cc" />
+    <ClCompile Include="rinterface_common.cc" />
+    <ClCompile Include="rinterface_win.cc" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\PB\message_utilities.h" />
+    <ClInclude Include="..\Common\message_utilities.h" />
+    <ClInclude Include="..\Common\pipe.h" />
+    <ClInclude Include="..\Common\process_exit_codes.h" />
+    <ClInclude Include="..\Common\string_utilities.h" />
     <ClInclude Include="..\PB\variable.pb.h" />
     <ClInclude Include="console_graphics_device.h" />
-    <ClInclude Include="console_message.h" />
-    <ClInclude Include="controlr.hpp" />
+    <ClInclude Include="controlr.h" />
     <ClInclude Include="controlr_common.h" />
-    <ClInclude Include="controlr_rinterface.h" />
-    <ClInclude Include="controlr_version.h" />
-    <ClInclude Include="util.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\PB\variable.proto" />
