@@ -176,12 +176,12 @@ bool ExcelRegisterLanguageCalls(const char *language_name, uint32_t language_key
     // index 0: add numeric index (+1000)
     wsprintf(wide_string, L"%s%d", callTemplates[i][0], language_key + 1000);
     wcscpy_s(&(arguments[0 + 1]->val.str[1]), max_string_length - 1, wide_string);
-    arguments[0 + 1]->val.str[0] = wcslen(wide_string);
+    arguments[0 + 1]->val.str[0] = (XCHAR)wcslen(wide_string);
 
     // index 2: add language name string
     wsprintf(wide_string, L"%s%s", callTemplates[i][2], wide_name);
     wcscpy_s(&(arguments[2 + 1]->val.str[1]), max_string_length - 1, wide_string);
-    arguments[2 + 1]->val.str[0] = wcslen(wide_string);
+    arguments[2 + 1]->val.str[0] = (XCHAR)wcslen(wide_string);
 
     // ok
     
