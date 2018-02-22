@@ -2,58 +2,80 @@
 const Constants = require("../data/constants.json");
 const DefaultPreferences = require("../data/default_preferences.json");
 
-// FIXME: export as static class member instead?
-export const PreferencesSchema = require("../data/schemas/preferences_schema.json");
+import { FileWatcher } from './file-watcher'; 
 
+// FIXME: export as static class member instead?
+export const PreferencesSchema = require("../data/schemas/preferences.schema.json");
+
+import * as fs from 'fs';
+import * as path from 'path';
 import * as Rx from 'rxjs';
 
-export class Preferences {
-
-  static PREFERENCES_KEY = "preferences"
-  static PREFERENCES_URI = "localStorage://" + Preferences.PREFERENCES_KEY;
-
-  /**  */
-  private static events_:Rx.Subject<any> = new Rx.Subject<any>();
+/** 
+ * no longer static, -> singleton 
+ */
+class PreferencesManager {
 
   /**  */
-  public static get events() { return this.events_; }
+  private preferences_:Rx.Subject<any> = new Rx.Subject<any>();
+
+  /**  */
+  public get preferences() { return this.preferences_; }
+
+  private preferences_path_ = path.join(
+    process.env['BERT2_HOME_DIRECTORY'], "bert-config.json");
+
+  public get preferences_path(){ return this.preferences_path_; }
+
+  constructor(){
+
+    // load the first time. that will generate an event clients can 
+    // subscribe to. then start watching the file, so we get subsequent
+    // changes. 
+
+    this.ReadPreferences().then(prefs => {
+      this.preferences_.next(prefs);
+      FileWatcher.Watch(this.preferences_path);
+      FileWatcher.events.filter( x => (x === this.preferences_path)).subscribe(x => {
+        this.ReadPreferences().then(prefs => {
+          this.preferences_.next(prefs);
+        });
+      });
+    });
+  }
 
   /** 
    * utility function: strip comments, c style and c++ style.
    * for json w/ comments
    */
-  static StripComments(text:string) : string {
-    return text.replace( /\/\*[\s\S]+\*\//g, "").split(/\n/).map( 
+  StripComments(text:string) : string {
+    return text.replace( /\/\*[\s\S]+?\*\//g, "").split(/\n/).map( 
       line => line.replace( /\/\/.*$/m, "" )).join("\n");
   }
 
   /** 
-   * loads preferences, either from storage or from defaults. 
+   * FIXME: coming from the old localstorage implementation,
+   * this run synchronously. make sure all the callers can 
+   * handle async and then convert.
    */
-  static ReadPreferences() {
+  private ReadPreferences() : Promise<any> {
+    return new Promise((resolve, reject) => {
 
-    let data = {};
+      let prefs;
+      let preferences_path = path.join(process.env['BERT2_HOME_DIRECTORY'], "bert-config.json");
+      let json = fs.readFileSync(preferences_path, "utf8");
 
-    // if prefs does not exist, create from defaults and save first.
-    // UPDATE: why save defaults? (...)
-
-    let json = localStorage.getItem(Preferences.PREFERENCES_KEY);
-
-    if (json) {
       try {
-        data = JSON.parse(this.StripComments(json));
+        prefs = JSON.parse(this.StripComments(json));
+        return resolve(prefs);
       }
       catch (e) {
-
-        // FIXME: notify user, set defaults
-        console.error(e);
+        console.error(e); // FIXME: notify user, set defaults
       }
-      return data;
-    }
 
-    data = DefaultPreferences;
-    return data;
-
+      resolve(DefaultPreferences);
+    });
   }
-
 }
+
+export const Preferences = new PreferencesManager()

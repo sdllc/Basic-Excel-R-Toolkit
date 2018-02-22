@@ -15,7 +15,6 @@ import * as JuliaLanguage from './julia_tokenizer';
 import { TabPanel, TabJustify, TabEventType, TabSpec } from './tab_panel';
 
 const Constants = require("../data/constants.json");
-// const PreferencesSchema = require("../data/schemas/preferences_schema.json");
 
 import * as path from 'path';
 import * as fs from 'fs';
@@ -28,15 +27,11 @@ import * as MarkdownIt from 'markdown-it';
 import * as MarkdownItTasks from 'markdown-it-task-lists';
 const MD = new MarkdownIt().use(MarkdownItTasks); 
 
-// const DefaultPreferences = require("../data/default_preferences.json");
-
 // ambient, declared in html. we need this for loading monaco
 declare const amd_require: any;
 
-// const PREFERENCES_KEY = "preferences"
-// const PREFERENCES_URI = "localStorage://" + PREFERENCES_KEY;
-
 import { Preferences, PreferencesSchema } from './preferences';
+const SchemaSchema = require("../data/schemas/schema.schema.json");
 
 interface UncloseRecord {
   id: number;
@@ -375,15 +370,6 @@ export class Editor {
       this.CloseTab(event.tab);
     });
 
-    // the load call ensures monaco is loaded via the amd loader;
-    // if it's already been loaded once this will return immediately
-    // via Promise.resolve().
-
-    // prefs is no longer async
-
-    let prefs = Preferences.ReadPreferences();
-    this.editor_options_ = prefs ? prefs['editor'] || {} : {};
-
     this.InitEditor(editor);
 
     MenuUtilities.events.subscribe(event => {
@@ -517,15 +503,33 @@ export class Editor {
   }
 
   /**
+   * ensure that we have loaded preferences (or initial defaults)
+   */
+  private EnsurePreferences() : Promise<any> {
+    return new Promise(resolve => {
+      Preferences.preferences.first(x => x).subscribe(prefs => {
+        this.editor_options_ = prefs['editor'] || {};
+        resolve();
+      });
+    });
+  }
+
+  /**
    * sets up editor. monaco needs to load asynchronously, then 
    * once it's loaded we do some additional configuration.
    */
   private async InitEditor(node: HTMLElement) {
 
-    await Editor.LoadMonaco();
-    // await this.LoadThemes();
+    // the load call ensures monaco is loaded via the amd loader;
+    // if it's already been loaded once this will return immediately
+    // via Promise.resolve().
+    
+    // prefs is async again, so do these in parallel (...)
+
+    await Promise.all([Editor.LoadMonaco(), this.EnsurePreferences()]);
 
     // sanity check
+
     this.editor_options_.model = null;
     this.editor_options_.readOnly = false;
     this.editor_options_.contextmenu = false;
@@ -603,24 +607,21 @@ export class Editor {
     monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
       validate: true, allowComments: true,
       schemas: [{
-        uri: "http://bert-toolkit.org/preferences-schema",
-        fileMatch: [Preferences.PREFERENCES_URI],
+        uri: "http://bert-toolkit.com/preferences-schema",
+        fileMatch: [path.basename(Preferences.preferences_path)], 
         schema: PreferencesSchema
       }, {
-        uri: "http://bert-toolkit.org/generic-schema",
-        fileMatch: ['*.json'],
-        schema: {
-          type: "object",
-          properties: {}
-        }
-      }]
+        uri: "http://json-schema.org/draft-07/schema#",
+        fileMatch: ["*.schema.json"],
+        schema: SchemaSchema
+      }
+      ]
     });
 
     // TODO: come back to this for managing config/preferences.
     // the demo does not work because it's missing the triggerCharacters
     // field, add that (triggerCharacters: ['"']) and it works, although 
     // it's adding extra quotes. wildcards? needs some investigation. ...
-
     /*
     monaco.languages.registerCompletionItemProvider('json', {
       triggerCharacters: ['""'],
@@ -632,6 +633,10 @@ export class Editor {
     */
 
     this.RestoreOpenFiles();
+
+    // subscribe to preference changes from here on
+
+    Preferences.preferences.subscribe(x => this.UpdatePreferences(x));
 
   }
 
@@ -761,7 +766,7 @@ export class Editor {
             }
             else {
               document.model_ = monaco.editor.createModel(unserialized.text, undefined,
-                monaco.Uri.parse(Editor.UriFromPath(unserialized.file_path)));
+                monaco.Uri.file(unserialized.file_path));
             }
           }
           else {
@@ -876,12 +881,11 @@ export class Editor {
 
   }
 
-
   /**
    * opens preferences in an editor tab. 
    */
   public OpenPreferences() {
-    this.OpenFile(Preferences.PREFERENCES_URI);
+    this.OpenFileInternal(Preferences.preferences_path, Constants.files.preferences);
   }
 
   /** close tab (called on button click) */
@@ -998,6 +1002,36 @@ export class Editor {
     this.tabs_.Previous();
   }
 
+  private UpdatePreferences(preferences){
+  
+    let editor_options = preferences.editor || {};
+
+    // theme can't be set at runtime using updateOptions. (asymmetry?)
+
+    if (editor_options.theme !== this.editor_options_.theme) {
+      monaco.editor.setTheme(editor_options.theme || "");
+    }
+
+    // sanity check 
+    editor_options.model = null;
+    editor_options.readOnly = false;
+    editor_options.contextmenu = false;
+
+    // hold
+    this.editor_options_ = editor_options;
+
+    // set
+    this.editor_.updateOptions(editor_options);
+
+    // this.active_document_.model_.updateOptions(editor_options);
+    this.tabs_.data.forEach(document => {
+      if (document.model_) {
+        document.model_.updateOptions(editor_options);
+      }
+    });
+
+  }
+
   /**
    * force_dialog is for "save as", can also be used in any case you
    * don't necessarily want to overwrite.
@@ -1043,6 +1077,7 @@ export class Editor {
         let key = match[1];
         localStorage.setItem(key, contents);
 
+        /*
         // special case
         if (document.file_path_ === Preferences.PREFERENCES_URI) {
           try {
@@ -1090,6 +1125,7 @@ export class Editor {
             console.error(e);
           }
         }
+        */
 
         tab.dirty = document.dirty_ = false;
         document.saved_version_ = document.model_.getAlternativeVersionId();
@@ -1166,6 +1202,9 @@ export class Editor {
       // special handling for documents in local storage, which
       // (atm) is just preferences. should be a little more generic
 
+      // no longer used
+
+      /* 
       let match = file_path.match(/^localStorage:\/\/(.*)$/);
       if (match) {
         let key = match[1];
@@ -1176,8 +1215,9 @@ export class Editor {
 
         let document = new Document();
 
-        if (key === Preferences.PREFERENCES_KEY) document.label_ = Constants.files.preferences;
-        else document.label_ = key;
+        //if (key === Preferences.PREFERENCES_KEY) document.label_ = Constants.files.preferences;
+        //else 
+        document.label_ = key;
 
         document.file_path_ = file_path;
         document.type_ = DocumentType.LocalStorage;
@@ -1205,6 +1245,7 @@ export class Editor {
 
         return resolve();
       }
+      */
 
       fs.readFile(file_path, "utf8", (err, data) => {
         if (err) return reject(err);
@@ -1225,7 +1266,8 @@ export class Editor {
         }
         else {
           document.model_ = monaco.editor.createModel(data, undefined,
-            monaco.Uri.parse(Editor.UriFromPath(file_path)));
+            monaco.Uri.file(file_path));
+
           document.model_.updateOptions(this.editor_options_);
           document.saved_version_ = document.model_.getAlternativeVersionId()
         }

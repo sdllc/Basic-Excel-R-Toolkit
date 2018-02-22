@@ -1,0 +1,92 @@
+{
+  "type": "object",
+  "properties": {
+
+    "BERT": {
+      "type": "object",
+      "properties": {
+        "functionsDirectory": { 
+          "type": "string"
+        },
+        "R": {
+          "type": "object" 
+        },
+        "Julia": {
+          "type": "object"
+        }
+      }
+    },
+
+    "shell": {
+      "type": "object",
+      "properties": {
+        "theme": {
+          "type": "object",
+          "properties": {
+            "foreground": { "type": "string" },
+            "background": { "type": "string" },
+            "cursor": { "type": "string" },
+            "cursorAccent": { "type": "string" },
+            "selection": { "type": "string" },
+            "black": { "type": "string" },
+            "red": { "type": "string" },
+            "green": { "type": "string" },
+            "yellow": { "type": "string" },
+            "blue": { "type": "string" },
+            "magenta": { "type": "string" },
+            "cyan": { "type": "string" },
+            "white": { "type": "string" },
+            "brightBlack": { "type": "string" },
+            "brightRed": { "type": "string" },
+            "brightGreen": { "type": "string" },
+            "brightYellow": { "type": "string" },
+            "brightBlue": { "type": "string" },
+            "brightMagenta": { "type": "string" },
+            "brightCyan": { "type": "string" },
+            "brightWhite": { "type": "string" }
+          }
+        },
+        "fontFamily": {
+          "type": "string"
+        },
+        "fontSize": {
+          "type": ["string", "number"]
+        }
+      }
+    },
+
+    "editor": {
+      "type": "object",
+
+      "properties": {
+
+        "fontFamily": { "type": "string" },
+        "fontSize": { "type": ["string", "number"] },
+        "fontLigatures": { "type": "boolean", "default": false },
+
+        "rulers": {
+          "type": "array", "items": { "type": "integer" }
+        },
+
+        "roundedSelection": {"type": "boolean"},
+        "scrollBeyondLastLine": {"type": "boolean"},
+        "theme": {
+          "type": "string",
+          "enum": ["vs", "vs-dark", "hc-black"]
+        },
+        "lineNumbers": {"type": "boolean"},
+        "statusBar": {"type": "boolean"},
+
+        "tabSize": {"type": "integer"},
+        "insertSpaces": {"type": "boolean"},
+
+        "minimap": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": true }
+          }
+        }
+      }
+    }
+  }
+}

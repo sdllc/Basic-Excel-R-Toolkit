@@ -129,27 +129,12 @@ window.addEventListener("beforeunload", event => {
   }
 });
 
-/**
- * 
- */
-const ApplyPreferences = function(preferences:any = {}){
-  if(preferences.shell){
-    terminals.Terminals().forEach(terminal => {
-      terminal.ApplyPreferences(preferences.shell);
-    });
-  }
-}
-
 // construct editor
 
 let editor = new Editor("#editor", properties.editor);
 editor.events.subscribe(event => {
   if( event.type === EditorEventType.Command ){
     switch(event.message){
-    case "update-preferences":
-      ApplyPreferences(event.data);
-      break;
-
     case "execute-selection":
     case "execute-buffer":
       let terminal = terminals.Get(event.data.language)
@@ -167,9 +152,11 @@ window['editor'] = editor;
 
 let pipe_list = (process.env['BERT_PIPE_NAME']||"").split(";"); // separator?
 
-setTimeout(() => {
+// wait until we have read prefs once, then set up.
+// FIXME: is that necessary? we could just repaint.
+
+Preferences.preferences.first(x => x).subscribe(preferences => {
   
-  let preferences:any = Preferences.ReadPreferences() || {};
   let shell_preferences = preferences.shell || {};
 
   // FIXME: after languages/tabs are initialized, select tab
@@ -227,10 +214,21 @@ setTimeout(() => {
 
     terminals.active_tab.subscribe(active => {
       if(properties.active_tab !== active) properties.active_tab = active;
-    })
-  })
+    });
 
-}, 1 );
+    // subscribe to preference changes
+
+    Preferences.preferences.subscribe(prefs => {
+      console.info("terminals prefs update");
+      let shell_preferences = prefs.shell || {}
+      terminals.Terminals().forEach(terminal => {
+        terminal.ApplyPreferences(shell_preferences);
+      });
+    });
+
+  });
+
+});
 
 // deal with splitter change on drag end 
 
