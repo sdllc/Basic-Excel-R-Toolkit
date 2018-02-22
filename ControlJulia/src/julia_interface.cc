@@ -997,11 +997,14 @@ void JuliaCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallRespo
 
     // check for a julia exception (handled)
     if (jl_exception_occurred()) {
+      /*
       std::cout << "* [JC] EXCEPTION" << std::endl;
       jl_printf(JL_STDERR, "[JC] error during run:\n");
       jl_static_show(JL_STDERR, ptls->exception_in_transit);
       jl_exception_clear();
       jl_printf(JL_STDOUT, "\n");
+      */
+      ReportJuliaException("JC", false);
 
       // set err
       response.set_err("julia exception");
@@ -1034,6 +1037,8 @@ void JuliaCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallRespo
     response.set_err("external exception");
 
   }
+
+  JuliaRunUVLoop(true);
 
   // JlValueToVariable(response.mutable_result(), function_result);
 
