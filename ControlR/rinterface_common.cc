@@ -106,7 +106,8 @@ SEXP VariableToSEXP(const BERTBuffers::Variable &var) {
       has_names = has_names || arr.data(i).name().length();
     }
 
-    //  FIXME: can merge int and logical? (...)
+    // FIXME: can merge int and logical? (...)
+    // FIXME: can we use the coercion functions (asReal &c) here?  would simplify
 
     SEXP list;
     if (is_numeric) {

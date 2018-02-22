@@ -1,27 +1,6 @@
 
-#include <iostream>
-#include "../../PB/variable.pb.h"
 
 #include "julia_interface.h"
-
-#include <fstream>
-
-//
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-#include <setjmp.h>
-#include <signal.h>
-#include <time.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <limits.h>
-#include <errno.h>
-#include <math.h>
-#include <ctype.h>
-#include <inttypes.h>
-
-#include "string_utilities.h"
 
 #define JULIA_ENABLE_THREADING 1
 

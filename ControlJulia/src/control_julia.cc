@@ -1,17 +1,7 @@
 
-#include "include_common.h"
 #include "control_julia.h"
 #include "julia_interface.h"
-#include "pipe.h"
-#include "process_exit_codes.h"
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <io.h>
-#include <fcntl.h>
-#include <process.h>
-
-#include <fstream>
 
 // handle for signaling break (ctrl+c); set as first
 // handle in pipe loop set
@@ -326,7 +316,7 @@ void pipe_loop() {
     else if (result == WAIT_TIMEOUT) {
       // ...
 
-      // maybe // JuliaRunUVLoop(false);
+      // maybe // JuliaRunUVLoop(false); // why not? 
 
     }
     else {

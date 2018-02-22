@@ -27,9 +27,6 @@
     <ClInclude Include="include\control_julia.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\include_common.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\PB\message_utilities.h">
       <Filter>PB</Filter>
     </ClInclude>

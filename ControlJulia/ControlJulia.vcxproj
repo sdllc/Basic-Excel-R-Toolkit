@@ -137,7 +137,6 @@
     <ClInclude Include="..\PB\message_utilities.h" />
     <ClInclude Include="..\PB\variable.pb.h" />
     <ClInclude Include="include\control_julia.h" />
-    <ClInclude Include="include\include_common.h" />
     <ClInclude Include="include\julia_interface.h" />
   </ItemGroup>
   <ItemGroup>
