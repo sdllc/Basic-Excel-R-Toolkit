@@ -27,18 +27,37 @@ typedef enum {
 }
 ExecResult;
 
+/** startup */
 void JuliaInit();
+
+/** shutdown */
 void JuliaShutdown();
+
+/** get version so we can gate/limit */
 void JuliaGetVersion(int32_t *major, int32_t *minor, int32_t *patch);
 
-// void julia_exec();
-
+/** exec in a shell context; as if we're typing at the repl */
 ExecResult JuliaShellExec(const std::string &command, const std::string &shell_buffer);
 
+/** returns a list of functions exported to excel */
 void ListScriptFunctions(BERTBuffers::CallResponse &response, const BERTBuffers::CallResponse &call);
 
+/** runs arbitrary julia code */
 void JuliaExec(BERTBuffers::CallResponse &response, const BERTBuffers::CallResponse &call);
+
+/** runs julia function by name, optionally with arguments */
 void JuliaCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallResponse &call);
 
+/** second-level init */
 bool JuliaPostInit();
+
+/** reads source file; for julia this uses `import` */
 bool ReadSourceFile(const std::string &file);
+
+bool Callback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response);
+
+/** 
+ * send message to the console. in julia, stdio is handled separately. console
+ * messages are used for notifications and non-text output (e.g. images)
+ */
+void PushConsoleMessage(google::protobuf::Message &message);

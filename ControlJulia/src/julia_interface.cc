@@ -6,8 +6,6 @@
 
 #include "julia.h"
 
-jl_value_t *JuliaCallJlValue(const BERTBuffers::CompositeFunctionCall &call);
-
 jl_ptls_t ptls; 
 
 jl_value_t * VariableToJlValue(const BERTBuffers::Variable *variable) {
@@ -396,14 +394,13 @@ void JlValueToVariable(BERTBuffers::Variable *variable, jl_value_t *value) {
 
   }
 
-  //////////////
+  // FIXME: remove
 
   jl_value_t *value_type = jl_typeof(value);
   jl_printf(JL_STDOUT, "unexpected type (0x%X): ", value_type);
   jl_static_show(JL_STDOUT, value_type);
   jl_printf(JL_STDOUT, "\n");
-
-
+  
   // ?
 
   BERTBuffers::Error *err = variable->mutable_err();
@@ -419,38 +416,29 @@ void JuliaGetVersion(int32_t *major, int32_t *minor, int32_t *patch) {
 
 void JuliaInit() {
 
-  //memset(&jl_options, 0, sizeof(jl_options));
-  //jl_options.quiet = 0;
-  //jl_options.banner = 1;
+  // FIXME: let user specify startup options
+
   jl_options.quiet = 0;
   jl_options.color = JL_OPTIONS_COLOR_ON;
   jl_options.handle_signals = JL_OPTIONS_HANDLE_SIGNALS_ON;
-
   jl_options.use_precompiled = JL_OPTIONS_USE_PRECOMPILED_YES;
   jl_options.use_compilecache = JL_OPTIONS_USE_COMPILECACHE_YES;
 
-
   ptls = jl_get_ptls_states();
 
-  /* required: setup the Julia context */
+  // [from docs] required: setup the Julia context 
   jl_init();
-
-  // FIXME (NEXT): need to redirect stdout/stderr to streams we can
-  // push out on the pipes (or cache)
-
-  /* ... */
-  // jl_eval_string("Base.banner()");
-
 
 }
 
 void JuliaShutdown() {
 
-  /* strongly recommended: notify Julia that the
-  program is about to terminate. this allows
-  Julia time to cleanup pending write requests
-  and run all finalizers
-  */
+  // [from docs]
+
+  // strongly recommended: notify Julia that the program is about to terminate. 
+  // this allows Julia time to cleanup pending write requests and run all 
+  // finalizers
+
   jl_atexit_hook(0);
 
 }
@@ -654,14 +642,6 @@ ExecResult JuliaShellExec(const std::string &command, const std::string &shell_b
 
 }
 
-
-// testing
-extern void DumpJSON(const google::protobuf::Message &message, const char *path);
-
-extern bool Callback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response);
-
-extern void PushConsoleMessage(google::protobuf::Message &message);
-
 void PushConsoleMimeData(const std::string &mime_type, void *data) {
 
   BERTBuffers::CallResponse message;
@@ -769,6 +749,49 @@ jl_value_t* Callback2(const char *command, void *data1, void *data2, void *data3
   
   return jl_result;
 
+}
+
+
+jl_value_t *JuliaCallJlValue(const BERTBuffers::CompositeFunctionCall &call) {
+
+  jl_function_t *function_pointer = ResolveFunction(call.function());
+  jl_value_t *function_result = jl_nothing;
+  if (!function_pointer || jl_is_nothing(function_pointer)) return function_result;
+
+  JL_TRY{
+
+    // call here, with or without arguments
+    int len = call.arguments().size();
+  if (len > 0) {
+    std::vector<jl_value_t*> arguments_vector;
+    for (auto argument : call.arguments()) {
+      arguments_vector.push_back(VariableToJlValue(&argument));
+    }
+    function_result = jl_call(function_pointer, &(arguments_vector[0]), len);
+  }
+  else {
+    function_result = jl_call0(function_pointer);
+  }
+  ReportException("JCJV");
+
+  }
+    JL_CATCH{
+
+    // external exception; return error
+
+    std::cout << "* CATCH [JCJV]" << std::endl;
+  jl_printf(JL_STDERR, "\nparser error:\n");
+
+  jl_static_show(JL_STDERR, ptls->exception_in_transit);
+  jl_printf(JL_STDERR, "\n");
+  jlbacktrace();
+  jl_exception_clear();
+
+  //response.set_err("external exception");
+
+  }
+
+  return function_result;
 }
 
 jl_value_t * COMCallback(uint64_t pointer, const char *name, const char *calltype, uint32_t index, void *arguments_list) {
@@ -903,48 +926,6 @@ bool JuliaPostInit() {
   return true;
 }
 
-jl_value_t *JuliaCallJlValue(const BERTBuffers::CompositeFunctionCall &call) {
-
-  jl_function_t *function_pointer = ResolveFunction(call.function());
-  jl_value_t *function_result = jl_nothing;
-  if (!function_pointer || jl_is_nothing(function_pointer)) return function_result;
-
-  JL_TRY{
-
-    // call here, with or without arguments
-    int len = call.arguments().size();
-    if (len > 0) {
-      std::vector<jl_value_t*> arguments_vector;
-      for (auto argument : call.arguments()) {
-        arguments_vector.push_back(VariableToJlValue(&argument));
-      }
-      function_result = jl_call(function_pointer, &(arguments_vector[0]), len);
-    }
-    else {
-      function_result = jl_call0(function_pointer);
-    }
-    ReportException("JCJV");
-     
-  }
-  JL_CATCH{
-
-    // external exception; return error
-
-    std::cout << "* CATCH [JCJV]" << std::endl;
-    jl_printf(JL_STDERR, "\nparser error:\n");
-
-    jl_static_show(JL_STDERR, ptls->exception_in_transit);
-    jl_printf(JL_STDERR, "\n");
-    jlbacktrace();
-    jl_exception_clear();
-
-   //response.set_err("external exception");
-
-  }
-
-  return function_result;
-}
-
 void JuliaCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallResponse &call) {
 
   response.set_id(call.id());
@@ -976,13 +957,7 @@ void JuliaCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallRespo
 
     // check for a julia exception (handled)
     if (jl_exception_occurred()) {
-      /*
-      std::cout << "* [JC] EXCEPTION" << std::endl;
-      jl_printf(JL_STDERR, "[JC] error during run:\n");
-      jl_static_show(JL_STDERR, ptls->exception_in_transit);
-      jl_exception_clear();
-      jl_printf(JL_STDOUT, "\n");
-      */
+
       ReportJuliaException("JC", false);
 
       // set err
@@ -1152,7 +1127,6 @@ void JuliaExec(BERTBuffers::CallResponse &response, const BERTBuffers::CallRespo
 
   std::string composite;
   for (auto line : call.code().line()) {
-    // std::cout << "[line] " << line << std::endl;
     composite += line;
     composite += "\n";
   }
@@ -1166,16 +1140,13 @@ void JuliaExec(BERTBuffers::CallResponse &response, const BERTBuffers::CallRespo
 
     if (jl_exception_occurred()) {
       std::cout << "* [JE] EXCEPTION" << std::endl;
-      //jl_printf(JL_STDERR, "[JE] error during run:\n");
-      //jl_static_show(JL_STDERR, ptls->exception_in_transit);
       jl_exception_clear();
     }
     
     if (val) {
       JlValueToVariable(response.mutable_result(), val);
-      //jl_static_show(JL_STDOUT, val);
     }
-    //jl_printf(JL_STDOUT, "\n");
+
   }
   JL_CATCH {
     std::cout << "* CATCH [JE]" << std::endl;
@@ -1186,6 +1157,10 @@ void JuliaExec(BERTBuffers::CallResponse &response, const BERTBuffers::CallRespo
     jl_exception_clear();
   }
 
+  // flag indicates that this is startup, so take any final setup actions.
+  // FIXME: should this gate on success, above? (...)
+
+  if (call.code().startup()) JuliaPostInit();
 
 }
 

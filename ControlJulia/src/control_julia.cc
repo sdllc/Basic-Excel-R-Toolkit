@@ -145,10 +145,12 @@ bool SystemCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallResp
     }
     response.mutable_result()->set_boolean(success);
   }
+  /*
   else if (!function.compare("post-init")) {
     //JuliaPostInit(response, translated_call);
     response.mutable_result()->set_boolean(JuliaPostInit());
   }
+  */
   else if (!function.compare("install-application-pointer")) {
     BERTBuffers::CallResponse translated_call;
     translated_call.CopyFrom(call);
