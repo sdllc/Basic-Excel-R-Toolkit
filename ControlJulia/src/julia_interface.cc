@@ -163,9 +163,10 @@ jl_value_t * VariableToJlValue(const BERTBuffers::Variable *variable) {
       jl_value_t* array_type = jl_apply_array_type((jl_value_t*)jl_any_type, 2);
       julia_array = jl_alloc_array_2d(array_type, nrows, ncols);
 
+      int index = 0;
       for (int i = 0; i < ncols; i++) {
         for (int j = 0; j < nrows; j++) {
-          jl_value_t *element = VariableToJlValue(&(arr.data(i)));
+          jl_value_t *element = VariableToJlValue(&(arr.data(index++)));
           jl_arrayset(julia_array, element, j + nrows * i);
         }
       }
