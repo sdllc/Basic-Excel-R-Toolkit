@@ -33,6 +33,8 @@ declare const amd_require: any;
 import { Preferences, PreferencesSchema } from './preferences';
 const SchemaSchema = require("../data/schemas/schema.schema.json");
 
+const CACHE_PREFIX = "cached-document-"
+
 interface UncloseRecord {
   id: number;
   position: number;
@@ -290,8 +292,10 @@ export class Editor {
   private untitled_id_generator_ = 1;
 
   /** 
-   * internal document IDs need to be unique, but no other constraints. we 
-   * start at > 0 just for aesthetic reasons.
+   * internal document IDs need to be unique, but no other constraints. 
+   * we start at > 0 just for aesthetic reasons. when opening, we'll push
+   * the number up by the ID of any open documents. we should think about 
+   * renumbering, because this will climb.
    */
   private document_id_generator = 1000;
 
@@ -683,7 +687,7 @@ export class Editor {
    * presentation metadata from the editor
    */
   private CacheDocument(document: Document = this.active_document_) {
-    localStorage.setItem(`cached-document-${document.id_}`, JSON.stringify(document));
+    localStorage.setItem(`${CACHE_PREFIX}${document.id_}`, JSON.stringify(document));
   }
 
   /** 
@@ -699,7 +703,7 @@ export class Editor {
    * can get called when a new file is opened or when a file is 
    * closed.
    */
-  private UpdateOpenFiles(flush = false) {
+  private UpdateOpenFiles() {
 
     let open_files: number[] = this.properties_.open_files || [];
     let new_list: number[] = [];
@@ -707,7 +711,7 @@ export class Editor {
     this.tabs_.data.forEach(document => {
       if (undefined === open_files.find(x => (document.id_ === x))) {
         console.info("add file:", document);
-        localStorage.setItem(`cached-document-${document.id_}`, JSON.stringify(document));
+        localStorage.setItem(`${CACHE_PREFIX}${document.id_}`, JSON.stringify(document));
       }
       new_list.push(document.id_);
     });
@@ -717,7 +721,6 @@ export class Editor {
       if (undefined === new_list.find(x => (x === check))) {
         console.info("remove", check);
         this.closed_tabs_.unshift({ id: check, position: index });
-        if (flush) localStorage.removeItem(`cached-document-${check}`);
       }
     });
 
@@ -728,6 +731,8 @@ export class Editor {
     let enable_items = (new_list.length > 0);
     MenuUtilities.SetEnabled("main.file.close-file", enable_items);
 
+    this.ScrubCachedDocuments();
+
   }
 
   /**
@@ -736,7 +741,7 @@ export class Editor {
    */
   private LoadStoredDocument(entry: number, position?: number): [Document, TabSpec] {
 
-    let key = `cached-document-${entry}`;
+    let key = `${CACHE_PREFIX}${entry}`;
     let text = localStorage.getItem(key);
 
     let document: Document;
@@ -811,6 +816,45 @@ export class Editor {
   }
 
   /**
+   * scrub cached documents. remove any documents that are not in the 
+   * unclosed tab list or the open files list.
+   */
+  private ScrubCachedDocuments(){
+
+    let regex = new RegExp("^" + CACHE_PREFIX);    
+    let keys = new Array(localStorage.length);
+    for( let i = 0; i< localStorage.length; i++ ) keys.push(localStorage.key(i));
+    keys = keys.filter(x => regex.test(x)).map(x => x.replace(regex, ""));
+
+    // where did this come from?
+    keys = keys.filter(x => {
+      if( x === "undefined" ) {
+        console.warn( "Undefined document key in storage" );
+        return false;
+      }
+      return true;
+    })    
+
+    // reverse
+    let reverse = {};
+    keys.forEach(key => reverse[key] = 1);
+
+    // take out open files
+    Object.keys(this.properties_.open_files).forEach(key => reverse[this.properties_.open_files[key]] = 0);
+
+    // take out unclosed tabs -- these will get scrubbed on the next open,
+    // but we keep them for now to allow unclosing
+    (this.closed_tabs_||[]).forEach(tab => reverse[tab.id] = 0);
+
+    Object.keys(reverse).filter(key => reverse[key]).forEach(key => {
+      let item = `${CACHE_PREFIX}${key}`;
+      console.info("removing cached document", item);
+      localStorage.removeItem(item);
+    });
+
+  }
+
+  /**
    * 
    */
   private RestoreOpenFiles() {
@@ -848,7 +892,7 @@ export class Editor {
 
     if (activate) this.tabs_.ActivateTab(activate);
 
-    this.UpdateOpenFiles(true); // flush junk
+    this.UpdateOpenFiles();
 
   }
 
