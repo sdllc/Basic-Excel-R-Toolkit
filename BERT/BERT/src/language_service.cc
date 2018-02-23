@@ -36,9 +36,11 @@ LanguageService::LanguageService(CallbackInfo &callback_info, COMObjectMap &obje
   child_path_.append("\\");
   child_path_.append(descriptor.executable_);
 
-  std::string override_key = "BERT2.Override$NAMEPipeName";
-  InterpolateString(override_key);
-  APIFunctions::GetRegistryString(pipe_name_, override_key.c_str());
+  if (dev_flags_) {
+    std::string override_key = "BERT2.Override$NAMEPipeName";
+    InterpolateString(override_key);
+    APIFunctions::GetRegistryString(pipe_name_, override_key.c_str());
+  }
 
   if (!pipe_name_.length()) {
     std::stringstream ss;
@@ -521,7 +523,7 @@ int LanguageService::StartChildProcess(HANDLE job_handle) {
   command << "\"" << child_path_ << "\" -p " << pipe_name_ << " " << arguments;
 
   // construct shell command and launch process
-  int len = command.str().length();
+  size_t len = command.str().length();
   char *args = new char[len + 1];
   memcpy_s(args, len, command.str().c_str(), len);
   args[len] = 0;
