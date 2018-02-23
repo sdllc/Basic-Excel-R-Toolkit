@@ -41,6 +41,9 @@ export interface MenuEvent {
 
 /**
  * class abstracts menu installation, handling
+ * 
+ * FIXME: why is this static? we should use the same class for main
+ * and context menus, otherwise we're just duplicating effort
  */
 export class MenuUtilities {
 
@@ -176,23 +179,5 @@ export class MenuUtilities {
   static Load(menu_data){
     if( menu_data['main-menu'] ) this.Install(menu_data['main-menu']);
   }
-
-  /*
-  static Load(menu_data_path){
-    return new Promise((resolve, reject) => {
-      fs.readFile( menu_data_path, "utf8", (err, data) => {
-        if(err) return reject(err);
-        try {
-          let template = JSON.parse(data);
-          if( template['main-menu'] ) this.Install(template['main-menu']);
-        }
-        catch(e){
-          return reject(e);
-        }
-        resolve();
-      })
-    });
-  }
-  */
 
 }

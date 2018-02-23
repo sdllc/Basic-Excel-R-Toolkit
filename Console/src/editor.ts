@@ -928,7 +928,6 @@ export class Editor {
         }
         max_id = Math.max(max_id, entry);
         if(document.file_path_){
-          console.info("fww", document.file_path_);
           FileWatcher.Watch(document.file_path_);
         }
       }

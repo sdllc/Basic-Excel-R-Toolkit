@@ -7,6 +7,7 @@ import {TabPanel, TabJustify, TabEventType} from './tab_panel';
 import {remote} from 'electron';
 
 const {Menu, MenuItem} = remote;
+const TerminalContextMenu = require("../data/context_menu.json");
 
 import * as Rx from "rxjs";
 
@@ -208,7 +209,7 @@ export class MuliplexedTerminal {
     child.addEventListener("contextmenu", e => {
       
       // FIXME: use constants for menus
-
+      /*
       let menu_template:Electron.MenuItemConstructorOptions[] = [
         { label: "Copy", click: () => { terminal.Copy(); }},
         { label: "Paste", click: () => { terminal.Paste(); }},
@@ -225,6 +226,44 @@ export class MuliplexedTerminal {
           { type: "separator" }
         );
       }
+      */
+      
+      let event_handler = function(key, target?){
+        switch(key){
+        case "terminal-save-image":
+          this.SaveImageAs(target)
+          break;          
+        case "terminal-copy":
+          this.Copy();
+          break;          
+        case "terminal-paste":
+          this.Paste();
+          break;          
+        case "terminal-clear-shell":
+          this.ClearShell();
+          break;
+        default:
+          console.info(arguments);
+        }
+      };
+
+      let menu_template:Electron.MenuItemConstructorOptions[] = [];
+      let tag = e.target['tagName'] || "";
+      let class_name = e.target['className'] || "";
+      if( /img/i.test(tag) || (/canvas/i.test(tag) && /xterm-annotation/.test(class_name))){
+        TerminalContextMenu["terminal-image"]["items"].forEach(item => {
+          if( item.type === "separator" ) menu_template.push({type:"separator"});
+          else if( item.id ){
+            menu_template.push({ label:item.label, accelerator:item.accelerator, click: event_handler.bind(terminal, item.id, e.target) });
+          }
+        });
+      }
+      TerminalContextMenu["terminal"]["items"].forEach(item => {
+        if( item.type === "separator" ) menu_template.push({type:"separator"});
+        else if( item.id ){
+          menu_template.push({ label:item.label, accelerator:item.accelerator, click: event_handler.bind(terminal, item.id) });
+        }
+      });
 
       Menu.buildFromTemplate(menu_template).popup();
 
