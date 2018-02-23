@@ -8,11 +8,18 @@
   "status": {
     "ready": "Ready",
     "line": "Line",
-    "column": "Col"
+    "column": "Col",
+    "rendered": "Rendered"
   },
 
   "files": {
     "untitled": "Untitled",
     "preferences": "Preferences"
+  },
+
+  "editorCommands": {
+    "executeBuffer": "Execute Entire Buffer",
+    "executeSelection": "Execute Selection"
   }
+
 }

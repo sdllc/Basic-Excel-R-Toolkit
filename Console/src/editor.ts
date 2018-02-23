@@ -1,7 +1,6 @@
 /// <reference path="../node_modules/monaco-editor/monaco.d.ts" />
 
 import { remote } from 'electron';
-
 const { Menu, MenuItem, dialog } = remote;
 
 import { MenuUtilities } from './menu_utilities';
@@ -21,28 +20,25 @@ import * as fs from 'fs';
 import * as Rx from 'rxjs';
 
 // md for static rendering. FIXME: options, tune
-// [adding task lists]
 
 import * as MarkdownIt from 'markdown-it';
 import * as MarkdownItTasks from 'markdown-it-task-lists';
 const MD = new MarkdownIt().use(MarkdownItTasks); 
 
+import { FileWatcher } from './file-watcher';
+import { Preferences, PreferencesSchema } from './preferences';
+import { EEXIST } from 'constants';
+const SchemaSchema = require("../data/schemas/schema.schema.json");
+
 // ambient, declared in html. we need this for loading monaco
 declare const amd_require: any;
 
-import { Preferences, PreferencesSchema } from './preferences';
-const SchemaSchema = require("../data/schemas/schema.schema.json");
-
+// prefix for document cache in localStorage
 const CACHE_PREFIX = "cached-document-"
 
 interface UncloseRecord {
   id: number;
   position: number;
-}
-
-enum DocumentType {
-  File = 0,
-  LocalStorage
 }
 
 export enum EditorEventType {
@@ -90,9 +86,6 @@ class Document {
   /** local ID */
   id_: number;
 
-  /** type */
-  type_ = DocumentType.File;
-
   /** rendered: not editable, show rendered content -- md and html? */
   rendered_ = false;
 
@@ -114,7 +107,6 @@ class Document {
       dirty: this.dirty_,
       overrideLanguage: this.overrideLanguage_,
       uri: this.model_ ? this.model_.uri : null,
-      type: this.type_,
       rendered: this.rendered_,
       saved_version: this.saved_version_,
       alternative_version_id: this.model_ ? this.model_.getAlternativeVersionId() : 0,
@@ -457,7 +449,6 @@ export class Editor {
     let precondition = `editorLangId=='${id}'`;
 
     // FIXME: (optionally) override keybindings 
-    // FIXME: use constants for labels
 
     // I think the argument for these actions is the editor instance
 
@@ -466,7 +457,7 @@ export class Editor {
     
     this.editor_.addAction({
       id: `editor.exec_selection.${id}`,
-      label: "Execute Selection", 
+      label: Constants.editorCommands.executeSelection, // "Execute Selection", 
       keybindings: [ monaco.KeyCode.F9 ], 
       keybindingContext: null, 
       contextMenuGroupId: '80_exec',
@@ -486,7 +477,7 @@ export class Editor {
 
     this.editor_.addAction({
       id: `editor.exec_buffer.${id}`,
-      label: "Execute Buffer", 
+      label: Constants.editorCommands.executeBuffer, // "Execute Buffer", 
       keybindings: [ monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.F9 ], 
       keybindingContext: null, 
       contextMenuGroupId: '80_exec',
@@ -668,7 +659,7 @@ export class Editor {
    * utility for ~unique hashes (uses the java string algorithm). NOT SECURE! 
    * 
    * FIXME: who is using this? can we drop?
-   */
+   * /
   private static Hash(text) {
     let hash = 0;
     let length = text.length;
@@ -681,6 +672,7 @@ export class Editor {
     }
     return hash;
   }
+  */
 
   /**
    * writes document to local storage. document here includes content and
@@ -754,7 +746,6 @@ export class Editor {
         document = new Document();
         document.label_ = unserialized.label;
         document.file_path_ = unserialized.file_path;
-        document.type_ = unserialized.type_;
         document.overrideLanguage_ = unserialized.overrideLanguage;
 
         document.rendered_ = unserialized.rendered;
@@ -1006,7 +997,7 @@ export class Editor {
         editor_document.rendered_content_node_.style.zIndex = "10";
         this.editor_node_.style.zIndex = "0";
 
-        this.status_bar_.language = "Rendered"; // FIXME: use constant
+        this.status_bar_.language = Constants.status.rendered;
         this.status_bar_.show_position = false;
       }
       else {
@@ -1080,113 +1071,47 @@ export class Editor {
    * force_dialog is for "save as", can also be used in any case you
    * don't necessarily want to overwrite.
    */
-  public SaveTab(tab: TabSpec, force_dialog = false) {
+  public SaveTab(tab: TabSpec, save_as_dialog = false) {
 
     let document = tab.data as Document;
     let file_path = document.file_path_;
 
-    if (force_dialog || !file_path) {
+    // always show dialog if there's no path (this is a new document).
+    // note that the "save as" dialog automatically prompts for overwrite,
+    // so we don't need to do that ourselves.
 
-      // FIXME: get languages from config or something for better 
-      // extensibility, we don't want to have to edit this if we add
-      // a language.
+    if(!file_path) save_as_dialog = true;
 
-      // actually, more broadly, it should be based on the known or 
-      // assumed language, and then use any/all if we don't know      
+    if(save_as_dialog) {
 
-      // tip: use monaco.languages 
-
-      // dialog
-      let dialog_result = remote.dialog.showSaveDialog({
-        title: "Save File",
-        filters: [
-          { name: 'R source files', extensions: ['r', 'rsrc', 'rscript'] },
-          { name: 'Julia source files', extensions: ['jl', 'julia'] },
-          { name: 'All Files', extensions: ['*'] }
-        ]
+      file_path = remote.dialog.showSaveDialog({
+        defaultPath: document.file_path_ || document.label_
       });
-      if (dialog_result && dialog_result.length) file_path = dialog_result;
 
-      // FIXME: after changing file name, update document
-      // language and recent files list
-
-      // (...)
+      if(!file_path) {
+        console.info("save as canceled");
+        return;
+      }
 
     }
 
     if (file_path) {
       let contents = document.model_.getValue();
-      let match = file_path.match(/^localStorage:\/\/(.*)$/);
-      if (match) {
-        let key = match[1];
-        localStorage.setItem(key, contents);
-
-        /*
-        // special case
-        if (document.file_path_ === Preferences.PREFERENCES_URI) {
-          try {
-
-            contents = Preferences.StripComments(contents);
-
-            let data = JSON.parse(contents);
-            let editor_options = data.editor || {};
-
-            // theme can't be set at runtime using updateOptions.
-            // hello asymmetry?
-            if (editor_options.theme !== this.editor_options_.theme) {
-              monaco.editor.setTheme(editor_options.theme || "");
-            }
-
-            // sanity check 
-            editor_options.model = null;
-            editor_options.readOnly = false;
-            editor_options.contextmenu = false;
-
-            // hold
-            this.editor_options_ = editor_options;
-
-            // set
-            this.editor_.updateOptions(editor_options);
-
-            // this.active_document_.model_.updateOptions(editor_options);
-            this.tabs_.data.forEach(document => {
-              if (document.model_) {
-                document.model_.updateOptions(editor_options);
-              }
-            });
-
-            // notify listeners about property changes. FIXME: is this 
-            // the best way to manage this? (by which I mean this is not
-            // the best way to manage this).
-            this.events_.next({
-              type: EditorEventType.Command,
-              message: "update-preferences",
-              data: data || {}
-            });
-
+      fs.writeFile(file_path, contents, "utf8", err => {
+        if (err) console.error(err);
+        else {
+          tab.dirty = document.dirty_ = false;
+          if(save_as_dialog){
+            tab.tooltip = file_path;
+            document.label_ = tab.label = path.basename(file_path);
           }
-          catch (e) {
-            console.error(e);
-          }
+          document.file_path_ = file_path;
+          document.saved_version_ = document.model_.getAlternativeVersionId();
+          this.CacheDocument(document);
+          this.tabs_.UpdateTab(tab);
+          if(save_as_dialog) this.UpdateRecentFiles(file_path, true);
         }
-        */
-
-        tab.dirty = document.dirty_ = false;
-        document.saved_version_ = document.model_.getAlternativeVersionId();
-        this.CacheDocument(document);
-        this.tabs_.UpdateTab(tab);
-      }
-      else {
-        fs.writeFile(file_path, contents, "utf8", err => {
-          if (err) console.error(err);
-          else {
-            tab.dirty = document.dirty_ = false;
-            document.saved_version_ = document.model_.getAlternativeVersionId();
-            this.CacheDocument(document);
-            this.tabs_.UpdateTab(tab);
-          }
-        });
-      }
+      });
     }
 
   }
@@ -1223,6 +1148,17 @@ export class Editor {
     });
   }
 
+  /** 
+   * adds to or removes item from recent files list. if you are adding
+   * and it's already present, it will move to the top.
+   */
+  private UpdateRecentFiles(file_path:string, add=true){
+    let recent_files = (this.properties_.recent_files || []).slice(0).filter(x => x !== file_path);
+    if(add) recent_files.unshift(file_path);
+    this.properties_.recent_files = recent_files;
+    this.UpdateRecentFilesList();
+  }
+
   /** loads a file from a given path */
   private OpenFileInternal(file_path: string, override_label?:string , rendered = false) {
 
@@ -1243,63 +1179,21 @@ export class Editor {
 
     return new Promise((resolve, reject) => {
 
-      // special handling for documents in local storage, which
-      // (atm) is just preferences. should be a little more generic
-
-      // no longer used
-
-      /* 
-      let match = file_path.match(/^localStorage:\/\/(.*)$/);
-      if (match) {
-        let key = match[1];
-        let data = localStorage.getItem(key) || "";
-
-        // FIXME: do we want this in recent files? (...)
-        // ...
-
-        let document = new Document();
-
-        //if (key === Preferences.PREFERENCES_KEY) document.label_ = Constants.files.preferences;
-        //else 
-        document.label_ = key;
-
-        document.file_path_ = file_path;
-        document.type_ = DocumentType.LocalStorage;
-        document.overrideLanguage_ = "json";
-
-        // set the URI here so we can match it in json schema definitions
-        document.model_ = monaco.editor.createModel(data, "json", file_path as any);
-        document.model_.updateOptions(this.editor_options_);
-
-        document.saved_version_ = document.model_.getAlternativeVersionId()
-        document.id_ = this.document_id_generator++;
-
-        let tab: TabSpec = {
-          label: document.label_,
-          tooltip: file_path,
-          closeable: true,
-          button: true,
-          dirty: false,
-          data: document
-        };
-
-        this.tabs_.AddTabs(tab);
-        this.tabs_.ActivateTab(tab);
-        this.UpdateOpenFiles();
-
-        return resolve();
-      }
-      */
-
       fs.readFile(file_path, "utf8", (err, data) => {
-        if (err) return reject(err);
+        if (err) {
 
-        if(!rendered){
-          let recent_files = (this.properties_.recent_files || []).slice(0).filter(x => x !== file_path);
-          recent_files.unshift(file_path);
-          this.properties_.recent_files = recent_files;
-          this.UpdateRecentFilesList();
+          remote.dialog.showMessageBox({
+            type: "info", 
+            icon: null,
+            //title: "Error Opening File",
+            message: "We couldn't open the file. Please make sure the file exists and is readable."
+          });
+
+          this.UpdateRecentFiles(file_path, false);
+          return reject(err);
         }
+
+        if(!rendered) this.UpdateRecentFiles(file_path, true);
 
         let document = new Document();
         document.label_ = override_label ? override_label : path.basename(file_path);
@@ -1338,21 +1232,13 @@ export class Editor {
   }
 
   /** 
-   * select and open file. if no path is passed, show a file chooser.
-   * FIXME: use registered languages for selecting what to open?
-   * FIXME: actually since monaco can open almost anything, why not just
-   *        default to that? 
+   * opens file in the editor, in a new tab. if the file is already open,
+   * switches to the open buffer. if no path is passed, shows a file chooser.
    */
   public OpenFile(file_path?: string) {
     if (file_path) return this.OpenFileInternal(file_path);
     let files = remote.dialog.showOpenDialog({
-      title: "Open File",
-      properties: ["openFile"],
-      filters: [
-        //{ name: 'R source files', extensions: ['r', 'rsrc', 'rscript'] },
-        //{ name: 'Julia source files', extensions: ['jl', 'julia'] },
-        { name: 'All Files', extensions: ['*'] }
-      ]
+      properties: ["openFile"]
     });
     if (files && files.length) return this.OpenFileInternal(files[0]);
     return Promise.reject("no file selected");

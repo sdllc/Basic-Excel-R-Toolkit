@@ -137,9 +137,10 @@ editor.events.subscribe(event => {
     switch(event.message){
     case "execute-selection":
     case "execute-buffer":
-      let terminal = terminals.Get(event.data.language)
       let code = event.data.code || "";
-      if( code.length ){
+      let terminal = terminals.Get(event.data.language)
+      if(terminal && code.length ){
+        terminals.Activate(event.data.language);
         terminal.Paste(code);
       }
       break;     

@@ -219,6 +219,11 @@ export class TabPanel {
       if( tab === check_tab ){
         if( tab.dirty ) child.classList.add(TabClasses.dirty);
         else child.classList.remove(TabClasses.dirty);
+        let label = child.querySelector('.tab-panel-tab-label');
+        if(label){
+          label.setAttribute("title", tab.tooltip || "");
+          label.textContent = tab.label || "";
+        }
         return true;
       }
       return false;
