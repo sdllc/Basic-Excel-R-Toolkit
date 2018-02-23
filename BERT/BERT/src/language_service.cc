@@ -96,8 +96,6 @@ void LanguageService::SetApplicationPointer(LPDISPATCH application_pointer) {
   auto function_call = call.mutable_function_call();
   function_call->set_function("install-application-pointer"); // generic
   function_call->set_target(BERTBuffers::CallTarget::system);
-
-  //function_call->add_arguments()->set_external_pointer(reinterpret_cast<ULONG_PTR>(application_pointer));
   object_map_.DispatchToVariable(function_call->add_arguments(), application_pointer, true);
 
   Call(response, call);
@@ -126,11 +124,6 @@ void LanguageService::RunCallbackThread() {
 
     DWORD bytes = 0;
     OVERLAPPED io;
-    //bool reading = true;
-
-//    if (stream_pointer_) {
-//      DebugOut("stream pointer already set\n");
-//    }
 
     memset(&io, 0, sizeof(io));
     io.hEvent = CreateEvent(0, TRUE, FALSE, 0);
@@ -154,14 +147,8 @@ void LanguageService::RunCallbackThread() {
 
           if (call.wait()) {
             std::string str_response = MessageUtilities::Frame(response);
-            //memcpy(buffer, str_response.c_str(), str_response.length());
-            DebugOut("callback writing response (%d)\n", str_response.size());
-
-            // block?
-            //WriteFile(callback_pipe_handle, buffer, (int32_t)str_response.size(), &bytes, &io);
             WriteFile(callback_pipe_handle, str_response.c_str(), (int32_t)str_response.size(), &bytes, &io);
             result = GetOverlappedResultEx(callback_pipe_handle, &io, &bytes, INFINITE, FALSE);
-            DebugOut("result %d; wrote %d bytes\n", result, bytes);
           }
 
           // restart

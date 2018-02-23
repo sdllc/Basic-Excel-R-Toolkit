@@ -19,6 +19,9 @@
     <Filter Include="script">
       <UniqueIdentifier>{d0318f18-87ac-4f4a-8c25-85db8c49c5e6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Common">
+      <UniqueIdentifier>{26c08613-c867-4dc2-a9ef-70457c409b79}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\stdafx.h">
@@ -58,9 +61,6 @@
     <ClInclude Include="include\excel_com_type_libraries.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\message_utilities.h">
-      <Filter>PB</Filter>
-    </ClInclude>
     <ClInclude Include="include\callback_info.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -87,6 +87,9 @@
     </ClInclude>
     <ClInclude Include="include\excel_api_functions.h">
       <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\message_utilities.h">
+      <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -139,6 +142,9 @@
     </ClCompile>
     <ClCompile Include="..\..\Common\json11\json11.cpp">
       <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\message_utilities.cc">
+      <Filter>Common</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

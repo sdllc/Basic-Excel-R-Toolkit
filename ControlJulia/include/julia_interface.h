@@ -19,6 +19,7 @@
 
 #include "variable.pb.h"
 #include "string_utilities.h"
+#include "message_utilities.h"
 
 typedef enum {
   Error = 0,

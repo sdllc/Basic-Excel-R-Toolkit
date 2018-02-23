@@ -27,9 +27,6 @@
     <ClInclude Include="include\control_julia.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\PB\message_utilities.h">
-      <Filter>PB</Filter>
-    </ClInclude>
     <ClInclude Include="..\PB\variable.pb.h">
       <Filter>PB</Filter>
     </ClInclude>
@@ -40,6 +37,9 @@
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="..\Common\string_utilities.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\message_utilities.h">
       <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>
@@ -54,6 +54,9 @@
       <Filter>PB</Filter>
     </ClCompile>
     <ClCompile Include="..\Common\pipe.cc">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\message_utilities.cc">
       <Filter>Common</Filter>
     </ClCompile>
   </ItemGroup>

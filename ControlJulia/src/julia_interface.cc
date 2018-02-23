@@ -146,12 +146,23 @@ jl_value_t * VariableToJlValue(const BERTBuffers::Variable *variable) {
     // can use more efficient julia arrays and use a data pointer rather than the 
     // set() syntax
 
+    // julia doesn't like sparse arrays [actually they are fine, but they're a 
+    // separate type; we will only allow full arrays]
+
+    MessageUtilities::TypeFlags type_flags = MessageUtilities::CheckArrayType(arr, false, false);
+
+    jl_datatype_t *array_base_type = jl_any_type;
+    if (type_flags & MessageUtilities::TypeFlags::integer) array_base_type = jl_int64_type;
+    else if (type_flags & MessageUtilities::TypeFlags::numeric) array_base_type = jl_float64_type;
+    else if (type_flags & MessageUtilities::TypeFlags::string) array_base_type = jl_string_type;
+    else if (type_flags & MessageUtilities::TypeFlags::logical) array_base_type = jl_bool_type;
+
     jl_array_t *julia_array = 0; //  jl_nothing;
     if (ncols == 1) 
     {
-      jl_value_t* array_type = jl_apply_array_type((jl_value_t*)jl_any_type, 1);
+      jl_value_t* array_type = jl_apply_array_type((jl_value_t*)array_base_type, 1);
       julia_array = jl_alloc_array_1d(array_type, nrows);
-
+      
       for (int i = 0; i < nrows; i++) {
         jl_value_t *element = VariableToJlValue(&(arr.data(i)));
         jl_arrayset(julia_array, element, i);
@@ -160,7 +171,7 @@ jl_value_t * VariableToJlValue(const BERTBuffers::Variable *variable) {
     }
     else {
 
-      jl_value_t* array_type = jl_apply_array_type((jl_value_t*)jl_any_type, 2);
+      jl_value_t* array_type = jl_apply_array_type((jl_value_t*)array_base_type, 2);
       julia_array = jl_alloc_array_2d(array_type, nrows, ncols);
 
       int index = 0;

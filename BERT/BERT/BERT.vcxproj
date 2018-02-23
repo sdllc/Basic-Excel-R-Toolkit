@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Common\json11\json11.hpp" />
+    <ClInclude Include="..\..\Common\message_utilities.h" />
     <ClInclude Include="..\..\Common\process_exit_codes.h" />
     <ClInclude Include="..\..\Common\string_utilities.h" />
     <ClInclude Include="..\..\PB\variable.pb.h" />
@@ -31,7 +32,6 @@
     <ClInclude Include="include\file_change_watcher.h" />
     <ClInclude Include="include\language_desc.h" />
     <ClInclude Include="include\language_service.h" />
-    <ClInclude Include="include\message_utilities.h" />
     <ClInclude Include="include\windows_api_functions.h" />
     <ClInclude Include="include\basic_functions.h" />
     <ClInclude Include="include\bert.h" />
@@ -51,6 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Common\json11\json11.cpp" />
+    <ClCompile Include="..\..\Common\message_utilities.cc" />
     <ClCompile Include="..\..\PB\variable.pb.cc" />
     <ClCompile Include="ExcelLib\XLCALL.CPP" />
     <ClCompile Include="src\com_object_map.cc" />

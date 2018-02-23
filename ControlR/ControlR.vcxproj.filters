@@ -36,6 +36,9 @@
     <ClCompile Include="rinterface_common.cc">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="..\Common\message_utilities.cc">
+      <Filter>Common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\PB\variable.pb.h">

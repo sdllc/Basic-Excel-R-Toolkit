@@ -131,15 +131,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\Common\message_utilities.h" />
     <ClInclude Include="..\Common\pipe.h" />
     <ClInclude Include="..\Common\process_exit_codes.h" />
     <ClInclude Include="..\Common\string_utilities.h" />
-    <ClInclude Include="..\PB\message_utilities.h" />
     <ClInclude Include="..\PB\variable.pb.h" />
     <ClInclude Include="include\control_julia.h" />
     <ClInclude Include="include\julia_interface.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\Common\message_utilities.cc" />
     <ClCompile Include="..\Common\pipe.cc" />
     <ClCompile Include="..\PB\variable.pb.cc" />
     <ClCompile Include="src\control_julia.cc" />

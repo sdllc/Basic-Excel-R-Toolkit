@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\Common\message_utilities.cc" />
     <ClCompile Include="..\Common\pipe.cc" />
     <ClCompile Include="..\PB\variable.pb.cc" />
     <ClCompile Include="console_graphics_device.cc" />
