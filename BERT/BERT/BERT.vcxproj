@@ -27,6 +27,7 @@
     <ClInclude Include="include\callback_info.h" />
     <ClInclude Include="include\com_object_map.h" />
     <ClInclude Include="include\debug_functions.h" />
+    <ClInclude Include="include\excel_api_functions.h" />
     <ClInclude Include="include\file_change_watcher.h" />
     <ClInclude Include="include\language_desc.h" />
     <ClInclude Include="include\language_service.h" />

@@ -8,6 +8,8 @@
 #include "type_conversions.h"
 #include "windows_api_functions.h"
 
+#include "excel_api_functions.h"
+
 void resetXlOper(LPXLOPER12 x)
 {
   if (x->xltype == (xltypeStr | xlbitDLLFree) && x->val.str)
@@ -250,7 +252,6 @@ bool RegisterBasicFunctions()
 
   return true;
 }
-
 
 BOOL WINAPI xlAutoOpen(void)
 {

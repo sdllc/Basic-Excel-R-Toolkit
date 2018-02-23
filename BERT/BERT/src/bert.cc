@@ -12,7 +12,9 @@
 #include "..\resource.h"
 
 #include "excel_com_type_libraries.h"
-#include <google\protobuf\util\json_util.h>
+#include "excel_api_functions.h"
+
+#include "bert_version.h"
 
 // --- temp (pending move to config) --------------
 
@@ -22,37 +24,6 @@ std::vector < LanguageDescriptor > language_descriptors = {
 };
 
 // ------------------------------------------------
-
-#include "bert_version.h"
-
-// this is an excel api function
-extern void RegisterFunctions();
-
-// this is an excel api function
-extern void UnregisterFunctions();
-
-// this is an excel api function
-extern bool ExcelRegisterLanguageCalls(const char *language_name, uint32_t language_key);
-
-/** debug/util function */
-void DumpJSON(const google::protobuf::Message &message, const char *path = 0) {
-//#ifdef _DEBUG
-  std::string str;
-  google::protobuf::util::JsonOptions opts;
-  opts.add_whitespace = true;
-  google::protobuf::util::MessageToJsonString(message, &str, opts);
-  if (path) {
-    FILE *f;
-    fopen_s(&f, path, "w");
-    if (f) {
-      fwrite(str.c_str(), sizeof(char), str.length(), f);
-      fflush(f);
-    }
-    fclose(f);
-  }
-  else DebugOut("%s\n", str.c_str());
-//#endif
-}
 
 BERT* BERT::instance_ = 0;
 
@@ -227,13 +198,13 @@ BOOL CALLBACK BERT::ShowConsoleWindowCallback(HWND hwnd, LPARAM lParam)
 
       ShowWindow(hwnd, SW_HIDE);
 
-      SetWindowLong(hwnd, GWL_STYLE, style);
       SetWindowLong(hwnd, GWL_EXSTYLE, exstyle);
+      SetWindowLong(hwnd, GWL_STYLE, style);
 
       if (show) {
         if (IsIconic(hwnd)) ShowWindow(hwnd, SW_RESTORE);
         ShowWindow(hwnd, SW_SHOW);
-        ::SetForegroundWindow(hwnd);
+        SetForegroundWindow(hwnd);
       }
 
       style = GetWindowLong(hwnd, GWL_STYLE);
@@ -245,8 +216,40 @@ BOOL CALLBACK BERT::ShowConsoleWindowCallback(HWND hwnd, LPARAM lParam)
   return TRUE;
 }
 
+struct handle_data {
+  unsigned long process_id;
+  HWND best_handle;
+};
+
+BOOL CALLBACK BERT::FocusExcelWindowCallback(HWND hwnd, LPARAM lParam) {
+
+  DWORD pid = (DWORD)lParam;
+  DWORD window_pid;
+
+  GetWindowThreadProcessId(hwnd, &window_pid);
+
+  if ((pid != window_pid)
+    || (GetWindow(hwnd, GW_OWNER) != (HWND)0)
+    || !IsWindowVisible(hwnd)) return TRUE;
+
+  /*
+  char className[256];
+  ::RealGetWindowClassA(hwnd, className, 256);
+  std::cout << "found window, focusing: " << className << std::endl;
+  */
+
+  SetForegroundWindow(hwnd);
+  SetActiveWindow(hwnd);
+  SetFocus(hwnd);
+
+  return FALSE;
+}
+
 void BERT::HideConsole() {
   EnumWindows(BERT::ShowConsoleWindowCallback, false);
+
+  DWORD pid = _getpid();
+  EnumWindows(BERT::FocusExcelWindowCallback, (LPARAM)pid);
 }
 
 void BERT::ShowConsole() {
@@ -364,7 +367,7 @@ unsigned BERT::InstanceConsoleThreadFunction(){
       ::ResetEvent(handles[1]);
       std::string message = console_notifications_[0];
       console_notifications_.erase(console_notifications_.begin());
-      WriteFile(handle, message.c_str(), message.length(), &bytes_written, &write_io);
+      WriteFile(handle, message.c_str(), (DWORD)message.length(), &bytes_written, &write_io);
       result = GetOverlappedResultEx(handle, &write_io, &bytes_written, INFINITE, FALSE);
     }
     else if (result == WAIT_OBJECT_0) {
@@ -766,31 +769,19 @@ void BERT::Init() {
 
 void BERT::RegisterLanguageCalls() {
   function_list_.clear();
-  int len = language_services_.size();
-  for (int i = 0; i < len; i++) {
-    auto language_service = language_services_[i];
-    //FUNCTION_LIST functions = language_services_[i]->MapLanguageFunctions(i);
-    //function_list_.insert(function_list_.end(), functions.begin(), functions.end());
-    ExcelRegisterLanguageCalls(language_service->name().c_str(), i);
+  int index = 0;
+  for (auto language_service : language_services_) {
+    ExcelRegisterLanguageCalls(language_service->name().c_str(), index++);
   }
 }
 
 void BERT::MapFunctions() {
   function_list_.clear();
-  int len = language_services_.size();
-
-  std::stringstream ss;
-
-  for (int i = 0; i < len; i++) {
-    FUNCTION_LIST functions = language_services_[i]->MapLanguageFunctions(i);
+  int index = 0;
+  for (auto language_service : language_services_) {
+    FUNCTION_LIST functions = language_service->MapLanguageFunctions(index++);
     function_list_.insert(function_list_.end(), functions.begin(), functions.end());
-    ss << functions.size() << ", ";
   }
-  
-  // ::MessageBoxA(0, ss.str().c_str(), "OK", MB_OK);
-  std::cout << ss.str() << std::endl;
-  return;
-
 }
 
 std::shared_ptr<LanguageService> BERT::GetLanguageService(uint32_t key) {

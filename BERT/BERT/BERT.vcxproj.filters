@@ -85,6 +85,9 @@
     <ClInclude Include="include\language_desc.h">
       <Filter>language-services</Filter>
     </ClInclude>
+    <ClInclude Include="include\excel_api_functions.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\PB\variable.proto">

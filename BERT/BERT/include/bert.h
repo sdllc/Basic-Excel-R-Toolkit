@@ -163,6 +163,11 @@ public:
    */
   static BOOL CALLBACK ShowConsoleWindowCallback(HWND hwnd, LPARAM lParam);
 
+  /**
+   * tail routine for 2d enum proc, finding topmost excel window
+   */
+  static BOOL CALLBACK FocusExcelWindowCallback(HWND hwnd, LPARAM lParam);
+
   /** 
    * opens the console, creating the process if necessary 
    */
