@@ -1,90 +1,187 @@
 {
   "type": "object",
   "properties": {
-
     "BERT": {
       "type": "object",
       "properties": {
-        "functionsDirectory": { 
+        "functionsDirectory": {
           "type": "string"
         },
         "R": {
-          "type": "object" 
+          "type": "object"
         },
         "Julia": {
           "type": "object"
         }
       }
     },
-
     "shell": {
       "type": "object",
       "properties": {
         "theme": {
           "type": "object",
           "properties": {
-            "foreground": { "type": "string" },
-            "background": { "type": "string" },
-            "cursor": { "type": "string" },
-            "cursorAccent": { "type": "string" },
-            "selection": { "type": "string" },
-            "black": { "type": "string" },
-            "red": { "type": "string" },
-            "green": { "type": "string" },
-            "yellow": { "type": "string" },
-            "blue": { "type": "string" },
-            "magenta": { "type": "string" },
-            "cyan": { "type": "string" },
-            "white": { "type": "string" },
-            "brightBlack": { "type": "string" },
-            "brightRed": { "type": "string" },
-            "brightGreen": { "type": "string" },
-            "brightYellow": { "type": "string" },
-            "brightBlue": { "type": "string" },
-            "brightMagenta": { "type": "string" },
-            "brightCyan": { "type": "string" },
-            "brightWhite": { "type": "string" }
+            "foreground": {
+              "type": "string"
+            },
+            "background": {
+              "type": "string"
+            },
+            "cursor": {
+              "type": "string"
+            },
+            "cursorAccent": {
+              "type": "string"
+            },
+            "selection": {
+              "type": "string"
+            },
+            "black": {
+              "type": "string"
+            },
+            "red": {
+              "type": "string"
+            },
+            "green": {
+              "type": "string"
+            },
+            "yellow": {
+              "type": "string"
+            },
+            "blue": {
+              "type": "string"
+            },
+            "magenta": {
+              "type": "string"
+            },
+            "cyan": {
+              "type": "string"
+            },
+            "white": {
+              "type": "string"
+            },
+            "brightBlack": {
+              "type": "string"
+            },
+            "brightRed": {
+              "type": "string"
+            },
+            "brightGreen": {
+              "type": "string"
+            },
+            "brightYellow": {
+              "type": "string"
+            },
+            "brightBlue": {
+              "type": "string"
+            },
+            "brightMagenta": {
+              "type": "string"
+            },
+            "brightCyan": {
+              "type": "string"
+            },
+            "brightWhite": {
+              "type": "string"
+            }
           }
+        },
+        "cursorStyle": {
+          "type": "string",
+          "enum": [
+            "block",
+            "underline",
+            "bar"
+          ]
+        },
+        "cursorBlink": {
+          "type": "boolean"
         },
         "fontFamily": {
           "type": "string"
         },
         "fontSize": {
-          "type": ["string", "number"]
+          "type": [
+            "string",
+            "number"
+          ]
         }
       }
     },
-
     "editor": {
       "type": "object",
-
       "properties": {
-
-        "fontFamily": { "type": "string" },
-        "fontSize": { "type": ["string", "number"] },
-        "fontLigatures": { "type": "boolean", "default": false },
-
-        "rulers": {
-          "type": "array", "items": { "type": "integer" }
+        "fontFamily": {
+          "type": "string"
         },
-
-        "roundedSelection": {"type": "boolean"},
-        "scrollBeyondLastLine": {"type": "boolean"},
+        "fontSize": {
+          "type": [
+            "string",
+            "number"
+          ]
+        },
+        "fontLigatures": {
+          "type": "boolean",
+          "default": false
+        },
+        "rulers": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "roundedSelection": {
+          "type": "boolean"
+        },
+        "scrollBeyondLastLine": {
+          "type": "boolean"
+        },
         "theme": {
           "type": "string",
-          "enum": ["vs", "vs-dark", "hc-black"]
+          "enum": [
+            "vs",
+            "vs-dark",
+            "hc-black"
+          ]
         },
-        "lineNumbers": {"type": "boolean"},
-        "statusBar": {"type": "boolean"},
-
-        "tabSize": {"type": "integer"},
-        "insertSpaces": {"type": "boolean"},
-
+        "lineNumbers": {
+          "type": "string",
+          "enum": [
+            "on",
+            "off"
+          ]
+        },
+        "statusBar": {
+          "type": "boolean"
+        },
+        "tabSize": {
+          "type": "integer"
+        },
+        "insertSpaces": {
+          "type": "boolean"
+        },
         "minimap": {
           "type": "object",
           "properties": {
-            "enabled": { "type": "boolean", "default": true }
+            "enabled": {
+              "type": "boolean",
+              "default": true
+            }
           }
+        },
+        "renderWhitespace": {
+          "type": "string",
+          "enum": [
+            "none",
+            "boundary",
+            "all"
+          ]
+        },
+        "autoIndent": {
+          "type": "boolean"
+        },
+        "links": {
+          "type": "boolean"
         }
       }
     }
