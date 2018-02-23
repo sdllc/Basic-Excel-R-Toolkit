@@ -98,6 +98,9 @@ class Document {
   /** override language (optional) */
   overrideLanguage_: string;
 
+  /** save pending to prevent loop with file watcher; not preserved */
+  save_pending_ = false;
+
   /** serialize */
   toJSON() {
     return {
@@ -633,6 +636,57 @@ export class Editor {
 
     Preferences.preferences.subscribe(x => this.UpdatePreferences(x));
 
+    // file updates
+    FileWatcher.events.subscribe(x => this.OnFileChange(x));
+
+  }
+
+  private OnFileChange(file_path){
+
+    // FIXME: handle changes to dirty tabs, closed tabs
+    // for the latter we probably need to start caching 
+    // file times with the documents
+
+    // FIXME: handle saving in editor
+
+    this.tabs_.tabs.forEach(t => {
+      let tab = <TabSpec>t;
+      let document = t.data as Document;
+      if(document.file_path_ === file_path ){
+        if(document.save_pending_){
+          document.save_pending_ = false;
+          return;
+        }
+
+        if(!document.dirty_){
+
+          document.view_state_ = this.editor_.saveViewState();
+          fs.readFile(file_path, "utf8", (err, data) => {
+            if(!err) {
+              if(document.rendered_){
+                document.rendered_content_ = data;
+                document.rendered_content_node_.innerHTML = MD.render(document.rendered_content_);
+              }
+              else {
+                document.model_.setValue(data);
+              }
+              tab.dirty = document.dirty_ = false;
+              this.CacheDocument(document);
+              this.tabs_.UpdateTab(tab);
+
+              // if active, call restore view state asap
+              if(!document.rendered_ && this.active_tab_ === tab){
+                this.editor_.restoreViewState(document.view_state_);
+              }
+              
+            }
+          });
+        }       
+        else {
+          console.warn( "Changes to dirty document, notify user" ); // FIXME
+        }
+      }
+    });
   }
 
   /**
@@ -873,6 +927,10 @@ export class Editor {
           this.untitled_id_generator_ = Math.max(this.untitled_id_generator_, Number(match[1]) + 1);
         }
         max_id = Math.max(max_id, entry);
+        if(document.file_path_){
+          console.info("fww", document.file_path_);
+          FileWatcher.Watch(document.file_path_);
+        }
       }
       if (active_id === entry) activate = tab;
     });
@@ -914,6 +972,8 @@ export class Editor {
       this.UpdateOpenFiles();
     }
 
+    if(document && document.file_path_) FileWatcher.Watch(document.file_path_);
+
   }
 
   /**
@@ -947,6 +1007,9 @@ export class Editor {
       document.rendered_content_node_.parentElement.removeChild(document.rendered_content_node_);
       document.rendered_content_node_ = null;
     }
+
+    if(document.file_path_) FileWatcher.Unwatch(document.file_path_);
+
   }
 
   /** deactivates tab and saves view state. */
@@ -1096,14 +1159,24 @@ export class Editor {
     }
 
     if (file_path) {
+
+      if(FileWatcher.IsWatching(file_path)) {
+        // because the watcher won't unset if we don't get notified
+        document.save_pending_ = true;
+      }
+
       let contents = document.model_.getValue();
       fs.writeFile(file_path, contents, "utf8", err => {
-        if (err) console.error(err);
+        if (err) {
+          document.save_pending_ = false;
+          console.error(err);
+        }
         else {
           tab.dirty = document.dirty_ = false;
           if(save_as_dialog){
             tab.tooltip = file_path;
             document.label_ = tab.label = path.basename(file_path);
+            if(document.file_path_ !== file_path) FileWatcher.Watch(file_path);
           }
           document.file_path_ = file_path;
           document.saved_version_ = document.model_.getAlternativeVersionId();
@@ -1194,6 +1267,8 @@ export class Editor {
         }
 
         if(!rendered) this.UpdateRecentFiles(file_path, true);
+
+        FileWatcher.Watch(file_path);
 
         let document = new Document();
         document.label_ = override_label ? override_label : path.basename(file_path);

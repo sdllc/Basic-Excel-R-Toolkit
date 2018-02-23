@@ -13,6 +13,10 @@ export class FileWatcher {
 
   private static watcher_:any;
 
+  public static IsWatching(file:string) : boolean {
+    return !!this.reference_map_[file];
+  }
+
   static Watch(file:string){
     if( this.reference_map_[file] ) this.reference_map_[file]++;
     else {
