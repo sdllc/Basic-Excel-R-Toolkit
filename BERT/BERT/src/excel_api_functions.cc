@@ -144,7 +144,7 @@ bool ExcelRegisterLanguageCalls(const char *language_name, uint32_t language_key
   XCHAR wide_string[128];
 
   WCHAR wide_name[128];
-  int wide_name_length = MultiByteToWideChar(CP_UTF8, 0, language_name, strlen(language_name), wide_name, 128);
+  size_t wide_name_length = MultiByteToWideChar(CP_UTF8, 0, language_name, strlen(language_name), wide_name, 128);
   wide_name[wide_name_length] = 0;
 
   // here we're assuming that all strings are < 255 characters.
