@@ -354,18 +354,21 @@ public:
         x->val.array.rows = rows;
         x->val.array.lparray = new XLOPER12[rows * cols];
 
+        int c_offset = (row_names ? 1 : 0);
+        int r_offset = (col_names ? 1 : 0);
+
         int index = 0;
         for (int c = 0; c < cols; c++) {
           if (row_names && c == 0) {
-            StringToXLOPER(&(x->val.array.lparray[0]), "");
-            for (int r = 1; r < rows; r++) {
-              StringToXLOPER(&(x->val.array.lparray[r * cols + c]), arr.rownames(r - 1));
+            if(col_names) StringToXLOPER(&(x->val.array.lparray[0]), "");
+            for (int r = r_offset; r < rows; r++) {
+              StringToXLOPER(&(x->val.array.lparray[r * cols + c]), arr.rownames(r - r_offset));
             }
           }
           else {
             for (int r = 0; r < rows; r++) {
               if (col_names && r == 0) {
-                StringToXLOPER(&(x->val.array.lparray[r * cols + c]), arr.colnames(c - 1));
+                StringToXLOPER(&(x->val.array.lparray[r * cols + c]), arr.colnames(c - c_offset));
               }
               else {
                 VariableToXLOPER(&(x->val.array.lparray[r * cols + c]), arr.data(index++));
