@@ -24,6 +24,14 @@ LanguageService::LanguageService(CallbackInfo &callback_info, COMObjectMap &obje
   this->configured_ = language_home_.length();
   if (!this->configured_) return;
 
+  DWORD result = ExpandEnvironmentStringsA(language_home_.c_str(), 0, 0);
+  if (result) {
+    char *buffer = new char[result + 1];
+    result = ExpandEnvironmentStringsA(language_home_.c_str(), buffer, result + 1);
+    if (result) language_home_ = buffer;
+    delete[] buffer;
+  }
+
   file_extensions_ = descriptor.extensions_;
   language_prefix_ = descriptor.prefix_;
   language_name_ = descriptor.name_;
@@ -268,6 +276,7 @@ void LanguageService::ReadSourceFile(const std::string &file) {
   function_call->set_function("read-source-file");
   function_call->set_target(BERTBuffers::CallTarget::system);
   function_call->add_arguments()->set_str(file);
+  function_call->add_arguments()->set_boolean(true); // notify
 
   Call(response, call);
 }

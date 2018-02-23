@@ -310,8 +310,14 @@ SEXP RCallSEXP(const BERTBuffers::CompositeFunctionCall &fc, bool wait, int &err
 
 }
 
-bool ReadSourceFile(const std::string &file) {
+bool ReadSourceFile(const std::string &file, bool notify) {
   int err = 0;
+  if (notify) {
+    std::string message = "Loading script file: ";
+    message.append(file);
+    message.append("\n");
+    R_tryEval(Rf_lang2(Rf_install("cat"), Rf_mkString(message.c_str())), R_GlobalEnv, &err);
+  }
   R_tryEval(Rf_lang2(Rf_install("source"), Rf_mkString(file.c_str())), R_GlobalEnv, &err);
   return !err;
 }

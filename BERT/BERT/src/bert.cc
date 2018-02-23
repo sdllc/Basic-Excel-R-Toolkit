@@ -76,6 +76,9 @@ void BERT::FileWatcherCallback(void *argument, const std::vector<std::string> &f
 
 bool BERT::LoadLanguageFile(const std::string &file) {
 
+  // are we looping twice, once over files and then over languages? 
+  // is that the best way to do this? [obviously not]
+
   // check available langauges
   for (auto language_service : language_services_) {
     if (language_service->ValidFile(file)) {
@@ -747,6 +750,14 @@ void BERT::Init() {
   {
     std::string functions_directory = config_["BERT"]["functionsDirectory"].string_value();
     if (functions_directory.length()) {
+
+      DWORD result = ExpandEnvironmentStringsA(functions_directory.c_str(), 0, 0);
+      if (result) {
+        char *buffer = new char[result + 1];
+        result = ExpandEnvironmentStringsA(functions_directory.c_str(), buffer, result+1);
+        if (result) functions_directory = buffer;
+        delete[] buffer;
+      }
 
       // list...
       std::vector< std::pair< std::string, FILETIME >> directory_entries = APIFunctions::ListDirectory(functions_directory);

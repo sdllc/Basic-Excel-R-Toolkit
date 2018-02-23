@@ -138,10 +138,12 @@ bool SystemCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallResp
   }
   else if (!function.compare("read-source-file")) {
     std::string file = call.function_call().arguments(0).str();
+    bool notify = false;
+    if (call.function_call().arguments_size() > 1) notify = call.function_call().arguments(1).boolean();
     bool success = false;
     if (file.length()) {
       std::cout << "read source: " << file << std::endl;
-      success = ReadSourceFile(file);
+      success = ReadSourceFile(file, notify);
     }
     response.mutable_result()->set_boolean(success);
   }

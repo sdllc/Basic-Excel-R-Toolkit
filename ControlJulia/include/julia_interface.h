@@ -52,7 +52,7 @@ void JuliaCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallRespo
 bool JuliaPostInit();
 
 /** reads source file; for julia this uses `import` */
-bool ReadSourceFile(const std::string &file);
+bool ReadSourceFile(const std::string &file, bool notify = false);
 
 bool Callback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response);
 

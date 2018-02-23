@@ -516,16 +516,17 @@ __inline bool ReportException(const char *tag) {
   return false;
 }
 
-bool ReadSourceFile(const std::string &file) {
+bool ReadSourceFile(const std::string &file, bool notify) {
 
-  jl_function_t *function_pointer = jl_get_function(jl_main_module, "include");
+  // should be able to cache this one
+  //jl_function_t *function_pointer = jl_get_function(jl_main_module, "include");
+  jl_function_t *function_pointer = ResolveFunction("BERT.ReadScriptFile");
   if (!function_pointer || jl_is_nothing(function_pointer)) return false;
 
   jl_value_t *function_result = jl_nothing;
-  jl_value_t *argument = jl_pchar_to_string(file.c_str(), file.length());
 
   JL_TRY{
-    function_result = jl_call1(function_pointer, argument);
+    function_result = jl_call2(function_pointer, jl_pchar_to_string(file.c_str(), file.length()), jl_box_bool(notify ? 1 : 0));
     ReportException("read-source-file");
   }
   JL_CATCH{

@@ -53,7 +53,7 @@ bool ConsoleCallback(const BERTBuffers::CallResponse &call, BERTBuffers::CallRes
 /** 
  * reads source file. in R, this uses `source`.
  */
-bool ReadSourceFile(const std::string &file);
+bool ReadSourceFile(const std::string &file, bool notify = false);
 
 /**
  *

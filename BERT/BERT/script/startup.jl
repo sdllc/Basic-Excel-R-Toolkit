@@ -164,6 +164,19 @@ module BERT
 
   #---------------------------------------------------------------------------- 
   #
+  # read script file and (optionally) log to the console
+  #
+  #---------------------------------------------------------------------------- 
+  function ReadScriptFile(file, notify=false)
+    if(notify)
+      print("Loading script file: $(Base.text_colors[:cyan])$(file)$(Base.text_colors[:normal])\n");
+    end
+    include(file)
+    nothing
+  end
+
+  #---------------------------------------------------------------------------- 
+  #
   # banner under regular julia banner
   #
   #---------------------------------------------------------------------------- 
