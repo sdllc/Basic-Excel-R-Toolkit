@@ -79,26 +79,10 @@ SEXP VariableToSEXP(const BERTBuffers::Variable &var) {
       count = rows = arr.data_size();
       cols = 0;
     }
+    
+    // check for single type (in R, we can include nulls and NAs in the array)
 
-    bool is_numeric = true;
-    bool is_integer = true;
-    bool is_logical = true;
-    bool is_string = true;
-
-    // FIXME: other simple type? complex?
-    // FIXME: treat NAs as part of generic type? (...yes) 
-
-    // we're treating BOTH nil and missing as NAs here. we get slightly different
-    // values from excel/COM, and we want reasonable behavior in each case.
-
-    for (int i = 0; i < count && (is_numeric || is_logical || is_string); i++) {
-      BERTBuffers::Variable::ValueCase value_case = arr.data(i).value_case();
-      bool is_na = ((value_case == BERTBuffers::Variable::ValueCase::kNil) || (value_case == BERTBuffers::Variable::ValueCase::kMissing));
-      is_integer = is_integer && (is_na || (value_case == BERTBuffers::Variable::ValueCase::kInteger));
-      is_numeric = is_numeric && (is_na || (value_case == BERTBuffers::Variable::ValueCase::kReal) || (value_case == BERTBuffers::Variable::ValueCase::kInteger));
-      is_logical = is_logical && (is_na || (value_case == BERTBuffers::Variable::ValueCase::kBoolean));
-      is_string = is_string && (is_na || (value_case == BERTBuffers::Variable::ValueCase::kStr));
-    }
+    MessageUtilities::TypeFlags type_flags = MessageUtilities::CheckArrayType(arr, true, true);
 
     bool has_names = false;
 
@@ -110,8 +94,8 @@ SEXP VariableToSEXP(const BERTBuffers::Variable &var) {
     // FIXME: can we use the coercion functions (asReal &c) here?  would simplify
 
     SEXP list;
-    if (is_numeric) {
-      if (is_integer) {
+    if (type_flags & MessageUtilities::TypeFlags::numeric) {
+      if (type_flags & MessageUtilities::TypeFlags::integer) {
         if (!cols) list = Rf_allocVector(INTSXP, count);
         else list = Rf_allocMatrix(INTSXP, rows, cols);
         int *p = INTEGER(list);
@@ -133,7 +117,7 @@ SEXP VariableToSEXP(const BERTBuffers::Variable &var) {
         }
       }
     }
-    else if (is_logical) {
+    else if (type_flags & MessageUtilities::TypeFlags::logical) {
       if (!cols) list = Rf_allocVector(LGLSXP, count);
       else list = Rf_allocMatrix(LGLSXP, rows, cols);
       int *p = LOGICAL(list);
@@ -143,7 +127,7 @@ SEXP VariableToSEXP(const BERTBuffers::Variable &var) {
         else p[i] = arr.data(i).boolean() ? -1 : 0;
       }
     }
-    else if (is_string) {
+    else if (type_flags & MessageUtilities::TypeFlags::string) {
       if (!cols) list = Rf_allocVector(STRSXP, count);
       else list = Rf_allocMatrix(STRSXP, rows, cols);
       for (int i = 0; i < count; i++) {
