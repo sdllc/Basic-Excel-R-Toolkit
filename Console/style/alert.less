@@ -1,0 +1,67 @@
+
+@import "./common.less";
+
+.alert_overlay {
+
+  z-index: 2000;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  // background: rgba(0, 0, 0, .1);
+  background: transparent;
+
+  position: flex;
+  display: none;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
+  font-family: 'Segoe UI';
+  
+  .alert_container {
+    background: #fff;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+    width: 90%;
+    margin-top: 3em;
+    padding: 0px;
+    display: flex;
+    flex-direction: row;
+    box-shadow: 0px 5px 12px 0px rgba(0,0,0,.2);
+
+    button {
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      outline: none;
+      color: inherit;
+      font-family: inherit;
+      font-size: inherit;
+      &:hover { text-decoration: underline; }
+    }
+
+    & > div {
+      padding: 8px 13px;
+      white-space: nowrap;
+    }
+
+    .alert_title {
+      background: rgb(37, 98, 148);
+      color: #fff;
+    }
+
+    .alert_message {
+      flex-grow: 1;
+      background: #f8f8f8;
+    }
+
+    .alert_buttons {
+      background: rgb(37, 98, 148);
+      color: #fff;
+    }
+
+  }
+
+}
+

@@ -7,15 +7,36 @@
 
   h1, h2, h3 {
     font-weight: 300;
-    border-bottom: 1px solid #ddd;
-  }
-
-  h2 {
     padding: 3px 10px;
   }
 
+  h1 {
+    border-bottom: 3px double #ddd;
+    font-size: 21px;
+  }
+  
+  h2 {
+    font-size: 18px;
+    padding: 3px 16px;
+    border-bottom: 1px solid #ddd;
+  }
+
+  h3 {
+    padding: 3px 16px;
+  }
+
   hr {
-    // width: 1px;
+  }
+
+  pre {
+    & > code {
+      font-family: consolas;
+    }
+    background: #f0f0f0;
+    color: #333;
+    padding: 7px 10px;
+    border-radius: 3px;
+    font-size: 13px;
   }
 
 }

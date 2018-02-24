@@ -47,11 +47,6 @@
           { "label": "Reload", "accelerator": "Ctrl+R", "id": "reload" },
           { "label": "Toggle Developer Tools", "accelerator": "Ctrl+Shift+I", "id": "toggle-developer-tools" }
         ]
-      },
-      {
-        "label": "BERT", "id": "bert", "items": [
-          
-        ]
       }
     ]
   }

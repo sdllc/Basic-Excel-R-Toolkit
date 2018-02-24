@@ -16,6 +16,8 @@ import {PropertyManager} from './properties';
 import {MenuUtilities} from './menu_utilities';
 import {MuliplexedTerminal} from './multiplexed_terminal';
 
+import {Alert, AlertSpec} from './alert';
+
 import {Editor, EditorEvent, EditorEventType} from './editor';
 import {Preferences} from './preferences';
 
