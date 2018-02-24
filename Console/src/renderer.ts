@@ -17,7 +17,6 @@ import {MenuUtilities} from './menu_utilities';
 import {MuliplexedTerminal} from './multiplexed_terminal';
 
 import {Alert, AlertSpec} from './alert';
-
 import {Editor, EditorEvent, EditorEventType} from './editor';
 import {Preferences} from './preferences';
 
@@ -322,6 +321,11 @@ TerminalImplementation.events.filter(x => (x.type === "release-focus")).subscrib
 });
 
 window.addEventListener("keydown", event => {
+
+  // we trap Ctrl+Insert and Shift+Insert in this handler,
+  // even though they're intended for the shell. for whatever
+  // reason the shell doesn't see these keys.
+
   if(event.ctrlKey){
     switch(event.key){
     case 'e':
@@ -333,6 +337,18 @@ window.addEventListener("keydown", event => {
       break;
     case 'PageDown':
       editor.NextTab();
+      break;
+    case 'Insert':
+      terminals.SendCommand("copy");
+      break;
+    default:
+      return;
+    }
+  }
+  else if(event.shiftKey){
+    switch(event.key){
+    case 'Insert':
+      terminals.SendCommand("paste");
       break;
     default:
       return;

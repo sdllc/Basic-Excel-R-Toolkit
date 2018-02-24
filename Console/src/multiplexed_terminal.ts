@@ -19,6 +19,28 @@ interface TerminalInstance {
 }
 
 /**
+ * this implementation has lots of problems. it should be rebuilt.
+ * one thing to think about might be doing what the editor does, 
+ * that is, using a single instance for multiple terminals.
+ * 
+ * for that to work, we need to preserve state: state would be
+ * content, cursor, selection, buffer, and history. and of course
+ * we need to be able to _apply_ state to a terminal.
+ * 
+ * but this might not be any more complex than rewriting this 
+ * part, and it might be a better long-term solution.
+ * 
+ * maybe the biggest problem with this is that there is an ongoing
+ * stream of data coming in, and if it's not rendering to the terminal
+ * it will have to be buffered somewhere. actually that's not that
+ * hard, just use a buffer.
+ * 
+ * OTOH, because we don't need to serialize state -- just hold it
+ * in memory -- we can use objects and structures, which makes it 
+ * a lot simpler.
+ */
+
+/**
  * tabbed interface for multiple shells, supporting different languages.
  * the actual tab component only handles tabs, not content, so we manage
  * displaying/hiding content on tab changes.
@@ -99,6 +121,11 @@ export class MuliplexedTerminal {
       }
     });
 
+  }
+
+  /** send command to active terminal */
+  SendCommand(command:string, data?:any){
+    this.active_instance_.terminal.SendCommand(command, data);
   }
 
   /** focus active terminal (pass through) */
