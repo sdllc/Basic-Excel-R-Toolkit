@@ -587,7 +587,10 @@ export class Editor {
         this.active_tab_.dirty = dirty;
         this.active_document_.dirty_ = dirty;
         this.tabs_.UpdateTab(this.active_tab_);
-        MenuUtilities.SetEnabled("main.file.revert-file", this.active_document_.dirty_ && !!this.active_document_.file_path_);
+
+        MenuUtilities.SetEnabled("main.file.revert-file", this.active_document_.dirty_ && !!this.active_document_.file_path_, false);
+        MenuUtilities.SetEnabled("main.file.save-file", this.active_document_.dirty_, false);
+        MenuUtilities.Update();
       }
 
       // FIXME: every time? no. use a set of short/long timeouts
@@ -664,8 +667,15 @@ export class Editor {
           fs.readFile(file_path, "utf8", (err, data) => {
             if(!err) {
               if(document.rendered_){
+
+                // documents are rendered on activation so it might not 
+                // be created yet; in that case just set content and don't 
+                // worry about it
+
                 document.rendered_content_ = data;
-                document.rendered_content_node_.innerHTML = MD.render(document.rendered_content_);
+                if(document.rendered_content_node_){
+                  document.rendered_content_node_.innerHTML = MD.render(document.rendered_content_);
+                }
               }
               else {
                 document.model_.setValue(data);
@@ -1084,7 +1094,10 @@ export class Editor {
         }
       }
       this.properties_.active_tab = editor_document.id_;
-      MenuUtilities.SetEnabled("main.file.revert-file", editor_document.dirty_ && !!editor_document.file_path_);
+
+      MenuUtilities.SetEnabled("main.file.revert-file", editor_document.dirty_ && !!editor_document.file_path_, false);
+      MenuUtilities.SetEnabled("main.file.save-file", editor_document.dirty_, false);
+      MenuUtilities.Update();
     }
 
   }

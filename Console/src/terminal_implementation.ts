@@ -367,18 +367,20 @@ export class TerminalImplementation {
    * left or right delete (by sign)
    * FIXME: multiple? would be handy
    */
-  DeleteText(dir: number) {
+  DeleteText(dir:1|-1) {
 
     let line_info = this.state_.line_info_;
 
     if (dir > 0) { // delete right
-      if (line_info.cursor_position >= line_info.buffer.length) return;
+      if(line_info.cursor_at_end) return;
+
       let balance = line_info.right.substr(1);
       this.ClearRight();
       this.Write(balance);
       this.MoveCursor(-balance.length);
       line_info.set(line_info.left + balance, line_info.cursor_position);
     }
+    
     else { // delete left (ruboff)
       if (line_info.cursor_position <= 0) return;
       let balance = line_info.buffer.substr(line_info.cursor_position);
@@ -394,10 +396,8 @@ export class TerminalImplementation {
    * type a character 
    */
   Type(key: string) {
-
     let line_info = this.state_.line_info_;
-    
-    if (line_info.cursor_position < line_info.buffer.length) {
+    if (!line_info.cursor_at_end) {
       this.Write(key);
       this.Write(line_info.right);
       this.MoveCursor(-line_info.right.length);
@@ -406,7 +406,6 @@ export class TerminalImplementation {
       this.Write(key);
     }
     line_info.append_or_insert(key);
-
     this.RunAutocomplete();
   }
 
@@ -766,7 +765,7 @@ export class TerminalImplementation {
             break;
 
           case "ArrowRight":
-            if (this.state_.line_info_.cursor_position < this.state_.line_info_.buffer.length) {
+            if(!this.state_.line_info_.cursor_at_end){
               this.Escape("C");
               this.state_.line_info_.cursor_position++;
             }

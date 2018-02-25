@@ -95,11 +95,11 @@ export class MenuUtilities {
   }
 
   /** enable/disable */
-  static SetEnabled(id:string, enabled=true){
+  static SetEnabled(id:string, enabled=true, update=true){
     let item = this.Find(id);
     if( item.enabled !== enabled ){
       item.enabled = enabled;
-      this.Update();
+      if(update) this.Update(); // can toll
     }
   }
 

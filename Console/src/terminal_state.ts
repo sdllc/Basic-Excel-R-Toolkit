@@ -9,22 +9,16 @@ export enum ConsolePrintFlags {
   Error = 1
 }
 
-export interface PrintConsoleMessage {
-  text:string;
-  offset:boolean;
-  flags:ConsolePrintFlags;
-}
-
 export enum StdIOStream {
   STDIN, STDOUT, STDERR
 };
 
+// could just reuse console message
 export interface StdIOMessage {
   text:string;
   stream:StdIOStream;
 }
 
-// export interface RenderLineFunction { (line: string, lastline: boolean, flags: ConsolePrintFlags ): void }
 export interface FormatLineFunction { (text:string): string }
 
 export class ShellHistory {
@@ -138,6 +132,9 @@ export class LineInfo {
     return this.buffer_.length - this.cursor_position_;
   }
 
+  /** is the cursor at the end of the line? */
+  get cursor_at_end(){ return this.buffer_.length === this.cursor_position_; }
+
   /** accessor */
   get prompt(){ return this.prompt_; }
 
@@ -162,11 +159,7 @@ export class LineInfo {
 }
 
 /**
- * breaking out state for multiplexing...
- * things which are still going to be problematic: 
- * (1) the pending execution stack; (2) annotations.
- * there's also a bit in the ctor where the language
- * attaches to the terminal, that should change.
+ * 
  */
 export class TerminalState {
 
@@ -298,33 +291,14 @@ export class TerminalState {
   }
 
   /**
-   * exec function moved here, in case the terminal is switched out
-   * (deactivated) before the command returns. in that case, we want
-   * to push the result prompt onto cache.
+   * we're not longer swapping state in/out of terminals, but it still
+   * makes sense to have exec over here
    */
   async Execute(line:string) {
-
-    /*
-    // the problem with this is that the returned value here is a 
-    // `PromptMessage`, not a `ConsoleMessage`. we need a way to 
-    // handle this generically.
-
-    // TEMPORARILY we're going to stuff this into the data field of 
-    // a prompt message, and check for that. should pad out the root
-    // type though.
-
-    this.at_prompt_ = false;
-    this.language_interface_.ExecCallback(line).then(x => {
-      this.history_.Push(line);
-      this.internal_messages_.next({id: 0, type:ConsoleMessageType.PROMPT, data: x});
-    });
-    */
-
     this.at_prompt_ = false;
     let x = await this.language_interface_.ExecCallback(line);
     this.history_.Push(line);
     return x;
-  
   }
 
   /**
