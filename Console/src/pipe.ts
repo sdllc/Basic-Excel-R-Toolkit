@@ -33,8 +33,8 @@ export enum ConsoleMessageType {
 export interface ConsoleMessage {
   id:number;
   text?:string;
+  data?:any;
   type:ConsoleMessageType;
-  mime_data?:any;
   mime_type?:string;
 }
 
@@ -256,7 +256,7 @@ export class Pipe {
         break;
 
       case messages.Console.MessageCase.MIME_DATA:
-        this.console_messages_.next({ id:response.getId(),type: ConsoleMessageType.MIME_DATA, mime_type: obj.getMimeData().getMimeType(), mime_data: obj.getMimeData().getData_asU8() });
+        this.console_messages_.next({ id:response.getId(),type: ConsoleMessageType.MIME_DATA, mime_type: obj.getMimeData().getMimeType(), data: obj.getMimeData().getData_asU8() });
         break;
 
       case messages.Console.MessageCase.HISTORY:

@@ -14,7 +14,8 @@ import {TabPanel, TabJustify, TabEventType} from './tab_panel';
 import {DialogManager, DialogSpec, DialogButton} from './dialog';
 import {PropertyManager} from './properties';
 import {MenuUtilities} from './menu_utilities';
-import {MuliplexedTerminal} from './multiplexed_terminal';
+
+import { MultiplexedTerminal } from './multiplexed_terminal';
 
 import {Alert, AlertSpec} from './alert';
 import {Editor, EditorEvent, EditorEventType} from './editor';
@@ -23,7 +24,6 @@ import {Preferences} from './preferences';
 import * as Rx from "rxjs";
 import * as path from 'path';
 import { prototype } from 'stream';
-// import { language } from './julia_tokenizer';
 
 // FIXME: l10n override?
 const MenuTemplate = require("../data/menu.json");
@@ -65,7 +65,7 @@ window['dm'] = dialog_manager;
 
 // terminals and tabs
 
-let terminals = new MuliplexedTerminal("#terminal-tabs");
+let terminals = new MultiplexedTerminal("#terminal-tabs");
 
 // language connections. 
 // FIXME: parameterize, or make these dynamic. in fact, do that (make them dynamic).
@@ -106,17 +106,12 @@ const Shutdown = function(){
   });
 }
 
-/*
 let Close = function(){
-  terminals.CleanUp();  
-  Promise.all(language_interfaces.map(language_interface => 
-    language_interface.Shutdown())).then(() => {
-  
+  terminals.CleanUp().then(() => {
     allow_close = true;
     remote.getCurrentWindow().close();
   });
 };
-*/
 
 window.addEventListener("beforeunload", event => {
  
@@ -133,22 +128,21 @@ window.addEventListener("beforeunload", event => {
 // construct editor
 
 let editor = new Editor("#editor", properties.editor);
+window['editor'] = editor;
+
 editor.events.subscribe(event => {
   if( event.type === EditorEventType.Command ){
     switch(event.message){
     case "execute-selection":
     case "execute-buffer":
-      let code = event.data.code || "";
-      let terminal = terminals.Get(event.data.language)
-      if(terminal && code.length ){
+      if(event.data.code){
         terminals.Activate(event.data.language);
-        terminal.Paste(code);
+        terminals.SendCommand("paste", event.data.code);
       }
       break;     
     }
   }
-})
-window['editor'] = editor;
+});
 
 // connect/init pipes, languages
 
@@ -160,6 +154,9 @@ let pipe_list = (process.env['BERT_PIPE_NAME']||"").split(";"); // separator?
 Preferences.preferences.first(x => x).subscribe(preferences => {
   
   let shell_preferences = preferences.shell || {};
+
+  // FIXME: have terminal subscribe to prefs on its own
+  terminals.SetPreferences(shell_preferences);
 
   // FIXME: after languages/tabs are initialized, select tab
   // based on stored preferences (is this going to be a long
@@ -183,7 +180,7 @@ Preferences.preferences.first(x => x).subscribe(preferences => {
                     instance.label_ = language;
                     language_interfaces.push(instance);
                     instance.InitPipe(pipe, pipe_name);
-                    terminals.Add(instance, shell_preferences);
+                    terminals.Add(instance);
                     return true;
                   }
                   return false;
@@ -205,26 +202,11 @@ Preferences.preferences.first(x => x).subscribe(preferences => {
     })
   ).then(() => {
     console.info( "languages complete");
-    if( properties.active_tab ){
-      console.info( "Activate:", properties.active_tab);
-      terminals.Activate(properties.active_tab);
-    }
-    else {
-      console.info("Activate default (0)");
-      terminals.Activate();
-    }
+
+    terminals.Activate(properties.active_tab||0);
 
     terminals.active_tab.subscribe(active => {
       if(properties.active_tab !== active) properties.active_tab = active;
-    });
-
-    // subscribe to preference changes
-
-    Preferences.preferences.subscribe(prefs => {
-      let shell_preferences = prefs.shell || {}
-      terminals.Terminals().forEach(terminal => {
-        terminal.ApplyPreferences(shell_preferences);
-      });
     });
 
   });

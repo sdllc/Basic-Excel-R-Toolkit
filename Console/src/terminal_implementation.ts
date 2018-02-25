@@ -1,5 +1,6 @@
 
 import { Terminal as XTerm, ITerminalOptions, ITheme as ITerminalTheme } from 'xterm';
+
 import * as fit from 'xterm/lib/addons/fit/fit';
 XTerm.applyAddon(fit);
 
@@ -9,10 +10,13 @@ XTerm.applyAddon(CursorClientPosition);
 import {AnnotationManager, AnnotationType} from './annotation_addon';
 XTerm.applyAddon(AnnotationManager);
 
-import { TextFormatter, VTESC } from './text_formatter';
+import { TextFormatter } from './text_formatter';
 import { shell, clipboard } from 'electron';
 import { LanguageInterface } from './language_interface';
-import {Pipe, ConsoleMessage, ConsoleMessageType} from './pipe';
+import { Pipe, ConsoleMessage, ConsoleMessageType } from './pipe';
+
+import { ShellHistory, ConsolePrintFlags, LineInfo, TerminalState } from './terminal_state';
+import { Utilities } from './utilities';
 
 import * as Rx from 'rxjs';
 
@@ -23,6 +27,7 @@ import * as fs from 'fs';
 
 // for julia, replacing backslash entities in the shell like Julia REPL. 
 // FIXME: this should be in the language class
+
 const SymbolTable = require('../data/symbol_table.json');
 
 const BaseTheme:ITerminalTheme = {
@@ -39,73 +44,6 @@ const BaseOptions:ITerminalOptions = {
   fontFamily: 'consolas',
   fontSize: 13
 };
-
-/**
- * 
- */
-class ShellHistory {
-
-  private history_: string[] = [];
-  private copy_: string[] = [];
-  private pointer_ = 0;
-
-  /** accessor */
-  public get history(){ return this.history_.slice(0); }
-
-  /** language-specific storage key */
-  private key_:string;
-
-  /** 
-   * flag: write history on every new line. better for dev, 
-   * can unwind for production
-   */
-  private always_store_ = false;
-
-  constructor(language_label:string, always_store = false){
-    this.key_ = "console-history-" + language_label;
-    this.always_store_ = always_store;
-  }
-
-  Push(line: string) {
-    if (line.length) {
-      this.history_.push(line);
-      if(this.always_store_) this.Store();
-    }
-  }
-
-  /**
-   * write to localstorage
-   */
-  Store() {
-    let json = JSON.stringify(this.history_.slice(0, 1024));
-    localStorage.setItem(this.key_, json);
-  }
-
-  /** 
-   * restore from local storage 
-   */
-  Restore() {
-    let tmp = localStorage.getItem(this.key_);
-    if (tmp) this.history_ = JSON.parse(tmp);
-  }
-
-  NewLine() {
-    if (this.history_.length > 1024) this.history_ = this.history_.slice(this.history_.length - 1024);
-    this.copy_ = this.history_.slice(0);
-    this.pointer_ = this.copy_.length;
-    this.copy_.push("");
-  }
-
-  Offset(offset: number, current_buffer: string): (string | false) {
-    let index = this.pointer_ + offset;
-    if (index < 0 || index >= this.copy_.length) return false;
-    let line = this.copy_[index];
-    this.copy_[this.pointer_] = current_buffer;
-    this.pointer_ = index;
-    return line;
-  }
-
-}
 
 class Autocomplete {
 
@@ -268,90 +206,11 @@ class Autocomplete {
 
 export interface AutocompleteCallbackType { (buffer: string, position: number): Promise<any> }
 
-export interface ExecCallbackType { (buffer: string): Promise<any> }
-
 export interface PromptMessage {
   text?:string;
   push_stack?:boolean;
   pop_stack?:boolean;
 }
-
-/**
- * abstracting line info. we want to move operations into this class
- * and use accessors. it breaks down a bit and gets messy when we are 
- * inserting, but it's still worthwhile for the most part.
- */
-export class LineInfo {
-
-  private cursor_position_ = 0;
-  private buffer_ = "";
-  
-  /**
-   * not sure how I feel about constructor-declared properties. it kinds
-   * of obscures them (although if you just rely on tooling, they'll be 
-   * visible).
-   */
-  constructor(private prompt_ = ""){}
-
-  append(text:string){
-    this.buffer_ += text;
-    this.cursor_position_ += text.length;
-  }
-
-  /**
-   * append, or if the cursor is not at the end, insert at cursor position.
-   * in either case increment cursor position by the length of the added text.
-   */
-  append_or_insert(text:string){
-    this.buffer_ = 
-      this.buffer_.substr(0, this.cursor_position_) + text +
-      this.buffer_.substr(this.cursor_position);
-    this.cursor_position_ += text.length;
-  }
-
-  /**
-   * replace any current text and cursor position. optionally set position
-   * to end of line.
-   */
-  set(buffer:string, cursor_position = -1){
-    if( cursor_position === -1 ) cursor_position = buffer.length;
-    this.cursor_position_ = cursor_position;
-    this.buffer_ = buffer;
-  }
-
-  get offset_from_end(){
-    return this.buffer_.length - this.cursor_position_;
-  }
-
-  /** accessor */
-  get prompt(){ return this.prompt_; }
-
-  /** accessor */
-  get buffer(){ return this.buffer_; }
-
-  /** accessor */
-  get cursor_position(){ return this.cursor_position_; }
-
-  /** accessor */
-  set cursor_position(cursor_position:number){ this.cursor_position_ = cursor_position; }
-
-  /** get the full line of text, including prompt */
-  get full_text(){ return this.prompt_ + this.buffer_ }
-
-  /** get text left of the cursor */
-  get left(){ return this.buffer_.substr(0, this.cursor_position_); }
-  
-  /** get text right of the cursor */
-  get right(){ return this.buffer_.substr(this.cursor_position_); }
-
-}
-
-enum ConsolePrintFlags {
-  None = 0, 
-  Error = 1
-}
-
-interface PrintLineFunction { (line: string, lastline: boolean, flags: ConsolePrintFlags ): void }
 
 /**
  * FIXME: enumerated event types
@@ -361,42 +220,13 @@ interface TerminalEvent {
 }
 
 /**
- * breaking out state for multiplexing...
- * things which are still going to be problematic: 
- * (1) the pending execution stack; (2) annotations.
- * there's also a bit in the ctor where the language
- * attaches to the terminal, that should change.
- */
-export class TerminalState {
-
-  public line_info_ = new LineInfo();
-  public history_:ShellHistory; 
-  public current_tip_: any;
-  public dismissed_tip_: any;
-  public prompt_stack_:LineInfo[] = [];
-  public at_prompt_ = true; // for various reasons // false;
-  public pending_exec_list_:string[] = [];
-  public language_interface_:LanguageInterface;
-  public PrintLine:PrintLineFunction;
-
-  public Buffers:any; // FIXME: type
-
-  public Save(){}
-  public Restore(){}
-
-}
-
-/**
  * implementation of the terminal on top of xtermjs.
  */
 export class TerminalImplementation {
-
-  private state_:TerminalState = new TerminalState();
-
+ 
+  private state_:TerminalState; 
   private xterm_: XTerm = null;
-
   private autocomplete_: Autocomplete;
-
   private static function_tip_node_:HTMLElement;
 
   /** options is constructed from base, then preferences are overlaid */
@@ -416,34 +246,15 @@ export class TerminalImplementation {
   /** accessor */
   public static get events() { return this.events_; }
 
-  constructor(language_interface:LanguageInterface, private node_:HTMLElement){
+  constructor(private node_:HTMLElement){
 
-    this.state_.language_interface_ = language_interface;
-    this.state_.history_ = new ShellHistory((this.state_.language_interface_.label_||"").toLocaleLowerCase(), true);
-    this.state_.history_.Restore();
+    // this.state_ = new TerminalState(language_interface);
 
     if( !TerminalImplementation.function_tip_node_ ){
       TerminalImplementation.function_tip_node_ = document.createElement("div");
       TerminalImplementation.function_tip_node_.classList.add("terminal-tooltip");
       document.body.appendChild(TerminalImplementation.function_tip_node_);
     }
-
-    if( this.state_.language_interface_.formatter_ ){
-      this.state_.PrintLine = (line:string, lastline = false, flags = ConsolePrintFlags.None) => {
-        let formatted = this.state_.language_interface_.formatter_.FormatString(line);
-        if (lastline) this.xterm_.write(formatted);
-        else this.xterm_.writeln(formatted);
-      };
-    }
-    else {
-      this.state_.PrintLine = (line:string, lastline = false, flags = ConsolePrintFlags.None) => {
-        let formatted = line;
-        if (lastline) this.xterm_.write(formatted);
-        else this.xterm_.writeln(formatted);
-      };
-    }
- 
-    this.state_.language_interface_.AttachTerminal(this);
 
   }
 
@@ -482,11 +293,8 @@ export class TerminalImplementation {
     window['term'] = this; // dev
   }
 
-  /**
-   * any housekeeping before closing
-   */
-  CleanUp() {
-    this.state_.history_.Store();
+  CleanUp(){
+    // ...
   }
 
   private RunAutocomplete() {
@@ -567,14 +375,14 @@ export class TerminalImplementation {
       if (line_info.cursor_position >= line_info.buffer.length) return;
       let balance = line_info.right.substr(1);
       this.ClearRight();
-      this.xterm_.write(balance);
+      this.Write(balance);
       this.MoveCursor(-balance.length);
       line_info.set(line_info.left + balance, line_info.cursor_position);
     }
     else { // delete left (ruboff)
       if (line_info.cursor_position <= 0) return;
       let balance = line_info.buffer.substr(line_info.cursor_position);
-      this.xterm_.write(`${VTESC}D${VTESC}0K${balance}`)
+      this.Write(`\x1b[D\x1b[0K${balance}`)
       this.MoveCursor(-balance.length);
       line_info.set(line_info.buffer.substr(0, line_info.cursor_position - 1) + balance, line_info.cursor_position-1);
     }
@@ -590,12 +398,12 @@ export class TerminalImplementation {
     let line_info = this.state_.line_info_;
     
     if (line_info.cursor_position < line_info.buffer.length) {
-      this.xterm_.write(key);
-      this.xterm_.write(line_info.right);
+      this.Write(key);
+      this.Write(line_info.right);
       this.MoveCursor(-line_info.right.length);
     }
     else {
-      this.xterm_.write(key);
+      this.Write(key);
     }
     line_info.append_or_insert(key);
 
@@ -611,6 +419,9 @@ export class TerminalImplementation {
     line_info.set(text);
   }
 
+  /**
+   * 
+   */
   Prompt(prompt:PromptMessage) {
 
     let line_info = this.state_.line_info_;
@@ -637,51 +448,59 @@ export class TerminalImplementation {
       line_info = this.state_.prompt_stack_.shift();
     }
     else {
+
+      let pending = line_info.buffer || "";
+
       line_info = new LineInfo(prompt.text);
+
       if( this.state_.pending_exec_list_.length ){
         line_info.append(this.state_.pending_exec_list_.shift());
         exec_immediately = true;
       }
+      else {
+
+        // this is for the case where you type something while a command 
+        // is executing, but you don't press enter. we want the typed text 
+        // in front of the next prompt, on a new line.
+        // 
+        // NOTE: you could just move the prompt in front of the typed 
+        // text, but I don't like that effect. probably just because that's
+        // not what normal terminals do.
+
+        line_info.append(pending);
+        if(pending.length) this.Write('\r\n'); 
+      }
     }
 
-    this.xterm_.write(line_info.full_text);
+    this.Write(line_info.full_text);
     if( line_info.offset_from_end ) this.MoveCursor(-line_info.offset_from_end);
     this.state_.history_.NewLine();
-
+    
     // handle command if we've been typing while system was busy
 
+    // this is ok w/ state now, with the exception noted above that 
+    // other pending commands will get tolled if the state is inactivated
+    
     if(exec_immediately){ 
-      this.xterm_.write('\r\n');
+      this.Write('\r\n');
       let line = line_info.buffer;
       line_info.set(""); 
-      this.state_.at_prompt_ = false;
-      this.state_.language_interface_.ExecCallback(line).then(x => {
-        this.state_.history_.Push(line);
-        this.Prompt(x);
-      });
+      this.state_.Execute(line).then(x => this.Prompt(x));
     }
   }
 
+  /** 
+   * wrapper for xterm write method. use this one. of course you could call
+   * xterm.write directly, we're trying to abstract it a little better
+   */
   Write(text: string) {
     this.xterm_.write(text);
   }
 
   SaveImageAs(target:any){
+
     let tag = target.tagName || "";
     let image_type = "png";
-    
-    /*
-    // FIXME: use constant strings
-
-    let file_name = remote.dialog.showSaveDialog({
-      title: "Save Image As...",
-      filters: [
-        { name: `${image_type.toUpperCase()} Images`, extensions: [image_type] }
-      ]
-    });
-    if (!file_name || !file_name.length) return;
-    */
-
     let src = null;
 
     if(/canvas/i.test(tag)){
@@ -700,11 +519,14 @@ export class TerminalImplementation {
       }
     }
 
+    // FIXME: constants
+
     if(src){
       let file_name = remote.dialog.showSaveDialog({
-        title: "Save Image As...",
+        // title: "Save Image As...", // can use default, but think about constant
         filters: [
-          { name: `${image_type.toUpperCase()} Images`, extensions: [image_type] }
+          // this one should change to constant, but needs interpolation (e.g. "Images PNG" in FR)
+          { name: `${image_type.toUpperCase()} Images`, extensions: [image_type] } 
         ]
       });
       if(file_name){
@@ -717,22 +539,8 @@ export class TerminalImplementation {
   }
 
   /**
-   * thanks to
-   * https://stackoverflow.com/questions/12710001/how-to-convert-uint8-array-to-base64-encoded-string
    *
-   * FIXME: move to utility library
    */
-  Uint8ToBase64(data:Uint8Array):string{
-
-    let chunks = [];
-    let block = 0x8000;
-    for( let i = 0; i< data.length; i += block){
-      chunks.push( String.fromCharCode.apply(null, data.subarray(i, i + block)));
-    }
-    return btoa(chunks.join(""));
-
-  }
-
   InsertDataImage(height:number, width:number, mime_type:string, data:Uint8Array, text?:string){
 
     let node = document.createElement("img") as HTMLImageElement;
@@ -742,10 +550,13 @@ export class TerminalImplementation {
 
     let src = `data:${mime_type};base64,`;
     if(text) node.src = src + btoa(text);
-    else node.src = src + this.Uint8ToBase64(data);
+    else node.src = src + Utilities.Uint8ToBase64(data);
     this.InsertGraphic(height, node);
   }
 
+  /**
+   * 
+   */
   InsertGraphic(height:number, node:HTMLElement){
 
     let buffer = (this.xterm_ as any).buffer;
@@ -773,7 +584,11 @@ export class TerminalImplementation {
     this.PrintConsole(text, offset);
   }
 
-  PrintConsole(text: string, offset = false, flags = ConsolePrintFlags.None ) {
+  /**
+   * 
+   * NOTE: flags is ignored, has been for a while (call it deprecated)
+   */
+  private PrintConsole(text: string, offset = false, flags = ConsolePrintFlags.None ) {
 
     // if not busy, meaning we're waiting at a prompt, we want any
     // stray console messages to appear above (to the left of) the 
@@ -788,12 +603,18 @@ export class TerminalImplementation {
     if (offset) {
       this.MoveCursor(-this.state_.line_info_.full_text.length);
       this.ClearRight();
-      lines.forEach((line, index) => this.state_.PrintLine(line, index === (lines.length - 1), flags));
-      this.xterm_.write(this.state_.line_info_.full_text);
+      lines.forEach((line, index) => {
+        this.Write(this.state_.FormatLine(line));
+        if(index !== lines.length-1) this.Write('\r\n');
+      });
+      this.Write(this.state_.line_info_.full_text);
       if(this.state_.line_info_.offset_from_end) this.MoveCursor(-this.state_.line_info_.offset_from_end);
     }
     else {
-      lines.forEach((line, index) => this.state_.PrintLine(line, index === (lines.length - 1), flags));
+      lines.forEach((line, index) => {
+        this.Write(this.state_.FormatLine(line));
+        if(index !== lines.length-1) this.Write('\r\n');
+      });
     }
   }
 
@@ -801,12 +622,16 @@ export class TerminalImplementation {
     this.xterm_.clear();
   }
 
+  /** 
+   * FIXME: this needs to be reflected in state... ? 
+   */
   ShowCursor(show = true) {
+    this.state_.show_cursor_ = show;
     this.Escape(show ? "?25h" : "?25l"); // FIXME: inline
   }
 
   Escape(command: string) {
-    this.xterm_.write(`\x1b[${command}`);
+    this.Write(`\x1b[${command}`);
   }
 
   /**
@@ -825,11 +650,17 @@ export class TerminalImplementation {
     this.Escape(`${Math.abs(columns)}${char}`);
   }
 
+  /** 
+   * 
+   */
   Copy() {
     let text = this.xterm_.getSelection();
     clipboard.writeText(text);
   }
 
+  /**
+   * 
+   */
   Paste(text?: string) {
 
     this.xterm_.scrollToBottom();
@@ -839,28 +670,36 @@ export class TerminalImplementation {
     // FIXME: cursor pos [meaning what?]
 
     let lines = (text || "").split(/\n/).map(x => x.trim());
-    // console.info(lines, lines.length);
 
     lines.reduce((a, line, index) => {
       return new Promise((resolve, reject) => {
         a.then(() => {
           if (lines.length > (index + 1)) {
-            this.xterm_.writeln(line);
+            this.Write(line + '\r\n'); // writeln
             if (!index) line = this.state_.line_info_.buffer + line;
             this.state_.line_info_.set("");
+
+            /*
             this.state_.at_prompt_ = false;
             this.state_.language_interface_.ExecCallback(line).then(x => {
               this.state_.history_.Push(line);
               this.Prompt(x);
               resolve(x);
             });
+            */
+
+            this.state_.Execute(line).then(x => {
+              this.Prompt(x);
+              resolve(x);
+            });
+
           }
           else {
 
             // what if we're pasting at the cursor, which is not at 
             // the end? handled? FIXME
 
-            this.xterm_.write(line);
+            this.Write(line);
             this.state_.line_info_.set(this.state_.line_info_.buffer + line);
             resolve();
           }
@@ -944,14 +783,14 @@ export class TerminalImplementation {
             break;
 
           case "End":
-            if(this.state_.line_info_.offset_from_end) // this.Escape(`${this.line_info_.offset_from_end}C`);
+            if(this.state_.line_info_.offset_from_end){
               this.MoveCursor(this.state_.line_info_.offset_from_end);
+            }
             this.state_.line_info_.cursor_position = this.state_.line_info_.buffer.length;
             break;
 
           case "Home":
             if (this.state_.line_info_.cursor_position > 0) {
-              //this.Escape(`${this.line_info_.cursor_position}D`);
               this.MoveCursor(-this.state_.line_info_.cursor_position);
             }
             this.state_.line_info_.cursor_position = 0;
@@ -968,7 +807,7 @@ export class TerminalImplementation {
 
           case "Enter":
             if (this.autocomplete_.visible_) { this.autocomplete_.Accept(); return; }
-            this.xterm_.write('\r\n');
+            this.Write('\r\n');
             {
               // some updates to exec: (1) we clear buffer immediately. that 
               // way if you type something, it doesn't accidentally get appended
@@ -995,11 +834,19 @@ export class TerminalImplementation {
                 return; 
               }
 
+              // FIXME: STATE -- the response may arrive after the terminal
+              // has been switched out, so it needs to move to another class
+              // (probably the state class?)
+              
+              /*
               this.state_.at_prompt_ = false;
               this.state_.language_interface_.ExecCallback(line).then(x => {
                 this.state_.history_.Push(line);
                 this.Prompt(x);
               });
+              */
+              this.state_.Execute(line).then(x => this.Prompt(x));
+
             }
             this.state_.dismissed_tip_ = null;
             break;
@@ -1017,6 +864,9 @@ export class TerminalImplementation {
 
   Resize(){
     (this.xterm_ as any).fit();
+
+    // FIXME: pass through to languages to adjust terminal size
+
   }
 
   /** 
@@ -1077,7 +927,7 @@ export class TerminalImplementation {
   SendCommand(command:string, data?:any){
     switch(command){
     case "paste":
-      this.Paste();
+      this.Paste(data);
       break;
     case "copy":
       this.Copy();
@@ -1087,14 +937,67 @@ export class TerminalImplementation {
     }
   }
 
-  Init(preferences:any = {}) {
+  HandleConsoleMessage(console_message) {
 
-    // see benchmarks; this is the fastest deep copy. 
-    
+    switch (console_message.type) {
+    case ConsoleMessageType.PROMPT:
+      if( console_message.data) this.Prompt(console_message.data);
+      else this.Prompt({
+        text: console_message.text,
+        push_stack: console_message.id !== 0 // true
+      });
+      break;
+
+    case ConsoleMessageType.MIME_DATA:
+      if (console_message.data && console_message.data.length) {
+        switch (console_message.mime_type) {
+          case "text/html":
+            let html = new TextDecoder("utf-8").decode(console_message.data);
+
+            // this might be svg, in which case we want to display it as 
+            // an image. otherwise it should be html...
+
+            // ...
+
+            if (/\/svg>\s*/i.test(html)) {
+              this.InsertDataImage(300, 0, "image/svg+xml", null, html);
+            }
+            else {
+              console.info("UNHANDLED HTML\n", html);
+              window['h'] = html;
+            }
+            break;
+
+          case "image/jpeg":
+          case "image/gif":
+          case "image/png":
+
+            //console.info("not rendering");
+            window['msg'] = console_message;
+            this.InsertDataImage(300, 0, console_message.mime_type, console_message.data);
+            break;
+        }
+      }
+      break;
+
+    default:
+      this.PrintConsole(console_message.text, this.state_.at_prompt_);
+    }
+  }
+
+  /**
+   *
+   */
+  Init(preferences:any = {}, initial_state:TerminalState) {
+
+    this.state_ = initial_state;
+
     // we need local options so they don't overlap (for now they're 
     // going to be the same, but in the future we may want to support 
     // per-shell options)
 
+    // see benchmarks; this is the fastest deep copy. 
+    
     this.options_ = JSON.parse(JSON.stringify(BaseOptions));
     this.OverlayOptions(this.options_, preferences);
 
@@ -1107,41 +1010,39 @@ export class TerminalImplementation {
     // so this is for layout. unfortunate.
     let inner_node = document.createElement("div");
     this.node_.appendChild(inner_node);
-
-//    this.xterm_.open(this.node_); //, { focus: true });
-    this.xterm_.open(inner_node); //, { focus: true });
+    this.xterm_.open(inner_node); 
     this.xterm_.focus();
 
     this.UpdateContainerBackground();
     
+    // FIXME: STATE -- have to figure out how to move annotations to state
+
     // ensure
     (this.xterm_ as any).annotation_manager.Init();
 
-    this.state_.language_interface_.pipe_.history_callback = async (options?:any) => {
-      return this.state_.history_.history || [];
-    }
-
     this.Resize();
 
-    this.xterm_.write(`\x1b[\x35 q`); // ?
+    //
+    // set cursor to vertical bar. otherwise it's a rectangular block, 
+    // like the character in adventure. this command should also set blink, 
+    // although that's handled separately by xtermjs (as an option)
+    //
+    this.Write(`\x1b[\x35 q`); 
 
     let ac_accept = (addition:string, scrub = 0) => {
-
       if(scrub > 0){
         for( let i = 0; i< scrub; i++ ) this.DeleteText(-1);
       }
-
-      this.xterm_.write(addition);
+      this.Write(addition);
       this.state_.line_info_.append_or_insert(addition);      
       this.RunAutocomplete();
     };
 
-    //this.autocomplete_ = new Autocomplete(ac_accept, this.node_);
     this.autocomplete_ = new Autocomplete(ac_accept, inner_node);
 
     window.addEventListener("resize", event => {
       // FIXME: debounce
-      this.Resize(); // checks active
+      this.Resize(); // checks active [it does?]
     });
 
     (this.xterm_ as any).setHypertextLinkHandler((event: MouseEvent, uri: string) => {
@@ -1151,67 +1052,30 @@ export class TerminalImplementation {
 
     this.xterm_.on("key", (key, event) => this.KeyDown(key, event));
 
+    // FIXME: I don't think we ever use (or display) title, but it 
+    // seems like something that should be part of state. not sure how it 
+    // works.
+
     this.xterm_.on("title", title => {
-      console.info( "title change:", title ); // ??
+      console.warn( "title change:", title ); // ??
     });
 
-    if(this.state_.language_interface_.stdout_pipe_){
-      this.state_.language_interface_.stdout_pipe_.data.subscribe( text => {
-        this.PrintConsole(text, !this.state_.language_interface_.pipe_.busy);
-      });
-    }
-
-    if(this.state_.language_interface_.stderr_pipe_){
-      this.state_.language_interface_.stderr_pipe_.data.subscribe( text => {
-        this.PrintConsole(text, !this.state_.language_interface_.pipe_.busy, ConsolePrintFlags.Error);
-      });
-    }
+    // FIXME: since we are no longer swapping state in/out, we don't 
+    // need to manage this subscription any longer. not that this has 
+    // much cost.
     
-    this.state_.language_interface_.pipe_.console_messages.subscribe(console_message => {
-      if( console_message.type === ConsoleMessageType.PROMPT ){
-        this.Prompt({
-          text: console_message.text,
-          push_stack: console_message.id !== 0 // true
-        });
-      }
-      else if( console_message.type === ConsoleMessageType.MIME_DATA ){
-        if(console_message.mime_data && console_message.mime_data.length){
-          switch( console_message.mime_type ){
-          case "text/html":
-            let html = new TextDecoder("utf-8").decode(console_message.mime_data);
+    this.state_.console_messages.subscribe(this.HandleConsoleMessage.bind(this));
 
-            // this might be svg, in which case we want to display it as 
-            // an image. otherwise it should be html...
+    if(this.state_.stdio){
+      this.state_.stdio.subscribe(message => {
+        this.PrintConsole(message.text, this.state_.at_prompt_);
+      });
+    }
 
-            // ...
+    // NOTE: this is only used for the graphics devices in R.
+    
+    this.state_.language_interface_.AttachTerminal(this);
 
-            if( /\/svg>\s*/i.test(html)){
-              this.InsertDataImage(300, 0, "image/svg+xml", null, html);
-            }
-            else {
-              console.info( "UNHANDLED HTML\n", html );
-              window['h'] = html;
-            }
-            break;
-
-          case "image/jpeg":
-          case "image/gif":
-          case "image/png":
-
-            //console.info("not rendering");
-            window['msg'] = console_message;
-            this.InsertDataImage(300, 0, console_message.mime_type, console_message.mime_data);
-            break;
-          }
-        }
-      }
-      else {
-        // console.info( "console message; busy =", this.language_interface_.pipe_.busy, "ip =", this.initial_prompt_, console_message.text);
-        // let offset = (!this.language_interface_.pipe_.busy || !this.initial_prompt_);
-        // let offset = (!this.language_interface_.pipe_.busy); // || !this.initial_prompt_);
-        this.PrintConsole(console_message.text, this.state_.at_prompt_);
-      }
-    });
 
   }
 
