@@ -285,14 +285,23 @@ void JlValueToVariable(BERTBuffers::Variable *variable, jl_value_t *value) {
     auto jl_array = (jl_array_t*)value;
     auto eltype = jl_array_eltype(value);
 
+    int ndims = jl_array_ndims(jl_array);
     int ncols = jl_array->ncols;
     int nrows = jl_array->nrows;
     int len = jl_array->length;
 
+    // if this is a 1-dimensional array, julia will return the length
+    // as both rows and columns, so we need to correct. set as rows. 
+
+    // FIXME: should be columns? although we've been doing rows for R,
+    // so at least it will be consistent
+
+    if (ndims == 1 && (nrows == ncols)) ncols = 1;
+
     results_array->set_cols(ncols);
     results_array->set_rows(nrows);
 
-    // std::cout << "arr: " << ncols << ", " << nrows << ", " << len << "; p? " << (jl_array->flags.ptrarray != 0) << std::endl;
+    // std::cout << "arr: " << ncols << ", " << nrows << ", " << len << "; dims=" << ndims << ", p? " << (jl_array->flags.ptrarray != 0) << std::endl;
 
     if (jl_array->flags.ptrarray) {
       jl_value_t** data = (jl_value_t**)(jl_array_data(jl_array));
