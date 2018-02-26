@@ -1239,7 +1239,7 @@ export class Editor {
    */
   private UpdateRecentFiles(file_path:string, add=true){
     let recent_files = (this.properties_.recent_files || []).slice(0).filter(x => x !== file_path);
-    if(add) recent_files.unshift(file_path);
+    if(add) recent_files.unshift(file_path).slice(0, 10);
     this.properties_.recent_files = recent_files;
     this.UpdateRecentFilesList();
   }
