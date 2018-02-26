@@ -4,11 +4,6 @@ import { ConsoleMessage, ConsoleMessageType } from './pipe';
 
 import * as Rx from 'rxjs';
 
-export enum ConsolePrintFlags {
-  None = 0, 
-  Error = 1
-}
-
 export enum StdIOStream {
   STDIN, STDOUT, STDERR
 };
@@ -159,18 +154,31 @@ export class LineInfo {
 }
 
 /**
+ * there's a 1-to-1 relationship between state and terminal. state
+ * was originally written to remove that relationship, but that turned
+ * out to be not such a useful idea. 
  * 
+ * given that, it might be worthwhile to merge state back into terminal, 
+ * perhaps via extension or composition.
  */
 export class TerminalState {
 
-  public line_info_ = new LineInfo();
   public history_:ShellHistory; 
   public current_tip_: any;
   public dismissed_tip_: any;
   public prompt_stack_:LineInfo[] = [];
-  public at_prompt_ = true; // for various reasons // false;
   public pending_exec_list_:string[] = [];
   public language_interface_:LanguageInterface;
+
+  private line_info_ = new LineInfo();
+
+  public get line_info(){ return this.line_info_; }
+  public set line_info(value){ this.line_info_ = value; }
+
+  private at_prompt_ = true; // for various reasons // false;
+
+  public get at_prompt(){ return this.at_prompt_; }
+  public set at_prompt(value){ this.at_prompt_ = value; }
 
   public FormatLine:FormatLineFunction = (text:string) => text;
 

@@ -15,7 +15,7 @@ import { shell, clipboard } from 'electron';
 import { LanguageInterface } from './language_interface';
 import { Pipe, ConsoleMessage, ConsoleMessageType } from './pipe';
 
-import { ShellHistory, ConsolePrintFlags, LineInfo, TerminalState } from './terminal_state';
+import { ShellHistory, LineInfo, TerminalState } from './terminal_state';
 import { Utilities } from './utilities';
 
 import * as Rx from 'rxjs';
@@ -299,7 +299,7 @@ export class TerminalImplementation {
 
   private RunAutocomplete() {
     
-    let thennable = this.state_.language_interface_.AutocompleteCallback(this.state_.line_info_.buffer, this.state_.line_info_.cursor_position);
+    let thennable = this.state_.language_interface_.AutocompleteCallback(this.state_.line_info.buffer, this.state_.line_info.cursor_position);
 
     if(thennable) thennable.then(autocomplete_response => {
       if (!autocomplete_response) return;
@@ -316,7 +316,7 @@ export class TerminalImplementation {
   }
 
   DismissTooltip() {
-    this.state_.dismissed_tip_ = this.state_.line_info_.cursor_position;
+    this.state_.dismissed_tip_ = this.state_.line_info.cursor_position;
   }
 
   /**
@@ -369,7 +369,7 @@ export class TerminalImplementation {
    */
   DeleteText(dir:1|-1) {
 
-    let line_info = this.state_.line_info_;
+    let line_info = this.state_.line_info;
 
     if (dir > 0) { // delete right
       if(line_info.cursor_at_end) return;
@@ -396,7 +396,7 @@ export class TerminalImplementation {
    * type a character 
    */
   Type(key: string) {
-    let line_info = this.state_.line_info_;
+    let line_info = this.state_.line_info;
     if (!line_info.cursor_at_end) {
       this.Write(key);
       this.Write(line_info.right);
@@ -410,7 +410,7 @@ export class TerminalImplementation {
   }
 
   OffsetHistory(dir: number) {
-    let line_info = this.state_.line_info_;
+    let line_info = this.state_.line_info;
     let text = this.state_.history_.Offset(dir, line_info.buffer);
     if (text === false) return;
     if (line_info.cursor_position > 0) this.MoveCursor(-line_info.cursor_position);
@@ -423,19 +423,18 @@ export class TerminalImplementation {
    */
   Prompt(prompt:PromptMessage) {
 
-    let line_info = this.state_.line_info_;
-    this.state_.at_prompt_ = true;
-
     let text = prompt.text;
+
+    this.state_.at_prompt = true;
 
     if( prompt.push_stack ){
 
       console.info("push prompt stack: ", JSON.stringify(prompt) );
 
-      this.state_.prompt_stack_.unshift(line_info);
+      this.state_.prompt_stack_.unshift();
 
       // move left and clear line before writing
-      this.MoveCursor(-line_info.full_text.length);
+      this.MoveCursor(-this.state_.line_info.full_text.length);
       this.ClearRight();
     }
 
@@ -444,16 +443,16 @@ export class TerminalImplementation {
     let exec_immediately = false;
 
     if( prompt.pop_stack ){
-      line_info = this.state_.prompt_stack_.shift();
+      this.state_.line_info = this.state_.prompt_stack_.shift();
     }
     else {
 
-      let pending = line_info.buffer || "";
+      let pending = this.state_.line_info.buffer || "";
 
-      line_info = new LineInfo(prompt.text);
+      this.state_.line_info = new LineInfo(prompt.text);
 
       if( this.state_.pending_exec_list_.length ){
-        line_info.append(this.state_.pending_exec_list_.shift());
+        this.state_.line_info.append(this.state_.pending_exec_list_.shift());
         exec_immediately = true;
       }
       else {
@@ -466,13 +465,13 @@ export class TerminalImplementation {
         // text, but I don't like that effect. probably just because that's
         // not what normal terminals do.
 
-        line_info.append(pending);
+        this.state_.line_info.append(pending);
         if(pending.length) this.Write('\r\n'); 
       }
     }
 
-    this.Write(line_info.full_text);
-    if( line_info.offset_from_end ) this.MoveCursor(-line_info.offset_from_end);
+    this.Write(this.state_.line_info.full_text);
+    if( this.state_.line_info.offset_from_end ) this.MoveCursor(-this.state_.line_info.offset_from_end);
     this.state_.history_.NewLine();
     
     // handle command if we've been typing while system was busy
@@ -482,10 +481,11 @@ export class TerminalImplementation {
     
     if(exec_immediately){ 
       this.Write('\r\n');
-      let line = line_info.buffer;
-      line_info.set(""); 
+      let line = this.state_.line_info.buffer;
+      this.state_.line_info.set(""); 
       this.state_.Execute(line).then(x => this.Prompt(x));
     }
+
   }
 
   /** 
@@ -587,7 +587,7 @@ export class TerminalImplementation {
    * 
    * NOTE: flags is ignored, has been for a while (call it deprecated)
    */
-  private PrintConsole(text: string, offset = false, flags = ConsolePrintFlags.None ) {
+  private PrintConsole(text: string, offset = false) {
 
     // if not busy, meaning we're waiting at a prompt, we want any
     // stray console messages to appear above (to the left of) the 
@@ -600,14 +600,15 @@ export class TerminalImplementation {
 
     let lines = text.split(/\n/);
     if (offset) {
-      this.MoveCursor(-this.state_.line_info_.full_text.length);
+
+      this.MoveCursor(-this.state_.line_info.full_text.length);
       this.ClearRight();
       lines.forEach((line, index) => {
         this.Write(this.state_.FormatLine(line));
         if(index !== lines.length-1) this.Write('\r\n');
       });
-      this.Write(this.state_.line_info_.full_text);
-      if(this.state_.line_info_.offset_from_end) this.MoveCursor(-this.state_.line_info_.offset_from_end);
+      this.Write(this.state_.line_info.full_text);
+      if(this.state_.line_info.offset_from_end) this.MoveCursor(-this.state_.line_info.offset_from_end);
     }
     else {
       lines.forEach((line, index) => {
@@ -675,11 +676,11 @@ export class TerminalImplementation {
         a.then(() => {
           if (lines.length > (index + 1)) {
             this.Write(line + '\r\n'); // writeln
-            if (!index) line = this.state_.line_info_.buffer + line;
-            this.state_.line_info_.set("");
+            if (!index) line = this.state_.line_info.buffer + line;
+            this.state_.line_info.set("");
 
             /*
-            this.state_.at_prompt_ = false;
+            this.state_.at_prompt = false;
             this.state_.language_interface_.ExecCallback(line).then(x => {
               this.state_.history_.Push(line);
               this.Prompt(x);
@@ -699,7 +700,7 @@ export class TerminalImplementation {
             // the end? handled? FIXME
 
             this.Write(line);
-            this.state_.line_info_.set(this.state_.line_info_.buffer + line);
+            this.state_.line_info.set(this.state_.line_info.buffer + line);
             resolve();
           }
         });
@@ -758,16 +759,16 @@ export class TerminalImplementation {
             break;
 
           case "ArrowLeft":
-            if (this.state_.line_info_.cursor_position > 0) {
+            if (this.state_.line_info.cursor_position > 0) {
               this.Escape("D");
-              this.state_.line_info_.cursor_position--;
+              this.state_.line_info.cursor_position--;
             }
             break;
 
           case "ArrowRight":
-            if(!this.state_.line_info_.cursor_at_end){
+            if(!this.state_.line_info.cursor_at_end){
               this.Escape("C");
-              this.state_.line_info_.cursor_position++;
+              this.state_.line_info.cursor_position++;
             }
             break;
 
@@ -782,17 +783,17 @@ export class TerminalImplementation {
             break;
 
           case "End":
-            if(this.state_.line_info_.offset_from_end){
-              this.MoveCursor(this.state_.line_info_.offset_from_end);
+            if(this.state_.line_info.offset_from_end){
+              this.MoveCursor(this.state_.line_info.offset_from_end);
             }
-            this.state_.line_info_.cursor_position = this.state_.line_info_.buffer.length;
+            this.state_.line_info.cursor_position = this.state_.line_info.buffer.length;
             break;
 
           case "Home":
-            if (this.state_.line_info_.cursor_position > 0) {
-              this.MoveCursor(-this.state_.line_info_.cursor_position);
+            if (this.state_.line_info.cursor_position > 0) {
+              this.MoveCursor(-this.state_.line_info.cursor_position);
             }
-            this.state_.line_info_.cursor_position = 0;
+            this.state_.line_info.cursor_position = 0;
             break;
 
           case "Backspace":
@@ -820,10 +821,10 @@ export class TerminalImplementation {
               // currently at prompt. if not, push to a stack. make sure to 
               // flush on break.
 
-              let line = this.state_.line_info_.buffer;
-              this.state_.line_info_.set(""); 
+              let line = this.state_.line_info.buffer;
+              this.state_.line_info.set(""); 
 
-              if(!this.state_.at_prompt_){
+              if(!this.state_.at_prompt){
 
                 // so now we don't exec here, but wait until the next prompt.
                 // that works as desired (above). be sure to dump this stack
@@ -838,7 +839,7 @@ export class TerminalImplementation {
               // (probably the state class?)
               
               /*
-              this.state_.at_prompt_ = false;
+              this.state_.at_prompt = false;
               this.state_.language_interface_.ExecCallback(line).then(x => {
                 this.state_.history_.Push(line);
                 this.Prompt(x);
@@ -939,8 +940,9 @@ export class TerminalImplementation {
   HandleConsoleMessage(console_message) {
 
     switch (console_message.type) {
+
     case ConsoleMessageType.PROMPT:
-      if( console_message.data) this.Prompt(console_message.data);
+      if(console_message.data) this.Prompt(console_message.data);
       else this.Prompt({
         text: console_message.text,
         push_stack: console_message.id !== 0 // true
@@ -980,7 +982,9 @@ export class TerminalImplementation {
       break;
 
     default:
-      this.PrintConsole(console_message.text, this.state_.at_prompt_);
+      this.PrintConsole(console_message.text, this.state_.at_prompt);
+      break;
+
     }
   }
 
@@ -1033,7 +1037,7 @@ export class TerminalImplementation {
         for( let i = 0; i< scrub; i++ ) this.DeleteText(-1);
       }
       this.Write(addition);
-      this.state_.line_info_.append_or_insert(addition);      
+      this.state_.line_info.append_or_insert(addition);      
       this.RunAutocomplete();
     };
 
@@ -1063,11 +1067,13 @@ export class TerminalImplementation {
     // need to manage this subscription any longer. not that this has 
     // much cost.
     
-    this.state_.console_messages.subscribe(this.HandleConsoleMessage.bind(this));
+    this.state_.console_messages.subscribe(message => {
+      this.HandleConsoleMessage(message);
+    });
 
     if(this.state_.stdio){
       this.state_.stdio.subscribe(message => {
-        this.PrintConsole(message.text, this.state_.at_prompt_);
+        this.PrintConsole(message.text, this.state_.at_prompt);
       });
     }
 
