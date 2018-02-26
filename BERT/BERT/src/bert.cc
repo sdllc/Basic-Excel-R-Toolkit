@@ -468,6 +468,7 @@ unsigned BERT::InstanceConsoleThreadFunction(){
 int BERT::StartConsoleProcess() {
 
   std::string console_command;
+  std::string console_arguments;
 
   std::stringstream pipe_name;
   pipe_name << "BERT-console-pipe-";
@@ -482,6 +483,7 @@ int BERT::StartConsoleProcess() {
 
   if (dev_flags_) {
     APIFunctions::GetRegistryString(console_command, "BERT2.OverrideConsoleCommand");
+    APIFunctions::GetRegistryString(console_arguments, "BERT2.OverrideConsoleArguments");
   }
 
   if (!console_command.length()) {
@@ -500,6 +502,8 @@ int BERT::StartConsoleProcess() {
 
   std::stringstream command_line;
   command_line << "\"" << console_command << "\"";
+
+  if(console_arguments.length()) command_line << " " << console_arguments;
 
   // add flag for management pipe
   command_line << " -m " << console_pipe_name_;
