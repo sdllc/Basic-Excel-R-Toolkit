@@ -258,6 +258,9 @@ export class TabPanel {
       }
     });
 
+    // are there any tabs?
+    if(!this.tabs_.length) return;
+
     // if there are tabs, guarantee that one is active.
     if( active < 0 && this.tabs_.length > 0 ) return this.ActivateTab(0);
 
