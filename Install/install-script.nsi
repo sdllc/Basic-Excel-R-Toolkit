@@ -126,8 +126,8 @@ Section "Docs" SecDocs
 
   ; intro/release notes
 
-  File Welcome.md 
-
+  SetOutPath "$INSTDIR"
+  File ..\Build\Welcome.md 
 
 SectionEnd
 
@@ -142,6 +142,10 @@ Section "Uninstall"
   RMDir /r "$INSTDIR\module"
   RMDir /r "$INSTDIR\files"
 
+  ; this is data for the console
+
+  RMDir /r "$APPDATA\bert2-console"
+
   ; unregister. see note above re:32-bit Excel
 
   ExecWait 'regsvr32 /s /u "$INSTDIR\BERTRibbon2x64.dll"'
@@ -152,13 +156,13 @@ Section "Uninstall"
   Delete "$INSTDIR\ControlJulia.exe"
   Delete "$INSTDIR\bert-config-default.json"
 
-  Delete "$DOCUMENTS\BERT2\Welcome.md"
+  Delete "$INSTDIR\Welcome.md"
 
   ; uninstaller
 
   Delete "$INSTDIR\Uninstall.exe"
   RMDir "$INSTDIR"
 
-  DeleteRegKey /ifempty HKCU "Software\BERT2"
+  ; DeleteRegKey /ifempty HKCU "Software\BERT2"
 
 SectionEnd
