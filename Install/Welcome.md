@@ -26,10 +26,11 @@ Have suggestions, feedback, questions, comments?  Let us know!
 
 Cheers,
 
- -- The BERT team
+ -- [The BERT team][3]
 
 [1]: https://cran.r-project.org/
 [2]: https://julialang.org/downloads/
+[3]: https://bert-toolkit.com/contact
 
 # Release Notes #
 
@@ -44,12 +45,17 @@ Compared to mainline BERT, this version is missing the Excel graphics device
 (although there is a console graphics device). All other functionality should 
 be present, but there may be bugs.
 
+Some functions are installed in Excel but will be removed in future releases.
+These are the `BERT.Call.X` and `BERT.Exec.X functions`, allowing arbitrary 
+function calls or code execution in various languages. These will be removed
+from the spreadsheet and limited to VBA.
+
 # Credits #
 
-The BERT console is built using [Electron][3], [Monaco][4] and 
-[xtermjs][5]. 
+The BERT console is built using [Electron][4], [Monaco][5] and 
+[xtermjs][6]. 
 
-[3]: https://electronjs.org/
-[4]: https://github.com/Microsoft/monaco-editor
-[5]: https://xtermjs.org/
+[4]: https://electronjs.org/
+[5]: https://github.com/Microsoft/monaco-editor
+[6]: https://xtermjs.org/
 
