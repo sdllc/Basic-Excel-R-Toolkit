@@ -747,7 +747,15 @@ void BERT::Init() {
   language_services_.clear();
   language_services_.assign(connected.begin(), connected.end());
 
-  if (dev_flags_ & 0x02) StartConsoleProcess();
+  bool start_console = false;
+
+  std::string command_line = GetCommandLineA();
+  ::MessageBoxA(0, command_line.c_str(), "CL", MB_OK);
+  if (command_line.find("/x:BERT") != std::string::npos) {
+    start_console = true;
+  }
+
+  if (start_console || (dev_flags_ & 0x02)) StartConsoleProcess();
 
   // load code from starup folder(s). then start watching folders.
 
