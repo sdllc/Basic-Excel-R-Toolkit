@@ -154,7 +154,21 @@ class EditorStatusBar {
   public get node() { return this.node_; }
 
   /** accessor for content, not node */
-  public set label(text) { this.label_.textContent = text; }
+  // public set label(text) { this.label_.textContent = text; }
+
+  /** stack-based (reverse) */
+  private stack_:string[] = [];
+
+  public PushMessage(text){
+    this.stack_.push(text);
+    this.label_.textContent = text;
+  }
+
+  public PopMessage(){
+    if(this.stack_.length) this.stack_ = this.stack_.slice(0,this.stack_.length-1);
+    if(this.stack_.length) this.label_.textContent = this.stack_[this.stack_.length-1];
+    else this.label_.textContent = "";
+  }
 
   /** accessor for content, not node */
   public set language(text) { this.language_.textContent = text; }
@@ -319,6 +333,9 @@ export class Editor {
    */
   private editor_node_:HTMLElement;
 
+  /** handler for link hover in rendered documents */
+  private link_event_handler;
+
   /** 
    * we make some editor configuration changes for supported languages (that
    * we can execute). the renderer process reports which languages it has 
@@ -367,7 +384,14 @@ export class Editor {
     this.editor_node_ = editor;
 
     this.container_.appendChild(this.status_bar_.node);
-    this.status_bar_.label = Constants.status.ready;
+    this.status_bar_.PushMessage(Constants.status.ready);
+
+    this.link_event_handler = function(event){
+      if(event.type === "mouseenter"){
+        this.status_bar_.PushMessage(event.target ? event.target.href||"" : "");
+      }
+      else this.status_bar_.PopMessage();
+    }.bind(this);
 
     this.tabs_ = new TabPanel(tabs);
 
@@ -668,6 +692,22 @@ export class Editor {
 
   }
 
+  private SetHoverEvents(node:HTMLElement, add = true){
+    let links = node.querySelectorAll("a");
+    if(add){
+      Array.prototype.forEach.call(links, link => {
+        link.addEventListener("mouseenter", this.link_event_handler);
+        link.addEventListener("mouseleave", this.link_event_handler);
+      });
+    }
+    else {
+      Array.prototype.forEach.call(links, link => {
+        link.removeEventListener("mouseenter", this.link_event_handler);
+        link.removeEventListener("mouseleave", this.link_event_handler);
+      });
+    }
+  }
+
   private OnFileChange(file_path){
 
     // FIXME: handle changes to dirty tabs, closed tabs
@@ -699,6 +739,7 @@ export class Editor {
                 document.rendered_content_ = data;
                 if(document.rendered_content_node_){
                   document.rendered_content_node_.innerHTML = MD.render(document.rendered_content_);
+                  this.SetHoverEvents(document.rendered_content_node_, true);
                 }
               }
               else {
@@ -1024,8 +1065,6 @@ export class Editor {
 
     // FIXME: warn if dirty
 
-    // FIXME: push on closed tab stack (FIXME: add closed tab stack)
-
     if (tab === this.active_tab_) {
       if (this.tabs_.count > 1) this.tabs_.Previous();
     }
@@ -1041,6 +1080,7 @@ export class Editor {
     // but it will have a node we want to discard
     if(document.rendered_content_node_){
       document.rendered_content_node_.parentElement.removeChild(document.rendered_content_node_);
+      this.SetHoverEvents(document.rendered_content_node_, false); // clean up event handlers
       document.rendered_content_node_ = null;
     }
 
@@ -1090,7 +1130,7 @@ export class Editor {
           editor_document.rendered_content_node_ = document.createElement("div");
           editor_document.rendered_content_node_.className = "editor-rendered-viewer markdown";
           editor_document.rendered_content_node_.innerHTML = MD.render(editor_document.rendered_content_);
-          
+          this.SetHoverEvents(editor_document.rendered_content_node_, true);
           this.tabs_.AppendChildNode(editor_document.rendered_content_node_);
         }
         editor_document.rendered_content_node_.style.zIndex = "10";
