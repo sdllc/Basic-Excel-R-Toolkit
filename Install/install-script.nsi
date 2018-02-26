@@ -2,10 +2,12 @@
 ;--------------------------------
 ;
 
-!define VERSION 2.0.15
+!ifndef VERSION
+  !error "version is not defined"
+!endif
 
 ;--------------------------------
-;Include Modern UI
+;Includes
 
   !include "MUI2.nsh"
 
@@ -35,7 +37,7 @@
 ;Pages
 
   !insertmacro MUI_PAGE_WELCOME
-  !insertmacro MUI_PAGE_LICENSE "${NSISDIR}\Docs\Modern UI\License.txt"
+  !insertmacro MUI_PAGE_LICENSE "license.txt"
   !insertmacro MUI_PAGE_DIRECTORY
   !insertmacro MUI_PAGE_INSTFILES
   !insertmacro MUI_PAGE_FINISH
@@ -67,37 +69,65 @@ Section "Dummy Section" SecDummy
   File ..\Build\BERT64.xll
   File ..\Build\BERTRibbon2x64.dll
 
+  ; default prefs
+  File ..\Build\bert-config-default.json
+
+  ; copy unless there is an existing prefs file
+  IfFileExists "$INSTDIR\bert-config.json" +2
+  CopyFiles "$INSTDIR\bert-config-default.json" "$INSTDIR\bert-config.json"
+
+  ; FIXME: for 32-bit Excel, we'll need to switch registration based
+  ; on bitness. have to move a bitness check into this script somewhere.
+
+  ; NOTE: we stopped using the install lib macro because that requires
+  ; global defines, which will prohibit us from doing 32/64 bit switching.
+
+  ; register
+  ExecWait 'regsvr32 /s "$INSTDIR\BERTRibbon2x64.dll"'
+
   ; controllers
   File ..\Build\ControlR.exe
   File ..\Build\ControlJulia.exe
 
   ;Store installation folder
-  WriteRegStr HKCU "Software\BERT2" "InstallDir" $INSTDIR
+  WriteRegStr HKCU "Software\BERT2" "InstallDir" "$INSTDIR"
 
   ;Create uninstaller
   WriteUninstaller "$INSTDIR\Uninstall.exe"
 
 SectionEnd
 
-Section "Examples" SecExamples
-
-  CreateDirectory "$DOCUMENTS\BERT2\functions"
-  SetOutPath "$DOCUMENTS\BERT2\functions"
-
-  File ..\Examples\functions.*
-
-SectionEnd
-
 Section "Docs" SecDocs
 
-  CreateDirectory "$DOCUMENTS\BERT2\examples"
-  SetOutPath "$DOCUMENTS\BERT2\examples"
+  ; files are installed to the root directory,
+  ; then we can copy them if they don't already exist
 
+  SetOutPath "$INSTDIR\files"
+  File ..\Examples\functions.*
   File ..\Examples\excel-scripting.r
+  File ..\Examples\excel-scripting.jl
 
-  SetOutPath "$DOCUMENTS\BERT2"
+  CreateDirectory "$DOCUMENTS\BERT2\examples"
+  CreateDirectory "$DOCUMENTS\BERT2\functions"
 
-  File Welcome.md
+  ; FIXME: make this a function
+
+  IfFileExists "$DOCUMENTS\BERT2\examples\excel-scripting.r" +2
+  CopyFiles "$INSTDIR\files\excel-scripting.r" "$DOCUMENTS\BERT2\examples\excel-scripting.r"
+
+  IfFileExists "$DOCUMENTS\BERT2\examples\excel-scripting.jl" +2
+  CopyFiles "$INSTDIR\files\excel-scripting.jl" "$DOCUMENTS\BERT2\examples\excel-scripting.jl"
+
+  IfFileExists "$DOCUMENTS\BERT2\functions\functions.r" +2
+  CopyFiles "$INSTDIR\files\functions.r" "$DOCUMENTS\BERT2\functions\functions.r"
+
+  IfFileExists "$DOCUMENTS\BERT2\functions\functions.jl" +2
+  CopyFiles "$INSTDIR\files\functions.jl" "$DOCUMENTS\BERT2\functions\functions.jl"
+
+  ; intro/release notes
+
+  File Welcome.md 
+
 
 SectionEnd
 
@@ -110,11 +140,17 @@ Section "Uninstall"
 
   RMDir /r "$INSTDIR\console"
   RMDir /r "$INSTDIR\module"
+  RMDir /r "$INSTDIR\files"
+
+  ; unregister. see note above re:32-bit Excel
+
+  ExecWait 'regsvr32 /s /u "$INSTDIR\BERTRibbon2x64.dll"'
 
   Delete "$INSTDIR\BERT64.xll"
   Delete "$INSTDIR\BERTRibbon2x64.dll"
   Delete "$INSTDIR\ControlR.exe"
   Delete "$INSTDIR\ControlJulia.exe"
+  Delete "$INSTDIR\bert-config-default.json"
 
   Delete "$DOCUMENTS\BERT2\Welcome.md"
 

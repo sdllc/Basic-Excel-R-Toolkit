@@ -39,14 +39,15 @@ Cheers,
 Version 2 represents a complete rewrite and rearchitecting of BERT. In 
 particular, language services are moved out of process. This allows us to
 support multiple languages at once, as well as support killing and restarting
-languages.
+languages. We can also connect 32-bit Excel to 64-bit R, although for the 
+time being we are only providing a plug in for 64-bit Excel.
 
 Compared to mainline BERT, this version is missing the Excel graphics device
-(although there is a console graphics device). All other functionality should 
-be present, but there may be bugs.
+(although there is a console graphics device, via `BERT.Console.graphics.device`). 
+All other functionality should be present, but there may be bugs.
 
 Some functions are installed in Excel but will be removed in future releases.
-These are the `BERT.Call.X` and `BERT.Exec.X functions`, allowing arbitrary 
+These are the `BERT.Call.X` and `BERT.Exec.X` functions, allowing arbitrary 
 function calls or code execution in various languages. These will be removed
 from the spreadsheet and limited to VBA.
 
