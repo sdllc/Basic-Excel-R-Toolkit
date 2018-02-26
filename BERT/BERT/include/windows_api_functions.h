@@ -7,7 +7,7 @@
 #include <vector>
 
 #define DEFAULT_BASE_KEY        HKEY_CURRENT_USER
-#define DEFAULT_REGISTRY_KEY    "Software\\BERT"
+#define DEFAULT_REGISTRY_KEY    "Software\\BERT2"
 
 #define PATH_PATH_SEPARATOR ";"
 
