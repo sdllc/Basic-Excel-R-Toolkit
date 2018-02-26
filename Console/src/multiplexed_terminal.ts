@@ -115,6 +115,7 @@ export class MultiplexedTerminal {
   private ActivateInternal(label:string|number = 0){
 
     let instance = this.Find(label);
+    if(!instance) return; // can't 
 
     if(this.initialized_ && this.active_ === instance ){
       return;
