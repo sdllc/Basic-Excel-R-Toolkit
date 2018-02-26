@@ -4,6 +4,7 @@ import { remote } from 'electron';
 const { Menu, MenuItem, dialog } = remote;
 
 import { MenuUtilities } from '../ui/menu_utilities';
+import { Utilities } from '../common/utilities';
 
 // note elsewhere we're trying to be very generic about languages
 // in the editor (notwithstanding that we know which languages we
@@ -658,7 +659,16 @@ export class Editor {
 
     // subscribe to preference changes from here on
 
-    Preferences.preferences.subscribe(x => this.UpdatePreferences(x));
+    Preferences.preferences.filter(x => x).subscribe(x => {
+
+      this.UpdatePreferences(x);
+
+      // we do this after getting preferences, because we need the 
+      // documents directory which is in there
+
+      this.OpenDefaultFiles();
+
+    });
 
     // file updates
     FileWatcher.events.subscribe(x => this.OnFileChange(x));
@@ -968,11 +978,42 @@ export class Editor {
 
     Object.keys(reverse).filter(key => reverse[key]).forEach(key => {
       let item = `${CACHE_PREFIX}${key}`;
-      console.info("removing cached document", item);
+      // console.info("removing cached document", item);
       localStorage.removeItem(item);
     });
 
   }
+
+  /**
+   * open certain files on install, and on first-install
+   */
+  private OpenDefaultFiles() {
+
+    let current = Utilities.VersionToNumber(process.env.BERT_VERSION);
+    let last = Utilities.VersionToNumber(this.properties_.lastReleaseNotes || "");
+
+    if(!last){
+      
+      // this implies it was never opened.
+      // ... sample files?
+      
+      this.OpenPreferences();
+   }
+
+    if(!last || last < current){
+
+      let file_path = path.join(process.env.BERT2_HOME_DIRECTORY, "welcome.md");
+      this.OpenFileInternal(file_path, {
+        override_label: "Welcome",
+        add_to_recent_files: false,
+        rendered: true
+      });
+      this.properties_.lastReleaseNotes = process.env.BERT_VERSION;
+      
+    }
+
+  }
+
 
   /**
    * 
@@ -1148,16 +1189,7 @@ export class Editor {
           this.editor_.setModel(editor_document.model_);
           if (editor_document.view_state_)
             this.editor_.restoreViewState(editor_document.view_state_);
-          let language = editor_document.model_['_languageIdentifier'].language;
-          switch (language.toLowerCase()) {
-            case "json":
-            case "js":
-              language = language.toUpperCase();
-              break;
-            default:
-              language = language.substr(0, 1).toUpperCase() + language.substr(1);
-          }
-          this.status_bar_.language = language;
+          this.UpdateStatusBarLanguage(editor_document.model_);
         }
       }
       this.properties_.active_tab = editor_document.id_;
@@ -1167,6 +1199,20 @@ export class Editor {
       MenuUtilities.Update();
     }
 
+  }
+
+  private UpdateStatusBarLanguage(model:monaco.editor.IModel){
+    let language = model['_languageIdentifier'].language;
+    switch (language.toLowerCase()) {
+      case "json":
+      case "js":
+      case "css":
+        language = language.toUpperCase();
+        break;
+      default:
+        language = language.substr(0, 1).toUpperCase() + language.substr(1);
+    }
+    this.status_bar_.language = language;
   }
 
   /** switches tab. intended for keybinding. */
@@ -1180,7 +1226,7 @@ export class Editor {
   }
 
   private UpdatePreferences(preferences){
-  
+
     let editor_options = preferences.editor || {};
 
     // theme can't be set at runtime using updateOptions. (asymmetry?)
@@ -1256,6 +1302,8 @@ export class Editor {
             tab.tooltip = file_path;
             document.label_ = tab.label = path.basename(file_path);
             if(document.file_path_ !== file_path) FileWatcher.Watch(file_path);
+            monaco.editor.setModelLanguage(document.model_, this.LanguageFromPath(file_path));
+            this.UpdateStatusBarLanguage(document.model_);
           }
           document.file_path_ = file_path;
           document.saved_version_ = document.model_.getAlternativeVersionId();
@@ -1266,6 +1314,29 @@ export class Editor {
       });
     }
 
+  }
+
+  private LanguageFromPath(file_path) : string {
+
+    // there has to be a better way to do this
+
+    let result = "plaintext";
+    let m = (file_path||"").match(/\.[^\.]*?$/);
+    if(m && m[0]){
+      let target = m[0].toLowerCase();
+      monaco.languages.getLanguages().some(language => {
+        return (language.extensions||[]).some(extension => {
+          if(extension.toLowerCase() === target){
+            result = language.id;
+            return true;
+          }
+          return false;
+        });
+      });
+    }
+
+    if(!result && file_path) console.info( "couldn't identify language:", file_path);
+    return result;
   }
 
   public RevertFile() { 

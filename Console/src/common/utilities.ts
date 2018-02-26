@@ -18,5 +18,16 @@ export class Utilities {
 
   }
 
+  static VersionToNumber(version_string){
+    let version = 0;
+    if(version_string){
+      version_string.split(/\./).forEach(component => {
+        version *= 1000;
+        version += Number(component||0)
+      });
+    }
+    return version;
+  }
+
 }
 
