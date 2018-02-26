@@ -55,7 +55,7 @@
 ;--------------------------------
 ;Installer Sections
 
-Section "Dummy Section" SecDummy
+Section "Main" SecMain
 
   SetOutPath "$INSTDIR"
 

@@ -22,6 +22,8 @@ if( $all ) {
   # $x86 = $TRUE;
 };
 
+$logfile = Resolve-Path $logfile
+
 #-------------------------------------------------------------------------------
 # functions
 #-------------------------------------------------------------------------------
@@ -65,7 +67,7 @@ Function BuildConfiguration( $platform ) {
 	else {
 		Write-Host "  Configuration: $platform (build)" -foregroundcolor yellow
 	}
-	msbuild '..\BERT\BERT.sln' /p:Configuration=Release /p:platform=$platform /m $extraargs | out-file -append -encoding "ASCII" $logfile 2>&1
+	msbuild '..\BERT\BERT.sln' /p:Configuration=Release /p:platform=$platform /m $extraargs | out-file -append -encoding "utf8" $logfile 2>&1
 	ExitOnError ;
 }
 
@@ -89,13 +91,13 @@ Function InvokeEnvironment(){
   Write-Host "Dir: $Directory";
   Write-Host "Cmd: $Command";
 
-  pushd $Directory;
+  Push-Location $Directory;
   foreach($_ in cmd /c " $Command > `"$stream`" 2>&1 $operator SET") {
     if ($_ -match '^([^=]+)=(.*)') {
       [System.Environment]::SetEnvironmentVariable($matches[1], $matches[2])
     }
   }
-  popd;
+  Pop-Location;
 
   if ($Output) {
     Get-Content -LiteralPath $temp
@@ -132,10 +134,9 @@ Write-Host ""
 
 if($console){
   Write-Host "Building console..."
-  $wd = Get-Location
-  Set-Location ..\Console
-  & yarn run repackage | out-file -append -encoding "ASCII"  $logfile 2>&1
-  Set-Location $wd
+  Push-Location ..\Console
+  & yarn run repackage | out-file -append -encoding "utf8"  $logfile 2>&1
+  Pop-Location
   ExitOnError
 }
 else {
@@ -197,7 +198,7 @@ Write-Host ""
 
 if( $sign ) {
 	Write-Host "Signing installer" 
-	& cmd /c 'signtool.exe' sign /t http://timestamp.comodoca.com/authenticode /a /i comodo BERT-Installer-$bert_version.exe | out-file -append -encoding "ASCII"  $logfile 2>&1
+	& cmd /c 'signtool.exe' sign /t http://timestamp.comodoca.com/authenticode /a /i comodo BERT-Installer-$bert_version.exe | out-file -append -encoding "utf8"  $logfile 2>&1
 	ExitOnError ;
 }
 else {
