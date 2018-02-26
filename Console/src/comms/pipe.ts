@@ -1,10 +1,10 @@
 
 import * as fs from "fs";
 import * as net from "net";
-import * as messages from "../generated/variable_pb.js";
+import * as messages from "../../generated/variable_pb.js";
 import * as Rx from "rxjs";
 
-import { MessageUtilities } from './message_utilities';
+import { MessageUtilities } from '../common/message_utilities';
 
 enum Channel {
   INTERNAL,

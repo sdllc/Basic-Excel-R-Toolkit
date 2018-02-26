@@ -1,25 +1,25 @@
 
-import {Pipe, ConsoleMessage, ConsoleMessageType} from './pipe';
+import {Pipe, ConsoleMessage, ConsoleMessageType} from './comms/pipe';
 import {clipboard, remote, dialog} from 'electron';
 
 const {Menu, MenuItem} = remote;
 
-import { PromptMessage, TerminalImplementation } from './terminal_implementation';
-import { LanguageInterface } from './language_interface';
-import { RInterface } from './language_interface_r';
-import { JuliaInterface } from './language_interface_julia';
+import { PromptMessage, TerminalImplementation } from './shell/terminal_implementation';
+import { LanguageInterface } from './shell/language_interface';
+import { RInterface } from './shell/language_interface_r';
+import { JuliaInterface } from './shell/language_interface_julia';
 
-import {Splitter, SplitterOrientation, SplitterEvent} from './splitter';
-import {TabPanel, TabJustify, TabEventType} from './tab_panel';
-import {DialogManager, DialogSpec, DialogButton} from './dialog';
-import {PropertyManager} from './properties';
-import {MenuUtilities} from './menu_utilities';
+import {Splitter, SplitterOrientation, SplitterEvent} from './ui/splitter';
+import {TabPanel, TabJustify, TabEventType} from './ui/tab_panel';
+import {DialogManager, DialogSpec, DialogButton} from './ui/dialog';
+import {PropertyManager} from './common/properties';
+import {MenuUtilities} from './ui/menu_utilities';
 
-import { MultiplexedTerminal } from './multiplexed_terminal';
+import { MultiplexedTerminal } from './shell/multiplexed_terminal';
 
-import {Alert, AlertSpec} from './alert';
-import {Editor, EditorEvent, EditorEventType} from './editor';
-import {Preferences} from './preferences';
+import {Alert, AlertSpec} from './ui/alert';
+import {Editor, EditorEvent, EditorEventType} from './editor/editor';
+import {Preferences} from './common/preferences';
 
 import * as Rx from "rxjs";
 import * as path from 'path';

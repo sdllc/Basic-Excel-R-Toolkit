@@ -13,10 +13,10 @@ XTerm.applyAddon(AnnotationManager);
 import { TextFormatter } from './text_formatter';
 import { shell, clipboard } from 'electron';
 import { LanguageInterface } from './language_interface';
-import { Pipe, ConsoleMessage, ConsoleMessageType } from './pipe';
+import { Pipe, ConsoleMessage, ConsoleMessageType } from '../comms/pipe';
 
 import { ShellHistory, LineInfo, TerminalState } from './terminal_state';
-import { Utilities } from './utilities';
+import { Utilities } from '../common/utilities';
 
 import * as Rx from 'rxjs';
 
@@ -28,7 +28,7 @@ import * as fs from 'fs';
 // for julia, replacing backslash entities in the shell like Julia REPL. 
 // FIXME: this should be in the language class
 
-const SymbolTable = require('../data/symbol_table.json');
+const SymbolTable = require('../../data/symbol_table.json');
 
 const BaseTheme:ITerminalTheme = {
   background: "#fff", 

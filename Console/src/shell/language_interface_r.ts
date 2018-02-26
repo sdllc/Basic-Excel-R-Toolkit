@@ -1,8 +1,8 @@
 
 import { LanguageInterface } from './language_interface';
 import { RTextFormatter } from './text_formatter';
-import { Pipe } from './pipe';
-import { Pipe2 } from './pipe2';
+import { Pipe } from '../comms/pipe';
+import { Pipe2 } from '../comms/management_pipe';
 
 import { GraphicsDevice } from './graphics_device';
 import { SVGGraphicsDevice } from './svg_graphics_device';

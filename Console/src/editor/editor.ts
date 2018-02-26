@@ -1,9 +1,9 @@
-/// <reference path="../node_modules/monaco-editor/monaco.d.ts" />
+/// <reference path="../../node_modules/monaco-editor/monaco.d.ts" />
 
 import { remote } from 'electron';
 const { Menu, MenuItem, dialog } = remote;
 
-import { MenuUtilities } from './menu_utilities';
+import { MenuUtilities } from '../ui/menu_utilities';
 
 // note elsewhere we're trying to be very generic about languages
 // in the editor (notwithstanding that we know which languages we
@@ -11,9 +11,9 @@ import { MenuUtilities } from './menu_utilities';
 // is independent of that (there's no native julia support in monaco).
 
 import * as JuliaLanguage from './julia_tokenizer';
-import { TabPanel, TabJustify, TabEventType, TabSpec } from './tab_panel';
+import { TabPanel, TabJustify, TabEventType, TabSpec } from '../ui/tab_panel';
 
-const Constants = require("../data/constants.json");
+const Constants = require("../../data/constants.json");
 
 import * as path from 'path';
 import * as fs from 'fs';
@@ -25,10 +25,11 @@ import * as MarkdownIt from 'markdown-it';
 import * as MarkdownItTasks from 'markdown-it-task-lists';
 const MD = new MarkdownIt().use(MarkdownItTasks); 
 
-import { FileWatcher } from './file-watcher';
-import { Preferences, PreferencesSchema } from './preferences';
+import { FileWatcher } from '../common/file-watcher';
+import { Preferences, PreferencesSchema } from '../common/preferences';
 import { EEXIST } from 'constants';
-const SchemaSchema = require("../data/schemas/schema.schema.json");
+
+const SchemaSchema = require("../../data/schemas/schema.schema.json");
 
 // ambient, declared in html. we need this for loading monaco
 declare const amd_require: any;
@@ -219,7 +220,7 @@ export class Editor {
       // see monaco electron sample for this
 
       amd_require.config({
-        baseUrl: Editor.UriFromPath(path.join(__dirname, '../node_modules/monaco-editor/min'))
+        baseUrl: Editor.UriFromPath(path.join(__dirname, '../../node_modules/monaco-editor/min'))
       });
       self['module'] = undefined;
       self['process'].browser = true;

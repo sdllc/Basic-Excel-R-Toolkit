@@ -1,4 +1,4 @@
-/// <reference path="../node_modules/monaco-editor/monaco.d.ts" />
+/// <reference path="../../node_modules/monaco-editor/monaco.d.ts" />
 
 /**
  * this is a language tokenizer for julia for the monaco editor.

@@ -1,12 +1,12 @@
 
-import { Pipe } from './pipe';
+import { Pipe } from '../comms/pipe';
 import { Metrics, FontMetrics } from './fontmetrics';
 
 import * as Rx from 'rxjs';
 import { AnnotationInfo } from './annotation_addon';
 
 // I wanted this to be hidden... we should have a translation library
-import * as messages from "../generated/variable_pb.js";
+import * as messages from "../../generated/variable_pb.js";
 
 /** 
  * base class for graphics devices. work in progress. 

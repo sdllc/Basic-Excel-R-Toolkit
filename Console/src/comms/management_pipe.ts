@@ -1,6 +1,6 @@
 
 import * as net from "net";
-import * as messages from "../generated/variable_pb.js";
+import * as messages from "../../generated/variable_pb.js";
 
 /**
  * second pipe for out-of-band management tasks [FIXME: merge]

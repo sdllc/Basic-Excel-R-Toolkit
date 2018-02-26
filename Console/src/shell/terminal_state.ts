@@ -1,6 +1,6 @@
 
 import { LanguageInterface } from './language_interface';
-import { ConsoleMessage, ConsoleMessageType } from './pipe';
+import { ConsoleMessage, ConsoleMessageType } from '../comms/pipe';
 
 import * as Rx from 'rxjs';
 

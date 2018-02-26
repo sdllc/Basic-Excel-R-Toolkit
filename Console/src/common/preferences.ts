@@ -1,11 +1,11 @@
 
-const Constants = require("../data/constants.json");
-const DefaultPreferences = require("../data/default_preferences.json");
+const Constants = require("../../data/constants.json");
+const DefaultPreferences = require("../../data/default_preferences.json");
 
 import { FileWatcher } from './file-watcher'; 
 
 // FIXME: export as static class member instead?
-export const PreferencesSchema = require("../data/schemas/preferences.schema.json");
+export const PreferencesSchema = require("../../data/schemas/preferences.schema.json");
 
 import * as fs from 'fs';
 import * as path from 'path';

@@ -1,5 +1,5 @@
 
-import * as messages from "../generated/variable_pb.js";
+import * as messages from "../../generated/variable_pb.js";
 
 window['messages'] = messages;
 

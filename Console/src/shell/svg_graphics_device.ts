@@ -1,12 +1,12 @@
 
-import { Pipe } from './pipe';
+import { Pipe } from '../comms/pipe';
 import { Metrics, FontMetrics } from './fontmetrics';
 import { GraphicsDevice } from './graphics_device';
 
 import * as fs from 'fs';
 
 // I wanted this to be hidden... we should have a translation library
-import * as messages from "../generated/variable_pb.js";
+import * as messages from "../../generated/variable_pb.js";
 
 
 /**

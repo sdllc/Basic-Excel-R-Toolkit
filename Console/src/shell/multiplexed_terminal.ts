@@ -1,15 +1,15 @@
 
-import { TabPanel, TabJustify } from './tab_panel';
+import { TabPanel, TabJustify } from '../ui/tab_panel';
 import { TerminalImplementation } from './terminal_implementation';
 import { TerminalState } from './terminal_state';
 import { LanguageInterface } from './language_interface';
-import { Preferences } from './preferences';
+import { Preferences } from '../common/preferences';
 
 import { remote } from 'electron';
 import * as Rx from 'rxjs';
 
 const {Menu, MenuItem} = remote;
-const TerminalContextMenu = require("../data/context_menu.json");
+const TerminalContextMenu = require("../../data/context_menu.json");
 
 interface TerminalInstance {
   node_:HTMLElement;

@@ -1,7 +1,7 @@
 
-import {Pipe, ConsoleMessage, ConsoleMessageType} from './pipe';
-import {Pipe2} from './pipe2';
-import {StdIOPipe} from './stdio_pipe';
+import {Pipe, ConsoleMessage, ConsoleMessageType} from '../comms/pipe';
+import {Pipe2} from '../comms/management_pipe';
+import {StdIOPipe} from '../comms/stdio_pipe';
 import { TerminalImplementation } from './terminal_implementation';
 
 /** generic language interface */
