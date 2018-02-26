@@ -7,6 +7,26 @@
 !endif
 
 ;--------------------------------
+;Check bitness and path
+
+Function CheckExcel
+
+  Var /GLOBAL ExcelFlavor
+  Var /GLOBAL ExcelPath
+
+  EnumRegKey $1 HKCR "TypeLib\{00020813-0000-0000-C000-000000000046}" 0
+  StrCmp $1 "" CheckExcel_end
+
+  EnumRegKey $ExcelFlavor HKCR "TypeLib\{00020813-0000-0000-C000-000000000046}\$1\0" 0
+  StrCmp $ExcelFlavor "" CheckExcel_end
+
+  ReadRegStr $ExcelPath HKCR "TypeLib\{00020813-0000-0000-C000-000000000046}\$1\0\$ExcelFlavor" ""
+
+  CheckExcel_end:
+
+FunctionEnd
+
+;--------------------------------
 ;Includes
 
   !include "MUI2.nsh"
@@ -32,6 +52,9 @@
 ;Interface Settings
 
   !define MUI_ABORTWARNING
+  !define MUI_FINISHPAGE_RUN_TEXT "Open Excel and the BERT Console"
+  !define MUI_FINISHPAGE_RUN_PARAMETERS "/x:BERT"
+  !define MUI_FINISHPAGE_RUN $ExcelPath
 
 ;--------------------------------
 ;Pages
@@ -56,6 +79,12 @@
 ;Installer Sections
 
 Section "Main" SecMain
+
+  Call CheckExcel
+
+  StrCmp $ExcelFlavor "Win64" +3
+  MessageBox MB_ICONSTOP|MB_OK "Sorry, 32-bit Excel is not supported in this release."
+  Abort "Install error - invalid Excel version detected"
 
   SetOutPath "$INSTDIR"
 
