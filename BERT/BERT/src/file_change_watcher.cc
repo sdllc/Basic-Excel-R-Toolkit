@@ -125,15 +125,16 @@ uint32_t FileChangeWatcher::InstanceStartThread() {
     }
     LeaveCriticalSection(&critical_section_);
 
-    int count = directories.size();
     std::vector < HANDLE > handles;
     for (auto entry : directories) {
       HANDLE handle = FindFirstChangeNotificationA(entry.c_str(), FALSE, FILE_WATCH_EVENT_MASK);
       if (!handle || handle == INVALID_HANDLE_VALUE) {
         DebugOut("WARNING: bad handle @ %s\n", entry.c_str());
       }
-      handles.push_back(handle);
+      else handles.push_back(handle);
     }
+
+    int count = handles.size();
 
     // extra handle for updates to list
     handles.push_back(update_watch_list_handle_);
