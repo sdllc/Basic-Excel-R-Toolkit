@@ -1,5 +1,5 @@
 
-import { Pipe } from '../comms/pipe';
+import { Pipe } from '../io/pipe';
 import { Metrics, FontMetrics } from './fontmetrics';
 import { GraphicsDevice } from './graphics_device';
 

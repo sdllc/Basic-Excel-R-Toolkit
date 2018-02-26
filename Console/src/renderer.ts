@@ -1,5 +1,5 @@
 
-import {Pipe, ConsoleMessage, ConsoleMessageType} from './comms/pipe';
+import {Pipe, ConsoleMessage, ConsoleMessageType} from './io/pipe';
 import {clipboard, remote, dialog} from 'electron';
 
 const {Menu, MenuItem} = remote;

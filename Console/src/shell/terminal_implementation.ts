@@ -13,7 +13,7 @@ XTerm.applyAddon(AnnotationManager);
 import { TextFormatter } from './text_formatter';
 import { shell, clipboard } from 'electron';
 import { LanguageInterface } from './language_interface';
-import { Pipe, ConsoleMessage, ConsoleMessageType } from '../comms/pipe';
+import { Pipe, ConsoleMessage, ConsoleMessageType } from '../io/pipe';
 
 import { ShellHistory, LineInfo, TerminalState } from './terminal_state';
 import { Utilities } from '../common/utilities';

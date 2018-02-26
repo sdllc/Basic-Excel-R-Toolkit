@@ -1,8 +1,8 @@
 
 import { LanguageInterface } from './language_interface';
-import {Pipe, ConsoleMessage, ConsoleMessageType} from '../comms/pipe';
-import {Pipe2} from '../comms/management_pipe';
-import {StdIOPipe} from '../comms/stdio_pipe';
+import {Pipe, ConsoleMessage, ConsoleMessageType} from '../io/pipe';
+import {Pipe2} from '../io/management_pipe';
+import {StdIOPipe} from '../io/stdio_pipe';
 
 /** specialization: Julia */
 export class JuliaInterface extends LanguageInterface {
