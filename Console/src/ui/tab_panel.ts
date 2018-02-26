@@ -205,9 +205,27 @@ export class TabPanel {
   /**
    * remove tab, by reference
    */
-  RemoveTab(tab:TabSpec, do_layout=true){
+  RemoveTab(tab:TabSpec){
     this.tabs_ = this.tabs_.filter(compare => compare !== tab);
-    if(do_layout) this.UpdateLayout();
+
+    let children = this.tab_container_.children;
+    for( let i = 0; i< children.length; i++ ){
+      let child = children[i] as DecoratedElement;
+      if( child.ref_ === tab ){
+        console.info("Found ref");
+        this.tab_container_.removeChild(child);
+        break;
+      }
+    }
+
+    /*
+    // this.UpdateLayout();
+    let index = this.active_index_ - 1;
+    if( index < 0 ) index = 0;
+    console.info( "active index is", this.active_index_, "set to", index);
+    this.ActivateTab(index);
+    */
+   
   }
 
   UpdateTab(tab:TabSpec){
