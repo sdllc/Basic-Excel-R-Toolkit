@@ -29,6 +29,7 @@ import { prototype } from 'stream';
 const MenuTemplate = require("../data/menu.json");
 
 // init management pipe for talking to BERT
+
 let management_pipe = new Pipe();
 if( process.env['BERT_MANAGEMENT_PIPE']){
   management_pipe.Init({ pipe_name: process.env['BERT_MANAGEMENT_PIPE'] });
@@ -36,14 +37,13 @@ if( process.env['BERT_MANAGEMENT_PIPE']){
     if( message == "shutdown-console" ) Shutdown();
   })
 }
-window['pipe'] = management_pipe;
+
+// props
 
 let property_manager = new PropertyManager("console-settings", {
   terminal: {}, editor: {}, console: {}
 });
-
 let properties = property_manager.properties;
-window['properties'] = properties;
 
 // create splitter (main layout)
 
@@ -61,7 +61,6 @@ let splitter = new Splitter(
 // dialogs
 
 let dialog_manager = new DialogManager();
-window['dm'] = dialog_manager;
 
 // terminals and tabs
 
@@ -151,8 +150,8 @@ let pipe_list = (process.env['BERT_PIPE_NAME']||"").split(";"); // separator?
 // wait until we have read prefs once, then set up.
 // FIXME: is that necessary? we could just repaint.
 
-Preferences.preferences.first(x => x).subscribe(preferences => {
-  
+Preferences.preferences.filter(x => x).first(x => x).subscribe(preferences => {
+
   let shell_preferences = preferences.shell || {};
 
   // FIXME: have terminal subscribe to prefs on its own

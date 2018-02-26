@@ -17,7 +17,7 @@ import * as Rx from 'rxjs';
 class PreferencesManager {
 
   /**  */
-  private preferences_:Rx.Subject<any> = new Rx.Subject<any>();
+  private preferences_:Rx.BehaviorSubject<any> = new Rx.BehaviorSubject<any>(null);
 
   /**  */
   public get preferences() { return this.preferences_; }

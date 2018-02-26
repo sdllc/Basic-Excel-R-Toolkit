@@ -71,7 +71,7 @@ export class MultiplexedTerminal {
     });    
 
     // subscribe to preference changes
-    Preferences.preferences.subscribe(prefs => this.SetPreferences(prefs.shell||{}));
+    Preferences.preferences.filter(x => x).subscribe(prefs => this.SetPreferences(prefs.shell||{}));
 
   }
 
