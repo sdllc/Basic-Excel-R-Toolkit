@@ -55,6 +55,12 @@ export interface EditorEvent {
   data?:any;
 }
 
+interface OpenFileOptions {
+  override_label?:string;
+  rendered?:boolean;
+  add_to_recent_files?:boolean; // default true
+}
+
 /**
  * class represents a document in the editor; has content, view state.
  * extended to support static (i.e. rendered) documents, which are 
@@ -101,6 +107,13 @@ class Document {
 
   /** save pending to prevent loop with file watcher; not preserved */
   save_pending_ = false;
+
+  /** 
+   * revert pending to prevent side-effects (sigh). it should always be 
+   * an indication of bad design if you have to start working around side
+   * effects. 
+   */
+  revert_pending_ = false;
 
   /** serialize */
   toJSON() {
@@ -581,24 +594,7 @@ export class Editor {
 
     // watch dirty
     this.editor_.onDidChangeModelContent(event => {
-      let dirty = (this.active_document_.saved_version_ !== this.active_document_.model_.getAlternativeVersionId());
-
-      // dirty is in two places now? FIXME
-      if (dirty !== this.active_tab_.dirty) {
-        this.active_tab_.dirty = dirty;
-        this.active_document_.dirty_ = dirty;
-        this.tabs_.UpdateTab(this.active_tab_);
-
-        MenuUtilities.SetEnabled("main.file.revert-file", this.active_document_.dirty_ && !!this.active_document_.file_path_, false);
-        MenuUtilities.SetEnabled("main.file.save-file", this.active_document_.dirty_, false);
-        MenuUtilities.Update();
-      }
-
-      // FIXME: every time? no. use a set of short/long timeouts
-      // and save periodically (like 5/30 or 7/40 or something)
-
-      this.CacheDocument();
-
+      this.UpdateDocumentState();
     });
 
     // FIXME: demand load
@@ -642,6 +638,33 @@ export class Editor {
 
     // file updates
     FileWatcher.events.subscribe(x => this.OnFileChange(x));
+
+  }
+
+  private UpdateDocumentState(){
+
+    let dirty = (this.active_document_.saved_version_ !== this.active_document_.model_.getAlternativeVersionId());
+
+    if(this.active_document_.revert_pending_){
+      this.active_document_.revert_pending_ = false;
+      dirty = false;
+    }
+
+    // dirty is in two places now? FIXME
+    if (dirty !== this.active_tab_.dirty) {
+      this.active_tab_.dirty = dirty;
+      this.active_document_.dirty_ = dirty;
+      this.tabs_.UpdateTab(this.active_tab_);
+
+      MenuUtilities.SetEnabled("main.file.revert-file", this.active_document_.dirty_ && !!this.active_document_.file_path_, false);
+      MenuUtilities.SetEnabled("main.file.save-file", this.active_document_.dirty_, false);
+      MenuUtilities.Update();
+    }
+
+    // FIXME: every time? no. use a set of short/long timeouts
+    // and save periodically (like 5/30 or 7/40 or something)
+
+    this.CacheDocument();
 
   }
 
@@ -990,7 +1013,10 @@ export class Editor {
    * opens preferences in an editor tab. 
    */
   public OpenPreferences() {
-    this.OpenFileInternal(Preferences.preferences_path, Constants.files.preferences);
+    this.OpenFileInternal(Preferences.preferences_path, {
+      override_label:Constants.files.preferences,
+      add_to_recent_files:false
+    });
   }
 
   /** close tab (called on button click) */
@@ -1001,7 +1027,7 @@ export class Editor {
     // FIXME: push on closed tab stack (FIXME: add closed tab stack)
 
     if (tab === this.active_tab_) {
-      if (this.tabs_.count > 1) this.tabs_.Next();
+      if (this.tabs_.count > 1) this.tabs_.Previous();
     }
 
     let document = tab.data as Document;
@@ -1202,6 +1228,43 @@ export class Editor {
 
   }
 
+  public RevertFile() { 
+
+    return new Promise((resolve, reject) => {
+
+      let tab = this.active_tab_;
+      let document = tab.data as Document;
+      let file_path = document.file_path_;
+
+      if(file_path){
+
+        fs.readFile(file_path, "utf8", (err, data) => {
+          
+          if (err) {
+            this.OpenFileError();
+            this.UpdateRecentFiles(file_path, false);
+            return reject(err);
+          }
+
+          document.revert_pending_ = true;
+          document.model_.setValue(data);
+          setImmediate(() => {
+            if(document.revert_pending_){
+              console.warn("revert pending in second pass");
+              this.UpdateDocumentState();
+            }
+          })
+          resolve();
+
+        });
+
+      }
+      else return reject("Missing file path");
+
+    });
+
+  }
+
   /** 
    * creates a new file. this is like opening a file, except that there's
    * no path, and no initial content. 
@@ -1234,25 +1297,33 @@ export class Editor {
     });
   }
 
+  private OpenFileError(){
+    remote.dialog.showMessageBox({
+      type: "info", 
+      icon: null,
+      message: Constants.errors.openFileError
+    });
+  }
+
   /** 
    * adds to or removes item from recent files list. if you are adding
    * and it's already present, it will move to the top.
    */
   private UpdateRecentFiles(file_path:string, add=true){
     let recent_files = (this.properties_.recent_files || []).slice(0).filter(x => x !== file_path);
-    if(add) recent_files.unshift(file_path).slice(0, 10);
-    this.properties_.recent_files = recent_files;
+    if(add) recent_files.unshift(file_path);
+    this.properties_.recent_files = recent_files.slice(0,12);
     this.UpdateRecentFilesList();
   }
 
   /** loads a file from a given path */
-  private OpenFileInternal(file_path: string, override_label?:string , rendered = false) {
+  private OpenFileInternal(file_path: string, options:OpenFileOptions = {} ){
 
     // check if this file is already open (by path), switch to
 
     let current_tab = this.tabs_.tabs.find(tab => {
       return (tab.data 
-        && (!!(tab.data as Document).rendered_ === rendered)
+        && (!!(tab.data as Document).rendered_ === !!options.rendered)
         && ((tab.data as Document).file_path_ === file_path));
     });
 
@@ -1266,28 +1337,22 @@ export class Editor {
     return new Promise((resolve, reject) => {
 
       fs.readFile(file_path, "utf8", (err, data) => {
+
         if (err) {
-
-          remote.dialog.showMessageBox({
-            type: "info", 
-            icon: null,
-            //title: "Error Opening File",
-            message: "We couldn't open the file. Please make sure the file exists and is readable."
-          });
-
+          this.OpenFileError();
           this.UpdateRecentFiles(file_path, false);
           return reject(err);
         }
 
-        if(!rendered) this.UpdateRecentFiles(file_path, true);
+        if(!options.rendered && (options.add_to_recent_files !== false)) this.UpdateRecentFiles(file_path, true);
 
         FileWatcher.Watch(file_path);
 
         let document = new Document();
-        document.label_ = override_label ? override_label : path.basename(file_path);
+        document.label_ = options.override_label ? options.override_label : path.basename(file_path);
         document.file_path_ = file_path;
 
-        if(rendered){
+        if(options.rendered){
           document.rendered_content_ = data;
         }
         else {
@@ -1298,7 +1363,7 @@ export class Editor {
           document.saved_version_ = document.model_.getAlternativeVersionId()
         }
         document.id_ = this.document_id_generator++;
-        document.rendered_ = rendered;
+        document.rendered_ = !!options.rendered;
 
         let tab: TabSpec = {
           label: document.label_,
@@ -1329,10 +1394,8 @@ export class Editor {
       properties: ["openFile"]
     });
     if (files && files.length) return this.OpenFileInternal(files[0]);
-    return Promise.reject("no file selected");
+    return Promise.reject("no file selected"); 
   }
-
-  public RevertFile() { }
 
   /** update layout, should be called after resize */
   public UpdateLayout() {

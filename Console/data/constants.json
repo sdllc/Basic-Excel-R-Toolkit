@@ -20,6 +20,10 @@
   "editorCommands": {
     "executeBuffer": "Execute Entire Buffer",
     "executeSelection": "Execute Selection"
+  },
+
+  "errors": {
+    "openFileError": "We couldn't open the file. Please make sure the file exists and is readable."
   }
 
 }
