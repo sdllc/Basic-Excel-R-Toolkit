@@ -55,7 +55,7 @@ class PreferencesManager {
 
   /** 
    * FIXME: coming from the old localstorage implementation,
-   * this run synchronously. make sure all the callers can 
+   * this runs synchronously. make sure all the callers can 
    * handle async and then convert.
    */
   private ReadPreferences() : Promise<any> {
@@ -63,9 +63,9 @@ class PreferencesManager {
 
       let prefs;
       let preferences_path = path.join(process.env['BERT2_HOME_DIRECTORY'], "bert-config.json");
-      let json = fs.readFileSync(preferences_path, "utf8");
 
       try {
+        let json = fs.readFileSync(preferences_path, "utf8");
         prefs = JSON.parse(this.StripComments(json));
         return resolve(prefs);
       }
