@@ -33,6 +33,6 @@ public:
 };
 
 #else 
-#define DebugOut(){}
+#define DebugOut(fmt, ...){}
 #endif
 
