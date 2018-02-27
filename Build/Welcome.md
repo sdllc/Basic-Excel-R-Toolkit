@@ -34,7 +34,7 @@ Cheers,
 
 # Release Notes #
 
-2.0.17 -- Preview Release (27 February 2018)
+2.0.18 -- Preview Release (27 February 2018)
 
 bugfixes and updates
 
