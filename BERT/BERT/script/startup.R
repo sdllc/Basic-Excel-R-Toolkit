@@ -127,7 +127,10 @@ with( BERT, {
     env <- new.env();
     assign( "Application", install.com.pointer(descriptor), envir=env);
     lapply(names(descriptor$enums), function(name){
-      assign( name, descriptor$enums[name], envir=env)
+      tmp <- new.env();
+      src <- descriptor$enums[[name]];
+      sapply(names(src), function(x){ assign(x, src[[x]], envir=tmp) });
+      assign( name, tmp, envir=env)
     });
     assign( "EXCEL", env, envir=.GlobalEnv);
   }
