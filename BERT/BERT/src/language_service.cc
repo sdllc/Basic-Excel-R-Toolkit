@@ -125,6 +125,8 @@ void LanguageService::RunCallbackThread() {
     DWORD bytes = 0;
     OVERLAPPED io;
 
+    std::string message_buffer;
+
     memset(&io, 0, sizeof(io));
     io.hEvent = CreateEvent(0, TRUE, FALSE, 0);
     ReadFile(callback_pipe_handle, buffer, buffer_size, 0, &io);
@@ -140,7 +142,15 @@ void LanguageService::RunCallbackThread() {
 
           call.Clear();
           response.Clear();
-          MessageUtilities::Unframe(call, buffer, bytes);
+
+          if (message_buffer.length()) {
+            message_buffer.append(buffer, bytes);
+            MessageUtilities::Unframe(call, message_buffer);
+            message_buffer = "";
+          }
+          else {
+            MessageUtilities::Unframe(call, buffer, bytes);
+          }
 
           bert->HandleCallback();
           //DumpJSON(response);
@@ -158,9 +168,16 @@ void LanguageService::RunCallbackThread() {
         }
         else {
           DWORD err = GetLastError();
-          DebugOut("ERR in GORE: %d\n", err);
-          // ...
-          break;
+          if (err == ERROR_MORE_DATA) {
+            message_buffer.append(buffer, bytes);
+            ResetEvent(io.hEvent);
+            ReadFile(callback_pipe_handle, buffer, buffer_size, 0, &io);
+          }
+          else {
+            DebugOut("ERR in GORE: %d\n", err);
+            // ...
+            break;
+          }
         }
       }
       else if (result != WAIT_TIMEOUT) {

@@ -1,4 +1,4 @@
 #pragma once
 
-#define BERT_VERSION L"2.0.15"
+#define BERT_VERSION L"2.0.16"
 

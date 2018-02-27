@@ -260,12 +260,33 @@ public:
         variant.scode = DISP_E_PARAMNOTFOUND;
       }
       else {
+
+        int count = rows * cols;
+
+        bool col_names = (cols && arr.colnames_size() == cols);
+        bool row_names = (rows && arr.rownames_size() == rows);
+
+        if (length > 0 && count == 0) {
+          count = length;
+          cols = length;
+          rows = 1;
+        }
+        else if (count > length) {
+          variant.vt = VT_ERROR;
+          break;
+        }
+
+        /*
         if (cols == 0 && rows == 0) {
           cols = 1;
           rows = arr.data_size();
         }
         else if (cols == 0 && rows > 0) cols = 1;
         else if (rows == 0 && cols > 0) rows = 1;
+        */
+
+        if (col_names) rows++;
+        if (row_names) cols++;
 
         SAFEARRAYBOUND array_bounds[2];
 
@@ -279,11 +300,41 @@ public:
         int32_t index = 0;
         LONG indexes[2]; // is this type architecture-dependent? otherwise it should be === int32_t, no?
 
+        int c_offset = (row_names ? 1 : 0);
+        int r_offset = (col_names ? 1 : 0);
+
+        /*
         for (int col = 0; col < cols; col++) {
           indexes[1] = col;
           for (int row = 0; row < rows; row++) {
             indexes[0] = row;
             variant_array.MultiDimSetAt(indexes, VariableToVariant(arr.data(index++)));
+          }
+        }
+        */
+
+        for (int c = 0; c < cols; c++) {
+          indexes[1] = c;
+          if (row_names && c == 0) {
+            if (col_names) //StringToXLOPER(&(x->val.array.lparray[0]), "");
+              variant_array.MultiDimSetAt(indexes, CComVariant(CComBSTR("")));
+            for (int r = r_offset; r < rows; r++) {
+              //StringToXLOPER(&(x->val.array.lparray[r * cols + c]), arr.rownames(r - r_offset));
+              variant_array.MultiDimSetAt(indexes, CComVariant(CComBSTR(arr.rownames(r - r_offset).c_str())));
+            }
+          }
+          else {
+            for (int r = 0; r < rows; r++) {
+              indexes[0] = r;
+              if (col_names && r == 0) {
+                //StringToXLOPER(&(x->val.array.lparray[r * cols + c]), arr.colnames(c - c_offset));
+                variant_array.MultiDimSetAt(indexes, CComVariant(CComBSTR(arr.colnames(c - c_offset).c_str())));
+              }
+              else {
+                //VariableToXLOPER(&(x->val.array.lparray[r * cols + c]), arr.data(index++));
+                variant_array.MultiDimSetAt(indexes, VariableToVariant(arr.data(index++)));
+              }
+            }
           }
         }
 
