@@ -47,6 +47,16 @@
           { "label": "Reload", "accelerator": "Ctrl+R", "id": "reload" },
           { "label": "Toggle Developer Tools", "accelerator": "Ctrl+Shift+I", "id": "toggle-developer-tools" }
         ]
+      },
+      {
+        "label": "Help", "id": "help",
+        "items": [
+          { "label": "BERT Version", "id": "version", "enabled": false },
+          { "type": "separator" },
+          { "label": "Feedback", "id": "feedback" },
+          { "label": "BERT Website", "id": "website" },
+          { "label": "Release Notes", "id": "release-notes" }
+        ]
       }
     ]
   }
