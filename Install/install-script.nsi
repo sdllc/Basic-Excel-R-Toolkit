@@ -9,7 +9,7 @@
 ;--------------------------------
 ;Check bitness and path
 
-Function CheckExcel
+Function CheckExcelVersion
 
   Var /GLOBAL ExcelFlavor
   Var /GLOBAL ExcelPath
@@ -80,7 +80,14 @@ FunctionEnd
 
 Section "Main" SecMain
 
-  Call CheckExcel
+  CheckExcelRunning:
+    FindWindow $0 "XLMAIN"
+    StrCmp $0 0 +4
+    MessageBox MB_OKCANCEL|MB_ICONINFORMATION "Please close Excel before running the installer." IDCANCEL +2
+    Goto CheckExcelRunning
+    Abort "Install canceled"
+
+  Call CheckExcelVersion
 
   StrCmp $ExcelFlavor "Win64" +3
   MessageBox MB_ICONSTOP|MB_OK "Sorry, 32-bit Excel is not supported in this release."
