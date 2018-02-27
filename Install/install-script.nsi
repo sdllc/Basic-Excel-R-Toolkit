@@ -106,11 +106,18 @@ Section "Main" SecMain
   File ..\Build\BERTRibbon2x64.dll
 
   ; default prefs
-  File ..\Build\bert-config-default.json
+  File ..\Build\bert-config-template.json
 
   ; copy unless there is an existing prefs file
   IfFileExists "$INSTDIR\bert-config.json" +2
-  CopyFiles "$INSTDIR\bert-config-default.json" "$INSTDIR\bert-config.json"
+  CopyFiles "$INSTDIR\bert-config-template.json" "$INSTDIR\bert-config.json"
+
+  ; default stylesheet
+  File "..\Build\user-stylesheet-template.less"
+
+  ; copy unless there is an existing stylesheet
+  IfFileExists "$INSTDIR\user-stylesheet.less" +2
+  CopyFiles "$INSTDIR\user-stylesheet-template.less" "$INSTDIR\user-stylesheet.less"
 
   ; FIXME: for 32-bit Excel, we'll need to switch registration based
   ; on bitness. have to move a bitness check into this script somewhere.
@@ -190,7 +197,8 @@ Section "Uninstall"
   Delete "$INSTDIR\BERTRibbon2x64.dll"
   Delete "$INSTDIR\ControlR.exe"
   Delete "$INSTDIR\ControlJulia.exe"
-  Delete "$INSTDIR\bert-config-default.json"
+  Delete "$INSTDIR\bert-config-template.json"
+  Delete "$INSTDIR\user-stylesheet-template.json"
 
   Delete "$INSTDIR\Welcome.md"
 
