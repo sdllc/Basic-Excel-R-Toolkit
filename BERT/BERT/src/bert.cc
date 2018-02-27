@@ -750,7 +750,6 @@ void BERT::Init() {
   bool start_console = false;
 
   std::string command_line = GetCommandLineA();
-  ::MessageBoxA(0, command_line.c_str(), "CL", MB_OK);
   if (command_line.find("/x:BERT") != std::string::npos) {
     start_console = true;
   }
