@@ -85,12 +85,26 @@ export class MenuUtilities {
 
   }
 
+  static GetLabel(id:string){
+    let item = this.Find(id);
+    return item.label;
+  }
+
+  /** */
+  static SetLabel(id:string, label:string, update=true){
+    let item = this.Find(id);
+    if(item.label !== label){
+      item.label = label;
+      if(update) this.Update();
+    }
+  }
+
   /** set menu item check and optionally trigger the related event */
-  static SetCheck(id:string, checked=true){ // , trigger_event=false){
+  static SetCheck(id:string, checked=true, update=true){ // , trigger_event=false){
     let item = this.Find(id);
     if(item.checked !== checked){
       item.checked = checked;
-      this.Update();
+      if(update) this.Update();
     }
   }
 

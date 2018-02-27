@@ -18,6 +18,14 @@ export interface AlertSpec {
   /** disable escape key */
   disable_escape?: boolean;
 
+  /** timeout: 0 or falsy means don't timeout */
+  timeout?: number;
+
+}
+
+export interface AlertResult {
+  result: "button" | "escape" | "timeout";
+  data?: any;
 }
 
 const AlertTemplate = `
@@ -31,13 +39,19 @@ const AlertTemplate = `
 /** 
  * one-line mini dialog. alert is always modal. 
  * FIXME: consolidate with dialog
+ * FIXME: multiple alerts? stack? [to stack, restructure this class so we 
+ * can use multiple instances, and than append (and remove) container
+ * nodes for separate alerts. FIXME: what happens with keys?]
  */
 export class Alert {
 
   private static container_node_: HTMLElement;
+
   private key_listener_: EventListenerObject;
   private click_listener_: EventListenerObject;
   private spec_: AlertSpec;
+  private alert_node_:HTMLElement;
+  private timeout_id_;
 
   private static EnsureNodes() {
     if (this.container_node_) return;
@@ -47,7 +61,7 @@ export class Alert {
     document.body.appendChild(this.container_node_);
   }
  
-  private DelayResolution(resolve:Function, data:any){
+  private DelayResolution(resolve:Function, data:AlertResult){
     setTimeout(() => { 
       this.Hide(); 
       resolve(data);
@@ -58,10 +72,12 @@ export class Alert {
    * shows an alert. returns a promise that will resolve on a button 
    * click or (optionally) pressing escape. FIXME: return key?
    */
-  public Show(spec:AlertSpec) {
+  public Show(spec:AlertSpec) : Promise<AlertResult> {
 
     MenuUtilities.Disable();
     Alert.EnsureNodes();
+
+    this.alert_node_ = (Alert.container_node_.querySelector(".alert_container") as HTMLElement);
 
     return new Promise((resolve, reject) => {
 
@@ -73,14 +89,15 @@ export class Alert {
         button_text = spec.buttons.map(label => `<button>${label}</button>`).join("\n");
       }
       Alert.container_node_.querySelector(".alert_buttons").innerHTML = button_text || "";
-
       Alert.container_node_.style.display = "flex";
+
+      setTimeout(() => this.alert_node_.style.opacity = "1", 100);
 
       this.key_listener_ = {
         handleEvent: (event) => {
           if(!spec.disable_escape){
             if ((event as KeyboardEvent).key === "Escape") {
-              this.DelayResolution(resolve, { reason: "escape_key", data: null });
+              this.DelayResolution(resolve, { result: "escape", data: null });
             }
           }
         }
@@ -91,11 +108,19 @@ export class Alert {
         handleEvent: (event) => {
           let target = event.target as HTMLElement;
           if (/button/i.test(target.tagName || "")) {
-            this.DelayResolution(resolve, { reason: "button", data: target.textContent });
+            this.DelayResolution(resolve, { result: "button", data: target.textContent });
           }
         }
       };
       Alert.container_node_.addEventListener("click", this.click_listener_);
+
+      if(spec.timeout){
+        this.timeout_id_ = setTimeout(() => {
+          this.DelayResolution(resolve, { result: "timeout", data: null });
+          this.timeout_id_ = null;
+        }, spec.timeout * 1000);
+      }
+
       this.spec_ = spec;
 
     });
@@ -106,18 +131,30 @@ export class Alert {
    * closes the alert
    */
   private Hide() {
-    Alert.container_node_.style.display = "none";
+
+    let transition_end = () => {
+      Alert.container_node_.style.display = "none";
+      this.alert_node_.removeEventListener("transitionend", transition_end);
+    };
+
+    this.alert_node_.addEventListener("transitionend", transition_end);
+    this.alert_node_.style.opacity = "0";
+
     if (this.key_listener_) {
-      console.info("Remove kl");
       document.removeEventListener("keydown", this.key_listener_);
       this.key_listener_ = null;
     }
     if (this.click_listener_) {
-      console.info("Remove cl");
       Alert.container_node_.removeEventListener("click", this.click_listener_);
     }
+    if(this.timeout_id_){
+      clearTimeout(this.timeout_id_);
+      this.timeout_id_ = null;
+    }
+
     this.spec_ = null;
     MenuUtilities.Enable();
   }
 
 }
+
