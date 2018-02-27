@@ -25,16 +25,16 @@ new.sheet <- wb$get_Sheets()$Add();
 new.sheet$put_Name( "R Data Set" );
 
 #
-# add some data. 
+# add some data. includes headers
 #
-range <- new.sheet$get_Range( "B3:F152" );
+range <- new.sheet$get_Range( "B2:F152" );
 range$put_Value( iris );
 
 #
 # add column headers
 #
 header.range <- new.sheet$get_Range( "B2:F2" );
-header.range$put_Value( t( colnames( iris )));
+#header.range$put_Value( t( colnames( iris )));
 
 # 
 # resize columns to fit
@@ -44,6 +44,11 @@ range$get_EntireColumn()$AutoFit();
 #
 # example of using constants: add border (underline) to headers
 #
-borders <- header.range$get_Borders();
-border <- borders$get_Item( EXCEL$XlBordersIndex$xlEdgeBottom );
+border <- header.range$get_Borders(EXCEL$XlBordersIndex$xlEdgeBottom);
 border$put_Weight( EXCEL$XlBorderWeight$xlThin );
+
+#
+# center headers
+#
+header.range$put_HorizontalAlignment(EXCEL$Constants$xlCenter);
+
