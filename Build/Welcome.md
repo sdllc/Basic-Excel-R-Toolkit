@@ -34,11 +34,11 @@ Cheers,
 
 # Release Notes #
 
-2.0.17 -- preview release
+2.0.17 -- Preview Release (27 February 2018)
 
 bugfixes and updates
 
-2.0.15 -- preview release
+2.0.15 -- Preview Release (26 February 2018)
 
 Version 2 represents a complete rewrite and rearchitecting of BERT. In 
 particular, language services are moved out of process. This allows us to

@@ -23,6 +23,12 @@ export interface SplitterStatus {
   orientation:SplitterOrientation;
 }
 
+interface NodeSortDesc {
+  node:HTMLElement;
+  index:number;
+  order:number;  
+}
+
 /**
  * html splitter window. when instantiated, it determines layout from
  * markup. markup should look like this (where #parent is the parent node):
@@ -303,22 +309,40 @@ export class Splitter {
   }
 
   /**
+   * order based on flex property "order"
+   */
+  private OrderedChildren(){
+    
+    let desc:NodeSortDesc[] = this.children_.map((node, index) => {
+      let style = getComputedStyle(node);
+      let order = Number(style.order) || 0;
+      return { node, index, order };
+    });
+
+    desc.sort((a, b) => {
+      if(a.order === b.order) return a.index - b.index;
+      return a.order - b.order;
+    });
+
+    return desc.map(x => x.node);
+  }
+
+  /**
    * update layout only (no class changes)
    */
   private Update(key:string, split:number){
 
+    let ordered = this.OrderedChildren();
+
     if(this.visible_[0] && this.visible_[1]){
-      this.children_[0].style[key] = `${split}%`;
-      this.children_[1].style[key] = `${100-split}%`;
+      ordered[0].style[key] = `${split}%`;
+      ordered[1].style[key] = `${100-split}%`;
       Splitter.overlay_display_.textContent = `${split.toFixed(1)}%`;  
-      //this.children_[0].style.display = this.children_[1].style.display = 
       this.splitter_.style.display = "";
     } 
     else {
       this.children_[0].style[key] = this.visible_[0] ? "100%" : "0%";
       this.children_[1].style[key] = this.visible_[1] ? "100%" : "0%";
-      //this.children_[0].style.display = this.visible_[0] ? "" : "none";
-      //this.children_[1].style.display = this.visible_[1] ? "" : "none";
       this.splitter_.style.display = "none";
     }
     this.split_.next({split, orientation: this.orientation_});

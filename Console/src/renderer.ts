@@ -25,6 +25,9 @@ import * as Rx from "rxjs";
 import * as path from 'path';
 import { prototype } from 'stream';
 
+import { UserStylesheet } from './ui/user_stylesheet';
+UserStylesheet.Attach();
+
 // FIXME: l10n override?
 const MenuTemplate = require("../data/menu.json");
 
@@ -64,7 +67,7 @@ let dialog_manager = new DialogManager();
 
 // terminals and tabs
 
-let terminals = new MultiplexedTerminal("#terminal-tabs");
+let terminals = new MultiplexedTerminal("#terminals");
 
 // language connections. 
 // FIXME: parameterize, or make these dynamic. in fact, do that (make them dynamic).

@@ -6,6 +6,8 @@ const { Menu, MenuItem, dialog } = remote;
 import { MenuUtilities } from '../ui/menu_utilities';
 import { Utilities } from '../common/utilities';
 
+import { UserStylesheet } from '../ui/user_stylesheet';
+
 // note elsewhere we're trying to be very generic about languages
 // in the editor (notwithstanding that we know which languages we
 // actually support). this is our language tokenizer/lexer, which 
@@ -464,6 +466,10 @@ export class Editor {
           break;
         case "main.file.open-recent.open-recent-file":
           this.OpenFile(event.item.data);
+          break;
+
+        case "main.view.user-stylesheet":
+          this.OpenUserStylesheet();
           break;
 
         case "main.view.preferences":
@@ -1139,6 +1145,17 @@ export class Editor {
     });
   }
 
+  /** 
+   * 
+   */
+  public OpenUserStylesheet(){
+    this.OpenFileInternal(UserStylesheet.stylesheet_path, {
+      override_label:Constants.files.userStylesheet,
+      add_to_recent_files:false,
+      type:"editor"
+    });
+  }
+
   /** close tab (called on button click) */
   private CloseTab(tab: TabSpec) {
 
@@ -1171,12 +1188,8 @@ export class Editor {
   private DeactivateTab(tab: TabSpec) {
     if (tab.data) {
       let document = tab.data as Document;
-      if( document.type_ === "rendered" ){
-        console.info( "deactivate rendered document...");
-      }
-      else {
+      if( document.type_ !== DocumentType.rendered ){
         document.view_state_ = this.editor_.saveViewState();
-        // this.CacheDocument(document); // maybe unecessary
       }
       if(document.rendered_content_node_) document.rendered_content_node_.style.zIndex = "0";
     }
@@ -1374,7 +1387,7 @@ export class Editor {
             document.label_ = tab.label = path.basename(file_path);
             if(document.file_path_ !== file_path) FileWatcher.Watch(file_path);
             monaco.editor.setModelLanguage(document.model_, this.LanguageFromPath(file_path));
-            this.UpdateStatusBarLanguage(document);
+            this.UpdateStatusBar(document);
           }
           document.file_path_ = file_path;
           document.saved_version_ = document.model_.getAlternativeVersionId();

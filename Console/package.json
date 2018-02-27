@@ -32,7 +32,6 @@
     "asar": "^0.14.1",
     "electron": "^1.8.2",
     "electron-builder": "^19.56.0",
-    "less": "^2.7.3",
     "less-watch-compiler": "^1.11.0",
     "typescript": "^2.7.1"
   },
@@ -42,6 +41,7 @@
     "electron-reload": "^1.2.2",
     "electron-window-state": "^4.1.1",
     "google-protobuf": "^3.5.0",
+    "less": "^3.0.1",
     "markdown-it": "^8.4.0",
     "markdown-it-task-lists": "^2.1.0",
     "monaco-editor": "^0.10.1",
