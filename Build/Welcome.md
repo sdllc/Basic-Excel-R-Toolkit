@@ -34,6 +34,10 @@ Cheers,
 
 # Release Notes #
 
+2.0.17 -- preview release
+
+bugfixes and updates
+
 2.0.15 -- preview release
 
 Version 2 represents a complete rewrite and rearchitecting of BERT. In 
