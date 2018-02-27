@@ -27,7 +27,7 @@ import * as MarkdownItTasks from 'markdown-it-task-lists';
 const MD = new MarkdownIt().use(MarkdownItTasks); 
 
 import { FileWatcher } from '../common/file-watcher';
-import { Preferences, PreferencesSchema } from '../common/preferences';
+import { Preferences, PreferencesSchema, PreferencesLoadStatus } from '../common/preferences';
 import { EEXIST } from 'constants';
 
 const SchemaSchema = require("../../data/schemas/schema.schema.json");
@@ -58,8 +58,15 @@ export interface EditorEvent {
 
 interface OpenFileOptions {
   override_label?:string;
-  rendered?:boolean;
+  //rendered?:boolean;
+  type:"rendered" | "editor" | "preferences";
   add_to_recent_files?:boolean; // default true
+}
+
+enum DocumentType {
+  rendered = "rendered",
+  editor = "editor",
+  preferences = "preferences"
 }
 
 /**
@@ -95,7 +102,8 @@ class Document {
   id_: number;
 
   /** rendered: not editable, show rendered content -- md and html? */
-  rendered_ = false;
+  // rendered_ = false;
+  type_: DocumentType;
 
   /** */
   rendered_content_:string;
@@ -125,7 +133,7 @@ class Document {
       dirty: this.dirty_,
       overrideLanguage: this.overrideLanguage_,
       uri: this.model_ ? this.model_.uri : null,
-      rendered: this.rendered_,
+      type: this.type_,
       saved_version: this.saved_version_,
       alternative_version_id: this.model_ ? this.model_.getAlternativeVersionId() : 0,
       text: this.model_ ? this.model_.getValue() : this.rendered_content_
@@ -134,8 +142,17 @@ class Document {
 
 }
 
+interface EditorStackMessage {
+  text:string;
+  tag:any;
+}
+
 /**
+ * status bar was originally just text, then it became a stack,
+ * now it's a tagged stack. some of the cruft in here reflects
+ * handling all the types at the same time. 
  * 
+ * try to use tagged push/pop where possible.
  */
 class EditorStatusBar {
 
@@ -158,16 +175,25 @@ class EditorStatusBar {
   // public set label(text) { this.label_.textContent = text; }
 
   /** stack-based (reverse) */
-  private stack_:string[] = [];
+  private stack_:EditorStackMessage[] = [];
 
-  public PushMessage(text){
-    this.stack_.push(text);
+  public PushMessage(text:string, tag:any = 0){
+    this.stack_.push({text, tag});
     this.label_.textContent = text;
   }
 
-  public PopMessage(){
-    if(this.stack_.length) this.stack_ = this.stack_.slice(0,this.stack_.length-1);
-    if(this.stack_.length) this.label_.textContent = this.stack_[this.stack_.length-1];
+  public PopMessage(tag?:any){
+
+    if(typeof tag === "undefined"){
+      // pop last
+      if(this.stack_.length) this.stack_ = this.stack_.slice(0,this.stack_.length-1);
+    }
+    else {
+      // pop all with tag
+      this.stack_ = this.stack_.filter(item => item.tag !== tag);
+    }
+
+    if(this.stack_.length) this.label_.textContent = this.stack_[this.stack_.length-1].text;
     else this.label_.textContent = "";
   }
 
@@ -275,6 +301,9 @@ export class Editor {
 
   /** status bar instance */
   private status_bar_ = new EditorStatusBar();
+
+  /** accessor */
+  public get status_bar() { return this.status_bar_; } 
 
   /** editor instance */
   private editor_: monaco.editor.IStandaloneCodeEditor;
@@ -385,13 +414,13 @@ export class Editor {
     this.editor_node_ = editor;
 
     this.container_.appendChild(this.status_bar_.node);
-    this.status_bar_.PushMessage(Constants.status.ready);
+    this.status_bar_.PushMessage(Constants.status.ready, "BASE");
 
     this.link_event_handler = function(event){
       if(event.type === "mouseenter"){
-        this.status_bar_.PushMessage(event.target ? event.target.href||"" : "");
+        this.status_bar_.PushMessage(event.target ? event.target.href||"" : "", "link");
       }
-      else this.status_bar_.PopMessage();
+      else this.status_bar_.PopMessage("link");
     }.bind(this);
 
     this.tabs_ = new TabPanel(tabs);
@@ -437,10 +466,12 @@ export class Editor {
           this.OpenFile(event.item.data);
           break;
 
-        // prefs
-
         case "main.view.preferences":
           this.OpenPreferences();
+          break;
+
+        case "main.help.release-notes":
+          this.OpenReleaseNotes();
           break;
 
       }
@@ -544,7 +575,7 @@ export class Editor {
    */
   private EnsurePreferences() : Promise<any> {
     return new Promise(resolve => {
-      Preferences.preferences.first(x => x).subscribe(prefs => {
+      Preferences.filter(x => x.preferences).first().subscribe(prefs => {
         this.editor_options_ = prefs['editor'] || {};
         resolve();
       });
@@ -655,19 +686,17 @@ export class Editor {
     });
     */
 
+    // we already waited for preferences, so we are guaranteed 
+    // to have valid prefs (either user or default, based on status)
+
     this.RestoreOpenFiles();
+    this.OpenDefaultFiles();
 
     // subscribe to preference changes from here on
 
-    Preferences.preferences.filter(x => x).subscribe(x => {
-
-      this.UpdatePreferences(x);
-
-      // we do this after getting preferences, because we need the 
-      // documents directory which is in there
-
-      this.OpenDefaultFiles();
-
+    Preferences.subscribe(x => {
+      this.PreferencesStatusMessage();
+      this.UpdatePreferences(x.preferences);
     });
 
     // file updates
@@ -740,7 +769,7 @@ export class Editor {
           document.view_state_ = this.editor_.saveViewState();
           fs.readFile(file_path, "utf8", (err, data) => {
             if(!err) {
-              if(document.rendered_){
+              if(document.type_ === "rendered"){
 
                 // documents are rendered on activation so it might not 
                 // be created yet; in that case just set content and don't 
@@ -760,7 +789,7 @@ export class Editor {
               this.tabs_.UpdateTab(tab);
 
               // if active, call restore view state asap
-              if(!document.rendered_ && this.active_tab_ === tab){
+              if(document.type_ !== "rendered" && this.active_tab_ === tab){
                 this.editor_.restoreViewState(document.view_state_);
               }
               
@@ -887,10 +916,13 @@ export class Editor {
         document.file_path_ = unserialized.file_path;
         document.overrideLanguage_ = unserialized.overrideLanguage;
 
-        document.rendered_ = unserialized.rendered;
+        //document.rendered_ = unserialized.rendered;
+        document.type_ = unserialized.type;
+        if(!document.type_) document.type_ = unserialized.rendered ? DocumentType.rendered : DocumentType.editor;
+
         document.id_ = entry;
         
-        if(document.rendered_){
+        if(document.type_ === "rendered"){
           document.rendered_content_ = unserialized.text || "";
         }
         else {
@@ -1001,15 +1033,8 @@ export class Editor {
    }
 
     if(!last || last < current){
-
-      let file_path = path.join(process.env.BERT2_HOME_DIRECTORY, "welcome.md");
-      this.OpenFileInternal(file_path, {
-        override_label: "Welcome",
-        add_to_recent_files: false,
-        rendered: true
-      });
+      this.OpenReleaseNotes();
       this.properties_.lastReleaseNotes = process.env.BERT_VERSION;
-      
     }
 
   }
@@ -1092,12 +1117,25 @@ export class Editor {
   }
 
   /**
-   * opens preferences in an editor tab. 
+   * opens release notes in an editor tab
+   */
+  public OpenReleaseNotes(){
+    let file_path = path.join(process.env.BERT2_HOME_DIRECTORY, "welcome.md");
+    this.OpenFileInternal(file_path, {
+      override_label: "Welcome",
+      add_to_recent_files: false,
+      type: "rendered"
+    });
+  }
+
+  /**
+   * opens preferences in an editor tab
    */
   public OpenPreferences() {
     this.OpenFileInternal(Preferences.preferences_path, {
       override_label:Constants.files.preferences,
-      add_to_recent_files:false
+      add_to_recent_files:false,
+      type:"preferences"
     });
   }
 
@@ -1133,7 +1171,7 @@ export class Editor {
   private DeactivateTab(tab: TabSpec) {
     if (tab.data) {
       let document = tab.data as Document;
-      if( document.rendered_ ){
+      if( document.type_ === "rendered" ){
         console.info( "deactivate rendered document...");
       }
       else {
@@ -1166,7 +1204,7 @@ export class Editor {
       let editor_document = tab.data as Document;
       this.active_document_ = editor_document;
 
-      if(editor_document.rendered_){
+      if(editor_document.type_ === "rendered"){
         if(!editor_document.rendered_content_node_){
           editor_document.rendered_content_node_ = document.createElement("div");
           editor_document.rendered_content_node_.className = "editor-rendered-viewer markdown";
@@ -1177,21 +1215,19 @@ export class Editor {
         editor_document.rendered_content_node_.style.zIndex = "10";
         this.editor_node_.style.zIndex = "0";
 
-        this.status_bar_.language = Constants.status.rendered;
-        this.status_bar_.show_position = false;
       }
       else {
 
-        this.status_bar_.show_position = true;
         this.editor_node_.style.zIndex = "10";
         
         if (editor_document.model_) {
           this.editor_.setModel(editor_document.model_);
           if (editor_document.view_state_)
             this.editor_.restoreViewState(editor_document.view_state_);
-          this.UpdateStatusBarLanguage(editor_document.model_);
         }
       }
+
+      this.UpdateStatusBar(editor_document);
       this.properties_.active_tab = editor_document.id_;
 
       MenuUtilities.SetEnabled("main.file.revert-file", editor_document.dirty_ && !!editor_document.file_path_, false);
@@ -1201,8 +1237,34 @@ export class Editor {
 
   }
 
-  private UpdateStatusBarLanguage(model:monaco.editor.IModel){
-    let language = model['_languageIdentifier'].language;
+  /**
+   * if we're editing preferences, always show state. otherwise, show 
+   * preferences state if there is an error.
+   */
+  private PreferencesStatusMessage(document?:Document){
+
+    if(!document) document = this.active_document_;
+
+    this.status_bar_.PopMessage("preferences");
+    if( document && ((document.type_ === DocumentType.preferences) || Preferences.status === PreferencesLoadStatus.Error )){
+      let message = (Preferences.status === PreferencesLoadStatus.Error) ?
+        Constants.preferences.error : Constants.preferences.ok;
+      this.status_bar_.PushMessage(message, "preferences");
+    }
+
+  }
+
+  private UpdateStatusBar(document:Document){
+
+    this.PreferencesStatusMessage(document);
+
+    if( document.type_ === DocumentType.rendered ){
+      this.status_bar_.language = Constants.status.rendered;
+      this.status_bar_.show_position = false;
+      return;
+    }
+    
+    let language = document.model_['_languageIdentifier'].language;
     switch (language.toLowerCase()) {
       case "json":
       case "js":
@@ -1212,7 +1274,16 @@ export class Editor {
       default:
         language = language.substr(0, 1).toUpperCase() + language.substr(1);
     }
+
+    /*
+    if(document.type_ === DocumentType.preferences){
+      language += " (Preferences)";
+    }
+    */
+
     this.status_bar_.language = language;
+    this.status_bar_.show_position = true;
+
   }
 
   /** switches tab. intended for keybinding. */
@@ -1303,7 +1374,7 @@ export class Editor {
             document.label_ = tab.label = path.basename(file_path);
             if(document.file_path_ !== file_path) FileWatcher.Watch(file_path);
             monaco.editor.setModelLanguage(document.model_, this.LanguageFromPath(file_path));
-            this.UpdateStatusBarLanguage(document.model_);
+            this.UpdateStatusBarLanguage(document);
           }
           document.file_path_ = file_path;
           document.saved_version_ = document.model_.getAlternativeVersionId();
@@ -1428,13 +1499,13 @@ export class Editor {
   }
 
   /** loads a file from a given path */
-  private OpenFileInternal(file_path: string, options:OpenFileOptions = {} ){
+  private OpenFileInternal(file_path: string, options:OpenFileOptions = {type:"editor"} ){
 
     // check if this file is already open (by path), switch to
 
     let current_tab = this.tabs_.tabs.find(tab => {
       return (tab.data 
-        && (!!(tab.data as Document).rendered_ === !!options.rendered)
+        && ((tab.data as Document).type_ === options.type)
         && ((tab.data as Document).file_path_ === file_path));
     });
 
@@ -1455,7 +1526,7 @@ export class Editor {
           return reject(err);
         }
 
-        if(!options.rendered && (options.add_to_recent_files !== false)) this.UpdateRecentFiles(file_path, true);
+        if((options.type !== "rendered") && (options.add_to_recent_files !== false)) this.UpdateRecentFiles(file_path, true);
 
         FileWatcher.Watch(file_path);
 
@@ -1463,7 +1534,7 @@ export class Editor {
         document.label_ = options.override_label ? options.override_label : path.basename(file_path);
         document.file_path_ = file_path;
 
-        if(options.rendered){
+        if(options.type === "rendered"){
           document.rendered_content_ = data;
         }
         else {
@@ -1474,7 +1545,7 @@ export class Editor {
           document.saved_version_ = document.model_.getAlternativeVersionId()
         }
         document.id_ = this.document_id_generator++;
-        document.rendered_ = !!options.rendered;
+        document.type_ = options.type as DocumentType;
 
         let tab: TabSpec = {
           label: document.label_,

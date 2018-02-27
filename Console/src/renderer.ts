@@ -1,6 +1,6 @@
 
 import {Pipe, ConsoleMessage, ConsoleMessageType} from './io/pipe';
-import {clipboard, remote, dialog} from 'electron';
+import {clipboard, remote, dialog, shell as electron_shell} from 'electron';
 
 const {Menu, MenuItem} = remote;
 
@@ -19,7 +19,7 @@ import { MultiplexedTerminal } from './shell/multiplexed_terminal';
 
 import {Alert, AlertSpec} from './ui/alert';
 import {Editor, EditorEvent, EditorEventType} from './editor/editor';
-import {Preferences} from './common/preferences';
+import {Preferences, PreferencesLoadStatus} from './common/preferences';
 
 import * as Rx from "rxjs";
 import * as path from 'path';
@@ -150,9 +150,9 @@ let pipe_list = (process.env['BERT_PIPE_NAME']||"").split(";"); // separator?
 // wait until we have read prefs once, then set up.
 // FIXME: is that necessary? we could just repaint.
 
-Preferences.preferences.filter(x => x).first(x => x).subscribe(preferences => {
+Preferences.filter(x => x.preferences).first().subscribe(x => {
 
-  let shell_preferences = preferences.shell || {};
+  let shell_preferences = x.preferences.shell || {};
 
   // FIXME: have terminal subscribe to prefs on its own
   terminals.SetPreferences(shell_preferences);
@@ -212,6 +212,35 @@ Preferences.preferences.filter(x => x).first(x => x).subscribe(preferences => {
 
 });
 
+let alert_instance = new Alert();
+
+// subscribe to preferences to watch for errors
+let preferences_status = PreferencesLoadStatus.NotLoaded;
+let preferences_error_once = false;
+Preferences.subscribe(x => {  
+  if(x.status !== preferences_status){
+
+    /*
+    if( x.status === PreferencesLoadStatus.Error ){
+      editor.status_bar.PushMessage("Preferences error");
+    }    
+    else if( preferences_status === PreferencesLoadStatus.Error){
+      editor.status_bar.PopMessage();
+    }
+    preferences_status = x.status;
+    */
+
+    if(preferences_status === PreferencesLoadStatus.Error && !preferences_error_once){
+      preferences_error_once = true;
+      alert_instance.Show({
+        title: "Preferences Error",
+        message: "Please check your preferences file. BERT may not work correctly.",
+        timeout: 7
+      })
+    }
+  }
+});
+
 // deal with splitter change on drag end 
 
 splitter.events.filter(x => (x === SplitterEvent.EndDrag||x === SplitterEvent.UpdateLayout)).subscribe(x => {
@@ -224,6 +253,13 @@ splitter.events.filter(x => (x === SplitterEvent.EndDrag||x === SplitterEvent.Up
 // construct menus
 
 MenuUtilities.Load(MenuTemplate);
+try {
+  MenuUtilities.SetLabel( "main.help.version", 
+    (MenuUtilities.GetLabel("main.help.version")||"").trim() + " " + process.env.BERT_VERSION );
+}
+catch(e){
+  console.warn( "Error setting version label in menu" );
+}
 
 // update to match properties
 
@@ -275,8 +311,21 @@ MenuUtilities.events.subscribe(event => {
   case "main.view.preferences":
     break;
 
+  // ditto
+
+  case "main.help.release-notes":
+    break;
+    
   // ...
 
+  case "main.help.website":
+    electron_shell.openExternal("http://bert-toolkit.com");
+    break;
+
+  case "main.help.feedback":
+    electron_shell.openExternal("https://bert-toolkit.com/contact");
+    break;
+    
   default:
     console.info(event.id);
   }
