@@ -295,6 +295,11 @@ void LanguageService::InterpolateString(std::string &str) {
     }
   };
   
+  // NOTE: this is designed for switching x86/x64 R, but we actually
+  // want 64-bit R even with 32-bit Excel; the only reason to do this
+  // would be if you were running on a 32-bit machine, which we don't
+  // ncessarily want to support.
+
 #ifdef _WIN64
   const char arch[] = "x64";
 #else

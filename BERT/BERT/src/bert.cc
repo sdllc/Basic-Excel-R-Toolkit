@@ -19,7 +19,8 @@
 // --- temp (pending move to config) --------------
 
 std::vector < LanguageDescriptor > language_descriptors = {
-  LanguageDescriptor("R", "controlr.exe", "R", { "r", "rsrc", "rscript" }, "-r \"$HOME\"", "$HOME\\bin\\$ARCH", IDR_RCDATA1),
+//  LanguageDescriptor("R", "controlr.exe", "R",{ "r", "rsrc", "rscript" }, "-r \"$HOME\"", "$HOME\\bin\\$ARCH", IDR_RCDATA1),
+  LanguageDescriptor("R", "controlr.exe", "R",{ "r", "rsrc", "rscript" }, "-r \"$HOME\"", "$HOME\\bin\\x64", IDR_RCDATA1),
   LanguageDescriptor("Julia", "controljulia.exe", "JL", { "jl", "julia" }, "", "$HOME\\bin", IDR_RCDATA2)
 };
 
