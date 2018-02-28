@@ -129,8 +129,10 @@ export class AnnotationManager {
 
     this.annotations_.forEach(annotation => {
 
-      let top = (annotation.line - buffer.ydisp - this.top_offset_) * dimensions.scaledCellHeight;
-      let left = (annotation.column||0) * dimensions.scaledCellWidth; 
+      // TAG: switching scaled -> actual to fix highdpi
+      
+      let top = (annotation.line - buffer.ydisp - this.top_offset_) * dimensions.actualCellHeight;
+      let left = (annotation.column||0) * dimensions.actualCellWidth; 
 
       if(!annotation.attached){
         annotation.element.style.position = "absolute";

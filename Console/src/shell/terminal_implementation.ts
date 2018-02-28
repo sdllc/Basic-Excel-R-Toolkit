@@ -561,7 +561,9 @@ export class TerminalImplementation {
     let buffer = (this.xterm_ as any).buffer;
     // console.info(buffer);
 
-    let row_height = (this.xterm_ as any).renderer.dimensions.scaledCellHeight;
+    // TAG: switching scaled -> actual to fix highdpi
+
+    let row_height = (this.xterm_ as any).renderer.dimensions.actualCellHeight;
     let rows = Math.ceil( height / row_height ) + 2;
     let row = buffer.y + buffer.ybase + 1;
 

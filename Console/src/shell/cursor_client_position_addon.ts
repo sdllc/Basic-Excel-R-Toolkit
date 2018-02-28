@@ -17,11 +17,13 @@ const GetCursorPosition = function(terminal, offset_x = 0){
   // use our node? (actually this is our node, we should just cache)
   let client_rect = (terminal.parent as HTMLElement).getBoundingClientRect();
   
+  // TAG: switching scaled -> actual to fix highdpi
+  
   let rect = {
-    left: client_rect.left + ((x+offset_x) * dimensions.scaledCellWidth),
-    right: client_rect.left + ((x+offset_x+1) * dimensions.scaledCellWidth),
-    top: client_rect.top + (y * dimensions.scaledCellHeight),
-    bottom: client_rect.top + ((y+1) * dimensions.scaledCellHeight),
+    left: client_rect.left + ((x+offset_x) * dimensions.actualCellWidth),
+    right: client_rect.left + ((x+offset_x+1) * dimensions.actualCellWidth),
+    top: client_rect.top + (y * dimensions.actualCellHeight),
+    bottom: client_rect.top + ((y+1) * dimensions.actualCellHeight),
   };
   
   return rect;
