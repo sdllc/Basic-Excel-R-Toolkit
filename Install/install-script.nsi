@@ -34,6 +34,9 @@ FunctionEnd
 ;--------------------------------
 ;General
 
+  Icon "orange-install.ico"
+  UninstallIcon "orange-uninstall.ico"
+
   ;Name and file
   Name "BERT ${VERSION}"
   OutFile "BERT-Installer-${VERSION}.exe"
@@ -55,6 +58,9 @@ FunctionEnd
   !define MUI_FINISHPAGE_RUN_TEXT "Open Excel and the BERT Console"
   !define MUI_FINISHPAGE_RUN_PARAMETERS "/x:BERT"
   !define MUI_FINISHPAGE_RUN $ExcelPath
+
+  !define MUI_ICON "orange-install.ico"
+
 
 ;--------------------------------
 ;Pages
