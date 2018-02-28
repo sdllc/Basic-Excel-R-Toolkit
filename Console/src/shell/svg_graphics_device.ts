@@ -2,6 +2,7 @@
 import { Pipe } from '../io/pipe';
 import { Metrics, FontMetrics } from './fontmetrics';
 import { GraphicsDevice } from './graphics_device';
+import { Base64 } from 'js-base64';
 
 import * as fs from 'fs';
 
@@ -72,7 +73,7 @@ export class SVGGraphicsDevice extends GraphicsDevice {
   }
 
   UpdateImage(svg:string = this.svg_){
-    if(this.node_) this.node_.src = "data:image/svg+xml;base64," + btoa(svg + "</svg>");
+    if(this.node_) this.node_.src = "data:image/svg+xml;base64," + Base64.encode(svg + "</svg>");
   }
 
   GraphicsCommand(message, command){
@@ -223,6 +224,7 @@ export class SVGGraphicsDevice extends GraphicsDevice {
       node.setAttribute("x", command.xList[0]);
       node.setAttribute("y", command.yList[0]);
       node.textContent = command.text;
+
       if(command.context.fontface === 2 || command.context.fontface === 4) node.setAttribute("font-weight", "600");
       if(command.context.fontface === 3 || command.context.fontface === 4) node.setAttribute("font-style", "italic");
       node.setAttribute("font-family", GraphicsDevice.FontFamily(command.context)); 

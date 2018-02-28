@@ -1,5 +1,6 @@
 
 import { Terminal as XTerm, ITerminalOptions, ITheme as ITerminalTheme } from 'xterm';
+import { Base64 } from 'js-base64';
 
 import * as fit from 'xterm/lib/addons/fit/fit';
 XTerm.applyAddon(fit);
@@ -530,8 +531,8 @@ export class TerminalImplementation {
       });
       if(file_name){
         src = src.replace(/^.*?,/, "");
-        if( image_type === "svg" ) fs.writeFile(file_name, atob(src), "utf8", () => { console.info("image write complete") });
-        else fs.writeFile(file_name, atob(src), "binary", () => { console.info("image write complete") });
+        if( image_type === "svg" ) fs.writeFile(file_name, Base64.decode(src), "utf8", () => { console.info("image write complete") });
+        else fs.writeFile(file_name, Base64.decode(src), "binary", () => { console.info("image write complete") });
       }
     }
     
@@ -548,7 +549,7 @@ export class TerminalImplementation {
     if(height) node.style.height = height + "px";
 
     let src = `data:${mime_type};base64,`;
-    if(text) node.src = src + btoa(text);
+    if(text) node.src = src + Base64.encode(text);
     else node.src = src + Utilities.Uint8ToBase64(data);
     this.InsertGraphic(height, node);
   }
