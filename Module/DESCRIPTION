@@ -1,7 +1,7 @@
 Package: BERTModule
 Type: Package
 Title: Utilities for BERT
-Version: 2.0.4
+Version: 2.0.5
 Date: 2018-02-18
 Author: Duncan Werner
 Maintainer: Duncan Werner <dwerner@riskamp.com>

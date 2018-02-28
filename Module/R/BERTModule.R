@@ -349,24 +349,24 @@ ncol.xlReference <- function(x){
   # create a "js" download method, and set that as default
   #-----------------------------------------------------------------------------
 
-  download.file.original <- get( "download.file", envir=as.environment( "package:utils" ));
-  override.binding( "download.file",  
-    function (url, destfile, method, quiet = FALSE, mode = "w", cacheOK = TRUE, 
-        extra = getOption("download.file.extra")) 
-    {
-      method <- if (missing(method)) 
-        getOption("download.file.method", default = "auto")
-      else match.arg(method, c("auto", "internal", "wininet", "libcurl", 
-        "wget", "curl", "lynx", "js"))
-      if( method == "js" ){
-        invisible(.Call("download", as.list(environment()), PACKAGE="BERTModule" ));
-      }
-      else {
-        do.call( download.file.original, as.list(environment()), envir=parent.env(environment()));
-      }
-    }, "utils", T );
-
-  options( download.file.method="js" );
+#  download.file.original <- get( "download.file", envir=as.environment( "package:utils" ));
+#  override.binding( "download.file",  
+#    function (url, destfile, method, quiet = FALSE, mode = "w", cacheOK = TRUE, 
+#        extra = getOption("download.file.extra")) 
+#    {
+#      method <- if (missing(method)) 
+#        getOption("download.file.method", default = "auto")
+#      else match.arg(method, c("auto", "internal", "wininet", "libcurl", 
+#        "wget", "curl", "lynx", "js"))
+#      if( method == "js" ){
+#        invisible(.Call("download", as.list(environment()), PACKAGE="BERTModule" ));
+#      }
+#      else {
+#        do.call( download.file.original, as.list(environment()), envir=parent.env(environment()));
+#      }
+#    }, "utils", T );
+#
+#  options( download.file.method="js" );
 
   #-----------------------------------------------------------------------------
   # overload history for the console
