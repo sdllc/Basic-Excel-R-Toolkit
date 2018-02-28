@@ -1,6 +1,7 @@
 BERT/ExcelLib
 x64
 BERT/x64
+BERT/Win32
 .vs
 
 *.exp
