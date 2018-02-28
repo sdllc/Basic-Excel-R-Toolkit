@@ -1,131 +1,173 @@
 
 #include "windows_api_functions.h"
+#include <iostream>
 
 extern HMODULE global_module_handle;
 
-std::string APIFunctions::ModulePath() {
+namespace APIFunctions {
 
-  char path[MAX_PATH];
-  GetModuleFileNameA(global_module_handle, path, sizeof(path));
-  PathRemoveFileSpecA(path); // deprecated, but the replacement is windows 8+ only
+  std::string APIFunctions::ModulePath() {
 
-  std::string module_path(path);
-  module_path.append("\\");
-  return module_path;
+    char path[MAX_PATH];
+    GetModuleFileNameA(global_module_handle, path, sizeof(path));
+    PathRemoveFileSpecA(path); // deprecated, but the replacement is windows 8+ only
 
-}
+    std::string module_path(path);
+    module_path.append("\\");
+    return module_path;
 
-std::vector<std::pair<std::string, FILETIME>> APIFunctions::ListDirectory(const std::string &directory){
-  
-  char path[MAX_PATH];
-  WIN32_FIND_DATAA find_data_info;
-
-  std::vector<std::pair<std::string, FILETIME>> directory_entries;
-
-  strcpy_s(path, directory.c_str());
-  strcat_s(path, "\\*");
-
-  HANDLE find_handle = FindFirstFileA(path, &find_data_info);
-  if (find_handle && find_handle != INVALID_HANDLE_VALUE) {
-    do {
-      if (!(find_data_info.dwFileAttributes & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_DEVICE))) {
-        std::string match = directory;
-        match += "\\";
-        match += find_data_info.cFileName;
-        directory_entries.push_back({ match, find_data_info.ftLastWriteTime });
-       }
-    } while (FindNextFileA(find_handle, &find_data_info));
   }
 
-  return directory_entries;
-}
+  std::vector<std::pair<std::string, FILETIME>> APIFunctions::ListDirectory(const std::string &directory) {
 
-std::string APIFunctions::ReadResource(LPTSTR resource_id) {
+    char path[MAX_PATH];
+    WIN32_FIND_DATAA find_data_info;
 
-  HRSRC resource_handle;
-  HGLOBAL global_handle = 0;
-  DWORD resource_size = 0;
-  std::string resource_text;
+    std::vector<std::pair<std::string, FILETIME>> directory_entries;
 
-  resource_handle = FindResource(global_module_handle, resource_id, RT_RCDATA);
+    strcpy_s(path, directory.c_str());
+    strcat_s(path, "\\*");
 
-  if (resource_handle) {
-    resource_size = SizeofResource(global_module_handle, resource_handle);
-    global_handle = LoadResource(global_module_handle, resource_handle);
+    HANDLE find_handle = FindFirstFileA(path, &find_data_info);
+    if (find_handle && find_handle != INVALID_HANDLE_VALUE) {
+      do {
+        if (!(find_data_info.dwFileAttributes & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_DEVICE))) {
+          std::string match = directory;
+          match += "\\";
+          match += find_data_info.cFileName;
+          directory_entries.push_back({ match, find_data_info.ftLastWriteTime });
+        }
+      } while (FindNextFileA(find_handle, &find_data_info));
+    }
+
+    return directory_entries;
   }
 
-  if (global_handle && resource_size > 0) {
-    const void *data = LockResource(global_handle);
-    if (data) resource_text.assign(reinterpret_cast<const char*>(data), resource_size);
+  std::string APIFunctions::ReadResource(LPTSTR resource_id) {
+
+    HRSRC resource_handle;
+    HGLOBAL global_handle = 0;
+    DWORD resource_size = 0;
+    std::string resource_text;
+
+    resource_handle = FindResource(global_module_handle, resource_id, RT_RCDATA);
+
+    if (resource_handle) {
+      resource_size = SizeofResource(global_module_handle, resource_handle);
+      global_handle = LoadResource(global_module_handle, resource_handle);
+    }
+
+    if (global_handle && resource_size > 0) {
+      const void *data = LockResource(global_handle);
+      if (data) resource_text.assign(reinterpret_cast<const char*>(data), resource_size);
+    }
+
+    return resource_text;
+
   }
 
-  return resource_text;
+  bool APIFunctions::GetRegistryString(std::string &result_value, const char *name, const char *key, HKEY base_key) {
 
-}
+    char buffer[MAX_PATH];
+    DWORD data_size = MAX_PATH;
 
-bool APIFunctions::GetRegistryString(std::string &result_value, const char *name, const char *key, HKEY base_key) {
+    if (!base_key) base_key = DEFAULT_BASE_KEY;
+    if (!key) key = DEFAULT_REGISTRY_KEY;
 
-  char buffer[MAX_PATH];
-  DWORD data_size = MAX_PATH;
+    LSTATUS status = RegGetValueA(base_key, key, name, RRF_RT_REG_SZ | RRF_RT_REG_EXPAND_SZ, 0, buffer, &data_size);
 
-  if (!base_key) base_key = DEFAULT_BASE_KEY;
-  if (!key) key = DEFAULT_REGISTRY_KEY;
+    // don't add the terminating null to the string, or it will cause problems 
+    // if we want to concatenate (which we do)
 
-  LSTATUS status = RegGetValueA(base_key, key, name, RRF_RT_REG_SZ | RRF_RT_REG_EXPAND_SZ, 0, buffer, &data_size);
+    if (!status && data_size > 0) result_value.assign(buffer, data_size - 1);
 
-  // don't add the terminating null to the string, or it will cause problems 
-  // if we want to concatenate (which we do)
+    return (status == 0);
+  }
 
-  if (!status && data_size > 0) result_value.assign(buffer, data_size - 1);
+  bool APIFunctions::GetRegistryDWORD(DWORD &result_value, const char *name, const char *key, HKEY base_key) {
 
-  return (status == 0);
-}
+    DWORD data_size = sizeof(DWORD);
 
-bool APIFunctions::GetRegistryDWORD(DWORD &result_value, const char *name, const char *key, HKEY base_key) {
+    if (!base_key) base_key = DEFAULT_BASE_KEY;
+    if (!key) key = DEFAULT_REGISTRY_KEY;
 
-  DWORD data_size = sizeof(DWORD);
+    return(0 == RegGetValueA(base_key, key, name, RRF_RT_DWORD, 0, &result_value, &data_size));
+  }
 
-  if (!base_key) base_key = DEFAULT_BASE_KEY;
-  if (!key) key = DEFAULT_REGISTRY_KEY;
+  std::string APIFunctions::GetPath() {
 
-  return(0 == RegGetValueA(base_key, key, name, RRF_RT_DWORD, 0, &result_value, &data_size));
-}
+    // we do this infrequently enough that it's not worth having a persistent 
+    // buffer, just allocate
 
-std::string APIFunctions::GetPath() {
+    int length = ::GetEnvironmentVariableA("PATH", 0, 0);
+    char *buffer = new char[length + 1];
+    if (length > 0) ::GetEnvironmentVariableA("PATH", buffer, length);
+    buffer[length] = 0; // not necessary
+    std::string path(buffer, length);
+    delete[] buffer;
 
-  // we do this infrequently enough that it's not worth having a persistent 
-  // buffer, just allocate
+    return path;
+  }
 
-  int length = ::GetEnvironmentVariableA("PATH", 0, 0);
-  char *buffer = new char[length + 1];
-  if (length > 0) ::GetEnvironmentVariableA("PATH", buffer, length);
-  buffer[length] = 0; // not necessary
-  std::string path(buffer, length);
-  delete[] buffer;
+  std::string APIFunctions::AppendPath(const std::string &new_path) {
+    std::string path = GetPath();
+    path += PATH_PATH_SEPARATOR;
+    path += new_path;
+    SetPath(path);
+    return path;
+  }
 
-  return path;
-}
+  std::string APIFunctions::PrependPath(const std::string &new_path) {
+    std::string old_path = GetPath();
+    std::string path = new_path;
+    path += PATH_PATH_SEPARATOR;
+    path += old_path;
+    SetPath(path);
+    return path;
+  }
 
-std::string APIFunctions::AppendPath(const std::string &new_path) {
-  std::string path = GetPath();
-  path += PATH_PATH_SEPARATOR;
-  path += new_path;
-  SetPath(path);
-  return path;
-}
+  /** sets path (for uncaching) */
+  void APIFunctions::SetPath(const std::string &path) {
+    ::SetEnvironmentVariableA("PATH", path.c_str());
+  }
 
-std::string APIFunctions::PrependPath(const std::string &new_path) {
-  std::string old_path = GetPath();
-  std::string path = new_path;
-  path += PATH_PATH_SEPARATOR;
-  path += old_path;
-  SetPath(path);
-  return path;
-}
+  FileError APIFunctions::FileContents(std::string &contents, const std::string &path) {
 
-/** sets path (for uncaching) */
-void APIFunctions::SetPath(const std::string &path) {
-  ::SetEnvironmentVariableA("PATH", path.c_str());
+    HANDLE file_handle = CreateFileA(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+    if (!file_handle || file_handle == INVALID_HANDLE_VALUE) {
+      std::cerr << "WARNING: file not found" << std::endl;
+      return FileError::FileNotFound;
+    }
+    else {
+
+      FileError result = FileError::Success;
+      DWORD bytes_read = 0;
+      DWORD buffer_size = 8 * 1024;
+      char *buffer = new char[buffer_size];
+
+      contents = "";
+
+      // if this returns false, that's an error, it returns true on EOF
+      
+      while (true) {
+        if(ReadFile(file_handle, buffer, buffer_size, &bytes_read, 0)){
+          if(bytes_read) contents.append(buffer, bytes_read);
+          else break;
+        }
+        else {
+          std::cerr << "File read error: " << GetLastError() << std::endl;
+          result = FileError::FileReadError;
+          break;
+        }
+      }
+
+      CloseHandle(file_handle);
+      delete[] buffer;
+
+      return result;
+    }
+  }
+
 }
 
 

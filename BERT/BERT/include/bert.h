@@ -16,6 +16,7 @@
 #include "file_change_watcher.h"
 
 #define CONFIG_FILE_NAME "bert-config.json"
+#define LANGUAGE_CONFIG_FILE_NAME "bert-languages.json"
 
 class BERT {
 
@@ -123,9 +124,9 @@ protected:
   void ShutdownConsole();
 
   /**
-   * 
+   * updated to be generic 
    */
-  void ReadConfigFile();
+  json11::Json ReadConfigFile(const std::string &path);
 
 public:
 

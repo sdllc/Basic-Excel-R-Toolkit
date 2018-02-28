@@ -11,8 +11,14 @@
 
 #define PATH_PATH_SEPARATOR ";"
 
-class APIFunctions {
-public:
+namespace APIFunctions {
+
+  typedef enum {
+    Success = 0,
+    FileNotFound = 1,
+    FileReadError = 2
+  } 
+  FileError;
 
   /** 
    * list directory. returns a tuple of filename, last write. lists files only, 
@@ -20,30 +26,33 @@ public:
    *
    * TODO: options?
    */
-  static std::vector<std::pair<std::string, FILETIME>> ListDirectory(const std::string &directory);
+  std::vector<std::pair<std::string, FILETIME>> ListDirectory(const std::string &directory);
 
   /** reads resource in this dll */
-  static std::string ReadResource(LPTSTR resource_id);
+  std::string ReadResource(LPTSTR resource_id);
 
   /** reads registry string */
-  static bool GetRegistryString(std::string &result_value, const char *name, const char *key = 0, HKEY base_key = 0);
+  bool GetRegistryString(std::string &result_value, const char *name, const char *key = 0, HKEY base_key = 0);
 
   /** reads registry dword */
-  static bool GetRegistryDWORD(DWORD &result_value, const char *name, const char *key = 0, HKEY base_key = 0);
+  bool GetRegistryDWORD(DWORD &result_value, const char *name, const char *key = 0, HKEY base_key = 0);
 
   /** gets path. we are caching before modifying */
-  static std::string GetPath();
+  std::string GetPath();
 
   /** appends given string to path. returns new path. */
-  static std::string AppendPath(const std::string &new_path);
+  std::string AppendPath(const std::string &new_path);
 
   /** prepends given string to path. returns new path. */
-  static std::string PrependPath(const std::string &new_path);
+  std::string PrependPath(const std::string &new_path);
 
   /** sets path (for uncaching) */
-  static void SetPath(const std::string &path);
+  void SetPath(const std::string &path);
 
   /** get the path of the current module (not containing process) */
-  static std::string ModulePath();
+  std::string ModulePath();
+
+  /** read a file and return contents */
+  FileError FileContents(std::string &contents, const std::string &path);
 
 };

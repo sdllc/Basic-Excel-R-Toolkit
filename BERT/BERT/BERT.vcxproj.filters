@@ -16,9 +16,6 @@
     <Filter Include="language-services">
       <UniqueIdentifier>{1842e8ea-b1af-4f61-84ac-231b63ca436b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="script">
-      <UniqueIdentifier>{d0318f18-87ac-4f4a-8c25-85db8c49c5e6}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Common">
       <UniqueIdentifier>{26c08613-c867-4dc2-a9ef-70457c409b79}</UniqueIdentifier>
     </Filter>
@@ -98,12 +95,6 @@
     </None>
     <None Include="src\bert.def">
       <Filter>source</Filter>
-    </None>
-    <None Include="script\startup.jl">
-      <Filter>script</Filter>
-    </None>
-    <None Include="script\startup.R">
-      <Filter>script</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

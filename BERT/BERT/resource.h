@@ -2,8 +2,6 @@
 // Microsoft Visual C++ generated include file.
 // Used by BERT.rc
 //
-#define IDR_RCDATA1                     103
-#define IDR_RCDATA2                     104
 
 // Next default values for new objects
 // 

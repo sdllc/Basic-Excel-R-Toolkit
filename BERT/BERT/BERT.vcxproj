@@ -45,8 +45,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\PB\variable.proto" />
-    <None Include="script\startup.jl" />
-    <None Include="script\startup.R" />
     <None Include="src\bert.def" />
   </ItemGroup>
   <ItemGroup>

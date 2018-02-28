@@ -16,16 +16,6 @@
 
 #include "bert_version.h"
 
-// --- temp (pending move to config) --------------
-
-std::vector < LanguageDescriptor > language_descriptors = {
-//  LanguageDescriptor("R", "controlr.exe", "R",{ "r", "rsrc", "rscript" }, "-r \"$HOME\"", "$HOME\\bin\\$ARCH", IDR_RCDATA1),
-  LanguageDescriptor("R", "controlr.exe", "R",{ "r", "rsrc", "rscript" }, "-r \"$HOME\"", "$HOME\\bin\\x64", IDR_RCDATA1),
-  LanguageDescriptor("Julia", "controljulia.exe", "JL", { "jl", "julia" }, "", "$HOME\\bin", IDR_RCDATA2)
-};
-
-// ------------------------------------------------
-
 BERT* BERT::instance_ = 0;
 
 BERT* BERT::Instance() {
@@ -33,40 +23,14 @@ BERT* BERT::Instance() {
   return instance_;
 }
 
-void BERT::ReadConfigFile() {
+json11::Json BERT::ReadConfigFile(const std::string &path){
 
-  std::string config_file_path;
-  std::string config_contents;
-
-  // FIXME: set defaults?
-  config_ = json11::Json();
-
-  // home directory set in ctor, will have trailing path sep
-  config_file_path = home_directory_;
-  config_file_path.append(CONFIG_FILE_NAME);
-
-  HANDLE file_handle = CreateFileA(config_file_path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-  if (!file_handle || file_handle == INVALID_HANDLE_VALUE) {
-    std::cerr << "WARNING: config file not found" << std::endl;
-    return; // FIXME: warn user
-  }
-
-  DWORD bytes_read = 0;
-  DWORD buffer_size = 8 * 1024;
-  char *buffer = new char[buffer_size];
-  std::string config_data;
-
-  // if this returns false, that's an error, it returns true on EOF
-
-  while (ReadFile(file_handle, buffer, buffer_size, &bytes_read, 0) && bytes_read) {
-    config_data.append(buffer, bytes_read);
-  }
-  CloseHandle(file_handle);
-
-  delete[] buffer;
+  std::string contents;
+  APIFunctions::FileError err = APIFunctions::FileContents(contents, path);
+  if (err != APIFunctions::FileError::Success) return json11::Json();
 
   std::string parse_error;
-  config_ = json11::Json::parse(config_data, parse_error, json11::COMMENTS);
+  return json11::Json::parse(contents, parse_error, json11::COMMENTS);
 
 }
 
@@ -685,7 +649,43 @@ int BERT::ExcelCallback(const BERTBuffers::CallResponse &call, BERTBuffers::Call
 
 void BERT::Init() {
 
-  ReadConfigFile();
+  // ReadConfigFile();
+
+  std::string config_file_path;
+  config_file_path = home_directory_;
+  config_file_path.append(CONFIG_FILE_NAME);
+  config_ = ReadConfigFile(config_file_path);
+
+  std::vector<LanguageDescriptor> language_descriptors;
+
+  // FIXME: move this into a separate function
+
+  config_file_path = home_directory_;
+  config_file_path.append(LANGUAGE_CONFIG_FILE_NAME);
+  json11::Json language_config = ReadConfigFile(config_file_path);
+
+  if (language_config.is_array()) {
+    for (const auto &item : language_config.array_items()) {
+      std::vector<std::string> extensions;
+      if (item["extensions"].is_array()) {
+        for (const auto &extension : item["extensions"].array_items()) {
+          extensions.push_back(extension.string_value());
+        }
+      }
+      std::string startup_resource_path = home_directory_;
+      startup_resource_path.append("startup\\");
+      startup_resource_path.append(item["startup_resource"].string_value());
+      LanguageDescriptor language_descriptor(
+        item["name"].string_value(), 
+        item["executable"].string_value(), 
+        item["prefix"].string_value(), 
+        extensions, 
+        item["command_arguments"].string_value(), 
+        item["prepend_path"].string_value(), 0,
+        startup_resource_path);
+      language_descriptors.push_back(language_descriptor);
+    }
+  }
 
   // the job object created here is used to kill child processes
   // in the event of an excel exit (for any reason).

@@ -42,6 +42,8 @@ protected:
   
 protected:
 
+  LanguageDescriptor language_descriptor_;
+
   /** hold on to process handles, we can check for exit (and exit values) */
   PROCESS_INFORMATION process_info_;
 
@@ -104,19 +106,6 @@ protected:
 public:
 
   LanguageService(CallbackInfo &callback_info, COMObjectMap &object_map, DWORD dev_flags, const json11::Json &config, const std::string &home_directory, const LanguageDescriptor &descriptor);
-
-  /*
-  LanguageService(CallbackInfo &callback_info, COMObjectMap &object_map, DWORD dev_flags)
-    : callback_info_(callback_info)
-    , object_map_(object_map)
-    , dev_flags_(dev_flags)
-    , connected_(false)
-    , configured_(false)
-    , resource_id_(0)
-  {
-    memset(&io_, 0, sizeof(io_));
-  }
-  */
 
   /** preferentially use the shutdown method instead of destructor */
   ~LanguageService() {}

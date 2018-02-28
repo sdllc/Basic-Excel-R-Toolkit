@@ -17,6 +17,7 @@ LanguageService::LanguageService(CallbackInfo &callback_info, COMObjectMap &obje
   , connected_(false)
   , configured_(false)
   , resource_id_(0)
+  , language_descriptor_(descriptor)
 {
   memset(&io_, 0, sizeof(io_));
 
@@ -66,9 +67,12 @@ void LanguageService::Initialize() {
     // get embedded startup code, split into lines
     // FIXME: why do we require that this be in multiple lines?
 
-    if (resource_id_) {
+    //if (resource_id_) {
+    if (language_descriptor_.startup_resource_path_.length()){
 
-      std::string startup_code = APIFunctions::ReadResource(MAKEINTRESOURCE(resource_id_));
+      std::string startup_code;
+      APIFunctions::FileError err = APIFunctions::FileContents(startup_code, language_descriptor_.startup_resource_path_);
+
       std::vector<std::string> lines;
       StringUtilities::Split(startup_code, '\n', 1, lines, true);
 
