@@ -34,6 +34,11 @@ Cheers,
 
 # Release Notes #
 
+2.0.19 -- Preview Release (28 February 2018)
+
+Add 32-bit Excel support (on 64-bit Windows). Fixes for console R graphics.
+Restructured language config to move out of code.
+
 2.0.18 -- Preview Release (27 February 2018)
 
 bugfixes and updates
