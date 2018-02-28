@@ -19,7 +19,7 @@ if( $all ) {
   $build = $TRUE;
   $installer = $TRUE;
   $x64 = $TRUE;
-  # $x86 = $TRUE;
+  $x86 = $TRUE;
 };
 
 $logfile = Resolve-Path $logfile
@@ -153,7 +153,7 @@ if($build){
 	Write-Host "Building configurations..."
 	if( $x86 -or $x64 ){
     if( $x86 ){ 
-      BuildConfiguration "Win32" 
+      BuildConfiguration "x86" 
 		  ExitOnError
     }
 		if( $x64 ){ 

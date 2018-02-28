@@ -89,9 +89,9 @@ Section "Main" SecMain
 
   Call CheckExcelVersion
 
-  StrCmp $ExcelFlavor "Win64" +3
-  MessageBox MB_ICONSTOP|MB_OK "Sorry, 32-bit Excel is not supported in this release."
-  Abort "Install error - invalid Excel version detected"
+;  StrCmp $ExcelFlavor "Win64" +3
+;  MessageBox MB_ICONSTOP|MB_OK "Sorry, 32-bit Excel is not supported in this release."
+;  Abort "Install error - invalid Excel version detected"
 
   SetOutPath "$INSTDIR"
 
@@ -103,7 +103,9 @@ Section "Main" SecMain
 
   ; excel modules
   File ..\Build\BERT64.xll
+  File ..\Build\BERT32.xll
   File ..\Build\BERTRibbon2x64.dll
+  File ..\Build\BERTRibbon2x86.dll
 
   ; default prefs
   File ..\Build\bert-config-template.json
@@ -119,14 +121,11 @@ Section "Main" SecMain
   IfFileExists "$INSTDIR\user-stylesheet.less" +2
   CopyFiles "$INSTDIR\user-stylesheet-template.less" "$INSTDIR\user-stylesheet.less"
 
-  ; FIXME: for 32-bit Excel, we'll need to switch registration based
-  ; on bitness. have to move a bitness check into this script somewhere.
-
-  ; NOTE: we stopped using the install lib macro because that requires
-  ; global defines, which will prohibit us from doing 32/64 bit switching.
-
-  ; register
+  ; register, depends on bitness
+  StrCmp $ExcelFlavor "Win64" 0 +3
   ExecWait 'regsvr32 /s "$INSTDIR\BERTRibbon2x64.dll"'
+  Goto +2
+  ExecWait 'regsvr32 /s "$INSTDIR\BERTRibbon2x86.dll"'
 
   ; controllers
   File ..\Build\ControlR.exe
@@ -179,6 +178,13 @@ SectionEnd
 
 Section "Uninstall"
 
+  UninstallCheckExcelRunning:
+    FindWindow $0 "XLMAIN"
+    StrCmp $0 0 +4
+    MessageBox MB_OKCANCEL|MB_ICONINFORMATION "Please close Excel before running the uninstaller." IDCANCEL +2
+    Goto UninstallCheckExcelRunning
+    Abort "Uninstall canceled"
+
   ; directories and files
 
   RMDir /r "$INSTDIR\console"
@@ -189,12 +195,14 @@ Section "Uninstall"
 
   RMDir /r "$APPDATA\bert2-console"
 
-  ; unregister. see note above re:32-bit Excel
-
+  ; unregister, brute force
   ExecWait 'regsvr32 /s /u "$INSTDIR\BERTRibbon2x64.dll"'
+  ExecWait 'regsvr32 /s /u "$INSTDIR\BERTRibbon2x86.dll"'
 
   Delete "$INSTDIR\BERT64.xll"
+  Delete "$INSTDIR\BERT32.xll"
   Delete "$INSTDIR\BERTRibbon2x64.dll"
+  Delete "$INSTDIR\BERTRibbon2x86.dll"
   Delete "$INSTDIR\ControlR.exe"
   Delete "$INSTDIR\ControlJulia.exe"
   Delete "$INSTDIR\bert-config-template.json"
