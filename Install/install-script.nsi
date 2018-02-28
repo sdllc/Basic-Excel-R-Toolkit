@@ -101,6 +101,10 @@ Section "Main" SecMain
   ; R module 
   File /r ..\Build\module
 
+  ; config
+  File /r ..\Build\startup
+  File ..\Build\bert-languages.json
+
   ; excel modules
   File ..\Build\BERT64.xll
   File ..\Build\BERT32.xll
