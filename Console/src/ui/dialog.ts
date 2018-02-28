@@ -14,10 +14,6 @@ const DialogTemplate = `
     <div class='dialog_body'>
     </div>
     <div class='dialog_footer'>
-      <button class='button' data-index='0'></button>
-      <button class='button' data-index='1'></button>
-      <button class='button' data-index='2'></button>
-      <button class='button' data-index='3'></button>
     </div>
   </div>
 `;
@@ -25,6 +21,7 @@ const DialogTemplate = `
 export interface DialogButton {
   text:string;
   data?:any;
+  default?:boolean;
 }
 
 export interface DialogSpec {
@@ -37,6 +34,10 @@ export interface DialogSpec {
 
   /** support the escape key to close the dialog */
   escape?:boolean;
+
+  /** support the enter key to close the dialog */
+  enter?:boolean;
+
 }
 
 export class DialogManager {
@@ -83,50 +84,44 @@ export class DialogManager {
   set body(html) { (DialogManager.node_map_.dialog_body as HTMLElement).innerHTML = html || ""; }
 
   set buttons(buttons:(string|DialogButton)[]) {
-    for( let i = 0; i< 4; i++ ){
-      let node = DialogManager.node_map_.button[i];
-      if( buttons && buttons.length > i ){
-        let button = buttons[i];
-        node.style.display = "inline-block";
-        if( typeof button === "string" ){
-          node.textContent = button;
-        }
-        else {
-          node.textContent = button.text;
-        }
-      }
+    let container = DialogManager.node_map_.dialog_footer as HTMLElement;
+    if(!container) return;
+
+    container.textContent = "";
+
+    buttons.forEach((spec, index) => {
+      let button = document.createElement("button") as HTMLElement;
+      button.classList.add("button");
+      if( typeof spec === "string") button.innerText = spec;
       else {
-        node.style.display = "none";
+        button.innerText = spec.text;
+        if(spec.default) button.classList.add("default");
       }
-    }
+      button.setAttribute("data-index", String(index))
+      container.appendChild(button);
+    });
+
   }
 
   // hold on to active dialog spec for callbacks
   current_dialog_spec_:DialogSpec;
 
   key_listener_:EventListenerObject;
+
   click_listener_:EventListenerObject;
 
 
   constructor(){
-
     DialogManager.EnsureNodes();
-
-    this.title = "Are You Experienced";
-    this.body = "Or have you ever been experienced?";
-    this.buttons = ["Yes", "No", "I Have"];
-
   }
 
   Hide(){
     DialogManager.container_node_.style.display = "none";
     if( this.key_listener_ ){
-      console.info( "Remove kl");
       document.removeEventListener("keydown", this.key_listener_);
       this.key_listener_ = null;
     }
     if( this.click_listener_ ){
-      console.info( "Remove cl");
       DialogManager.container_node_.removeEventListener("click", this.click_listener_);
     }
     this.current_dialog_spec_ = null;
@@ -138,6 +133,24 @@ export class DialogManager {
       this.Hide(); 
       resolve(data);
     }, 1 );
+  }
+
+  Test(){
+    this.Show({
+      title: "Dialog Title",
+      escape: true, enter: true,
+      body: `Accent dialog.  Text body. <br/><br/>
+              Support for HTML, with some basic layout. Perhaps a few<br/> 
+              types for specific widgets (we will definitely need a list).
+              <br/><br/>
+              The dialog should pad out on very long or very tall content<br/>
+              (which is good), but that requires doing manual text layout <br/>
+              (which is bad). Maybe have some styles with fixed widths.
+            `,
+      buttons: ["Cancel", {text: "OK", default:true}],
+    }).then(x => {
+      console.info(x);
+    });
   }
 
   Show(spec:DialogSpec){
@@ -153,9 +166,15 @@ export class DialogManager {
 
       this.key_listener_ = {
         handleEvent: (event) => {
+          console.info(event);
           if(spec.escape){
             if((event as KeyboardEvent).key === "Escape" ){
               this.DelayResolution(resolve, {reason: "escape_key", data: null });
+            }
+          }
+          if(spec.enter){
+            if((event as KeyboardEvent).key === "Enter" ){
+              this.DelayResolution(resolve, {reason: "enter_key", data: null });
             }
           }
         }
@@ -173,7 +192,7 @@ export class DialogManager {
             let button = spec.buttons[index];
             let data:any = null;
             if( typeof button === "string" ) data = button;
-            else data = button.data;
+            else data = button.data||button.text;
             this.DelayResolution(resolve, {reason: "button", data });
           }
         }

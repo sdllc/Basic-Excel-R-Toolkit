@@ -15,8 +15,11 @@ export interface AlertSpec {
    */
   buttons?: string[];
 
-  /** disable escape key */
-  disable_escape?: boolean;
+  /** allow escape key */
+  escape?: boolean;
+
+  /** allow enter key */
+  enter?: boolean;
 
   /** timeout: 0 or falsy means don't timeout */
   timeout?: number;
@@ -24,15 +27,15 @@ export interface AlertSpec {
 }
 
 export interface AlertResult {
-  result: "button" | "escape" | "timeout";
+  result: "button" | "escape" | "enter" | "timeout";
   data?: any;
 }
 
 const AlertTemplate = `
   <div class='alert_container'>
-    <div class='alert_title'></div> 
-    <div class='alert_message'></div> 
-    <div class='alert_buttons'></div> 
+    <div class='alert_title'><div class='content'></div></div> 
+    <div class='alert_message'><div class='content'></div></div> 
+    <div class='alert_buttons'><div class='content'></div></div> 
   </div>
 `;
 
@@ -43,7 +46,7 @@ const AlertTemplate = `
  * can use multiple instances, and than append (and remove) container
  * nodes for separate alerts. FIXME: what happens with keys?]
  */
-export class Alert {
+export class AlertManager {
 
   private static container_node_: HTMLElement;
 
@@ -68,6 +71,14 @@ export class Alert {
     }, 1 );
   }
 
+  public Test(){
+    this.Show({
+      title:"Error",
+      message:"Something went wrong. Please fix it! <button>OK</button>",
+      buttons:["Close"]
+    }).then(x => console.info(x));
+  }
+
   /** 
    * shows an alert. returns a promise that will resolve on a button 
    * click or (optionally) pressing escape. FIXME: return key?
@@ -75,29 +86,34 @@ export class Alert {
   public Show(spec:AlertSpec) : Promise<AlertResult> {
 
     MenuUtilities.Disable();
-    Alert.EnsureNodes();
+    AlertManager.EnsureNodes();
 
-    this.alert_node_ = (Alert.container_node_.querySelector(".alert_container") as HTMLElement);
+    this.alert_node_ = (AlertManager.container_node_.querySelector(".alert_container") as HTMLElement);
 
     return new Promise((resolve, reject) => {
 
-      Alert.container_node_.querySelector(".alert_title").textContent = spec.title || "";
-      Alert.container_node_.querySelector(".alert_message").innerHTML = spec.message || "";
+      AlertManager.container_node_.querySelector(".alert_title>div.content").textContent = spec.title || "";
+      AlertManager.container_node_.querySelector(".alert_message>div.content").innerHTML = spec.message || "";
 
       let button_text = "<button>OK</button>";
       if(spec.buttons && spec.buttons.length){
         button_text = spec.buttons.map(label => `<button>${label}</button>`).join("\n");
       }
-      Alert.container_node_.querySelector(".alert_buttons").innerHTML = button_text || "";
-      Alert.container_node_.style.display = "flex";
+      AlertManager.container_node_.querySelector(".alert_buttons>div.content").innerHTML = button_text || "";
+      AlertManager.container_node_.style.display = "flex";
 
       setTimeout(() => this.alert_node_.style.opacity = "1", 100);
 
       this.key_listener_ = {
         handleEvent: (event) => {
-          if(!spec.disable_escape){
+          if(spec.escape){
             if ((event as KeyboardEvent).key === "Escape") {
               this.DelayResolution(resolve, { result: "escape", data: null });
+            }
+          }
+          if(spec.enter){
+            if ((event as KeyboardEvent).key === "Enter") {
+              this.DelayResolution(resolve, { result: "enter", data: null });
             }
           }
         }
@@ -112,7 +128,7 @@ export class Alert {
           }
         }
       };
-      Alert.container_node_.addEventListener("click", this.click_listener_);
+      AlertManager.container_node_.addEventListener("click", this.click_listener_);
 
       if(spec.timeout){
         this.timeout_id_ = setTimeout(() => {
@@ -133,7 +149,7 @@ export class Alert {
   private Hide() {
 
     let transition_end = () => {
-      Alert.container_node_.style.display = "none";
+      AlertManager.container_node_.style.display = "none";
       this.alert_node_.removeEventListener("transitionend", transition_end);
     };
 
@@ -145,7 +161,7 @@ export class Alert {
       this.key_listener_ = null;
     }
     if (this.click_listener_) {
-      Alert.container_node_.removeEventListener("click", this.click_listener_);
+      AlertManager.container_node_.removeEventListener("click", this.click_listener_);
     }
     if(this.timeout_id_){
       clearTimeout(this.timeout_id_);

@@ -17,7 +17,7 @@ import {MenuUtilities} from './ui/menu_utilities';
 
 import { MultiplexedTerminal } from './shell/multiplexed_terminal';
 
-import {Alert, AlertSpec} from './ui/alert';
+import {AlertManager, AlertSpec} from './ui/alert';
 import {Editor, EditorEvent, EditorEventType} from './editor/editor';
 import {Preferences, PreferencesLoadStatus} from './common/preferences';
 
@@ -64,6 +64,11 @@ let splitter = new Splitter(
 // dialogs
 
 let dialog_manager = new DialogManager();
+window['dialog_manager'] = dialog_manager;
+
+let alert_manager = new AlertManager();
+window['alert_manager'] = alert_manager;
+setTimeout(() => {alert_manager.Test()}, 10);
 
 // terminals and tabs
 
@@ -215,24 +220,15 @@ Preferences.filter(x => x.preferences).first().subscribe(x => {
 
 });
 
-let alert_instance = new Alert();
-
 // subscribe to preferences to watch for errors
 let preferences_status = PreferencesLoadStatus.NotLoaded;
 let preferences_error_once = false;
+
 Preferences.subscribe(x => {  
   if(x.status !== preferences_status){
+    preferences_status = x.status;
 
     /*
-    if( x.status === PreferencesLoadStatus.Error ){
-      editor.status_bar.PushMessage("Preferences error");
-    }    
-    else if( preferences_status === PreferencesLoadStatus.Error){
-      editor.status_bar.PopMessage();
-    }
-    preferences_status = x.status;
-    */
-
     if(preferences_status === PreferencesLoadStatus.Error && !preferences_error_once){
       preferences_error_once = true;
       alert_instance.Show({
@@ -241,6 +237,8 @@ Preferences.subscribe(x => {
         timeout: 7
       })
     }
+    */
+
   }
 });
 

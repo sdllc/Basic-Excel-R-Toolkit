@@ -22,31 +22,30 @@
     flex-direction: column;
     background: #fff;
     position: relative;
-    border: 1px solid #ccc;
+    // border: 1px solid #ccc;
+    border-top: 5px solid #66cc99;
     border-radius: 3px;
     min-width: 400px;
     height: 300px;
     box-shadow: @terminal-box-shadow;
     font-family: Segoe UI;
 
-    color: #444;
+    color: #666;
 
     .dialog_header {
 
-      background: #39a;
-      color: #fff;
+      color: #333;
+      padding: .5em 1em;
 
       .dialog_title {
-        padding: .25em .25em;
-        font-weight: 300;
-        font-size: 20px;
+        font-weight: 600;
+        font-size: 16px;
+        padding: 0;
+        margin: 0; 
       }
 
       position: relative;
-      min-height: 4em;
-      display: flex;
-      flex-direction: row;
-      align-items: center;
+      min-height: 3em;
 
       .dialog_close_x {
 
@@ -54,11 +53,9 @@
         right: 3px;
         top: 2px;
         cursor: default;
-        color: #ddd;
+        color: #999;
 
-        &:hover {
-          color: #fff;
-        }
+        &:hover { color: #333; }
 
         &::after {
           font-size: 18px;
@@ -71,15 +68,11 @@
 
     .dialog_footer {
       min-height: 1em;
-      //background: #39a;
-      //color: #fff;
     }
 
     .dialog_body {
       flex-grow: 1;
-      border-top: 1px solid #ddd;
-      border-bottom: 1px solid #ddd;
-      padding: .5em;
+      padding: .5em 1em;
     }
 
     .dialog_footer {
@@ -87,28 +80,45 @@
       padding: 6px;
       display: flex;
       flex-direction: row;
-      //justify-content: center;
       align-items: center;
       justify-content: flex-end;
 
       button {
 
-        background: inherit;
-        color: inherit;
+        &.default {
+
+          background: #66cc99;
+          color: #fff;
+
+          &:hover {
+            background: #efefef;
+            color: #66cc99;
+          }
+  
+          &:active {
+            background: #f2f2f2;
+            color: #66cc99;
+          }
+  
+        }
+
+        background: #c0c0c0;
+        color: #fff;
         outline: none;
 
         &:hover {
           background: #efefef;
+          color: #aaa;
         }
 
         &:active {
           background: #f2f2f2;
+          color: #aaa;
         }
         
-        display: none;
         min-height: 27px;
         min-width: 80px;
-        border: 1px solid #ccc;
+        border: 0; // border: 1px solid #ccc;
         border-radius: 2px;
         margin-right: .5em;
         &:last-child { margin-right: 0; }
