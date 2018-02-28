@@ -19,19 +19,36 @@
 #undef length
 #endif
 
+__inline void RColorToVariableColor(BERTBuffers::Color *target, uint32_t src) {
+
+  target->set_a((src >> 24) & 0xff);
+
+  target->set_b((src >> 16) & 0xff);
+  target->set_g((src >> 8) & 0xff);
+  target->set_r((src >> 0) & 0xff);
+
+}
+
 void SetMessageContext(BERTBuffers::GraphicsContext *target, const pGEcontext gc) {
 
+
   auto color = target->mutable_col();
+  auto fill = target->mutable_fill();
+
+  RColorToVariableColor(color, gc->col);
+  RColorToVariableColor(fill, gc->fill);
+
+  /*
   color->set_a(((gc->col >> 24) & 0xff));
   color->set_r(((gc->col >> 8) & 0xff));
   color->set_g(((gc->col >> 0) & 0xff));
   color->set_b(((gc->col >> 16) & 0xff));
 
-  auto fill = target->mutable_fill();
   fill->set_a(((gc->fill >> 24) & 0xff));
   fill->set_r(((gc->fill >> 8) & 0xff));
   fill->set_g(((gc->fill >> 0) & 0xff));
   fill->set_b(((gc->fill >> 16) & 0xff));
+  */
 
   target->set_gamma(gc->gamma);
   target->set_lwd(gc->lwd);
