@@ -4,6 +4,8 @@ import * as net from "net";
 import * as messages from "../../generated/variable_pb.js";
 import * as Rx from "rxjs";
 
+net; // TS optimizer breaks it otherwise [?]
+
 import { MessageUtilities } from '../common/message_utilities';
 
 enum Channel {
