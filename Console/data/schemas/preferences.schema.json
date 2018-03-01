@@ -12,8 +12,12 @@
         },
         "Julia": {
           "type": "object"
+        },
+        "startConsole": {
+          "type": "boolean"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "shell": {
       "type": "object",
@@ -106,7 +110,8 @@
             "number"
           ]
         }
-      }
+      },
+      "additionalProperties": false
     },
     "editor": {
       "type": "object",
@@ -183,7 +188,8 @@
         "links": {
           "type": "boolean"
         }
-      }
+      },
+      "additionalProperties": false
     }
   }
 }
