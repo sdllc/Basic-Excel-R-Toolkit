@@ -60,17 +60,16 @@ export interface EditorEvent {
   data?:any;
 }
 
-interface OpenFileOptions {
-  override_label?:string;
-  //rendered?:boolean;
-  type:"rendered" | "editor" | "preferences";
-  add_to_recent_files?:boolean; // default true
-}
-
 enum DocumentType {
   rendered = "rendered",
   editor = "editor",
   preferences = "preferences"
+}
+
+interface OpenFileOptions {
+  override_label?:string;
+  type?:DocumentType;
+  add_to_recent_files?:boolean; // default true
 }
 
 /**
@@ -1181,7 +1180,7 @@ export class Editor {
     this.OpenFileInternal(file_path, {
       override_label: "Welcome",
       add_to_recent_files: false,
-      type: "rendered"
+      type: DocumentType.rendered
     });
   }
 
@@ -1192,7 +1191,7 @@ export class Editor {
     this.OpenFileInternal(Preferences.preferences_path, {
       override_label:Constants.files.preferences,
       add_to_recent_files:false,
-      type:"preferences"
+      type: DocumentType.preferences
     });
   }
 
@@ -1203,7 +1202,7 @@ export class Editor {
     this.OpenFileInternal(UserStylesheet.stylesheet_path, {
       override_label:Constants.files.userStylesheet,
       add_to_recent_files:false,
-      type:"editor"
+      type: DocumentType.editor
     });
   }
 
@@ -1563,7 +1562,7 @@ export class Editor {
   }
 
   /** loads a file from a given path */
-  private OpenFileInternal(file_path: string, options:OpenFileOptions = {type:"editor"} ){
+  private OpenFileInternal(file_path: string, options:OpenFileOptions = {type:DocumentType.editor} ){
 
     // check if this file is already open (by path), switch to
 
