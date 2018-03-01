@@ -3,6 +3,7 @@ import { LanguageInterface } from './language_interface';
 import { ConsoleMessage, ConsoleMessageType } from '../io/pipe';
 
 import * as Rx from 'rxjs';
+import { wcwidth } from 'xterm/lib/CharWidth';
 
 export enum StdIOStream {
   STDIN, STDOUT, STDERR
@@ -89,7 +90,13 @@ export class LineInfo {
 
   private cursor_position_ = 0;
   private buffer_ = "";
-  
+
+  static MeasureText(text:string){
+    let length = 0;
+    for( let i = 0; i< text.length; i++) length += wcwidth(text.charCodeAt(i));
+    return length;
+  }
+
   /**
    * not sure how I feel about constructor-declared properties. it kinds
    * of obscures them (although if you just rely on tooling, they'll be 
@@ -150,6 +157,18 @@ export class LineInfo {
   
   /** get text right of the cursor */
   get right(){ return this.buffer_.substr(this.cursor_position_); }
+
+  get char_width_left(){ return LineInfo.MeasureText(this.left); }
+
+  get char_width_right(){ return LineInfo.MeasureText(this.right); }
+  
+  get char_width_full_text(){ return LineInfo.MeasureText(this.full_text); }
+
+  get char_width_buffer(){ return LineInfo.MeasureText(this.buffer_); }
+  
+  CharWidthAt(position:number){
+    return wcwidth(this.buffer_.charCodeAt(position));
+  }
 
 }
 

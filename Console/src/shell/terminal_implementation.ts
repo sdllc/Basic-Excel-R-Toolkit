@@ -5,6 +5,9 @@ import { Base64 } from 'js-base64';
 import * as fit from 'xterm/lib/addons/fit/fit';
 XTerm.applyAddon(fit);
 
+import { wcwidth } from 'xterm/lib/CharWidth';
+window['wcwidth'] = wcwidth;
+
 import * as CursorClientPosition from './cursor_client_position_addon';
 XTerm.applyAddon(CursorClientPosition);
 
@@ -374,19 +377,19 @@ export class TerminalImplementation {
 
     if (dir > 0) { // delete right
       if(line_info.cursor_at_end) return;
-
       let balance = line_info.right.substr(1);
       this.ClearRight();
       this.Write(balance);
-      this.MoveCursor(-balance.length);
+      this.MoveCursor(-LineInfo.MeasureText(balance));
       line_info.set(line_info.left + balance, line_info.cursor_position);
     }
     
     else { // delete left (ruboff)
       if (line_info.cursor_position <= 0) return;
       let balance = line_info.buffer.substr(line_info.cursor_position);
-      this.Write(`\x1b[D\x1b[0K${balance}`)
-      this.MoveCursor(-balance.length);
+      let w = line_info.CharWidthAt(line_info.cursor_position-1);
+      this.Write(`\x1b[${w}D\x1b[0K${balance}`)
+      this.MoveCursor(-LineInfo.MeasureText(balance));
       line_info.set(line_info.buffer.substr(0, line_info.cursor_position - 1) + balance, line_info.cursor_position-1);
     }
 
@@ -401,7 +404,7 @@ export class TerminalImplementation {
     if (!line_info.cursor_at_end) {
       this.Write(key);
       this.Write(line_info.right);
-      this.MoveCursor(-line_info.right.length);
+      this.MoveCursor(-line_info.char_width_right);
     }
     else {
       this.Write(key);
@@ -414,7 +417,7 @@ export class TerminalImplementation {
     let line_info = this.state_.line_info;
     let text = this.state_.history_.Offset(dir, line_info.buffer);
     if (text === false) return;
-    if (line_info.cursor_position > 0) this.MoveCursor(-line_info.cursor_position);
+    if (line_info.cursor_position > 0) this.MoveCursor(-line_info.char_width_left);
     this.Escape(`K${text}`);
     line_info.set(text);
   }
@@ -435,7 +438,7 @@ export class TerminalImplementation {
       this.state_.prompt_stack_.unshift();
 
       // move left and clear line before writing
-      this.MoveCursor(-this.state_.line_info.full_text.length);
+      this.MoveCursor(-this.state_.line_info.char_width_full_text);
       this.ClearRight();
     }
 
@@ -472,7 +475,10 @@ export class TerminalImplementation {
     }
 
     this.Write(this.state_.line_info.full_text);
-    if( this.state_.line_info.offset_from_end ) this.MoveCursor(-this.state_.line_info.offset_from_end);
+    if( this.state_.line_info.offset_from_end ) {
+      // this.MoveCursor(-this.state_.line_info.offset_from_end);
+      this.MoveCursor(-this.state_.line_info.char_width_right); // FIXME: CHECK
+    }
     this.state_.history_.NewLine();
     
     // handle command if we've been typing while system was busy
@@ -604,14 +610,14 @@ export class TerminalImplementation {
     let lines = text.split(/\n/);
     if (offset) {
 
-      this.MoveCursor(-this.state_.line_info.full_text.length);
+      this.MoveCursor(-this.state_.line_info.char_width_full_text);
       this.ClearRight();
       lines.forEach((line, index) => {
         this.Write(this.state_.FormatLine(line));
         if(index !== lines.length-1) this.Write('\r\n');
       });
       this.Write(this.state_.line_info.full_text);
-      if(this.state_.line_info.offset_from_end) this.MoveCursor(-this.state_.line_info.offset_from_end);
+      if(this.state_.line_info.offset_from_end) this.MoveCursor(-this.state_.line_info.char_width_right);
     }
     else {
       lines.forEach((line, index) => {
@@ -705,12 +711,9 @@ export class TerminalImplementation {
 
           }
           else {
-
-            // what if we're pasting at the cursor, which is not at 
-            // the end? handled? FIXME
-
-            this.Write(line);
-            this.state_.line_info.set(this.state_.line_info.buffer + line);
+            this.state_.line_info.append_or_insert(line);
+            this.Write(line + this.state_.line_info.right);
+            this.MoveCursor(-this.state_.line_info.char_width_right);
             resolve();
           }
         });
@@ -773,14 +776,14 @@ export class TerminalImplementation {
 
           case "ArrowLeft":
             if (this.state_.line_info.cursor_position > 0) {
-              this.Escape("D");
+              this.Escape(this.state_.line_info.CharWidthAt(this.state_.line_info.cursor_position-1) + "D");
               this.state_.line_info.cursor_position--;
             }
             break;
 
           case "ArrowRight":
             if(!this.state_.line_info.cursor_at_end){
-              this.Escape("C");
+              this.Escape(this.state_.line_info.CharWidthAt(this.state_.line_info.cursor_position) + "C");
               this.state_.line_info.cursor_position++;
             }
             break;
@@ -797,14 +800,14 @@ export class TerminalImplementation {
 
           case "End":
             if(this.state_.line_info.offset_from_end){
-              this.MoveCursor(this.state_.line_info.offset_from_end);
+              this.MoveCursor(this.state_.line_info.char_width_right);
             }
             this.state_.line_info.cursor_position = this.state_.line_info.buffer.length;
             break;
 
           case "Home":
             if (this.state_.line_info.cursor_position > 0) {
-              this.MoveCursor(-this.state_.line_info.cursor_position);
+              this.MoveCursor(-this.state_.line_info.char_width_left);
             }
             this.state_.line_info.cursor_position = 0;
             break;
