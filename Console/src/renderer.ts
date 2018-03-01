@@ -68,7 +68,6 @@ window['dialog_manager'] = dialog_manager;
 
 let alert_manager = new AlertManager();
 window['alert_manager'] = alert_manager;
-setTimeout(() => {alert_manager.Test()}, 10);
 
 // terminals and tabs
 
