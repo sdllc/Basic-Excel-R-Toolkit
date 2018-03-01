@@ -1,0 +1,12 @@
+{
+  "editor-tab": {
+    "items": [
+      { "label": "Close", "id": "tab.close" },
+      { "label": "Close Others", "id": "tab.close-others" },
+      { "label": "Close All", "id": "tab.close-all" },
+      { "type": "separator" },
+      { "label": "Copy Path", "id": "tab.copy-path", "condition": "path" },
+      { "label": "Open Directory", "id": "tab.open-directory", "condition": "path" }
+    ]
+  }
+}

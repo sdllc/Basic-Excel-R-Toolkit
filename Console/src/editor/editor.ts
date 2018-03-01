@@ -1,6 +1,6 @@
 /// <reference path="../../node_modules/monaco-editor/monaco.d.ts" />
 
-import { remote } from 'electron';
+import { remote, clipboard, shell as electron_shell } from 'electron';
 const { Menu, MenuItem, dialog } = remote;
 
 import { MenuUtilities } from '../ui/menu_utilities';
@@ -31,6 +31,8 @@ const MD = new MarkdownIt().use(MarkdownItTasks);
 import { FileWatcher } from '../common/file-watcher';
 import { Preferences, PreferencesSchema, PreferencesLoadStatus } from '../common/preferences';
 import { EEXIST } from 'constants';
+
+const TabContextMenuData = require("../../data/menus/editor_tab_context_menu.json");
 
 const SchemaSchema = require("../../data/schemas/schema.schema.json");
 
@@ -399,7 +401,7 @@ export class Editor {
       if(e.srcElement['href']){
         e.stopPropagation();
         e.preventDefault();
-        require('electron').shell.openExternal(e.srcElement['href']);
+        electron_shell.openExternal(e.srcElement['href']);
       }
     });
     
@@ -426,6 +428,8 @@ export class Editor {
     }.bind(this);
 
     this.tabs_ = new TabPanel(tabs);
+
+    tabs.addEventListener("contextmenu", event => this.TabContextMenu(event));
 
     this.tabs_.events.filter(event => event.type === TabEventType.deactivate).subscribe(event => {
       this.DeactivateTab(event.tab);
@@ -509,6 +513,53 @@ export class Editor {
     });
   }
   */
+
+  private TabContextMenu(event){
+    
+    let tab = this.tabs_.TabFromNode(event.target);
+    if(!tab) return;
+
+    let document = tab.data as Document;
+
+    let event_handler = function(key, target?){
+      let copy;
+      switch(key){
+      case "tab.close":
+        this.CloseTab(tab);
+        break;
+      case "tab.close-others":
+        copy = this.tabs_.tabs.slice(0);
+        copy.forEach(item => { if(item !== tab) this.CloseTab(item)});
+        break;
+      case "tab.close-all":
+        copy = this.tabs_.tabs.slice(0);
+        copy.forEach(item => this.CloseTab(item));
+        break;
+      case "tab.copy-path":
+        clipboard.writeText(document.file_path_);
+        break;
+      case "tab.open-directory":
+        electron_shell.openExternal(path.dirname(document.file_path_));
+        break;
+      default:
+        console.info(arguments);
+      }
+    }
+
+    let menu_template:Electron.MenuItemConstructorOptions[] = [];
+    TabContextMenuData["editor-tab"]["items"].forEach(item => {
+      if( item.type === "separator" ) menu_template.push({type:"separator"});
+      else if( item.id ){
+        let enabled = true;
+        if(item.condition) enabled = !!(document.file_path_);
+        menu_template.push({ label:item.label, enabled, accelerator:item.accelerator, click: e => {
+          event_handler.call(this, item.id);
+        }});
+      }
+    });
+    Menu.buildFromTemplate(menu_template).popup();
+
+  }
 
   /**
    * add exec actions for a language. I can't figure out how to 
@@ -614,7 +665,7 @@ export class Editor {
      
     let linkDetector = this.editor_.getContribution("editor.linkDetector" ) as any;
     linkDetector.openerService.open = function( resource, options ){ 
-      require('electron').shell.openExternal(resource.toString());
+      electron_shell.openExternal(resource.toString());
     };
 
     // handle any previously registered languages

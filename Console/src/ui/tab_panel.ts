@@ -159,6 +159,19 @@ export class TabPanel {
     
   }
   
+  /**
+   * for context menu or other event handling
+   */
+  public TabFromNode(target:HTMLElement) : TabSpec {
+    while(target){
+      if(target === this.tab_container_) break;
+      let decorated = target as DecoratedElement;
+      if(decorated.ref_) return decorated.ref_;
+      target = target.parentElement;
+    }
+    return null;
+  }
+  
   AppendChildNode(node:HTMLElement){
     this.tab_content_.appendChild(node);
   }

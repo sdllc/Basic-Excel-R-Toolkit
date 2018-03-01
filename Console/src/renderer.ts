@@ -29,7 +29,7 @@ import { UserStylesheet } from './ui/user_stylesheet';
 UserStylesheet.Attach();
 
 // FIXME: l10n override?
-const MenuTemplate = require("../data/menu.json");
+const MenuTemplate = require("../data/menus/application_menu.json");
 
 // init management pipe for talking to BERT
 

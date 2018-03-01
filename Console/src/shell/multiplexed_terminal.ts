@@ -9,7 +9,7 @@ import { remote } from 'electron';
 import * as Rx from 'rxjs';
 
 const {Menu, MenuItem} = remote;
-const TerminalContextMenu = require("../../data/context_menu.json");
+const TerminalContextMenu = require("../../data/menus/context_menu.json");
 
 interface TerminalInstance {
   node_:HTMLElement;
