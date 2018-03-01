@@ -10,6 +10,7 @@ Param(  [switch]$sign = $false,
         [switch]$x86 = $false,
         [switch]$x64 = $false,
         [switch]$clean = $false,
+        [switch]$zip = $false,
         [switch]$all = $false,
         [string]$logfile = "build-log.txt" );
 
@@ -20,6 +21,7 @@ if( $all ) {
   $installer = $TRUE;
   $x64 = $TRUE;
   $x86 = $TRUE;
+  $zip = $TRUE;
 };
 
 $logfile = Resolve-Path $logfile
@@ -104,6 +106,29 @@ Function InvokeEnvironment(){
     Remove-Item -LiteralPath $temp
   }
 
+}
+
+function ZipFile( $zipfile, $file )
+{
+  Add-Type -Assembly System.IO.Compression
+
+  $current = Get-Location
+  $resolved = Join-Path $current $file
+  $zipfile = Join-Path $current $zipfile
+
+  # use update in case there's an existing file (we run more than once)
+  $archive = [System.IO.Compression.ZipFile]::Open($zipfile, [System.IO.Compression.ZipArchiveMode]::Update)
+
+  # if you do that, then you have to check for an entry and delete it
+  $entry = $archive.GetEntry($file)
+  if($entry) { $entry.Delete() }
+
+  $entry = $archive.CreateEntry($file)
+  $output_stream = $entry.Open()
+  [System.IO.File]::OpenRead($resolved).CopyTo($output_stream)
+  $output_stream.Flush()
+  $output_stream.Close()
+  $archive.Dispose()
 }
 
 #-------------------------------------------------------------------------------
@@ -203,6 +228,20 @@ if( $sign ) {
 }
 else {
 	Write-Host "Not signing installer" -foregroundcolor magenta;
+}
+
+Write-Host ""
+
+#
+# zip installer
+#
+
+if( $zip ) {
+	Write-Host "Creating zip file" 
+  ZipFile "BERT-Installer-$bert_version.zip" "BERT-Installer-$bert_version.exe"
+}
+else {
+	Write-Host "Not creating zip file" -foregroundcolor magenta;
 }
 
 Write-Host ""
