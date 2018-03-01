@@ -732,10 +732,7 @@ export class TerminalImplementation {
           TerminalImplementation.events_.next({ type: "release-focus" });
           break;
         case "a":
-          console.info("SA");
-          setImmediate(() => {
-            this.SelectAll();
-          });
+          setImmediate(() => { this.SelectAll(); });
           break;
         case "c":
           this.state_.language_interface_.BreakCallback();
