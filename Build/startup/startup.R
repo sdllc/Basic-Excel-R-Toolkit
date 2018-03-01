@@ -70,13 +70,15 @@ library(BERTModule, lib.loc=paste0(Sys.getenv("BERT2_HOME_DIRECTORY"), "module")
     list.functions <- function(envir=.GlobalEnv){
       funcs <- ls(envir=envir, all.names=F);
       funcs <- funcs[sapply(funcs, function(a){ mode(get(a, envir=envir))=="function"; })];
-      z <- lapply(funcs, function(a){
+      function.list <- lapply(funcs, function(a){
         func <- get(a, envir=envir);
         f <- formals(func);
         attrib <- attributes(func)[names(attributes(func)) != "srcref" ];
         list(name=a, arguments=lapply(names(f), function(b){ list(name=b, default=f[[b]])}), attributes=attrib);
       });
-      z;
+      function.list;
+      class(function.list) <- "exported.function.list"; # see below
+      function.list;
     }
 
     #
@@ -138,6 +140,23 @@ library(BERTModule, lib.loc=paste0(Sys.getenv("BERT2_HOME_DIRECTORY"), "module")
     }
 
   });
+
+  #
+  # helpful for dev, can go
+  #
+  print.exported.function.list <- function(a){
+    cat("\nExported functions:\n\n");
+    invisible(sapply(a, function(func){
+      arg.list = sapply(func$arguments, function(arg){
+        if(is.null(arg$default) || arg$default == ""){
+          return(arg$name);
+        }
+        paste0(arg$name, "=", arg$default);
+      });
+      cat(paste0("  ", func$name, "(", paste(arg.list, collapse=", "), ")\n"));
+    }));
+    cat("\n");
+  }
 
   attach(environment());
 
