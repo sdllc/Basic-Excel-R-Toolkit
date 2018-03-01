@@ -8,6 +8,7 @@
 
   "terminal": {
     "items": [
+      { "label": "Select All", "id": "terminal-select-all", "accelerator": "Ctrl+A" },
       { "label": "Copy", "id": "terminal-copy", "accelerator": "Ctrl+Insert" },
       { "label": "Paste", "id": "terminal-paste", "accelerator": "Ctrl+Shift+Insert" },
       { "type": "separator" },

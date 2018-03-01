@@ -664,6 +664,13 @@ export class TerminalImplementation {
   /**
    * 
    */
+  SelectAll(){
+    this.xterm_.selectAll();
+  }
+
+  /**
+   * 
+   */
   Paste(text?: string) {
 
     this.xterm_.scrollToBottom();
@@ -723,6 +730,12 @@ export class TerminalImplementation {
           break;
         case "e":
           TerminalImplementation.events_.next({ type: "release-focus" });
+          break;
+        case "a":
+          console.info("SA");
+          setImmediate(() => {
+            this.SelectAll();
+          });
           break;
         case "c":
           this.state_.language_interface_.BreakCallback();

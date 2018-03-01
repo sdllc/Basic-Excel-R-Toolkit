@@ -9,7 +9,7 @@ import { remote } from 'electron';
 import * as Rx from 'rxjs';
 
 const {Menu, MenuItem} = remote;
-const TerminalContextMenu = require("../../data/menus/context_menu.json");
+const TerminalContextMenu = require("../../data/menus/terminal_context_menu.json");
 
 interface TerminalInstance {
   node_:HTMLElement;
@@ -180,6 +180,9 @@ export class MultiplexedTerminal {
         case "terminal-save-image":
           this.SaveImageAs(target)
           break;          
+        case "terminal-select-all":
+          this.SelectAll();
+          break;
         case "terminal-copy":
           this.Copy();
           break;          
