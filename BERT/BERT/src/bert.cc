@@ -676,11 +676,11 @@ void BERT::Init() {
       startup_resource_path.append("startup\\");
       startup_resource_path.append(item["startup_resource"].string_value());
       LanguageDescriptor language_descriptor(
-        item["name"].string_value(), 
-        item["executable"].string_value(), 
-        item["prefix"].string_value(), 
-        extensions, 
-        item["command_arguments"].string_value(), 
+        item["name"].string_value(),
+        item["executable"].string_value(),
+        item["prefix"].string_value(),
+        extensions,
+        item["command_arguments"].string_value(),
         item["prepend_path"].string_value(), 0,
         startup_resource_path);
       language_descriptors.push_back(language_descriptor);
@@ -721,7 +721,7 @@ void BERT::Init() {
     }
     else std::cerr << "r service not configured, skipping" << std::endl;
   }
-  
+
   // ... insert callback thread ...
 
   // we need to check if connection failed and if so, remove the service
@@ -751,10 +751,10 @@ void BERT::Init() {
   bool start_console = false;
 
   std::string command_line = GetCommandLineA();
-  if (command_line.find("/x:BERT") != std::string::npos) {
+  if (command_line.find("/x:BERT") != std::string::npos || config_["BERT"]["startConsole"].bool_value()) {
     start_console = true;
   }
-
+  
   if (start_console || (dev_flags_ & 0x02)) StartConsoleProcess();
 
   // load code from starup folder(s). then start watching folders.
