@@ -11,9 +11,6 @@ library(BERTModule, lib.loc=paste0(Sys.getenv("BERT2_HOME_DIRECTORY"), "module")
 #
 # first we create the BERT environment with utility functions
 #
-# FIXME: we want this to survive an env scrub (e.g. `rm(list=ls())`). we 
-# should put it in an unnamed environment on the search path.
-#
 #===============================================================================
 
 (function(){
