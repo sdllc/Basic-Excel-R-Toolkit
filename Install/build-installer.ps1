@@ -58,9 +58,6 @@ Function ExitOnError( $message ) {
 # build one config 
 #
 Function BuildConfiguration( $platform ) {
-
-  Write-Host "Building configuration: $platform"
-
 	$extraargs = "";
 	if( $clean ){
 		$extraargs = "/t:Clean,Build"
@@ -140,8 +137,7 @@ InvokeEnvironment "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterpris
 $bert_version = GetVersion;
 
 Write-Host ""
-Write-Host "Building installer for BERT Version $bert_version"
-Write-Host ""
+Write-Host "Building installer for BERT Version $bert_version" -ForegroundColor blue
 
 #
 # reset log file
@@ -150,7 +146,7 @@ Write-Host ""
 $startdate = Get-Date ;
 Set-Content $logfile "Starting build @ $startdate`r`n" ;
 
-Write-Host "Build started @ $startdate"
+Write-Host "Build started @ $startdate" -ForegroundColor blue
 Write-Host ""
 
 #
@@ -158,14 +154,14 @@ Write-Host ""
 #
 
 if($console){
-  Write-Host "Building console..."
+  Write-Host "Building console..." -ForegroundColor green
   Push-Location ..\Console
   & yarn run repackage | out-file -append -encoding "utf8"  $logfile 2>&1
   Pop-Location
   ExitOnError
 }
 else {
-	Write-Host "Skipping build" -foregroundcolor magenta
+	Write-Host "Skipping build" -foregroundcolor gray
 }
 
 Write-Host ""
@@ -175,7 +171,7 @@ Write-Host ""
 #
 
 if($build){
-	Write-Host "Building configurations..."
+	Write-Host "Building configurations..." -ForegroundColor green
 	if( $x86 -or $x64 ){
     if( $x86 ){ 
       BuildConfiguration "x86" 
@@ -193,7 +189,7 @@ if($build){
 	}
 }
 else {
-	Write-Host "Skipping build" -foregroundcolor magenta
+	Write-Host "Skipping build" -foregroundcolor gray
 }
 
 Write-Host ""
@@ -203,7 +199,7 @@ Write-Host ""
 #
 
 if($installer){
-	Write-Host "Building installer" 
+	Write-Host "Building installer" -ForegroundColor green
   & 'C:\Program Files (x86)\NSIS\makensis.exe' /DVERSION=$bert_version install-script.nsi
   ExitOnError
 
@@ -212,7 +208,7 @@ if($installer){
   Start-Sleep 3
 }
 else {
-	Write-Host "Skipping installer" -foregroundcolor magenta
+	Write-Host "Skipping installer" -foregroundcolor gray
 }
 
 Write-Host ""
@@ -222,12 +218,12 @@ Write-Host ""
 #
 
 if( $sign ) {
-	Write-Host "Signing installer" 
+	Write-Host "Signing installer" -ForegroundColor green
 	& cmd /c 'signtool.exe' sign /t http://timestamp.comodoca.com/authenticode /a /i comodo BERT-Installer-$bert_version.exe | out-file -append -encoding "utf8"  $logfile 2>&1
 	ExitOnError ;
 }
 else {
-	Write-Host "Not signing installer" -foregroundcolor magenta;
+	Write-Host "Not signing installer" -foregroundcolor gray;
 }
 
 Write-Host ""
@@ -237,11 +233,12 @@ Write-Host ""
 #
 
 if( $zip ) {
-	Write-Host "Creating zip file" 
+	Write-Host "Creating zip file" -ForegroundColor green
   ZipFile "BERT-Installer-$bert_version.zip" "BERT-Installer-$bert_version.exe"
+  ExitOnError;
 }
 else {
-	Write-Host "Not creating zip file" -foregroundcolor magenta;
+	Write-Host "Not creating zip file" -foregroundcolor gray;
 }
 
 Write-Host ""
@@ -255,8 +252,8 @@ $elapsed = $enddate - $startdate;
 
 Add-Content $logfile "Build complete @ $enddate`r`n" ;
 
-Write-Host "Build finished @ $enddate"
-Write-Host "Elapsed time $elapsed"
+Write-Host "Build finished @ $enddate" -ForegroundColor blue
+Write-Host "Elapsed time $elapsed" -ForegroundColor blue
 Write-Host ""
 
 
