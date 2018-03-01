@@ -200,6 +200,7 @@ Section "Uninstall"
   RMDir /r "$INSTDIR\console"
   RMDir /r "$INSTDIR\module"
   RMDir /r "$INSTDIR\files"
+  RMDir /r "$INSTDIR\startup"
 
   ; this is data for the console
 
@@ -217,7 +218,7 @@ Section "Uninstall"
   Delete "$INSTDIR\ControlJulia.exe"
   Delete "$INSTDIR\bert-config-template.json"
   Delete "$INSTDIR\user-stylesheet-template.json"
-
+  Delete "$INSTDIR\bert-languages.json"
   Delete "$INSTDIR\Welcome.md"
 
   ; uninstaller
