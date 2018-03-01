@@ -680,6 +680,8 @@ BERTBuffers::CallResponse& RExec(BERTBuffers::CallResponse &rsp, const BERTBuffe
   SEXP cmds = PROTECT(Rf_allocVector(STRSXP, count));
 
   for (int i = 0; i < count; i++) {
+    // temp
+    const std::string &line = code.line(i);
     SET_STRING_ELT(cmds, i, Rf_mkChar(code.line(i).c_str()));
   }
 

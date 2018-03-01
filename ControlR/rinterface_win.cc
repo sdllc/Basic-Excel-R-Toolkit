@@ -20,7 +20,55 @@ int R_ReadConsole(const char *prompt, char *buf, int len, int addtohistory) {
  * windows/linux so implementation is platform dependent.
  */
 void R_WriteConsoleEx(const char *buf, int len, int flag) {
-  ConsoleMessage(buf, len, flag);
+
+  // I cannot figure out how to get R to print UTF8 when it has windows cp 
+  // strings. it just seems to ignore all the things I set. temporarily let's
+  // do this the hard way.
+
+  // we can probably use fixed buffers here and expand, on the theory
+  // that they won't get too large... if anything most console messages are 
+  // too small, we should do some buffering (not here)
+
+  const int32_t chunk = 256; // 32;
+
+  static char *narrow_string = new char[chunk];
+  static uint32_t narrow_string_length = chunk;
+
+  static WCHAR *wide_string = new WCHAR[chunk];
+  static uint32_t wide_string_length = chunk;
+
+  int wide_size = MultiByteToWideChar(CP_ACP, MB_COMPOSITE, buf, len, 0, 0);
+  if (wide_size >= wide_string_length) {
+    wide_string_length = chunk * (1 + (wide_size / chunk));
+    delete[] wide_string;
+    wide_string = new WCHAR[wide_string_length];
+  }
+  MultiByteToWideChar(CP_ACP, MB_COMPOSITE, buf, len, wide_string, wide_string_length);
+  wide_string[wide_size] = 0;
+
+  int narrow_size = WideCharToMultiByte(CP_UTF8, 0, wide_string, wide_size, 0, 0, 0, 0);
+  if (narrow_size >= narrow_string_length) {
+    narrow_string_length = chunk * (1 + (narrow_size / chunk));
+    delete[] narrow_string;
+    narrow_string = new char[narrow_string_length];
+  }
+  WideCharToMultiByte(CP_UTF8, 0, wide_string, wide_size, narrow_string, narrow_string_length, 0, 0);
+  narrow_string[narrow_size] = 0;
+
+  ConsoleMessage(narrow_string, narrow_size, flag);
+
+  /*
+  int size = MultiByteToWideChar(CP_ACP, MB_COMPOSITE, buf, len, 0, 0);
+  std::wstring utf16_str(size, '\0');
+  MultiByteToWideChar(CP_ACP, MB_COMPOSITE, buf, len, &utf16_str[0], size);
+
+  int utf8_size = WideCharToMultiByte(CP_UTF8, 0, utf16_str.c_str(), utf16_str.length(), 0, 0, 0, 0);
+  std::string utf8_str(utf8_size, '\0');
+  WideCharToMultiByte(CP_UTF8, 0, utf16_str.c_str(), utf16_str.length(), &utf8_str[0], utf8_size, 0, 0);
+
+  ConsoleMessage(utf8_str.c_str(), utf8_str.length(), flag);
+  */
+
 }
 
 /**
@@ -121,7 +169,8 @@ int RLoop(const char *rhome, const char *ruser, int argc, char ** argv) {
   Rp->home = local_ruser;
 
   // typedef enum {RGui, RTerm, LinkDLL} UImode;
-  Rp->CharacterMode = LinkDLL;
+  // Rp->CharacterMode = LinkDLL;
+  Rp->CharacterMode = RTerm;
   Rp->R_Interactive = TRUE;
 
   Rp->ReadConsole = R_ReadConsole;
@@ -138,9 +187,11 @@ int RLoop(const char *rhome, const char *ruser, int argc, char ** argv) {
   Rp->SaveAction = SA_NOSAVE;
 
   R_SetParams(Rp);
-  R_set_command_line_arguments(0, 0);
+  //R_set_command_line_arguments(0, 0);
+  R_set_command_line_arguments(argc, argv);
   FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
   GA_initapp(0, 0);
+  readconsolecfg();
 
   // call setup separately so we can install functions
   setup_Rmainloop();
