@@ -160,7 +160,7 @@ BERT.graphics.device <- function( name="BERT-default", bgcolor="white", width=40
 #' renders to the shell.
 #'
 #' @export 
-BERT.console.graphics.device <- function( bgcolor="white", width=400, height=300, pointsize=14, type="svg"){
+BERT.console.graphics.device <- function( bgcolor="white", width=600, height=400, pointsize=14, type="png"){
   .Call( "console_device", bgcolor, width, height, pointsize, type, PACKAGE='BERTModule' );
 }
 

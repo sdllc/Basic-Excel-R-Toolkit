@@ -4,8 +4,8 @@
 \alias{BERT.console.graphics.device}
 \title{Create a console graphics device.}
 \usage{
-BERT.console.graphics.device(bgcolor = "white", width = 400, height = 300,
-  pointsize = 14, type = "svg")
+BERT.console.graphics.device(bgcolor = "white", width = 600, height = 400,
+  pointsize = 14, type = "png")
 }
 \description{
 \code{BERT.console.graphics.device} creates a graphics device that 
