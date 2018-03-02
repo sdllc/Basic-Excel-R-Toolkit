@@ -16,18 +16,37 @@ int R_ReadConsole(const char *prompt, char *buf, int len, int addtohistory) {
 }
 
 /**
+ * thanks to
+ * http://www.zedwood.com/article/cpp-is-valid-utf8-string-function
+ */
+bool ValidUTF8(const char *string, int len){
+
+  int c, i, ix, n, j;
+  for (i = 0, ix = len; i < ix; i++)
+  {
+    c = (unsigned char)string[i];
+    //if (c==0x09 || c==0x0a || c==0x0d || (0x20 <= c && c <= 0x7e) ) n = 0; // is_printable_ascii
+    if (0x00 <= c && c <= 0x7f) n = 0; // 0bbbbbbb
+    else if ((c & 0xE0) == 0xC0) n = 1; // 110bbbbb
+    else if (c == 0xed && i<(ix - 1) && ((unsigned char)string[i + 1] & 0xa0) == 0xa0) return false; //U+d800 to U+dfff
+    else if ((c & 0xF0) == 0xE0) n = 2; // 1110bbbb
+    else if ((c & 0xF8) == 0xF0) n = 3; // 11110bbb
+                                        //else if (($c & 0xFC) == 0xF8) n=4; // 111110bb //byte 5, unnecessary in 4 byte UTF-8
+                                        //else if (($c & 0xFE) == 0xFC) n=5; // 1111110b //byte 6, unnecessary in 4 byte UTF-8
+    else return false;
+    for (j = 0; j<n && i<ix; j++) { // n bytes matching 10bbbbbb follow ?
+      if ((++i == ix) || (((unsigned char)string[i] & 0xC0) != 0x80))
+        return false;
+    }
+  }
+  return true;
+}
+
+/**
  * console messages are passed through.  note the signature is different on
  * windows/linux so implementation is platform dependent.
  */
 void R_WriteConsoleEx(const char *buf, int len, int flag) {
-
-  // I cannot figure out how to get R to print UTF8 when it has windows cp 
-  // strings. it just seems to ignore all the things I set. temporarily let's
-  // do this the hard way.
-
-  // we can probably use fixed buffers here and expand, on the theory
-  // that they won't get too large... if anything most console messages are 
-  // too small, we should do some buffering (not here)
 
   const int32_t chunk = 256; // 32;
 
@@ -36,6 +55,20 @@ void R_WriteConsoleEx(const char *buf, int len, int flag) {
 
   static WCHAR *wide_string = new WCHAR[chunk];
   static uint32_t wide_string_length = chunk;
+
+  // I cannot figure out how to get R to output UTF8 when it has windows cp 
+  // strings. it just seems to ignore all the things I set. temporarily let's
+  // do this the hard way.
+
+  if (ValidUTF8(buf, len)) {
+    return ConsoleMessage(buf, len, flag);
+  }
+
+  // stats? bad guesses?
+
+  // we can probably use fixed buffers here and expand, on the theory
+  // that they won't get too large... if anything most console messages are 
+  // too small, we should do some buffering (not here)
 
   int wide_size = MultiByteToWideChar(CP_ACP, MB_COMPOSITE, buf, len, 0, 0);
   if (wide_size >= wide_string_length) {
