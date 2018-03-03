@@ -3,8 +3,10 @@
 #include "julia_interface.h"
 
 #define JULIA_ENABLE_THREADING 1
-
 #include "julia.h"
+
+#include "windows_api_functions.h"
+#include "json11/json11.hpp"
 
 jl_ptls_t ptls; 
 
@@ -296,7 +298,11 @@ void JlValueToVariable(BERTBuffers::Variable *variable, jl_value_t *value) {
     // FIXME: should be columns? although we've been doing rows for R,
     // so at least it will be consistent
 
-    if (ndims == 1 && (nrows == ncols)) ncols = 1;
+    // actually if it's a 1-dimensional array, the columns value is 
+    // garbage, ignore it
+
+    // if (ndims == 1 && (nrows == ncols)) ncols = 1;
+    if (ndims == 1) ncols = 1;
 
     results_array->set_cols(ncols);
     results_array->set_rows(nrows);
@@ -440,13 +446,48 @@ void JuliaGetVersion(int32_t *major, int32_t *minor, int32_t *patch) {
 
 void JuliaInit() {
 
-  // FIXME: let user specify startup options
+  char buffer[MAX_PATH];
+  GetEnvironmentVariableA("BERT2_HOME_DIRECTORY", buffer, MAX_PATH);
+
+  std::string config_data;
+  std::string config_path(buffer);
+  config_path.append("bert-config.json");
+  APIFunctions::FileError result = APIFunctions::FileContents(config_data, config_path);
 
   jl_options.quiet = 0;
   jl_options.color = JL_OPTIONS_COLOR_ON;
   jl_options.handle_signals = JL_OPTIONS_HANDLE_SIGNALS_ON;
   jl_options.use_precompiled = JL_OPTIONS_USE_PRECOMPILED_YES;
   jl_options.use_compilecache = JL_OPTIONS_USE_COMPILECACHE_YES;
+
+  if (result == APIFunctions::FileError::Success) {
+
+    std::string err;
+    json11::Json config = json11::Json::parse(config_data, err, json11::COMMENTS);
+    json11::Json julia = config["BERT"]["Julia"];
+    
+    if (julia["usePrecompiled"].is_string()) {
+      jl_options.use_precompiled = (julia["usePrecompiled"].string_value() == "yes") ? JL_OPTIONS_USE_PRECOMPILED_YES : JL_OPTIONS_USE_PRECOMPILED_NO;
+    }
+
+    if (julia["useCompileCache"].is_string()) {
+      jl_options.use_compilecache = (julia["useCompileCache"].string_value() == "yes") ? JL_OPTIONS_USE_COMPILECACHE_YES : JL_OPTIONS_USE_COMPILECACHE_NO;
+    }
+
+    if (julia["fastMath"].is_string()) {
+      const std::string &compare = julia["fastMath"].string_value();
+      if (compare == "on") jl_options.fast_math = JL_OPTIONS_FAST_MATH_ON;
+      if (compare == "off") jl_options.fast_math = JL_OPTIONS_FAST_MATH_OFF;
+      if (compare == "default") jl_options.fast_math = JL_OPTIONS_FAST_MATH_DEFAULT;
+    }
+
+    if (julia["polly"].is_string()) {
+      const std::string &compare = julia["polly"].string_value();
+      if (compare == "on") jl_options.polly = JL_OPTIONS_POLLY_ON;
+      if (compare == "off") jl_options.polly = JL_OPTIONS_POLLY_OFF;
+    }
+
+  }
 
   ptls = jl_get_ptls_states();
 

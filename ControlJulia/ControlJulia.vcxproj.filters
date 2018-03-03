@@ -42,6 +42,12 @@
     <ClInclude Include="..\Common\message_utilities.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="..\Common\windows_api_functions.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\json11\json11.hpp">
+      <Filter>Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\julia_interface.cc">
@@ -57,6 +63,12 @@
       <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="..\Common\message_utilities.cc">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\windows_api_functions.cc">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\json11\json11.cpp">
       <Filter>Common</Filter>
     </ClCompile>
   </ItemGroup>
