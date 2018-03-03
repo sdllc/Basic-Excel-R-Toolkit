@@ -128,7 +128,7 @@ export class Pipe {
     return this.Queue(command, Channel.SYSCALL);
   }
 
-  private Queue(command, channel) {
+  private Queue(command, channel) : Promise<any> {
     return new Promise((resolve, reject) => {
       this.queue_.push({
         command, channel, resolve, reject
