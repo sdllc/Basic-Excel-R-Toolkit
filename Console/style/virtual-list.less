@@ -1,0 +1,78 @@
+
+#list-measurement-node {
+  position: absolute;
+  top: -1000px;
+  left: -1000px;
+}
+
+.list-container {
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.list-header {
+  padding-bottom: .5em;
+}
+
+.list-body {
+  overflow: scroll;
+  flex-grow: 1;
+  border: 1px solid #ccc;
+}
+
+.list-inner-body {
+  position: relative;
+  overflow: hidden;
+}
+
+.list-body-entry {
+  white-space: nowrap;
+  padding: 0;
+  margin: 0;
+}
+
+// FIXME: this should probably move
+
+.dialog_container.cran-mirror-chooser {
+  height: 70%;
+  width: 30%;
+}
+
+.cran-mirror-list {
+
+  font-family: "Segoe UI";
+
+  .list-body-entry {
+
+    padding: 3px 6px;
+    border-bottom: 1px solid #ccc;
+    width: auto;
+
+    // the problem with this is that when we measure, it's always
+    // the last node. maybe use a style?
+
+    // &:last-child { border-bottom: none; }
+
+    .list-entry-header {
+      cursor: default;
+    }
+
+    .list-entry-subheader {
+      cursor: default;
+      font-size: .8em;
+    }
+
+    &.selected {
+      background: #66cc99;
+      color: #fff;
+    }
+
+  }
+}
+
