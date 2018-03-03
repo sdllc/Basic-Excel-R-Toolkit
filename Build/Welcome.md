@@ -34,6 +34,11 @@ Cheers,
 
 # Release Notes #
 
+2.0.20 -- Preview Release (3 March 2018)
+
+Add mirror and package selection dialogs to the console. Fixes for UTF-8 
+handling. Application restructuring and lots of bugfixes and updates.
+
 2.0.19 -- Preview Release (28 February 2018)
 
 Add 32-bit Excel support (on 64-bit Windows). Fixes for console R graphics.
