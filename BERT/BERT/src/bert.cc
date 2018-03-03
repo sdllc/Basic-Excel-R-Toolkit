@@ -8,6 +8,7 @@
 #include "type_conversions.h"
 #include "string_utilities.h"
 #include "windows_api_functions.h"
+#include "module_functions.h"
 #include "message_utilities.h"
 #include "..\resource.h"
 
@@ -117,7 +118,7 @@ BERT::BERT()
   , console_notification_handle_(0)
 {
   APIFunctions::GetRegistryDWORD(dev_flags_, "BERT2.DevOptions");
-  home_directory_ = APIFunctions::ModulePath();
+  home_directory_ = ModuleFunctions::ModulePath();
   
   if (!home_directory_.length()) {
     std::cerr << "WARNING: home directory not found" << std::endl;

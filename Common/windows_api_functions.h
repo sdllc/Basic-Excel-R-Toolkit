@@ -13,6 +13,12 @@
 
 namespace APIFunctions {
 
+  /** reads resource in this dll */
+  std::string ReadResource(LPTSTR resource_id);
+
+  /** get the path of the current module (not containing process) */
+  std::string ModulePath();
+
   typedef enum {
     Success = 0,
     FileNotFound = 1,
@@ -27,9 +33,6 @@ namespace APIFunctions {
    * TODO: options?
    */
   std::vector<std::pair<std::string, FILETIME>> ListDirectory(const std::string &directory);
-
-  /** reads resource in this dll */
-  std::string ReadResource(LPTSTR resource_id);
 
   /** reads registry string */
   bool GetRegistryString(std::string &result_value, const char *name, const char *key = 0, HKEY base_key = 0);
@@ -48,9 +51,6 @@ namespace APIFunctions {
 
   /** sets path (for uncaching) */
   void SetPath(const std::string &path);
-
-  /** get the path of the current module (not containing process) */
-  std::string ModulePath();
 
   /** read a file and return contents */
   FileError FileContents(std::string &contents, const std::string &path);

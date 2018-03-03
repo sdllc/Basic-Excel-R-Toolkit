@@ -37,9 +37,6 @@
     <ClInclude Include="include\bert.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\windows_api_functions.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="include\type_conversions.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -88,6 +85,12 @@
     <ClInclude Include="..\..\Common\message_utilities.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Common\windows_api_functions.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\module_functions.h">
+      <Filter>Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\PB\variable.proto">
@@ -108,9 +111,6 @@
       <Filter>PB</Filter>
     </ClCompile>
     <ClCompile Include="src\bert.cc">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="src\windows_api_functions.cc">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="src\debug_functions.cc">
@@ -135,6 +135,12 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Common\message_utilities.cc">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\windows_api_functions.cc">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\module_functions.cc">
       <Filter>Common</Filter>
     </ClCompile>
   </ItemGroup>
