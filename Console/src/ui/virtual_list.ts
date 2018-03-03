@@ -1,6 +1,6 @@
 
 export interface FormatItemFunction {(node, array, index, width?)};
-export interface ClickFunction {(index)};
+export interface ClickFunction {(index, event)};
 
 interface RenderFunction {(start)};
 
@@ -17,7 +17,7 @@ export interface ListOptions {
   data:any;
 
   // length of data.
-  length:number;
+  data_length:number;
 
   // the scroll node -- this one has scrollbars and generates events
   outer_node:HTMLElement;
@@ -29,61 +29,168 @@ export interface ListOptions {
   // node in format, and then check it in click.
   click?:ClickFunction;
 
+  // option: fixed height. this allows us to speed up measurement, 
+  // particularly if we update. 
+  fixed_height?:boolean;
+
+  hint?:number;
+
 }
 
+/** 
+ * virtual list. some hacks for really large lists (like the R packages
+ * list) so we can filter in reasonably close to real time.
+ */
 export class VirtualList {
-
-  /** 
-   * generated function for rendering, exported so we can call it 
-   * from a public Update function
-   */
-  private render_:RenderFunction;
-
-  /**
-   * generated function for scroll into view
-   */
-  private scroll_:ScrollFunction;
 
   /**
    * generated function to remove listeners
    */
   private cleanup_:Function;
 
+  private options_:ListOptions;
+
+  private nodes_:HTMLElement[] = [];
+
+  private tops_:number[] = [];
+  private height_:number[] = [];
+
+  private max_width_ = 0;
+  private min_height_ = 0;
+  private total_height_ = 0;
+
+  private inner_node_:HTMLElement;
+
   /** the first rendered item in the list */
   private first_ = 0;
 
-  static EnsureMeasurementNode(){
-    let measurement_node = document.querySelector("#list-measurement-node");
-    if(!measurement_node) {
-      measurement_node = document.createElement("div");
-      measurement_node.id = "list-measurement-node";
-      document.body.appendChild(measurement_node);
+  private static measurement_node_:HTMLElement;
+
+  static EnsureMeasurementNodes(){
+    if(!this.measurement_node_ ){
+      this.measurement_node_ = document.createElement("div");
+      this.measurement_node_.id = "list-measurement-node";
+      document.body.appendChild(this.measurement_node_);
     }
-    return measurement_node;
   }
 
   constructor(){}
 
   /** calls the paint method */
   Repaint(start = this.first_){
-    this.render_(start);
+    this.Render(start);
   }
 
   /** scroll into view */
   ScrollIntoView(index = 0){
-    this.scroll_(index);
+    if(this.options_ && this.tops_ && this.tops_.length){
+      this.options_.outer_node.scrollTop = this.tops_[index];
+    }
+  }
+
+  private Render(start = 0){
+    
+    // keep odd/even ordering for css
+    start = start - (start%2); 
+
+    // render nodes
+    for( let i = 0; i< this.nodes_.length && (i+start < this.options_.data_length); i++ ){
+      this.options_.format(this.nodes_[i], this.options_.data, i+start)
+    }
+
+    // push down
+    this.nodes_[0].style.marginTop = this.tops_[start] + "px";
+
   }
 
   /** 
-   * removes event handlers
+   * removes event handlers, nodes
    */
   CleanUp(){
     if(this.cleanup_){
       this.cleanup_();
       this.cleanup_ = null;
     }
-    this.scroll_ = null;
-    this.render_ = null;
+    // this.scroll_ = null;
+    // this.render_ = null;
+    this.options_ = null;
+    this.nodes_ = [];
+  }
+
+  /**
+   * measures nodes and calculates layout. this might get done 
+   * more than once if we update data.
+   */
+  private Measure(options:ListOptions, updating = false){
+
+    VirtualList.EnsureMeasurementNodes();
+    VirtualList.measurement_node_.className = options.containing_class_name || ""; 
+
+    let test_node;
+
+    if(!updating){
+      VirtualList.measurement_node_.innerText = "";
+      test_node = document.createElement("div");
+      VirtualList.measurement_node_.appendChild(test_node);
+    }
+    else test_node = VirtualList.measurement_node_.firstChild;
+
+    let tops = new Array(options.data_length);
+    let height = new Array(options.data_length);
+
+    let max_width = 100;
+    let min_height = 1000;
+    let total_height = 0;
+
+    let data = options.data;
+    let data_length = options.data_length;
+
+    if( this.options_.fixed_height){
+
+      if(!updating) options.format(test_node, data, options.hint||0);
+
+      let rect = test_node.getBoundingClientRect();
+      max_width = Math.max(max_width, rect.width);
+      min_height = Math.min(min_height, rect.height);
+
+      for( let i = 0; i< data_length; i++ ){
+        height[i] = rect.height;
+        tops[i] = total_height;
+        total_height += rect.height;
+      }
+
+    }
+    else {
+      for( let i = 0; i< data_length; i++ ){
+        options.format(test_node, data, i);
+        let rect = test_node.getBoundingClientRect();
+        max_width = Math.max(max_width, rect.width);
+        min_height = Math.min(min_height, rect.height);
+        height[i] = rect.height;
+        tops[i] = total_height;
+        total_height += rect.height;
+      }
+    }
+
+    this.tops_ = tops;
+    this.height_ = height;
+    this.max_width_ = max_width;
+    this.min_height_ = min_height;
+    this.total_height_ = total_height;
+
+    this.inner_node_.style.height = this.total_height_ + "px";
+    this.inner_node_.style.width = this.max_width_ + "px";
+
+  }
+
+  Update(options:ListOptions){
+    this.options_ = options;
+    this.Measure(options, true);
+    this.ScrollIntoView(0);
+    requestAnimationFrame(() => {
+      this.first_ = 0;
+      this.Repaint();
+    })
   }
 
   /**
@@ -92,87 +199,65 @@ export class VirtualList {
    */
   CreateList(options:ListOptions) : HTMLElement{ 
 
-    let inner_node = document.createElement("div");
-    inner_node.className = "list-inner-body";
+    this.options_ = options;
 
-    let measurement_node = VirtualList.EnsureMeasurementNode();
-    measurement_node.innerHTML = "";
-    measurement_node.className = options.containing_class_name || ""; 
-    let temp = document.createElement("div");
-    measurement_node.appendChild(temp);
+    this.inner_node_ = document.createElement("div");
+    this.inner_node_.className = "list-inner-body";
+
+    this.Measure(options);
 
     let data = options.data;
-    let length = options.length;
+    let data_length = options.data_length;
+    
+    let count = Math.ceil(options.outer_node.offsetHeight / this.min_height_) * 2;
 
-    // measure
+    // create initial nodes; this does first-pass formatting
 
-    let height = new Array(length);
-
-    let max_width = 100;
-    let min_height = 1000;
-    let total_height = 0;
-
-    for( let i = 0; i< length; i++ ){
-      options.format(temp, data, i);
-      let rect = temp.getBoundingClientRect();
-      max_width = Math.max(max_width, rect.width);
-      min_height = Math.min(min_height, rect.height);
-      height[i] = rect.height;
-      total_height += rect.height;
-    }
-
-    inner_node.style.height = total_height + "px";
-    inner_node.style.width = max_width + "px";
-
-    let count = Math.ceil(options.outer_node.offsetHeight / min_height) * 2;
-    let buffer = Math.round(count/4);
     let nodes = [];
-
     for( let i = 0; i< count; i++ ){
       let entry = document.createElement("div");
-      options.format(entry, data, i, max_width);
-      inner_node.appendChild(entry);
+      options.format(entry, data, i, this.max_width_);
+      this.inner_node_.appendChild(entry);
       nodes.push(entry);
     }
+    this.nodes_ = nodes;
 
-    // paint function
-    this.render_ = (start) => {
-      start = start - (start%2); // always even, for css
-      let top = 0;
-      for( let i = 0; i< start && i< length; i++ ) top += height[i];
-      for( let i = 0; i< count && (i+start < length); i++ ){
-        options.format(nodes[i], data, i+start)
-      }
-      nodes[0].style.marginTop = top + "px";
-    }
-
-    // scroll function (scroll item into view)
-    this.scroll_ = (selected) => {
-      let top = 0;
-      for( let i = 0; i< selected; i++ ){
-        top += height[i];
-      }      
-      options.outer_node.scrollTop = top;
-    }
+    // scroll function (scroll item into view). this gets attached 
+    // to the outside node, which does the scrolling
 
     // scroll event handler
     let updating = false;
     let scroll_handler = (e) => {
+
       if(!updating){
         updating = true;
         requestAnimationFrame(() => {
+
           let top = options.outer_node.scrollTop;
-          let bottom = 0;
-          for(let start = 0; start< height.length; start++ ){
-            bottom = bottom + height[start];
-            if( bottom > top ){
-              if((start - (start % 2)) !== this.first_){
-                this.first_ = Math.max(0, start - buffer);
-                requestAnimationFrame(() => {this.render_(this.first_)});
-              }
-              break;
-            }
+          let first = this.first_;
+          let tops = this.tops_;
+
+          // this is better but it's going to jump if you 
+          // change directions, could be smarter about it
+
+          if( tops[first] < top ){
+            for( ++first; first < tops.length && tops[first] < top; first++ );
           }
+          else {
+            for( --first; first >= 0 && tops[first] > top; first-- );
+          }
+
+          // ensure there's a buffer
+          first = Math.max(0, first - 2); // fixme: count/4
+         
+          // only paint if we're shifting. 
+          // FIXME: maybe set first_ anyway for the next scroll event?
+          
+          if((first - (first % 2)) !== this.first_){
+            this.first_ = first;
+            this.Render(this.first_);
+          }
+
           updating = false;
         });
       }
@@ -188,9 +273,18 @@ export class VirtualList {
         target = target.parentElement;
       }
       if(target) {
-        options.click(target);
+        e.stopPropagation();
+        e.preventDefault();
+        options.click(target, e);
       }
     };
+
+    let mousedown_handler = (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+
+    options.outer_node.addEventListener("mousedown", mousedown_handler);
 
     if(options.click){
       options.outer_node.addEventListener("click", click_handler);
@@ -198,10 +292,15 @@ export class VirtualList {
 
     this.cleanup_ = function(){
       options.outer_node.removeEventListener("scroll", scroll_handler);
+      options.outer_node.removeEventListener("mousedown", mousedown_handler);
+
+      // this should be OK even if it was not attached
       options.outer_node.removeEventListener("click", click_handler);
+
+      this.inner_node_ = null;
     }
 
-    return inner_node;
+    return this.inner_node_;
 
   }
 

@@ -39,25 +39,79 @@
 
 // FIXME: this should probably move
 
+// hack: we need this node or the containing flex layout doesn't work; 
+// the header gets compressed because it's not measured properly
+
+.list-header-layout {
+
+  display: flex;
+  align-items: center;
+
+  div {
+    flex-grow: 2;
+  }
+
+  input {
+    flex-grow: 1;
+    display: block;
+    border-radius: 2px;
+    border: 1px solid #ccc;
+    font-family: inherit;
+    font-size: inherit;
+    padding: 1px .35em;
+  }
+}
+
 .dialog_container.cran-mirror-chooser {
   height: 70%;
   width: 30%;
 }
 
-.cran-mirror-list {
+.dialog_container.cran-package-chooser {
+  height: 70%;
+  width: 50%;
+}
 
+.cran-package-list, .cran-mirror-list {
   font-family: "Segoe UI";
 
   .list-body-entry {
-
     padding: 3px 6px;
     border-bottom: 1px solid #ccc;
     width: auto;
+  }
+}
 
-    // the problem with this is that when we measure, it's always
-    // the last node. maybe use a style?
+.cran-package-list {
 
-    // &:last-child { border-bottom: none; }
+  .list-body-entry {
+
+    &.installed {
+      color: #aaa;
+    }
+
+    &.selected {
+      background: #66cc99;
+      color: #fff;
+    }
+
+    display: flex;
+    flex-direction: row;
+
+    .list-entry-name {
+      cursor: default;
+      font-weight: 600;
+    }
+
+    .list-entry-description {
+      cursor: default;
+      padding-left: .5em;
+    }
+  }
+}
+
+.cran-mirror-list {
+  .list-body-entry {
 
     .list-entry-header {
       cursor: default;

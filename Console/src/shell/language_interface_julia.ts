@@ -4,11 +4,24 @@ import {Pipe, ConsoleMessage, ConsoleMessageType} from '../io/pipe';
 import {Pipe2} from '../io/management_pipe';
 import {StdIOPipe} from '../io/stdio_pipe';
 
+import { MenuUtilities } from '../ui/menu_utilities';
+
 /** specialization: Julia */
 export class JuliaInterface extends LanguageInterface {
 
   static language_name_ = "Julia";
   
+  constructor(){
+    super();
+    MenuUtilities.events.subscribe(event => {
+      switch(event.id){
+      case "main.packages.julia.install-packages":
+        console.info("Julia install packages");
+        break; 
+      }
+    });
+  }
+
   InitPipe(pipe:Pipe, name:string){
     super.InitPipe(pipe, name);
     this.management_pipe_ = new Pipe2();
@@ -30,6 +43,7 @@ export class JuliaInterface extends LanguageInterface {
     buffer = buffer.replace( /\$/g, "\\$"); // julia string interpolations
 
     let x = await this.pipe_.Internal(`BERT.Autocomplete("${buffer}",${position})`);
+
     let arr:Array<any> = (Array.isArray(x) ? x as Array<any> : [])
 
     // slightly different breaks (+.). allow leading backslash (escape)

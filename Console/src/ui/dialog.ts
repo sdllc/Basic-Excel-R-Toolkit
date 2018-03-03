@@ -3,8 +3,9 @@ import {MenuUtilities} from './menu_utilities';
 
 /**
  * class for showing dialogs, along the lines of bootstrap's modals 
+ * 
+ * TODO: enable/disable buttons [more general button class?]
  */
-
 const DialogTemplate = `
   <div class='dialog_container'>
     <div class='dialog_header'>
@@ -14,6 +15,8 @@ const DialogTemplate = `
     <div class='dialog_body'>
     </div>
     <div class='dialog_footer'>
+      <div class='dialog_status'></div>
+      <div class='dialog_buttons'></div>
     </div>
   </div>
 `;
@@ -31,6 +34,8 @@ export interface DialogSpec {
   body?:string|HTMLElement;
 
   className?:string;
+
+  status?:string;
 
   /** buttons, as text strings (text will be returned) */
   buttons?:(string|DialogButton)[];
@@ -102,13 +107,18 @@ class DialogManager {
     }
   }
 
+  set status(text:string){
+    let container = (DialogManager.node_map_.dialog_status as HTMLElement);
+    container.innerHTML = text||"";
+  }
+
   set className(name:string){
     let container = (DialogManager.node_map_.dialog_container as HTMLElement);
     container.className = "dialog_container " + (name||"");
   }
 
   set buttons(buttons:(string|DialogButton)[]) {
-    let container = DialogManager.node_map_.dialog_footer as HTMLElement;
+    let container = DialogManager.node_map_.dialog_buttons as HTMLElement;
     if(!container) return;
 
     container.textContent = "";
@@ -188,12 +198,30 @@ class DialogManager {
     });
   }
 
+  /** 
+   * updates dialog with new data. only replaces data that is present.
+   * @see Append for full replacement.
+   */
+  Append(spec:DialogSpec){
+    ["title", "body", "buttons", "className", "status"].forEach(key => {
+      if(typeof spec[key] !== "undefined" ){
+        this[key] = this.current_dialog_spec_[key] = spec[key];
+      }
+    });
+  }
+
+  /** 
+   * updates dialog with new data. this is a complete replacement.
+   * @see Append for modifying existing.
+   */
   Update(spec:DialogSpec){
     this.title = spec.title||"";
     this.body = spec.body||"";
     this.buttons = spec.buttons||[];
-    this.current_dialog_spec_ = spec;
     this.className = spec.className;
+    this.status = spec.status||"";
+
+    this.current_dialog_spec_ = spec;
   }
 
   Show(spec:DialogSpec) : DialogResult {
@@ -209,6 +237,7 @@ class DialogManager {
       this.body = spec.body||"";
       this.buttons = spec.buttons||[];
       this.className = spec.className;
+      this.status = spec.status||"";
 
       DialogManager.container_node_.style.display = "flex";
 

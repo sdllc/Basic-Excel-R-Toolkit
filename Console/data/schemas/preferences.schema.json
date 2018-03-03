@@ -8,10 +8,24 @@
           "type": "string"
         },
         "R": {
-          "type": "object"
+          "type": "object",
+          "properties": {
+            "home": { "type": "string" },
+            "lib": { "type": "string" },
+            "CRAN": { "type": "string" },
+            "CRANextra": { "type": "string" }
+          },
+          "additionalProperties": false
         },
         "Julia": {
-          "type": "object"
+          "type": "object",
+          "properties": {
+            "home": { "type": "string" },
+            "fastMath": { "type": "string", "enum": [ "on", "off", "default" ] },
+            "useCompileCache": { "type": "string", "enum": [ "yes", "no" ] },
+            "usePrecompiled": { "type": "string", "enum": [ "yes", "no" ] }
+          },
+          "additionalProperties": false
         },
         "startConsole": {
           "type": "boolean"
@@ -88,7 +102,8 @@
             "brightWhite": {
               "type": "string"
             }
-          }
+          },
+          "additionalProperties": false
         },
         "cursorStyle": {
           "type": "string",
@@ -172,7 +187,8 @@
               "type": "boolean",
               "default": true
             }
-          }
+          },
+          "additionalProperties": false
         },
         "renderWhitespace": {
           "type": "string",

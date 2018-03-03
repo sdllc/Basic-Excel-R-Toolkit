@@ -11,7 +11,7 @@ import { JuliaInterface } from './shell/language_interface_julia';
 
 import {Splitter, SplitterOrientation, SplitterEvent} from './ui/splitter';
 import {TabPanel, TabJustify, TabEventType} from './ui/tab_panel';
-import {DialogManager, DialogSpec, DialogButton} from './ui/dialog';
+import {Dialog, DialogSpec, DialogButton} from './ui/dialog';
 import {PropertyManager} from './common/properties';
 import {MenuUtilities} from './ui/menu_utilities';
 
@@ -63,8 +63,7 @@ let splitter = new Splitter(
 
 // dialogs
 
-let dialog_manager = new DialogManager();
-window['dialog_manager'] = dialog_manager;
+window['dialog_manager'] = Dialog;
 
 let alert_manager = new AlertManager();
 window['alert_manager'] = alert_manager;
@@ -83,6 +82,7 @@ let language_interface_types = [
 // active languages, set by pipe connections
 
 let language_interfaces = [];
+window['language_interfaces'] = language_interfaces;
 
 // hide cursor when busy.
 // update: don't do this. it causes stray errors as the tooltip
@@ -187,6 +187,9 @@ Preferences.filter(x => x.preferences).first().subscribe(x => {
                     language_interfaces.push(instance);
                     instance.InitPipe(pipe, pipe_name);
                     terminals.Add(instance);
+
+                    MenuUtilities.SetEnabled(`main.packages.${language.toLowerCase()}`, true);
+
                     return true;
                   }
                   return false;
@@ -214,6 +217,8 @@ Preferences.filter(x => x.preferences).first().subscribe(x => {
     terminals.active_tab.subscribe(active => {
       if(properties.active_tab !== active) properties.active_tab = active;
     });
+
+    setTimeout(() => { language_interfaces[0].SelectPackages(); }, 100)
 
   });
 
@@ -402,3 +407,4 @@ window["Pause"] = function(in_seconds){
   }, in_seconds * 1000);
 } 
 */
+

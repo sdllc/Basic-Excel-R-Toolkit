@@ -55,24 +55,22 @@ export class LanguageInterface {
   AttachTerminal(terminal:TerminalImplementation){}
 
   Shutdown() : Promise<any> {
-    console.info( "LISD1");
+
+    // ugh. use async.
+
     return new Promise((resolve, reject) => {
       if(this.management_pipe_){
         // this.management_pipe_.Close(); // no close method?
       }
       // if( this.terminal_ ){ this.terminal_.CleanUp(); }
       if( this.pipe_ ){
-        console.info( "LISD1.1");
         this.pipe_.Close().then(() => {
-          console.info( "LISD2");
           return resolve();
         }).catch(() => {
-          console.info( "LISD3");
           return resolve();
         });
       }
       else {
-        console.info( "LISD4");
         return resolve();
       }
     });

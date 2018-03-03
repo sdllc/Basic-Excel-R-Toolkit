@@ -27,6 +27,31 @@
     "openFileError": "We couldn't open the file. Please make sure the file exists and is readable."
   },
 
+  "dialogs": {
+    "selectMirror": {
+      "chooseMirrorTitle": "Choose CRAN Mirror",
+      "selectMirror": "Select a Mirror:",
+      "pleaseWait": "Loading mirror list, please wait...",
+      "setRepo": "Set CRAN repo to #"
+    },
+    "selectPackages": {
+      "selectPackagesTitle": "Select Packages",
+      "selectPackages": "Select Packages:",
+      "pleaseWait": "Loading package list, please wait...",
+      "pleaseWaitInstalled": "Checking installed packages, please wait...",
+      "installed": "installed",
+      "filter": "Filter",
+      "singularSelected": "# Package Selected",
+      "pluralSelected": "# Packages Selected"
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "select": "Select",
+      "install": "Install",
+      "ok": "OK"
+    }
+  },
+
   "preferences": {
     "ok": "Preferences OK",
     "error": "Preferences Error"

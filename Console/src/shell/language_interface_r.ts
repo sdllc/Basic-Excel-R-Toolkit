@@ -9,12 +9,38 @@ import { SVGGraphicsDevice } from './svg_graphics_device';
 import { PNGGraphicsDevice } from './png_graphics_device';
 import { TerminalImplementation } from './terminal_implementation';
 
+import { MenuUtilities } from '../ui/menu_utilities';
+import { Dialog, DialogSpec, DialogButton } from '../ui/dialog';
+import { DataCache } from '../common/data-cache';
+
+import * as path from 'path';
+
+window['DataCache'] = DataCache;
+
+import { VirtualList } from '../ui/virtual_list';
+
+const Constants = require("../../data/constants.json");
+
 /** specialization: R */
 export class RInterface extends LanguageInterface {
 
   static language_name_ = "R";
 
   formatter_ = new RTextFormatter();
+
+  constructor(){
+    super();
+    MenuUtilities.events.subscribe(event => {
+      switch(event.id){
+      case "main.packages.r.choose-mirror":
+        this.ChooseMirror();
+        break; 
+      case "main.packages.r.install-packages":
+        this.SelectPackages();
+        break; 
+      }
+    });
+  }
 
   InitPipe(pipe:Pipe, name:string){
     super.InitPipe(pipe, name);
@@ -65,21 +91,443 @@ export class RInterface extends LanguageInterface {
     return { text:result };
   }
 
-  /*
-  ExecCallback(buffer:string) : Promise<any> {
-    return new Promise((resolve, reject) =>{
-      this.pipe_.ShellExec(buffer).then(result => {
-        if( result === -1 ){ resolve({ pop_stack: true }); }
-        else resolve({ text: result });
-      }).catch(e => {
-        console.error(e);
-      });
-    });
-  }
-  */
-
   BreakCallback(){
     this.management_pipe_.SendMessage("break");
+  }
+ 
+  /** 
+   * shows the "select packages" dialog.
+   */
+  async SelectPackages(){
+    
+    // ensure we have a repo
+
+    let repos = await this.pipe_.Internal(`getOption("repos")`);
+    if(!repos || !repos.CRAN || !/^http/.test(repos.CRAN)){
+      let success = await this.ChooseMirror();
+      if(!success) return;
+    }
+
+    repos = await this.pipe_.Internal(`getOption("repos")`);
+    
+    // ok, show a dialog and then get the list
+
+    let key = "cran-package-list";
+    let cacheResult = DataCache.Get(key);
+    let data;
+
+    let spec:DialogSpec = {
+      title: Constants.dialogs.selectPackages.selectPackagesTitle, 
+      escape: true,
+      className: "cran-package-chooser",
+      buttons: [Constants.dialogs.buttons.cancel]
+    }
+
+    spec.body = document.createElement("div");
+    spec.body.className = "list-container";
+
+    let header = document.createElement("div");
+    header.className = "list-header";
+    spec.body.appendChild(header);
+
+    let header_container = document.createElement('div');
+    header_container.className = "list-header-layout";
+    header.appendChild(header_container);
+
+    let header_text = document.createElement("div");
+    header_text.textContent = Constants.dialogs.selectPackages.pleaseWait;
+    header_container.appendChild(header_text);
+
+    let dialog_result = Dialog.Show(spec);
+
+    if(cacheResult.status !== DataCache.CacheStatus.Valid){
+
+      // NOTE: we're not using the package list. use the html list.
+
+      let html_list = await fetch(path.join(repos.CRAN, "web/packages/available_packages_by_name.html"));
+      let html_blob = await html_list.blob();
+      let reader = new FileReader();
+
+      await new Promise((resolve, reject) => {
+        reader.onloadend = () => {
+          resolve();
+        }
+        reader.onerror = () => {
+          reject();
+        }
+        reader.readAsText(html_blob);
+      });
+
+      let html = reader.result;
+      let regex = /<tr>[\s\S]*?<td>[\s\S]*?<a.*?>(.*?)<\/a>[\s\S]*?<\/td>[\s\S]*?<td>([\s\S]*?)<\/td>/g;
+      let match;
+      
+      data = [];
+      let index = 0;
+      while(match = regex.exec(html)){
+        data.push({name: match[1], description: match[2], index:index++});
+      }
+      DataCache.Store(key, data);
+
+      reader.onerror = null;
+      reader.onloadend = null;
+
+    }
+    else {
+      data = cacheResult.data;
+    }
+    window['data'] = data;
+
+    // in case user has pressed cancel while waiting
+    if( dialog_result.fulfilled ) return false;
+    
+    header_text.textContent = Constants.dialogs.selectPackages.pleaseWaitInstalled;
+
+    // get installed packages so we can indicate 
+    let installed_packages = await this.pipe_.Internal(`installed.packages()`);
+    
+    //console.info(installed_packages);
+    window['installed'] = installed_packages;
+
+    // in case user has pressed cancel while waiting
+    if( dialog_result.fulfilled ) return false;
+
+    // this is going to be expensive [actually not too bad step-wise]
+    // it runs the full loop on internal packages. we should white-list.
+    // UPDATE: remove items with Priority=base; those are defaults. there's
+    // one more for translations that we can (probably) safely remove.
+    
+    let package_index = 0;
+    let installed = installed_packages.data.Package.filter((p, index) => {
+      return (installed_packages.data.Priority[index] !== "base") && 
+        (p !== "translations");
+    });
+
+    for( let i = 0; i< installed.length; i++){
+      let j, compare = installed[i];
+      for( j = package_index; j< data.length; j++ ){
+        if( data[j].name === compare ){
+          data[j].installed = true;
+          data[j].name = data[j].name + ` (${Constants.dialogs.selectPackages.installed})`;
+          package_index = ++j;
+          break;
+        }
+      }
+      if( j === data.length ) console.info("missing?", compare);
+    }
+    
+    // update dialog
+    header_text.textContent = Constants.dialogs.selectPackages.selectPackages;
+
+    // filter should dynamically update the list
+    let filter = document.createElement("input");
+    filter.type = "text";
+    filter.placeholder = Constants.dialogs.selectPackages.filter;
+    filter.classList.add("package-filter");
+    header_container.appendChild(filter);
+
+    let node = document.createElement("div");
+    node.className = "list-body cran-package-list";
+    spec.body.appendChild(node);
+
+    spec.enter = true;
+    spec.buttons = [Constants.dialogs.buttons.cancel, {
+      text:Constants.dialogs.buttons.install, default:true}];
+    
+    Dialog.Update(spec);
+
+    let virtual_list = new VirtualList();
+    let last_click = -1;
+
+    let selected_count = 0;
+
+    // click to select or deselect, support shift-click to batch select
+    let click = (x, e) => {
+      let entry = data[x.index];
+      if(!entry.installed) entry.selected = !entry.selected;
+      selected_count += (entry.selected ? 1 : -1);
+
+      if(e.shiftKey && last_click >= 0){
+        let start = Math.min(last_click, x.index);
+        let end = Math.max(last_click, x.index);
+        for( ; start <= end; start++ ){
+          if(!data[start].installed && data[start].selected !== entry.selected){
+            data[start].selected = entry.selected;
+            selected_count += (entry.selected ? 1 : -1);
+          }
+        }
+      }
+      virtual_list.Repaint();
+      last_click = x.index;
+
+      // report count in status bar
+      let status;
+      if(selected_count === 1) {
+        status = (Constants.dialogs.selectPackages.singularSelected||"").replace(/#/, 1);
+      }
+      else if(selected_count > 1){
+        status = (Constants.dialogs.selectPackages.pluralSelected||"").replace(/#/, selected_count);
+      }
+      else status = "";
+      spec.status = status;
+      Dialog.Append({status});
+    }
+
+    // format one node
+    let format = (node:any, array, index, width = 0) => {
+
+      if(!node.initialized){
+
+        node.initialized = true;
+        if(width) node.style.width = width + "px";
+
+        let package_name = document.createElement("div");
+        package_name.className = "list-entry-name";
+        node.appendChild(package_name);
+        node.package_name = package_name;
+
+        let package_description = document.createElement("div");
+        package_description.className = "list-entry-description";
+        node.appendChild(package_description);
+        node.package_description = package_description;
+
+      }
+
+      let data = array[index];
+      let className = "";
+      
+      if(data.installed) className = "installed";
+      else if(data.selected) className = "selected";
+
+      node.className = "list-body-entry " + className;
+      node.index = data.index;
+      node.package_name.innerText = data.name;
+      node.package_description.innerHTML = data.description;
+
+    }
+
+    let filtered;
+    let longest_hint = 0;
+    let longest_length = 0;
+
+    for( let i = 0; i< data.length; i++ ){
+      let s = data[i].name + data[i].description;
+      if(s.length > longest_length){
+        longest_length = s.length;
+        longest_hint = i;
+      }
+    }
+
+    let options = {
+      click,
+      format, 
+      data, 
+      data_length:data.length, 
+      outer_node:node, 
+      containing_class_name: "cran-package-list",
+      fixed_height:true,
+      hint:longest_hint
+    };
+
+    let inner_node = virtual_list.CreateList(options);
+    node.appendChild(inner_node);
+
+    let last_filter = "";
+    let update_filter = e => {
+
+      if(filter.value.trim() === last_filter) return;
+      last_filter = filter.value.trim();
+
+      if(last_filter === "" ){
+        options.data = data;
+        options.data_length = data.length;
+      }
+      else {
+        let rex = new RegExp(filter.value.trim(), "i");
+        filtered = data.filter(x => {
+          return rex.test(x.name + " " + x.description);
+        })
+        console.info("len", filtered.length);
+        options.data = filtered;
+        options.data_length = filtered.length;
+      }
+
+      virtual_list.Update(options);
+
+    };
+
+    filter.addEventListener("input", update_filter);
+
+    let result = await dialog_result; // nice
+    let success = false;
+
+    if( result.reason === "enter_key" ||
+        (result.reason === "button" && result.data === Constants.dialogs.buttons.install)){
+      if(selected_count >= 0){
+        let selected = data.filter(x => x.selected).map(x => `"${x.name}"`);
+        console.info("install", selected_count, selected);
+        let command = `install.packages(${selected.join(", ")})`
+        this.pipe_.Internal(command);
+        success = true;
+      }
+    }
+    virtual_list.CleanUp();
+    filter.removeEventListener("input", update_filter);
+    node.removeChild(inner_node); // _should_ dump listeners. fingers crossed.
+
+    console.info("Done");
+    return success;
+    
+  }
+
+  /**
+   * shows the "choose mirror" dialog. on a successful result sets the 
+   * mirror in the session (via `options`).  only shows https mirrors;
+   * we could offer an option, but not atm.
+   * 
+   * TODO: put mirror in config (prefs)
+   * TODO: have controlr load mirror from config
+   * 
+   * FIXME: mirror change should flush cached package list 
+   * 
+   */
+  async ChooseMirror(){
+
+    let key = "cran-mirror-list";
+    let cacheResult = DataCache.Get(key);
+    let data;
+
+    let spec:DialogSpec = {
+      title: Constants.dialogs.selectMirror.chooseMirrorTitle, 
+      escape: true,
+      className: "cran-mirror-chooser",
+      buttons: [Constants.dialogs.buttons.cancel]
+    }
+
+    spec.body = document.createElement("div");
+    spec.body.className = "list-container";
+
+    let header = document.createElement("div");
+    header.className = "list-header";
+    header.textContent = Constants.dialogs.selectMirror.pleaseWait;
+    spec.body.appendChild(header);
+
+    let dialog_result = Dialog.Show(spec);
+
+    if(cacheResult.status !== DataCache.CacheStatus.Valid){
+      data = await this.pipe_.Internal(`getCRANmirrors()`);
+      DataCache.Store(key, data);
+    }
+    else {
+      data = cacheResult.data;
+    }
+
+    let repos = await this.pipe_.Internal(`getOption("repos")`);
+
+    window['data'] = data;
+
+    // in case user has pressed cancel while waiting
+
+    if( dialog_result.fulfilled ) return false;
+
+    // filter data
+
+    let indexes = [];
+    data.data.URL.forEach((url, index) => { if( /^https/.test(url)) indexes.push(index); });
+
+    let selected_index = -1;
+    let first_item = 0;
+    let repo = (repos && repos.CRAN && /^http/i.test(repos.CRAN)) ? repos.CRAN : null;
+
+    let filtered = indexes.map((index, n) => {
+      let url = data.data.URL[index];
+      if( url === repo || url === repo + "/"){
+        selected_index = index;
+        first_item = n;
+      }
+      return {
+        index, name: data.data.Name[index], host: data.data.Host[index]
+      }
+    });
+
+    header.textContent = Constants.dialogs.selectMirror.selectMirror;
+
+    let node = document.createElement("div");
+    node.className = "list-body cran-mirror-list";
+    spec.body.appendChild(node);
+
+    spec.enter = true;
+    spec.buttons = [Constants.dialogs.buttons.cancel, {
+      text:Constants.dialogs.buttons.select, default:true}];
+    
+    Dialog.Update(spec);
+
+    let virtual_list = new VirtualList();
+
+    let click = (x, e) => {
+      selected_index = x.index;
+      virtual_list.Repaint();
+    }
+
+    let format = (node:any, array, index, width = 0) => {
+
+      if(!node.initialized){
+
+        node.initialized = true;
+        if(width) node.style.width = width + "px";
+  
+        let entry_header = document.createElement("div");
+        entry_header.className = "list-entry-header";
+        node.appendChild(entry_header);
+        node.header = entry_header;
+  
+        let entry_subheader = document.createElement("div");
+        entry_subheader.className = "list-entry-subheader";
+        node.appendChild(entry_subheader);
+        node.subheader = entry_subheader;
+  
+      }
+
+      let data = array[index];
+      node.className = "list-body-entry" + (data.index === selected_index ? " selected": "");
+      node.index = data.index;
+      node.header.innerText = data.name;
+      node.subheader.innerText = data.host;
+    }
+
+    let inner_node = virtual_list.CreateList({
+      click,
+      format, 
+      data:filtered, 
+      data_length:indexes.length, 
+      outer_node:node, 
+      containing_class_name: "cran-mirror-list"
+    });
+
+    node.appendChild(inner_node);
+    virtual_list.ScrollIntoView(first_item);
+    
+    let result = await dialog_result; // nice
+    let success = false;
+
+    if( result.reason === "enter_key" ||
+        (result.reason === "button" && result.data === Constants.dialogs.buttons.select)){
+      if(selected_index >= 0){
+        let url = data.data.URL[selected_index];
+        let name = data.data.Name[selected_index];
+
+        // FIXME: put this on the command line, then exec normally; 
+        // this might take a while.
+
+        this.pipe_.Internal(`options(repos=c(CRAN="${url}", CRANextra="${repos.CRANextra}")); cat("${(Constants.dialogs.selectMirror.setRepo||"").replace(/#/, name)}\n")`);
+        success = true;
+      }
+    }
+    virtual_list.CleanUp();
+    node.removeChild(inner_node); // _should_ dump listeners. fingers crossed.
+    console.info("Done");
+
+    return success;
   }
 
 }
