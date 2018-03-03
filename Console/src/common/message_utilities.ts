@@ -1,7 +1,7 @@
 
 import * as messages from "../../generated/variable_pb.js";
 
-window['messages'] = messages;
+// window['messages'] = messages;
 
 export class MessageUtilities {
   
@@ -21,11 +21,39 @@ export class MessageUtilities {
         return x.getBoolean();
       case messages.Variable.ValueCase.ARR:
 
-        let list = x.getArr().getDataList();
+        let arr = x.getArr();
+        let rows = arr.getRows();
+        let cols = arr.getCols();
+        let list = arr.getDataList();
 
         // check for names. if no names, return an array
         let names = list.some(element => element.getName());
-        if (!names) return list.map(x => this.VariableToObject(x));
+
+        // frame: colnames
+        let colnames = x.getArr().getColnamesList();        
+        if(colnames && colnames.length){
+          let object = {colnames, rownames: arr.getRownamesList(), rows, cols, data: {}};
+          let frame = this.GetFrame(arr);
+          colnames.forEach((col, index) => object.data[col] = frame[index]);
+          return object;
+        }
+
+        if( rows && cols && rows > 1 && cols > 1 ) {
+          let src = arr.getDataList();          
+          let data = new Array(rows);
+          let index = 0;
+          for( let row = 0; row< rows; row++ ){
+            let row_data = new Array(cols);
+            for( let col = 0; col< cols; col++ ){
+              row_data[col] = this.VariableToObject(src[col * rows + row]);
+            }
+            data[row] = row_data;
+          }
+          return { rows, cols, data };
+        }
+
+        // return array [FIXME: matrix? ...]
+        if (!names && (!colnames || !colnames.length)) return list.map(x => this.VariableToObject(x));
 
         // if names, return an object. there may be unnamed items, use $X
         let object = {};
@@ -38,6 +66,25 @@ export class MessageUtilities {
         console.info(`UNTRANSLATED (${x.getValueCase()})\n`, x.toObject());
         return null;
     }
+  }
+
+  /** get column-oriented 2d array */
+  static GetFrame(arr){
+
+    let nrows = arr.getRows();
+    let ncols = arr.getCols();
+    let data = arr.getDataList();
+    let index = 0;
+
+    let result = new Array(ncols);
+    for( let c = 0; c< ncols; c++ ){
+      result[c] = new Array(nrows);
+      for( let r = 0; r< nrows; r++ ){
+        result[c][r] = this.VariableToObject(data[index++]);
+      }      
+    }
+
+    return result;
   }
 
   /** js intrinsic or object to protobuf Variable */
