@@ -39,6 +39,9 @@
     <ClCompile Include="..\Common\message_utilities.cc">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="convert.cc">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\PB\variable.pb.h">
@@ -63,6 +66,9 @@
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="controlr.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="convert.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>

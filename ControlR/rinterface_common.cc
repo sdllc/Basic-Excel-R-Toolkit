@@ -3,6 +3,7 @@
 #include "controlr.h"
 #include "controlr_common.h"
 #include "console_graphics_device.h"
+#include "convert.h"
 
 // try to store fuel now, you jerks
 #undef clear
@@ -349,7 +350,11 @@ __inline bool HandleSimpleTypes(SEXP sexp, int len, int rtype, BERTBuffers::Arra
     for (int i = 0; i < len; i++) {
       auto ptr = arr ? arr->add_data() : var;
       SEXP strsxp = STRING_ELT(sexp, i);
-      ptr->set_str(CHAR(Rf_asChar(strsxp)));
+      const char *sexp_string = CHAR(Rf_asChar(strsxp));
+      if (!ValidUTF8(sexp_string, 0)) {
+        ptr->set_str(WindowsCPToUTF8_2(sexp_string, 0));
+      }
+      else ptr->set_str(sexp_string);
     }
   }
   else return false;

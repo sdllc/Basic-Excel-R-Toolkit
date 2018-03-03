@@ -24,6 +24,7 @@
     <ClCompile Include="..\PB\variable.pb.cc" />
     <ClCompile Include="console_graphics_device.cc" />
     <ClCompile Include="controlr.cc" />
+    <ClCompile Include="convert.cc" />
     <ClCompile Include="rinterface_common.cc" />
     <ClCompile Include="rinterface_win.cc" />
   </ItemGroup>
@@ -36,6 +37,7 @@
     <ClInclude Include="console_graphics_device.h" />
     <ClInclude Include="controlr.h" />
     <ClInclude Include="controlr_common.h" />
+    <ClInclude Include="convert.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\PB\variable.proto" />
