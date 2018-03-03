@@ -1102,7 +1102,6 @@ export class TerminalImplementation {
     
     this.state_.language_interface_.AttachTerminal(this);
 
-
   }
 
 }

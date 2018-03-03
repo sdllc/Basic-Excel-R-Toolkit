@@ -77,6 +77,10 @@ export class RInterface extends LanguageInterface {
       terminal.InsertGraphic(x.height, x.element);
     });
 
+    this.subscribe(x => {
+      if(x.type === "paste") terminal.Paste(x.data);
+    })
+
   }
 
   async AutocompleteCallback(buffer:string, position:number) {
@@ -370,8 +374,8 @@ export class RInterface extends LanguageInterface {
       if(selected_count >= 0){
         let selected = data.filter(x => x.selected).map(x => `"${x.name}"`);
         console.info("install", selected_count, selected);
-        let command = `install.packages(${selected.join(", ")})`
-        this.pipe_.Internal(command);
+        let command = `install.packages(${selected.join(", ")})\n`;
+        this.next({type: "paste", data:command});
         success = true;
       }
     }

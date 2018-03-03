@@ -4,8 +4,15 @@ import {Pipe2} from '../io/management_pipe';
 import {StdIOPipe} from '../io/stdio_pipe';
 import { TerminalImplementation } from './terminal_implementation';
 
+import * as Rx from 'rxjs';
+
+export interface LanguageNotification {
+  type:string;
+  data:any;
+}
+
 /** generic language interface */
-export class LanguageInterface {
+export class LanguageInterface extends Rx.Subject<LanguageNotification> {
 
   // language name. needs to match what comes out of the pipe
   static language_name_: string;
@@ -28,8 +35,10 @@ export class LanguageInterface {
   // shell text colorizer/formatter
   formatter_:any = null;
 
-  // constructor(){} // unless we need it for something
-
+  constructor(){
+    super();
+  } 
+  
   InitPipe(pipe:Pipe, name:string){ 
 
     this.pipe_ = pipe;
