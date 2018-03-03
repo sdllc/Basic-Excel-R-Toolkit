@@ -13,7 +13,7 @@ fairly static, so we will update it periodically but infrequently.  When the
 data is updated the file will be checked in, so reading the latest commit 
 should give the most recent data.  Currently:
 
-https://cdn.rawgit.com/sdllc/BERTConsole/a96ccbf9eb74849d17fe2f8fa6feb18d62346ff5/util/packages.json
+https://cdn.rawgit.com/sdllc/Basic-Excel-R-Toolkit/520751144043ca48383de3cfc041aad082da59f5/Util/packages.json
 
 Thanks to [RawGit][1] and [StackPath][2].
 
