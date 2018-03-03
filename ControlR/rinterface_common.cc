@@ -474,52 +474,6 @@ void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector <SEXP> en
       arr->set_cols(ncol);
     }
 
-    // FIXME: should be able to template some of this 
-    /*
-    if (Rf_isLogical(sexp))
-    {
-      for (int i = 0; i < len; i++) {
-        auto ptr = arr ? arr->add_data() : var;
-        int lgl = (INTEGER(sexp))[i];
-        if (lgl == NA_LOGICAL) {
-          ptr->mutable_err()->set_type(BERTBuffers::ErrorType::NA);
-        }
-        else {
-          ptr->set_boolean(lgl ? true : false);
-        }
-      }
-    }
-    else if (Rf_isInteger(sexp))
-    {
-      for (int i = 0; i < len; i++) {
-        auto ptr = arr ? arr->add_data() : var;
-        ptr->set_integer(INTEGER(sexp)[i]);
-      }
-    }
-    else if (rtype == INTSXP) { // wtf?
-
-      for (int i = 0; i < len; i++) {
-        auto ptr = arr ? arr->add_data() : var;
-        ptr->set_integer(INTEGER(sexp)[i]);
-      }
-
-    }
-    else if (isReal(sexp) || Rf_isNumber(sexp))
-    {
-      for (int i = 0; i < len; i++) {
-        auto ptr = arr ? arr->add_data() : var;
-        ptr->set_real(REAL(sexp)[i]);
-      }
-    }
-    else if (isString(sexp))
-    {
-      for (int i = 0; i < len; i++) {
-        auto ptr = arr ? arr->add_data() : var;
-        SEXP strsxp = STRING_ELT(sexp, i);
-        ptr->set_str(CHAR(Rf_asChar(strsxp)));
-      }
-    }
-    */
     if (HandleSimpleTypes(sexp, len, rtype, arr, var)) {
       // ...
     }
@@ -535,27 +489,7 @@ void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector <SEXP> en
         SEXPToVariable(arr->add_data(), VECTOR_ELT(sexp, i));
       }
     }
-
-    /*
-    else if (rtype == SYMSXP) {
-
-    if (symbol_as_missing) {
-
-    // we see symbol types for empty arguments in constructed
-    // COM functions. however I'm not sure that's the _only_
-    // time we see symbols, so this is problematic.
-
-    // on the other hand, we were not handling this before at
-    // all, so it's not going to be any more broken.
-
-    for (int i = 0; i < len; i++) {
-    arr->add_data()->set_missing(true);
-    }
-
-    }
-    }
-    */
-
+    
     SEXP names = getAttrib(sexp, R_NamesSymbol);
     if (names && TYPEOF(names) != 0) {
       int nameslen = Rf_length(names);
@@ -565,7 +499,31 @@ void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector <SEXP> en
         std::string str(CHAR(Rf_asChar(name)));
         if (str.length()) { ref->set_name(str); }
       }
+    }
 
+    SEXP dimnames = getAttrib(sexp, R_DimNamesSymbol);
+    if (dimnames && TYPEOF(dimnames) != 0) {
+      if (TYPEOF(dimnames) == VECSXP) {
+        int dimnames_length = Rf_length(dimnames);
+        if (dimnames_length > 0) {
+          auto rownames = arr->mutable_rownames();
+          SEXP name_list = VECTOR_ELT(dimnames, 0);
+          int nameslen = Rf_length(name_list);
+          for (int i = 0; i < nameslen; i++)  rownames->Add(CHAR(Rf_asChar(STRING_ELT(name_list, i))));
+        }
+        if (dimnames_length > 1) {
+          auto colnames = arr->mutable_colnames();
+          SEXP name_list = VECTOR_ELT(dimnames, 1);
+          int nameslen = Rf_length(name_list);
+          for (int i = 0; i < nameslen; i++)  colnames->Add(CHAR(Rf_asChar(STRING_ELT(name_list, i))));
+        }
+        if (dimnames_length > 2) {
+          std::cout << " * unhandled dimnames: length is " << dimnames_length << std::endl;
+        }
+      }
+      else {
+        std::cout << " * unhandled: dimnames type is " << TYPEOF(dimnames) << std::endl;
+      }
     }
 
   }
