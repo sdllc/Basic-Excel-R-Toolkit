@@ -490,8 +490,10 @@ export class TerminalImplementation {
       this.Write('\r\n');
       let line = this.state_.line_info.buffer;
       this.state_.line_info.set(""); 
+      this.node_.classList.add("busy");
       this.state_.Execute(line).then(x => this.Prompt(x));
     }
+    else this.node_.classList.remove("busy");
 
   }
 
@@ -704,6 +706,7 @@ export class TerminalImplementation {
             });
             */
 
+            this.node_.classList.add("busy");
             this.state_.Execute(line).then(x => {
               this.Prompt(x);
               resolve(x);
@@ -861,6 +864,8 @@ export class TerminalImplementation {
                 this.Prompt(x);
               });
               */
+
+              this.node_.classList.add("busy");
               this.state_.Execute(line).then(x => this.Prompt(x));
 
             }
