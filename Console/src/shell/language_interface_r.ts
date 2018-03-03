@@ -306,7 +306,12 @@ export class RInterface extends LanguageInterface {
 
     }
 
-    let filtered;
+    // what is this about: for a fixed height list, we only measure
+    // one node. we want to measure the longest-width one, so width
+    // is padded out appropriately, without requiring measuring all 
+    // of them. we can give the list a hint telling it to measure a
+    // specific node.
+
     let longest_hint = 0;
     let longest_length = 0;
 
@@ -344,10 +349,9 @@ export class RInterface extends LanguageInterface {
       }
       else {
         let rex = new RegExp(filter.value.trim(), "i");
-        filtered = data.filter(x => {
+        let filtered = data.filter(x => {
           return rex.test(x.name + " " + x.description);
         })
-        console.info("len", filtered.length);
         options.data = filtered;
         options.data_length = filtered.length;
       }
@@ -375,7 +379,6 @@ export class RInterface extends LanguageInterface {
     filter.removeEventListener("input", update_filter);
     node.removeChild(inner_node); // _should_ dump listeners. fingers crossed.
 
-    console.info("Done");
     return success;
     
   }
@@ -525,7 +528,6 @@ export class RInterface extends LanguageInterface {
     }
     virtual_list.CleanUp();
     node.removeChild(inner_node); // _should_ dump listeners. fingers crossed.
-    console.info("Done");
 
     return success;
   }

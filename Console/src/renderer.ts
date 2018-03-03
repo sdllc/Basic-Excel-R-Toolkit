@@ -218,7 +218,7 @@ Preferences.filter(x => x.preferences).first().subscribe(x => {
       if(properties.active_tab !== active) properties.active_tab = active;
     });
 
-    setTimeout(() => { language_interfaces[0].SelectPackages(); }, 100)
+    // setTimeout(() => { language_interfaces[0].SelectPackages(); }, 100)
 
   });
 

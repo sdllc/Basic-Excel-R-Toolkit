@@ -13,10 +13,14 @@ export interface ListOptions {
   format:FormatItemFunction;
 
   // data passed to the format function. not necessarily an array
-  // (at least for mirrors, a column-oriented list of arrays)
+  // (at least for mirrors, a column-oriented list of arrays).
+  //
+  // FIXME: this is unecessary, because we are passing in the format
+  // function. just do it on the other side.
+  //
   data:any;
 
-  // length of data.
+  // length of data. required because data is not necessarily an array
   data_length:number;
 
   // the scroll node -- this one has scrollbars and generates events
@@ -33,6 +37,8 @@ export interface ListOptions {
   // particularly if we update. 
   fixed_height?:boolean;
 
+  // which one to measure for fixed-height lists (generally going to be 
+  // because of width, if we want to push out to the widest node)
   hint?:number;
 
 }
@@ -66,7 +72,7 @@ export class VirtualList {
 
   private static measurement_node_:HTMLElement;
 
-  static EnsureMeasurementNodes(){
+  static EnsureMeasurementNode(){
     if(!this.measurement_node_ ){
       this.measurement_node_ = document.createElement("div");
       this.measurement_node_.id = "list-measurement-node";
@@ -123,7 +129,7 @@ export class VirtualList {
    */
   private Measure(options:ListOptions, updating = false){
 
-    VirtualList.EnsureMeasurementNodes();
+    VirtualList.EnsureMeasurementNode();
     VirtualList.measurement_node_.className = options.containing_class_name || ""; 
 
     let test_node;
@@ -146,6 +152,10 @@ export class VirtualList {
     let data_length = options.data_length;
 
     if( this.options_.fixed_height){
+
+      // since we are using shared nodes, this is not necessarily 
+      // going to be a safe assumption. 
+      // FIXME: use an instance-specific child node. 
 
       if(!updating) options.format(test_node, data, options.hint||0);
 
@@ -183,7 +193,13 @@ export class VirtualList {
 
   }
 
+  /**
+   * update. generally for filtering.
+   */
   Update(options:ListOptions){
+
+    // FIXME: this may be generating two paint calls 
+
     this.options_ = options;
     this.Measure(options, true);
     this.ScrollIntoView(0);
