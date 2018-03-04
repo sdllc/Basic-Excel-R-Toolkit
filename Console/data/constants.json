@@ -23,6 +23,10 @@
     "executeSelection": "Execute Selection"
   },
 
+  "shell": {
+    "imageTypes": "# Images"
+  },
+
   "errors": {
     "openFileError": "We couldn't open the file. Please make sure the file exists and is readable."
   },

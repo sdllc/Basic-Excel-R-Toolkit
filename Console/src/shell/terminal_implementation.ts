@@ -22,6 +22,8 @@ import { Pipe, ConsoleMessage, ConsoleMessageType } from '../io/pipe';
 import { ShellHistory, LineInfo, TerminalState } from './terminal_state';
 import { Utilities } from '../common/utilities';
 
+const Constants = require("../../data/constants.json");
+
 import * as Rx from 'rxjs';
 
 // for save image dialog
@@ -428,25 +430,24 @@ export class TerminalImplementation {
   Prompt(prompt:PromptMessage) {
 
     let text = prompt.text;
+    let exec_immediately = false;
 
     this.state_.at_prompt = true;
 
     if( prompt.push_stack ){
 
       console.info("push prompt stack: ", JSON.stringify(prompt) );
-
-      this.state_.prompt_stack_.unshift();
+      this.state_.line_info = new LineInfo(prompt.text);
+      this.state_.prompt_stack_.unshift(new LineInfo(prompt.text));
 
       // move left and clear line before writing
-      this.MoveCursor(-this.state_.line_info.char_width_full_text);
-      this.ClearRight();
+      //this.MoveCursor(-this.state_.line_info.char_width_full_text);
+      //this.ClearRight();
+      this.Write('\r\n');
+ 
+
     }
-
-    // there may be something pending to do
-
-    let exec_immediately = false;
-
-    if( prompt.pop_stack ){
+    else if( prompt.pop_stack ){
       this.state_.line_info = this.state_.prompt_stack_.shift();
     }
     else {
@@ -490,7 +491,7 @@ export class TerminalImplementation {
       this.Write('\r\n');
       let line = this.state_.line_info.buffer;
       this.state_.line_info.set(""); 
-      this.node_.classList.add("busy");
+      this.node_.classList.add("busy"); // should already be busy
       this.state_.Execute(line).then(x => this.Prompt(x));
     }
     else this.node_.classList.remove("busy");
@@ -513,6 +514,7 @@ export class TerminalImplementation {
 
     if(/canvas/i.test(tag)){
       src = target.toDataURL("image/png");
+      console.info("png");
     }
     else if(/img/i.test(tag)){
       let m = (target.src||"").match(/data\:image\/(.*?)[,;]/);
@@ -527,20 +529,16 @@ export class TerminalImplementation {
       }
     }
 
-    // FIXME: constants
-
     if(src){
       let file_name = remote.dialog.showSaveDialog({
-        // title: "Save Image As...", // can use default, but think about constant
         filters: [
-          // this one should change to constant, but needs interpolation (e.g. "Images PNG" in FR)
-          { name: `${image_type.toUpperCase()} Images`, extensions: [image_type] } 
+          { name:  Constants.shell.imageTypes.replace(/#/, image_type.toUpperCase()), extensions: [image_type] } 
         ]
       });
       if(file_name){
         src = src.replace(/^.*?,/, "");
-        if( image_type === "svg" ) fs.writeFile(file_name, Base64.decode(src), "utf8", () => { console.info("image write complete") });
-        else fs.writeFile(file_name, Base64.decode(src), "binary", () => { console.info("image write complete") });
+        if( image_type === "svg" ) fs.writeFile(file_name, Base64.decode(src), "utf8", () => { console.info("image write complete (svg)") });
+        else fs.writeFile(file_name, atob(src), "binary", () => { console.info("image write complete (binary)") });
       }
     }
     
