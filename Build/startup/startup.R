@@ -98,6 +98,7 @@ library(BERTModule, lib.loc=paste0(Sys.getenv("BERT2_HOME_DIRECTORY"), "module")
       # OK this way they're easier to read, at least
 
       env <- new.env();
+
       lapply( sort(names(descriptor$functions)), function(name){
         ref <- descriptor$functions[name][[1]]
         if(length(ref$arguments) == 0){

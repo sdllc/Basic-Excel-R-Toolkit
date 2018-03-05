@@ -26,6 +26,9 @@ export interface LocalMenuItem {
   // key accelerator
   accelerator?:string;
 
+  // hide if there are no items. for dynamic menus.
+  hideIfEmpty?:boolean;
+
   // arbitrary data
   data?:any;
 
@@ -136,6 +139,14 @@ export class MenuUtilities {
     this.events_.next({id, item});
   }
 
+  public static AppendMenu(id:string, items){
+    let item = this.Find(id);
+    if(id){
+      item.items = items;
+      this.Update();
+    }
+  }
+
   static Install(template){
     this.template_ = template;
     this.Update();
@@ -157,7 +168,11 @@ export class MenuUtilities {
         if( item.items && item.items.length ) options.submenu = build_menu(item.items, options.id);
         else if(item.items) options.submenu = [];
         else options.click = this.Click.bind(this, options.id, item);
-        menu.append(new MenuItem(options));
+
+        // support "hide if empty"
+        if(!item.hideIfEmpty || (item.items && item.items.length))
+          menu.append(new MenuItem(options));
+
       });
       return menu;
     }

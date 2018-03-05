@@ -50,15 +50,7 @@
       },
       {
         "label": "Packages", "id": "packages",
-        "items": [
-          { "label": "R", "id": "r", "enabled": false, "items": [
-            { "label": "Choose CRAN Mirror", "id": "choose-mirror" },
-            { "label": "Install Packages", "id": "install-packages" }
-          ] },
-          { "label": "Julia", "id": "julia", "enabled": false, "items": [
-            { "label": "Install Packages", "id": "install-packages" }
-          ] }
-        ]
+        "hideIfEmpty": true
       },
       {
         "label": "Help", "id": "help",
@@ -71,5 +63,10 @@
         ]
       }
     ]
-  }
+  },
+  "r-packages": [
+    { "label": "R Packages:", "id": "r", "enabled": false },
+    { "label": "Choose CRAN Mirror", "id": "r-choose-mirror" },
+    { "label": "Install Packages", "id": "r-install-packages" }
+  ]
 }

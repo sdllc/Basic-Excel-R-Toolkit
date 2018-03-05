@@ -21,6 +21,9 @@ import { VirtualList } from '../ui/virtual_list';
 
 const Constants = require("../../data/constants.json");
 
+// FIXME: move to different file, language-specific
+const ApplicationMenu = require( "../../data/menus/application_menu.json");
+
 /** specialization: R */
 export class RInterface extends LanguageInterface {
 
@@ -28,14 +31,22 @@ export class RInterface extends LanguageInterface {
 
   formatter_ = new RTextFormatter();
 
+  static UpdateMenus(){
+
+    let menu_items = ApplicationMenu['r-packages'];
+    MenuUtilities.AppendMenu("main.packages", menu_items);
+
+  }
+
   constructor(){
     super();
+    RInterface.UpdateMenus();
     MenuUtilities.events.subscribe(event => {
       switch(event.id){
-      case "main.packages.r.choose-mirror":
+      case "main.packages.r-choose-mirror":
         this.ChooseMirror();
         break; 
-      case "main.packages.r.install-packages":
+      case "main.packages.r-install-packages":
         this.SelectPackages();
         break; 
       }

@@ -188,7 +188,7 @@ Preferences.filter(x => x.preferences).first().subscribe(x => {
                     instance.InitPipe(pipe, pipe_name);
                     terminals.Add(instance);
 
-                    MenuUtilities.SetEnabled(`main.packages.${language.toLowerCase()}`, true);
+                    // MenuUtilities.SetEnabled(`main.packages.${language.toLowerCase()}`, true);
 
                     return true;
                   }
