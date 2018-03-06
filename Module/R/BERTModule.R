@@ -150,7 +150,7 @@ BERT.graphics.device <- function( name="BERT-default", bgcolor="white", width=40
 	x <- dev.list();
 	if((length(x) > 0) & (name %in% names(x))){ dev.set( x[[name]]) }
 	else {
-    .Call( "create_device", name, bgcolor, width, height, pointsize, PACKAGE='BERTModule' );
+    .Call( "spreadsheet_device", name, bgcolor, width, height, pointsize, PACKAGE='BERTModule' );
 	}
 }
 

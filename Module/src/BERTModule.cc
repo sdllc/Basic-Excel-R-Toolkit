@@ -138,7 +138,7 @@ pDevDesc device_new_simple() {
 
 /**
  * create graphics device, add to display list 
- */ 
+ * / 
 int create_device( std::string name, std::string background, int width, int height, int pointsize) 
 {
     rcolor bg = R_GE_str2col(background.c_str());
@@ -160,6 +160,7 @@ int create_device( std::string name, std::string background, int width, int heig
     return device;
   
 }
+*/
 
 /**
  * creates and initializes console graphics device. parameters 
@@ -209,10 +210,49 @@ SEXP CreateConsoleDevice(SEXP background, SEXP width, SEXP height, SEXP pointsiz
   
 }
 
-SEXP BERTModule_create_device( SEXP name, SEXP background, SEXP width, SEXP height, SEXP pointsize ){
-  int dev = create_device( CHAR(STRING_ELT(name, 0)), CHAR(STRING_ELT(background, 0)),
-    Rf_asReal( width ), Rf_asReal( height ), Rf_asReal( pointsize ));
-  return Rf_ScalarInteger(dev);
+/**
+ * create spreadsheet device, based on the new console device. 
+ * doesn't take a type, but takes a name so we can identify it
+ */ 
+SEXP CreateSpreadsheetDevice(SEXP name, SEXP background, SEXP width, SEXP height, SEXP pointsize){
+
+  R_GE_checkVersionOrDie(R_GE_version);
+
+  // this will raise an error. there's an alternative which 
+  // returns boolean, which might allow more graceful failure.
+
+  R_CheckDeviceAvailable(); 
+
+  // create the device. we'll need to wrap this in an EXTPTR 
+  // struct in case it's a 64 bit pointer
+
+  pDevDesc dev = device_new_simple(); // bg, width, height, pointsize);
+  if(!dev) return R_NilValue;
+
+  // this is another calloc we need to leave on this 
+  // side of the wall
+
+  pGEDevDesc gd = GEcreateDevDesc(dev);
+
+  SEXP argument_list = PROTECT(Rf_allocVector(VECSXP, 6));
+  SET_VECTOR_ELT(argument_list, 0, name);
+  SET_VECTOR_ELT(argument_list, 1, background);
+  SET_VECTOR_ELT(argument_list, 2, width);
+  SET_VECTOR_ELT(argument_list, 3, height);
+  SET_VECTOR_ELT(argument_list, 4, pointsize);
+
+  // note we're now passing the pGEDevDesc instead of the inner 
+  // pDevDesc, because we need both and we can access the one 
+  // from the other
+
+  SET_VECTOR_ELT(argument_list, 5, PROTECT(R_MakeExternalPtr(gd, R_NilValue, R_NilValue)));
+
+  SEXP device = Callback2(Rf_mkString("spreadhseet-device"), argument_list); 
+
+  UNPROTECT(2);
+
+  return device;
+  
 }
 
 void CloseConsole(){
@@ -227,6 +267,7 @@ extern "C" {
     void R_init_BERTModule(DllInfo *info)
     {
         static R_CallMethodDef methods[]  = {
+            { "spreadsheet_device", (DL_FUNC)&CreateSpreadsheetDevice, 5},
             { "console_device", (DL_FUNC)&CreateConsoleDevice, 5},
             { "history", (DL_FUNC)&History, 1},
             { "close_console", (DL_FUNC)&CloseConsole, 0},

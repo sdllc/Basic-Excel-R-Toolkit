@@ -21,37 +21,34 @@
     <ClCompile Include="..\PB\variable.pb.cc">
       <Filter>PB</Filter>
     </ClCompile>
-    <ClCompile Include="console_graphics_device.cc">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\Common\pipe.cc">
       <Filter>Common</Filter>
-    </ClCompile>
-    <ClCompile Include="controlr.cc">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="rinterface_win.cc">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="rinterface_common.cc">
-      <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\Common\message_utilities.cc">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="convert.cc">
+    <ClCompile Include="src\console_graphics_device.cc">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\controlr.cc">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\convert.cc">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rinterface_common.cc">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rinterface_win.cc">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\spreadsheet_graphics_device.cc">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\PB\variable.pb.h">
       <Filter>PB</Filter>
-    </ClInclude>
-    <ClInclude Include="controlr_common.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="console_graphics_device.h">
-      <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\Common\pipe.h">
       <Filter>Common</Filter>
@@ -65,10 +62,19 @@
     <ClInclude Include="..\Common\message_utilities.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="controlr.h">
+    <ClInclude Include="include\console_graphics_device.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="convert.h">
+    <ClInclude Include="include\controlr.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\controlr_common.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\convert.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\spreadsheet_graphics_device.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
