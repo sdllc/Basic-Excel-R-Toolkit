@@ -247,7 +247,7 @@ SEXP CreateSpreadsheetDevice(SEXP name, SEXP background, SEXP width, SEXP height
 
   SET_VECTOR_ELT(argument_list, 5, PROTECT(R_MakeExternalPtr(gd, R_NilValue, R_NilValue)));
 
-  SEXP device = Callback2(Rf_mkString("spreadhseet-device"), argument_list); 
+  SEXP device = Callback2(Rf_mkString("spreadsheet-device"), argument_list); 
 
   UNPROTECT(2);
 
