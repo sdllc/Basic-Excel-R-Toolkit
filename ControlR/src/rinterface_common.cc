@@ -3,6 +3,7 @@
 #include "controlr.h"
 #include "controlr_common.h"
 #include "console_graphics_device.h"
+#include "spreadsheet_graphics_device.h"
 #include "convert.h"
 
 // try to store fuel now, you jerks
@@ -757,6 +758,10 @@ SEXP COMCallback(SEXP function_name, SEXP call_type, SEXP index, SEXP pointer_ke
   return sexp_result;
 }
 
+void UpdateSpreadsheetGraphics() {
+  SpreadsheetGraphicsDevice::UpdatePendingGraphics();
+}
+
 SEXP RCallback(SEXP command, SEXP data) {
 
   static uint32_t callback_id = 1;
@@ -790,9 +795,28 @@ SEXP RCallback(SEXP command, SEXP data) {
     type = CHAR(Rf_asChar(VECTOR_ELT(data, 4)));
     pointer = R_ExternalPtrAddr(VECTOR_ELT(data, 5));
 
-    return CreateConsoleDevice(background, width, height, pointsize, type, pointer);
+    return ConsoleGraphicsDevice::CreateConsoleDevice(background, width, height, pointsize, type, pointer);
   }
-  else if (!string_command.compare("create-device")) {
+  if (!string_command.compare("spreadsheet-device")) {
+
+    // validate args?
+    if (TYPEOF(data) != VECSXP) return Rf_ScalarLogical(0);
+    if (Rf_length(data) != 6) return Rf_ScalarLogical(0);
+
+    std::string background, name;
+    double width, height, pointsize;
+    void *pointer;
+
+    name = CHAR(Rf_asChar(VECTOR_ELT(data, 0)));
+    background = CHAR(Rf_asChar(VECTOR_ELT(data, 1)));
+    width = Rf_asReal(VECTOR_ELT(data, 2));
+    height = Rf_asReal(VECTOR_ELT(data, 3));
+    pointsize = Rf_asReal(VECTOR_ELT(data, 4));
+    pointer = R_ExternalPtrAddr(VECTOR_ELT(data, 5));
+
+    return SpreadsheetGraphicsDevice::CreateSpreadsheetDevice(name, background, width, height, pointsize, pointer);
+  }
+  else if (!string_command.compare("spreadsheet-device")) {
     std::cerr << "ENOTIMPL: " << string_command << std::endl;
     return Rf_ScalarLogical(0);
   }

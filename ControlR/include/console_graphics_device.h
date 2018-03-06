@@ -4,7 +4,11 @@
 
 #include <Rinternals.h>
 
-SEXP CreateConsoleDevice(const std::string &background, double width, double height, double pointsize, const std::string &type, void * pointer);
+namespace ConsoleGraphicsDevice {
+
+  SEXP CreateConsoleDevice(const std::string &background, double width, double height, double pointsize, const std::string &type, void * pointer);
+
+};
 
 #endif // #ifndef __CONSOLE_GRAPHICS_DEVICE_H
 

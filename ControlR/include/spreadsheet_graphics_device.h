@@ -4,7 +4,14 @@
 
 #include <Rinternals.h>
 
-SEXP CreateSpreadsheetDevice(const std::string &background, double width, double height, double pointsize, const std::string &name, void * pointer);
+namespace SpreadsheetGraphicsDevice {
+
+  SEXP CreateSpreadsheetDevice(const std::string &name, const std::string &background, double width, double height, double pointsize, void * pointer);
+  void UpdatePendingGraphics();
+
+};
+
+
 
 #endif // #ifndef __SPREADSGEET_GRAPHICS_DEVICE_H
 

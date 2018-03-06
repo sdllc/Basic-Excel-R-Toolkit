@@ -45,6 +45,9 @@
     <ClCompile Include="src\spreadsheet_graphics_device.cc">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="src\gdi_graphics_device.cc">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\PB\variable.pb.h">
@@ -75,6 +78,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\spreadsheet_graphics_device.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\gdi_graphics_device.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>

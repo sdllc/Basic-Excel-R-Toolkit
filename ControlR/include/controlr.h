@@ -105,6 +105,14 @@ void RSetUserBreak(const char *msg = 0);
 void RTick();
 
 /**
+ * do any pending graphics updates. these are scheduled rather than real-time 
+ * because they are expensive. it might even be worth getting them off the 
+ * main thread (meaning out of this function) because we don't want to wait.
+ */
+void UpdateSpreadsheetGraphics();
+
+
+/**
  * returns version as reported by the loaded R library
  */
 void RGetVersion(int32_t *major, int32_t *minor, int32_t *patch);
