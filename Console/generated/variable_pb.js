@@ -5741,7 +5741,8 @@ proto.BERTBuffers.CallType = {
 proto.BERTBuffers.CallTarget = {
   LANGUAGE: 0,
   COM: 1,
-  SYSTEM: 2
+  SYSTEM: 2,
+  GRAPHICS: 3
 };
 
 goog.object.extend(exports, proto.BERTBuffers);

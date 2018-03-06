@@ -111,6 +111,7 @@ enum CallTarget {
   language = 0;
   COM = 1;
   system = 2;
+  graphics = 3;
 }
 
 /**
@@ -161,6 +162,8 @@ message GraphicsCommand  {
 /**
  * although colors are passed as 4x 32-bit, they're 
  * actually only 8 bits each.
+ *
+ * FIXME: who passes colors as 128 bits? that's not a thing.
  */
 message Color {
   uint32 a = 1;

@@ -832,12 +832,12 @@ void AddDescriptorsImpl() {
       "fers.FunctionListH\000B\013\n\toperation*N\n\tErro"
       "rType\022\013\n\007GENERIC\020\000\022\006\n\002NA\020\001\022\007\n\003INF\020\002\022\t\n\005P"
       "ARSE\020\003\022\r\n\tEXECUTION\020\004\022\t\n\005OTHER\020\017*(\n\010Call"
-      "Type\022\n\n\006method\020\000\022\007\n\003get\020\001\022\007\n\003put\020\002*/\n\nCa"
+      "Type\022\n\n\006method\020\000\022\007\n\003get\020\001\022\007\n\003put\020\002*=\n\nCa"
       "llTarget\022\014\n\010language\020\000\022\007\n\003COM\020\001\022\n\n\006syste"
-      "m\020\002B\002H\001b\006proto3"
+      "m\020\002\022\014\n\010graphics\020\003B\002H\001b\006proto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 2855);
+      descriptor, 2869);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "variable.proto", &protobuf_RegisterTypes);
 }
@@ -896,6 +896,7 @@ bool CallTarget_IsValid(int value) {
     case 0:
     case 1:
     case 2:
+    case 3:
       return true;
     default:
       return false;

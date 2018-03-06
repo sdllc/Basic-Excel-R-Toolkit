@@ -203,12 +203,13 @@ enum CallTarget {
   language = 0,
   COM = 1,
   system = 2,
+  graphics = 3,
   CallTarget_INT_MIN_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32min,
   CallTarget_INT_MAX_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32max
 };
 bool CallTarget_IsValid(int value);
 const CallTarget CallTarget_MIN = language;
-const CallTarget CallTarget_MAX = system;
+const CallTarget CallTarget_MAX = graphics;
 const int CallTarget_ARRAYSIZE = CallTarget_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* CallTarget_descriptor();
