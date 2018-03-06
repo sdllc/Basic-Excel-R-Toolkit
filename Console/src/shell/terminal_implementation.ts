@@ -1001,6 +1001,7 @@ export class TerminalImplementation {
       break;
 
     default:
+      //console.info(`PC (${console_message.text.length})`, console_message.text);
       this.PrintConsole(console_message.text, this.state_.at_prompt);
       break;
 
