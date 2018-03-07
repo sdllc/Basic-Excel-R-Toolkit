@@ -91,6 +91,9 @@
     <ClInclude Include="..\..\Common\module_functions.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="include\bert_graphics.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\PB\variable.proto">
@@ -142,6 +145,9 @@
     </ClCompile>
     <ClCompile Include="..\..\Common\module_functions.cc">
       <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="src\bert_graphics.cc">
+      <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

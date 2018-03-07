@@ -9,6 +9,8 @@
 #include <codecvt>
 
 #include "gdi_graphics_device.h"
+#include "variable.pb.h"
+#include "controlr.h"
 
 namespace gdi_graphics_device {
 
@@ -180,11 +182,52 @@ namespace gdi_graphics_device {
 
   }
 
+  void Device::UpdateSize() {
+
+    BERTBuffers::CallResponse call, response;
+    call.set_wait(true);
+    auto function_call = call.mutable_function_call();
+    function_call->set_target(BERTBuffers::CallTarget::graphics);
+    auto graphics_update = function_call->add_arguments()->mutable_graphics();
+    graphics_update->set_command(BERTBuffers::GraphicsUpdateCommand::query_size);
+    graphics_update->set_name(name());
+    Callback(call, response);
+
+    auto result = response.result();
+
+    if (result.value_case() == BERTBuffers::Variable::ValueCase::kGraphics) {
+      const auto &graphics_response = result.graphics();
+
+      uint32_t width = graphics_response.width();
+      uint32_t height = graphics_response.height();
+
+      if (width_ != width || height_ != height) {
+        Gdiplus::Bitmap *bitmap;
+        if (bitmap_) {
+          bitmap = (Gdiplus::Bitmap *)bitmap_;
+          delete bitmap;
+        }
+        bitmap = new Gdiplus::Bitmap(width, height, PixelFormat32bppARGB);
+        bitmap_ = (void*)bitmap;
+        width_ = width;
+        height_ = height;
+      }
+
+    }
+
+  }
+
   void Device::NewPage(const GraphicsContext *context, int32_t width, int32_t height, uint32_t color) {
 
+    // this won't happen here, it will be called before this in UpdateSize
+
     if (width_ != width || height_ != height) {
-      if (bitmap_) delete bitmap_;
-      Gdiplus::Bitmap *bitmap = new Gdiplus::Bitmap(width, height, PixelFormat32bppARGB);
+      Gdiplus::Bitmap *bitmap;
+        if (bitmap_) {
+          bitmap = (Gdiplus::Bitmap *)bitmap_;
+          delete bitmap;
+        }
+      bitmap = new Gdiplus::Bitmap(width, height, PixelFormat32bppARGB);
       bitmap_ = (void*)bitmap;
       width_ = width;
       height_ = height;

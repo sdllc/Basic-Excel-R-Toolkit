@@ -26,7 +26,7 @@ namespace SpreadsheetGraphicsDevice {
 
   // callbacks: implemented
 
-  void close_device(pDevDesc dd) {
+  void CloseDevice(pDevDesc dd) {
 
     gdi_graphics_device::Device *device = (gdi_graphics_device::Device*)(dd->deviceSpecific);
     if (device) {
@@ -41,55 +41,72 @@ namespace SpreadsheetGraphicsDevice {
     dd->deviceSpecific = 0;
   }
   
-  void new_page(const pGEcontext gc, pDevDesc dd) {
+  void NewPage(const pGEcontext gc, pDevDesc dd) {
     gdi_graphics_device::Device *device = (gdi_graphics_device::Device*)(dd->deviceSpecific);
+
+    device->UpdateSize();
+    dd->right = dd->left + device->width();
+    dd->bottom = dd->top + device->height();
+
     device->NewPage(reinterpret_cast<gdi_graphics_device::GraphicsContext*>(gc), dd->right, dd->bottom, dd->startfill );
   }
 
-  void draw_line(double x1, double y1, double x2, double y2, const pGEcontext gc, pDevDesc dd) {
+  void DrawLine(double x1, double y1, double x2, double y2, const pGEcontext gc, pDevDesc dd) {
     gdi_graphics_device::Device *device = (gdi_graphics_device::Device*)(dd->deviceSpecific);
     device->DrawLine(reinterpret_cast<gdi_graphics_device::GraphicsContext*>(gc), x1, y1, x2, y2);
   }
 
-  void draw_rect(double x1, double y1, double x2, double y2, const pGEcontext gc, pDevDesc dd) {
+  void DrawRect(double x1, double y1, double x2, double y2, const pGEcontext gc, pDevDesc dd) {
     gdi_graphics_device::Device *device = (gdi_graphics_device::Device*)(dd->deviceSpecific);
     device->DrawRect(reinterpret_cast<gdi_graphics_device::GraphicsContext*>(gc), x1, y1, x2, y2);
   }
 
-  void draw_circle(double x, double y, double r, const pGEcontext gc, pDevDesc dd) {
+  void DrawCircle(double x, double y, double r, const pGEcontext gc, pDevDesc dd) {
     gdi_graphics_device::Device *device = (gdi_graphics_device::Device*)(dd->deviceSpecific);
     device->DrawCircle(reinterpret_cast<gdi_graphics_device::GraphicsContext*>(gc), x, y, r);
   }
   
-  void draw_poly(int n, double *x, double *y, bool filled, const pGEcontext gc, pDevDesc dd) {
+  void DrawPoly(int n, double *x, double *y, bool filled, const pGEcontext gc, pDevDesc dd) {
     gdi_graphics_device::Device *device = (gdi_graphics_device::Device*)(dd->deviceSpecific);
     device->DrawPoly(reinterpret_cast<gdi_graphics_device::GraphicsContext*>(gc), n, x, y, filled);
   }
 
-  void draw_polyline(int n, double *x, double *y, const pGEcontext gc, pDevDesc dd) {
-    draw_poly(n, x, y, false, gc, dd);
+  void DrawPolyline(int n, double *x, double *y, const pGEcontext gc, pDevDesc dd) {
+    DrawPoly(n, x, y, false, gc, dd);
   }
 
-  void draw_polygon(int n, double *x, double *y, const pGEcontext gc, pDevDesc dd) {
-    draw_poly(n, x, y, true, gc, dd);
+  void DrawPolygon(int n, double *x, double *y, const pGEcontext gc, pDevDesc dd) {
+    DrawPoly(n, x, y, true, gc, dd);
   }
 
-  void get_size(double *left, double *right, double *bottom, double *top, pDevDesc dd) {
+  void GetSize(double *left, double *right, double *bottom, double *top, pDevDesc dd) {
     gdi_graphics_device::Device *device = (gdi_graphics_device::Device*)(dd->deviceSpecific);
+
+    // it makes sense that this would be called before new page, but it's not; 
+    // not sure if anyone ever calls this function. we'll need to update size before 
+    // new page?
+
+    // actually ggplot2 calls it all the time. we _don't_ want to udpate here.
+
+    //std::cout << "graphics get_size" << std::endl;
+    //device->UpdateSize();
+
+    // right/bottom will get set on new page
+
     *left = dd->left;
     *top = dd->top;
-    *right = (dd->left + device->width());
-    *bottom = (dd->top + device->height());
+    *right = dd->right; // = (dd->left + device->width());
+    *bottom = dd->bottom; // = (dd->top + device->height());
   }
 
-  double get_strWidth(const char *str, const pGEcontext gc, pDevDesc dd) {
+  double GetStringWidth(const char *str, const pGEcontext gc, pDevDesc dd) {
     gdi_graphics_device::Device *device = (gdi_graphics_device::Device*)(dd->deviceSpecific);
     double width, height;
     device->MeasureText(reinterpret_cast<gdi_graphics_device::GraphicsContext*>(gc), str, &width, &height);
     return width;
   }
 
-  void draw_text(double x, double y, const char *str, double rot, double hadj, const pGEcontext gc, pDevDesc dd) {
+  void RenderText(double x, double y, const char *str, double rot, double hadj, const pGEcontext gc, pDevDesc dd) {
 
     gdi_graphics_device::Device *device = (gdi_graphics_device::Device*)(dd->deviceSpecific);
     if (hadj) {
@@ -99,7 +116,7 @@ namespace SpreadsheetGraphicsDevice {
     
   }
   
-  void get_metric_info(int c, const pGEcontext gc, double* ascent, double* descent, double* width, pDevDesc dd) {
+  void GetMetricInfo(int c, const pGEcontext gc, double* ascent, double* descent, double* width, pDevDesc dd) {
 
     static char str[8];
 
@@ -120,7 +137,7 @@ namespace SpreadsheetGraphicsDevice {
 
   }
 
-  void draw_raster(unsigned int *raster,
+  void DrawRaster(unsigned int *raster,
     int pixel_width, int pixel_height,
     double x, double y,
     double target_width, double target_height,
@@ -135,11 +152,11 @@ namespace SpreadsheetGraphicsDevice {
 
   // callbacks: not implemented
 
-  void draw_path(double *x, double *y, int npoly, int *nper, Rboolean winding, const pGEcontext gc, pDevDesc dd) {
+  void DrawPath(double *x, double *y, int npoly, int *nper, Rboolean winding, const pGEcontext gc, pDevDesc dd) {
     std::cerr << "ENOTIMPL: draw_path" << std::endl; // FIXME
   }
 
-  void set_clip(double x0, double x1, double y0, double y1, pDevDesc dd) {}
+  void SetClip (double x0, double x1, double y0, double y1, pDevDesc dd) {}
 
   // end callbacks
 
@@ -195,23 +212,23 @@ namespace SpreadsheetGraphicsDevice {
     device_list.push_back(device);
 
     dd->deviceSpecific = device;
-    dd->newPage = &new_page;
-    dd->close = &close_device;
-    dd->line = &draw_line;
-    dd->rect = &draw_rect;
-    dd->circle = &draw_circle;
+    dd->newPage = &NewPage;
+    dd->close = &CloseDevice;
+    dd->line = &DrawLine;
+    dd->rect = &DrawRect;
+    dd->circle = &DrawCircle;
 
-    dd->clip = &set_clip;
-    dd->size = &get_size;
-    dd->metricInfo = &get_metric_info;
-    dd->strWidth = &get_strWidth;
-    dd->text = &draw_text;
-    dd->polygon = &draw_polygon;
-    dd->polyline = &draw_polyline;
-    dd->path = &draw_path;
-    dd->raster = &draw_raster;
-    dd->textUTF8 = &draw_text;
-    dd->strWidthUTF8 = &get_strWidth;
+    dd->clip = &SetClip;
+    dd->size = &GetSize;
+    dd->metricInfo = &GetMetricInfo;
+    dd->strWidth = &GetStringWidth;
+    dd->text = &RenderText;
+    dd->polygon = &DrawPolygon;
+    dd->polyline = &DrawPolyline;
+    dd->path = &DrawPath;
+    dd->raster = &DrawRaster;
+    dd->textUTF8 = &RenderText;
+    dd->strWidthUTF8 = &GetStringWidth;
 
 
     GEaddDevice2(gd, name.c_str());
@@ -222,10 +239,15 @@ namespace SpreadsheetGraphicsDevice {
 
   }
 
-  void UpdatePendingGraphics() {
+  std::vector<gdi_graphics_device::Device*> UpdatePendingGraphics() {
+    std::vector<gdi_graphics_device::Device*> updates;
     for (auto device : device_list) {
-      if (device->dirty()) device->Repaint();
+      if (device->dirty()) {
+        device->Repaint();
+        updates.push_back(device);
+      }
     }
+    return updates;
   }
 
 }

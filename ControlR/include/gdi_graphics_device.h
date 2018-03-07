@@ -59,7 +59,7 @@ namespace gdi_graphics_device {
   public:
     bool dirty() { return dirty_; }
     std::string image_path() { return temp_file_path_; }
-
+    std::string name() { return name_; }
     int32_t width() { return width_; }
     int32_t height() { return height_; }
 
@@ -73,6 +73,9 @@ namespace gdi_graphics_device {
 
   public:
     
+    /** */
+    void UpdateSize();
+
     /**
      * update indicates that we need an update, but doesn't actually paint. it will always 
      * trigger the next update; we might prefer that it do some window buffering.
@@ -97,7 +100,6 @@ namespace gdi_graphics_device {
     /**
      * measure text; optionally including ascent and descent
      */
-
     void MeasureText(const GraphicsContext *context, const char *text, double *width, double *height);
     void FontMetrics(const GraphicsContext *context, const std::string &text, double *ascent, double *descent, double *width);
     void RenderText(const GraphicsContext *context, const char *text, double x, double y, double rot);

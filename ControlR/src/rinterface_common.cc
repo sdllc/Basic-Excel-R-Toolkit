@@ -6,6 +6,8 @@
 #include "spreadsheet_graphics_device.h"
 #include "convert.h"
 
+#include "gdi_graphics_device.h"
+
 // try to store fuel now, you jerks
 #undef clear
 #undef length
@@ -759,7 +761,34 @@ SEXP COMCallback(SEXP function_name, SEXP call_type, SEXP index, SEXP pointer_ke
 }
 
 void UpdateSpreadsheetGraphics() {
-  SpreadsheetGraphicsDevice::UpdatePendingGraphics();
+
+  uint32_t graphics_update_id = 0;
+
+  std::vector<gdi_graphics_device::Device*> update_list = SpreadsheetGraphicsDevice::UpdatePendingGraphics();
+
+  if (update_list.size()) {
+
+    BERTBuffers::CallResponse message, response;
+    message.set_id(graphics_update_id++);
+    message.set_wait(true);
+
+    auto function_call = message.mutable_function_call();
+    function_call->set_target(BERTBuffers::CallTarget::graphics);
+    for (auto device : update_list) {
+
+      auto argument = function_call->add_arguments();
+      auto graphics = argument->mutable_graphics();
+
+      graphics->set_width(device->width());
+      graphics->set_height(device->height());
+      graphics->set_name(device->name());
+      graphics->set_path(device->image_path());
+
+    }
+
+    Callback(message, response);
+
+  }
 }
 
 SEXP RCallback(SEXP command, SEXP data) {

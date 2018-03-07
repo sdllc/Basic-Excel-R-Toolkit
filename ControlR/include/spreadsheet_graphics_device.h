@@ -3,11 +3,12 @@
 #define __SPREADSGEET_GRAPHICS_DEVICE_H
 
 #include <Rinternals.h>
+#include "gdi_graphics_device.h"
 
 namespace SpreadsheetGraphicsDevice {
 
   SEXP CreateSpreadsheetDevice(const std::string &name, const std::string &background, double width, double height, double pointsize, void * pointer);
-  void UpdatePendingGraphics();
+  std::vector<gdi_graphics_device::Device*> UpdatePendingGraphics();
 
 };
 

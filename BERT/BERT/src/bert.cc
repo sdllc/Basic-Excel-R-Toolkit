@@ -4,6 +4,7 @@
 #include "XLCALL.h"
 #include "function_descriptor.h"
 #include "bert.h"
+#include "bert_graphics.h"
 #include "basic_functions.h"
 #include "type_conversions.h"
 #include "string_utilities.h"
@@ -602,6 +603,9 @@ int BERT::HandleCallbackOnThread(const BERTBuffers::CallResponse *call, BERTBuff
     else if (callback.target() == BERTBuffers::CallTarget::COM) {
       object_map_.InvokeCOMFunction(callback, *response);
     }
+    else if (callback.target() == BERTBuffers::CallTarget::graphics) {
+      UpdateGraphics(callback, *response);
+    }
     else {
       response->mutable_result()->set_boolean(false);
     }
@@ -612,6 +616,22 @@ int BERT::HandleCallbackOnThread(const BERTBuffers::CallResponse *call, BERTBuff
 
   // response.mutable_value()->set_boolean(true);
   return return_value;
+
+}
+
+void BERT::UpdateGraphics(const BERTBuffers::CompositeFunctionCall &call, BERTBuffers::CallResponse &response) {
+
+  for (auto argument : call.arguments()) {
+    if (argument.value_case() == BERTBuffers::Variable::kGraphics) {
+      const auto &graphics = argument.graphics();
+      if (graphics.command() == BERTBuffers::GraphicsUpdateCommand::query_size) {
+        BERTGraphics::QuerySize(graphics.name(), response, application_dispatch_);
+      }
+      else {
+        BERTGraphics::UpdateGraphics(graphics, application_dispatch_);
+      }
+    }
+  }
 
 }
 

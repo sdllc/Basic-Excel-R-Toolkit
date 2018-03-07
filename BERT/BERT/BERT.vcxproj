@@ -27,6 +27,7 @@
     <ClInclude Include="..\..\Common\windows_api_functions.h" />
     <ClInclude Include="..\..\PB\variable.pb.h" />
     <ClInclude Include="ExcelLib\XLCALL.H" />
+    <ClInclude Include="include\bert_graphics.h" />
     <ClInclude Include="include\callback_info.h" />
     <ClInclude Include="include\com_object_map.h" />
     <ClInclude Include="include\debug_functions.h" />
@@ -55,6 +56,7 @@
     <ClCompile Include="..\..\Common\windows_api_functions.cc" />
     <ClCompile Include="..\..\PB\variable.pb.cc" />
     <ClCompile Include="ExcelLib\XLCALL.CPP" />
+    <ClCompile Include="src\bert_graphics.cc" />
     <ClCompile Include="src\com_object_map.cc" />
     <ClCompile Include="src\file_change_watcher.cc" />
     <ClCompile Include="src\language_service.cc" />

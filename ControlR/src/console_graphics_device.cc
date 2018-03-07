@@ -49,7 +49,7 @@ namespace ConsoleGraphicsDevice {
     target->set_fontfamily(gc->fontfamily);
   }
 
-  void set_clip(double x0, double x1, double y0, double y1, pDevDesc dd) {
+  void SetClip(double x0, double x1, double y0, double y1, pDevDesc dd) {
     //std::cout << "g: set clip" << std::endl;
 
     BERTBuffers::CallResponse message;
@@ -68,7 +68,7 @@ namespace ConsoleGraphicsDevice {
 
   }
 
-  void new_page(const pGEcontext gc, pDevDesc dd) {
+  void NewPage(const pGEcontext gc, pDevDesc dd) {
     // std::cout << "g: new page: " << dd->right << ", " << dd->bottom << std::endl;
     BERTBuffers::CallResponse message;
     auto graphics = message.mutable_console()->mutable_graphics();
@@ -82,7 +82,7 @@ namespace ConsoleGraphicsDevice {
     PushConsoleMessage(message);
   }
 
-  void draw_line(double x1, double y1, double x2, double y2, const pGEcontext gc, pDevDesc dd) {
+  void DrawLine(double x1, double y1, double x2, double y2, const pGEcontext gc, pDevDesc dd) {
     // std::cout << "g: draw line" << std::endl;
     BERTBuffers::CallResponse message;
     auto graphics = message.mutable_console()->mutable_graphics();
@@ -97,7 +97,7 @@ namespace ConsoleGraphicsDevice {
     PushConsoleMessage(message);
   }
 
-  void draw_poly(int n, double *x, double *y, bool filled, const pGEcontext gc, pDevDesc dd) {
+  void DrawPoly(int n, double *x, double *y, bool filled, const pGEcontext gc, pDevDesc dd) {
 
     BERTBuffers::CallResponse message;
     auto graphics = message.mutable_console()->mutable_graphics();
@@ -114,24 +114,24 @@ namespace ConsoleGraphicsDevice {
 
   }
 
-  void draw_polyline(int n, double *x, double *y, const pGEcontext gc, pDevDesc dd) {
+  void DrawPolyline(int n, double *x, double *y, const pGEcontext gc, pDevDesc dd) {
     // std::cout << "g: draw polyline" << std::endl;
-    draw_poly(n, x, y, false, gc, dd);
+    DrawPoly(n, x, y, false, gc, dd);
   }
 
-  void draw_polygon(int n, double *x, double *y, const pGEcontext gc, pDevDesc dd) {
+  void DrawPolygon(int n, double *x, double *y, const pGEcontext gc, pDevDesc dd) {
     //std::cout << "g: draw polygon" << std::endl;
-    draw_poly(n, x, y, true, gc, dd);
+    DrawPoly(n, x, y, true, gc, dd);
   }
 
-  void draw_path(double *x, double *y,
+  void DrawPath(double *x, double *y,
     int npoly, int *nper,
     Rboolean winding,
     const pGEcontext gc, pDevDesc dd) {
     std::cerr << "ENOTIMPL: draw_path" << std::endl; // FIXME
   }
 
-  double get_strWidth(const char *str, const pGEcontext gc, pDevDesc dd) {
+  double GetStringWidth(const char *str, const pGEcontext gc, pDevDesc dd) {
 
     BERTBuffers::CallResponse message, response;
     auto graphics = message.mutable_console()->mutable_graphics();
@@ -153,7 +153,7 @@ namespace ConsoleGraphicsDevice {
     return 10;
   }
 
-  void draw_rect(double x1, double y1, double x2, double y2,
+  void DrawRect(double x1, double y1, double x2, double y2,
     const pGEcontext gc, pDevDesc dd) {
     //std::cout << "g: draw rect" << std::endl;
     BERTBuffers::CallResponse message;
@@ -169,7 +169,7 @@ namespace ConsoleGraphicsDevice {
     PushConsoleMessage(message);
   }
 
-  void draw_circle(double x, double y, double r, const pGEcontext gc,
+  void DrawCircle(double x, double y, double r, const pGEcontext gc,
     pDevDesc dd) {
     //std::cout << "g: draw circle" << std::endl;
     BERTBuffers::CallResponse message;
@@ -184,7 +184,7 @@ namespace ConsoleGraphicsDevice {
     PushConsoleMessage(message);
   }
 
-  void draw_text(double x, double y, const char *str, double rot,
+  void RenderText(double x, double y, const char *str, double rot,
     double hadj, const pGEcontext gc, pDevDesc dd) {
     //std::cout << "g: draw text" << std::endl;
     BERTBuffers::CallResponse message;
@@ -201,7 +201,7 @@ namespace ConsoleGraphicsDevice {
     PushConsoleMessage(message);
   }
 
-  void get_size(double *left, double *right, double *bottom, double *top, pDevDesc dd) {
+  void GetSize(double *left, double *right, double *bottom, double *top, pDevDesc dd) {
     // std::cout << "g: get size (" << dd->left << ", " << dd->top << ", " << dd->right << ", " << dd->bottom << ")" << std::endl;
 
     *left = dd->left;
@@ -211,7 +211,7 @@ namespace ConsoleGraphicsDevice {
   }
 
 
-  void get_metric_info(int c, const pGEcontext gc, double* ascent, double* descent, double* width, pDevDesc dd) {
+  void GetMetricInfo(int c, const pGEcontext gc, double* ascent, double* descent, double* width, pDevDesc dd) {
 
     static char str[8];
 
@@ -253,7 +253,7 @@ namespace ConsoleGraphicsDevice {
     *descent = 0;
   }
 
-  void draw_raster(unsigned int *raster,
+  void DrawRaster(unsigned int *raster,
     int pixel_width, int pixel_height,
     double x, double y,
     double target_width, double target_height,
@@ -291,7 +291,7 @@ namespace ConsoleGraphicsDevice {
     PushConsoleMessage(message);
   }
 
-  void close_device(pDevDesc dd) {
+  void CloseDevice(pDevDesc dd) {
     if (dd->deviceSpecific) delete (dd->deviceSpecific);
     dd->deviceSpecific = 0;
   }
@@ -345,22 +345,22 @@ namespace ConsoleGraphicsDevice {
 
     // now functions, at least the ones we're implementing
 
-    dd->newPage = &new_page;
-    dd->close = &close_device;
-    dd->clip = &set_clip;
-    dd->size = &get_size;
-    dd->metricInfo = &get_metric_info;
-    dd->strWidth = &get_strWidth;
-    dd->line = &draw_line;
-    dd->text = &draw_text;
-    dd->rect = &draw_rect;
-    dd->circle = &draw_circle;
-    dd->polygon = &draw_polygon;
-    dd->polyline = &draw_polyline;
-    dd->path = &draw_path;
-    dd->raster = &draw_raster;
-    dd->textUTF8 = &draw_text;
-    dd->strWidthUTF8 = &get_strWidth;
+    dd->newPage = &NewPage;
+    dd->close = &CloseDevice;
+    dd->clip = &SetClip;
+    dd->size = &GetSize;
+    dd->metricInfo = &GetMetricInfo;
+    dd->strWidth = &GetStringWidth;
+    dd->line = &DrawLine;
+    dd->text = &RenderText;
+    dd->rect = &DrawRect;
+    dd->circle = &DrawCircle;
+    dd->polygon = &DrawPolygon;
+    dd->polyline = &DrawPolyline;
+    dd->path = &DrawPath;
+    dd->raster = &DrawRaster;
+    dd->textUTF8 = &RenderText;
+    dd->strWidthUTF8 = &GetStringWidth;
 
     // force svg or png
 

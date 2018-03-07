@@ -194,4 +194,7 @@ public:
   /** handles callback functions from R */
   int HandleCallbackOnThread(const BERTBuffers::CallResponse *call = 0, BERTBuffers::CallResponse *response = 0);
 
+  /** updates or inserts graphics objects */
+  void UpdateGraphics(const BERTBuffers::CompositeFunctionCall &call, BERTBuffers::CallResponse &response);
+
 };
