@@ -86,6 +86,8 @@ message Variable {
 
     ExternalPointer com_pointer = 12; // taking over, maybe drop the other one
 
+    GraphicsUpdate graphics = 13;
+
   }	
   string name = 15;
 }
@@ -132,6 +134,19 @@ message CompositeFunctionCall {
   // new [enum or string?]
 
   CallTarget target = 6;
+}
+
+enum GraphicsUpdateCommand {
+  update = 0;
+  query_size = 1;
+}
+
+message GraphicsUpdate {
+  GraphicsUpdateCommand command = 1;
+  string name = 2;
+  string path = 3;
+  uint32 width = 4;
+  uint32 height = 5;
 }
 
 /**
