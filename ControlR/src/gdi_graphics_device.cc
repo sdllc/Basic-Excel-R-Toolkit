@@ -168,7 +168,7 @@ namespace gdi_graphics_device {
     if (!dirty_) return;
 
     dirty_ = false;
-    std::cout << " ** graphics update" << std::endl;
+    // std::cout << " ** graphics update" << std::endl;
 
     std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter_;
     std::wstring wide = converter_.from_bytes(temp_file_path_);
@@ -421,7 +421,7 @@ namespace gdi_graphics_device {
 
     graphics.MeasureString(wide_string.c_str(), wide_string.length(), &font, center, &bounding_rect);
 
-    std::cout << "Font size " << font_size << ", get size " << font.GetSize() << std::endl;
+    // std::cout << "Font size " << font_size << ", get size " << font.GetSize() << std::endl;
 
     // https://groups.google.com/forum/#!topic/microsoft.public.platformsdk.gdi/g_EZpq1o-NI
 
