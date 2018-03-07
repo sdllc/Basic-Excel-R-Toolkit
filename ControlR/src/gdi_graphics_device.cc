@@ -494,6 +494,7 @@ namespace gdi_graphics_device {
 
     Gdiplus::Graphics graphics((Gdiplus::Bitmap*)bitmap_);
     graphics.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
+    graphics.SetInterpolationMode(Gdiplus::InterpolationMode::InterpolationModeHighQuality);
 
     // R data comes in 32-bit RGBA (lsb first byte-order).  There's no matching GDI+ format, 
     // so we have to munge the data.  when GDI+ says "ARGB" that means word order, or BGRA 
@@ -506,10 +507,8 @@ namespace gdi_graphics_device {
       pixels[i] = (data[i] & 0xff00ff00) | ((data[i] >> 16) & 0x000000ff) | ((data[i] << 16) & 0x00ff0000);
     }
 
-    // kind of ugly scaling, unfortunately.  may have to do this some other way.
-
     Gdiplus::Bitmap bmp(pixel_width, pixel_height, 4 * pixel_width, PixelFormat32bppARGB, (unsigned char*)pixels);
-
+    
     if (target_height < 0) {
       y += target_height;
       target_height = -target_height;
@@ -520,8 +519,43 @@ namespace gdi_graphics_device {
       target_width = -target_width;
     }
 
-    Gdiplus::RectF rect(x, y, target_width, target_height);
-    graphics.DrawImage(&bmp, rect);
+    // gdiplus scaling is crummy because it samples in positive directions only. at the edge 
+    // of the sample image, instead of sampling in the other direction, it just uses transparent
+    // pixels, so you get fading at the edge (this is true of all interpolation modes). the way 
+    // to fix this would be to write a proper scaling method, but short of that a simple workaround
+    // is to tile the image and then scale from the original. depending on kernel size this could
+    // be simplified to paint only some smaller number of pixels to the target. 
+
+    // so this is hacky, and wasteful, but a huge improvement.
+
+    Gdiplus::Bitmap tiled(pixel_width * 2, pixel_height * 2);
+    Gdiplus::Graphics tiled_graphics(&tiled);
+    tiled_graphics.DrawImage(&bmp, 0, 0);
+
+    bmp.RotateFlip(Gdiplus::RotateNoneFlipX);
+    tiled_graphics.DrawImage(&bmp, pixel_width, 0);
+
+    bmp.RotateFlip(Gdiplus::RotateNoneFlipY);
+    tiled_graphics.DrawImage(&bmp, pixel_width, pixel_height);
+
+    bmp.RotateFlip(Gdiplus::RotateNoneFlipX);
+    tiled_graphics.DrawImage(&bmp, 0, pixel_height);
+
+    Gdiplus::RectF source_rect(0, 0, pixel_width, pixel_height);
+    Gdiplus::RectF target_rect(x, y, target_width, target_height);
+
+    // NOTE: the rect -> rect method is only available in a higher 
+    // level of gdiplus than we want to support
+
+    graphics.DrawImage(
+      &tiled,       // IN Image* image,
+      target_rect,  // IN const Rect& destRect,
+      0,            // IN INT srcx,
+      0,            // IN INT srcy,
+      pixel_width,  // IN INT srcwidth,
+      pixel_height, // IN INT srcheight,
+      Gdiplus::Unit::UnitPixel // IN Unit srcUnit,
+    );
 
     delete[] pixels;
 
