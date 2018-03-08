@@ -110,12 +110,14 @@ There are several third party tools and libraries used to build BERT:
  * Node and Yarn (or npm)
 
    Building the console requires a recent version of [node][11] and [yarn][12] 
-   (or npm), plus the libraries specified in devDependencies.
+   (or npm), plus the libraries specified in `dependencies` and 
+   `devDependencies`.
 
 License
 -------
 
-BERT is provided under the GPL (v3). 
+BERT is provided under the [GPL (v3)][13]. Contact us for alternate licensing
+options.
 
 [6]: https://cran.r-project.org/bin/windows/base/
 [7]: https://julialang.org/
@@ -125,3 +127,4 @@ BERT is provided under the GPL (v3).
 [10]: https://stat.ethz.ch/pipermail/r-devel/2010-October/058833.html
 [11]: https://nodejs.org
 [12]: https://yarnpkg.com
+[13]: https://www.gnu.org/licenses/gpl-3.0.md
