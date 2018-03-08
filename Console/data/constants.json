@@ -15,7 +15,8 @@
   "files": {
     "untitled": "Untitled",
     "preferences": "Preferences",
-    "userStylesheet": "User Stylesheet"
+    "userStylesheet": "User Stylesheet",
+    "welcome": "Welcome"
   },
 
   "editorCommands": {
