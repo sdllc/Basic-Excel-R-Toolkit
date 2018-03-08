@@ -108,7 +108,8 @@ Function InvokeEnvironment(){
 function ZipFile( $zipfile, $file )
 {
   Add-Type -Assembly System.IO.Compression
-
+  Add-Type -Assembly System.IO.Compression.FileSystem
+  
   $current = Get-Location
   $resolved = Join-Path $current $file
   $zipfile = Join-Path $current $zipfile
