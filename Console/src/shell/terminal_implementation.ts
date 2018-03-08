@@ -5,7 +5,7 @@ import { Base64 } from 'js-base64';
 import * as fit from 'xterm/lib/addons/fit/fit';
 XTerm.applyAddon(fit);
 
-import * as weblinks from 'xterm/lib/addons/webLinks';
+import * as weblinks from 'xterm/lib/addons/webLinks/webLinks';
 XTerm.applyAddon(weblinks);
 
 import { wcwidth } from 'xterm/lib/CharWidth';
@@ -1100,7 +1100,8 @@ export class TerminalImplementation {
     }
 
     // NOTE: this is only used for the graphics devices in R.
-    
+    // FIXME: this is backwards, needs a rethink
+
     this.state_.language_interface_.AttachTerminal(this);
 
   }

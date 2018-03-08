@@ -3,7 +3,6 @@ export interface FormatItemFunction {(node, array, index, width?)};
 export interface ClickFunction {(index, event)};
 
 interface RenderFunction {(start)};
-
 interface ScrollFunction {(index)};
 
 export interface ListOptions {

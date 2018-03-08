@@ -3,10 +3,6 @@ import * as net from "net";
 import * as messages from "../../generated/variable_pb.js";
 import * as Rx from "rxjs";
 
-// this is a ts bug, will be fixed in 2.8  
-
-net; 
-
 import { MessageUtilities } from '../common/message_utilities';
 
 enum Channel {

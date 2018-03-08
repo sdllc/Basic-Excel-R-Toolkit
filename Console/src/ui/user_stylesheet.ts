@@ -6,8 +6,8 @@ import { FileWatcher } from '../common/file_watcher';
 
 // this is a ts bug, will be fixed in 2.8  
 
-fs; 
-less;
+//fs; 
+//less;
 
 export class UserStylesheet {
 
