@@ -46,40 +46,40 @@ Roadmap
 
  * Full replacement for BERTv1
 
- Most of BERT has been rewritten from scratch for the new version. The result
- is a more stable and extensible base, with better structure and generally 
- cleaner and more consistent code.
+   Most of BERT has been rewritten from scratch for the new version. The result
+   is a more stable and extensible base, with better structure and generally 
+   cleaner and more consistent code.
 
  * Console rewrite
 
- The console has also been rewritten in typescript, which is a better 
- foundation for what is now a fairly large project. 
+   The console has also been rewritten in typescript, which is a better 
+   foundation for what is now a fairly large project. 
 
  * Additional language(s)
 
- Separation between the interface (Excel) and the language services means
- we can support more than one language. BERT currently supports R and Julia, 
- and we can add more languages in the future.
+   Separation between the interface (Excel) and the language services means
+   we can support more than one language. BERT currently supports R and Julia,
+   and we can add more languages in the future.
 
 Requirements (Runtime)
 ----------------------
 
  * Excel  
 
- BERT supports Excel 2010, 2013 and 2016, both 32-bit and 64-bit (but 
- only on 64-bit Windows).
+   BERT supports Excel 2010, 2013 and 2016, both 32-bit and 64-bit (but 
+   only on 64-bit Windows).
 
  * R 3.4.x (optional)
- 
- This version of BERT does not (at the moment) include R, so you will need
- an R installation. A plain-vanilla [Windows R install][6] is fine, as long as it
- is version 3.4.0 or later.
+  
+   This version of BERT does not (at the moment) include R, so you will need
+   an R installation. A plain-vanilla [Windows R install][6] is fine, as long  
+   as it is version 3.4.0 or later.
 
  * Julia 0.6.2 (optional)
 
- The same applies to Julia; if you want to integrate Julia, use a plain-
- vanilla [Windows install of Julia][7]. You must use the current release (0.6.2);
- When Julia releases 0.7, we will update to match.
+   The same applies to Julia; if you want to integrate Julia, use a plain-
+   vanilla [Windows install of Julia][7]. You must use the current release
+   (0.6.2); When Julia releases 0.7, we will update to match.
 
 Requirements (Building)
 -----------------------
@@ -88,29 +88,29 @@ There are several third party tools and libraries used to build BERT:
 
  * Protocol Buffers
 
- BERT uses [Protocol Buffers][8] for IPC. This requires the protoc compiler
- (to compile .proto files) as well as runtime libraries, which must be built 
- by compiling the protobuf library. We're currently using version 3.5.0 and 
- the version 3 syntax.
+   BERT uses [Protocol Buffers][8] for IPC. This requires the protoc compiler
+   (to compile .proto files) as well as runtime libraries, which must be  
+   built by compiling the protobuf library. We're currently using version 
+   3.5.0 and the version 3 syntax.
 
  * Excel SDK
 
- The [Excel SDK][9] provides XLCALL.cpp and XLCALL.h for Excel integration.
+   The [Excel SDK][9] provides XLCALL.cpp and XLCALL.h for Excel integration.
 
  * R, including headers and .libs
 
- To build R components, you will need R. A standard R distribution includes 
- headers and DLLs, but you need to build libs for linking. For tips on how 
- to do this, see (e.g.) [this mailing list post][10].
+   To build R components, you will need R. A standard R distribution includes 
+   headers and DLLs, but you need to build libs for linking. For tips on how 
+   to do this, see (e.g.) [this mailing list post][10].
 
  * Julia
 
- A plain-vanilla Windows install of Julia is sufficient.
+   A plain-vanilla Windows install of Julia is sufficient.
 
  * Node and Yarn (or npm)
 
- Building the console requires a recent version of [node][11] and [yarn][12] 
- (or npm), plus the libraries specified in devDependencies.
+   Building the console requires a recent version of [node][11] and [yarn][12] 
+   (or npm), plus the libraries specified in devDependencies.
 
 License
 -------
