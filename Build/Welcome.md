@@ -36,7 +36,8 @@ Cheers,
 
 2.0.21 -- Preview Release (7 March 2018)
 
-Add Excel graphics device, bugfixes and updates
+Add Excel graphics device, bugfixes and updates. Moved `BERT.Call.X`
+and `BERT.Excel.X` to macro category (limit to VBA calls).
 
 2.0.20 -- Preview Release (3 March 2018)
 
