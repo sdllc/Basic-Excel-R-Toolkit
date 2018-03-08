@@ -10,9 +10,6 @@
     <Filter Include="PB">
       <UniqueIdentifier>{c356d784-9c8e-4e2e-ae6f-46120e8ca313}</UniqueIdentifier>
     </Filter>
-    <Filter Include="R">
-      <UniqueIdentifier>{aa31411f-55c6-4bff-a7d1-b840cf200be4}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Common">
       <UniqueIdentifier>{d7221d55-a44b-4131-952c-de4b56a561f6}</UniqueIdentifier>
     </Filter>
@@ -48,6 +45,12 @@
     <ClCompile Include="src\gdi_graphics_device.cc">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="..\Common\windows_api_functions.cc">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\json11\json11.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\PB\variable.pb.h">
@@ -82,6 +85,12 @@
     </ClInclude>
     <ClInclude Include="include\gdi_graphics_device.h">
       <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\windows_api_functions.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\json11\json11.hpp">
+      <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

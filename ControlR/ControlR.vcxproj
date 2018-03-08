@@ -19,8 +19,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\Common\json11\json11.cpp" />
     <ClCompile Include="..\Common\message_utilities.cc" />
     <ClCompile Include="..\Common\pipe.cc" />
+    <ClCompile Include="..\Common\windows_api_functions.cc" />
     <ClCompile Include="..\PB\variable.pb.cc" />
     <ClCompile Include="src\console_graphics_device.cc" />
     <ClCompile Include="src\controlr.cc" />
@@ -31,10 +33,12 @@
     <ClCompile Include="src\spreadsheet_graphics_device.cc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Common\json11\json11.hpp" />
     <ClInclude Include="..\Common\message_utilities.h" />
     <ClInclude Include="..\Common\pipe.h" />
     <ClInclude Include="..\Common\process_exit_codes.h" />
     <ClInclude Include="..\Common\string_utilities.h" />
+    <ClInclude Include="..\Common\windows_api_functions.h" />
     <ClInclude Include="..\PB\variable.pb.h" />
     <ClInclude Include="include\console_graphics_device.h" />
     <ClInclude Include="include\controlr.h" />
