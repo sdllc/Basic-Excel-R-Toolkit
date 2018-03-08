@@ -21,34 +21,12 @@ static LPWSTR funcTemplates[][16] = {
   { L"BERT_ContextSwitch", L"J", L"BERT.ContextSwitch", L"", L"2", L"BERT", L"", L"94", L"", L"", L"", L"", L"", L"", L"", L"" },
   { L"BERT_UpdateFunctions", L"J", L"BERT.UpdateFunctions", L"", L"2", L"BERT", L"", L"93", L"", L"", L"", L"", L"", L"", L"", L"" },
 
-	/*
-	// type 2 functions
-
-	{ L"BERT_UpdateScript", L"UU#", L"BERT.UpdateScript", L"R Code", L"2", L"BERT", L"", L"100", L"Update Script", L"", L"", L"", L"", L"", L"", L"" },
-	{ L"BERT_RExec", L"UU", L"BERT.Exec", L"R Code", L"2", L"BERT", L"", L"99", L"Exec R Code", L"", L"", L"", L"", L"", L"", L"" },
-	{ L"BERT_RCall", L"UUUUUUUUUU", L"BERT.Call", L"R Function, Argument", L"2", L"BERT", L"", L"98", L"Exec R Code", L"", L"", L"", L"", L"", L"", L"" },
-	{ L"BERT_Configure", L"A#", L"BERT.Configure", L"", L"2", L"BERT", L"", L"97", L"", L"", L"", L"", L"", L"", L"", L"" },
-	{ L"BERT_Console", L"A#", L"BERT.Console", L"", L"2", L"BERT", L"", L"96", L"", L"", L"", L"", L"", L"", L"", L"" },
-	{ L"BERT_HomeDirectory", L"A#", L"BERT.Home", L"", L"2", L"BERT", L"", L"95", L"", L"", L"", L"", L"", L"", L"", L"" },
-	{ L"BERT_StartupFolder", L"A#", L"BERT.StartupFolder", L"", L"2", L"BERT", L"", L"95", L"", L"", L"", L"", L"", L"", L"", L"" },
-	{ L"BERT_InstallPackages", L"A#", L"BERT.InstallPackages", L"", L"2", L"BERT", L"", L"94", L"", L"", L"", L"", L"", L"", L"", L"" },
-	{ L"BERT_Reload", L"A#", L"BERT.Reload", L"", L"2", L"BERT", L"", L"93", L"", L"", L"", L"", L"", L"", L"", L"" },
-	{ L"BERT_About", L"A#", L"BERT.About", L"", L"2", L"BERT", L"", L"92", L"", L"", L"", L"", L"", L"", L"", L"" },
-	{ L"BERT_SafeCall", L"JJUU#", L"BERT.SafeCall", L"", L"2", L"BERT", L"", L"91", L"", L"", L"", L"", L"", L"", L"", L"" },
-
-	// type 1 functions
-
-	{ L"BERT_Volatile", L"UU!", L"BERT.Volatile", L"", L"1", L"BERT", L"", L"80", \
-	L"Forces calculation to be volatile (recalculate on F9).", \
-	L"", L"", L"", L"", L"", L"", L"" },
-	*/
-
 	{ 0 }
 };
 
 static LPWSTR callTemplates[][16] = {
-  { L"BERT_CallLanguage_", L"UQQQQQQQQQQQQQQQQQ", L"BERT.Call.", L"Function, Argument", L"1", L"BERT", L"", L"99", L"", L"", L"", L"", L"", L"", L"", L"" },
-  { L"BERT_ExecLanguage_", L"UQ", L"BERT.Exec.", L"Code", L"1", L"BERT", L"", L"97", L"Exec Language Code", L"", L"", L"", L"", L"", L"", L"" }
+  { L"BERT_CallLanguage_", L"UQQQQQQQQQQQQQQQQQ", L"BERT.Call.", L"Function, Argument", L"2", L"BERT", L"", L"99", L"", L"", L"", L"", L"", L"", L"", L"" },
+  { L"BERT_ExecLanguage_", L"UQ", L"BERT.Exec.", L"Code", L"2", L"BERT", L"", L"97", L"Exec Language Code", L"", L"", L"", L"", L"", L"", L"" }
 };
 
 /** exported function */
