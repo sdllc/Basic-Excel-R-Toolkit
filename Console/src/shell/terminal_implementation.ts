@@ -5,6 +5,9 @@ import { Base64 } from 'js-base64';
 import * as fit from 'xterm/lib/addons/fit/fit';
 XTerm.applyAddon(fit);
 
+import * as weblinks from 'xterm/lib/addons/webLinks';
+XTerm.applyAddon(weblinks);
+
 import { wcwidth } from 'xterm/lib/CharWidth';
 
 import * as CursorClientPosition from './cursor_client_position_addon';
@@ -295,7 +298,7 @@ export class TerminalImplementation {
   /** focus */
   Focus(){ 
     this.xterm_.focus(); 
-    // window['term'] = this; // dev
+    window['term'] = this; // dev
   }
 
   CleanUp(){
@@ -1067,7 +1070,7 @@ export class TerminalImplementation {
       this.Resize(); // checks active [it does?]
     });
 
-    (this.xterm_ as any).setHypertextLinkHandler((event: MouseEvent, uri: string) => {
+    (this.xterm_ as any).webLinksInit((event: MouseEvent, uri: string) => {
       shell.openExternal(uri);
       return true;
     });
