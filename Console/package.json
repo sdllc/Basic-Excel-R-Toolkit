@@ -33,7 +33,7 @@
     "electron": "^1.8.2",
     "electron-builder": "^19.56.0",
     "less-watch-compiler": "^1.11.0",
-    "typescript": "^2.7.1"
+    "typescript": "^2.7.2"
   },
   "dependencies": {
     "@types/text-encoding": "^0.0.32",
@@ -47,6 +47,6 @@
     "markdown-it-task-lists": "^2.1.0",
     "monaco-editor": "^0.10.1",
     "rxjs": "^5.5.6",
-    "xterm": "^3.1.0"
+    "xterm": "^3.2.0"
   }
 }
