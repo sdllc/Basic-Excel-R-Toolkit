@@ -11,7 +11,7 @@ window['less'] = less;
 export class UserStylesheet {
 
   private static stylesheet_path_ = path.join(
-    process.env['BERT2_HOME_DIRECTORY'], "user-stylesheet.less");
+    process.env['BERT_HOME'], "user-stylesheet.less");
 
   public static get stylesheet_path() { return this.stylesheet_path_; }
 

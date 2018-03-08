@@ -147,9 +147,8 @@ Section "Main" SecMain
   ;Create uninstaller
   WriteUninstaller "$INSTDIR\Uninstall.exe"
 
-SectionEnd
-
-Section "Docs" SecDocs
+  ; create a lib dir for R libs
+  CreateDirectory "$INSTDIR\lib"
 
   ; files are installed to the root directory,
   ; then we can copy them if they don't already exist

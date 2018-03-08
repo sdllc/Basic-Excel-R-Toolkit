@@ -1176,7 +1176,7 @@ export class Editor {
    * opens release notes in an editor tab
    */
   public OpenReleaseNotes(){
-    let file_path = path.join(process.env.BERT2_HOME_DIRECTORY, "welcome.md");
+    let file_path = path.join(process.env.BERT_HOME, "welcome.md");
     this.OpenFileInternal(file_path, {
       override_label: "Welcome",
       add_to_recent_files: false,

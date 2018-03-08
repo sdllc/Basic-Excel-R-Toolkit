@@ -54,7 +54,7 @@ class PreferencesManager extends Rx.BehaviorSubject<PreferencesState> {
   */
 
   private preferences_path_ = path.join(
-    process.env['BERT2_HOME_DIRECTORY'], "bert-config.json");
+    process.env['BERT_HOME'], "bert-config.json");
 
   public get preferences_path(){ return this.preferences_path_; }
 

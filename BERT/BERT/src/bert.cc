@@ -727,7 +727,7 @@ void BERT::Init() {
   }
 
   // before creating child processes, set env var
-  SetEnvironmentVariableA("BERT2_HOME_DIRECTORY", home_directory_.c_str());
+  SetEnvironmentVariableA("BERT_HOME", home_directory_.c_str());
 
   // who uses this one? [it's in the banners]
   SetEnvironmentVariableW(L"BERT_VERSION", BERT_VERSION);

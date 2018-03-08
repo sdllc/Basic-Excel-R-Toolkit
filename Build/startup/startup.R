@@ -5,7 +5,8 @@
 # load module. moved from code.
 #
 #===============================================================================
-library(BERTModule, lib.loc=paste0(Sys.getenv("BERT2_HOME_DIRECTORY"), "module"));
+
+library(BERTModule, lib.loc=paste0(Sys.getenv("BERT_HOME"), "module"));
 
 #===============================================================================
 #

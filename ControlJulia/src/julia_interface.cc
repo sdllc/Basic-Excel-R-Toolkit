@@ -447,7 +447,7 @@ void JuliaGetVersion(int32_t *major, int32_t *minor, int32_t *patch) {
 void JuliaInit() {
 
   char buffer[MAX_PATH];
-  GetEnvironmentVariableA("BERT2_HOME_DIRECTORY", buffer, MAX_PATH);
+  GetEnvironmentVariableA("BERT_HOME", buffer, MAX_PATH);
 
   std::string config_data;
   std::string config_path(buffer);
