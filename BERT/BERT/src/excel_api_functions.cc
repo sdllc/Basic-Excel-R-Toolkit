@@ -138,7 +138,7 @@ void RegisterFunctions() {
   for (int i = 0; i < 32; i++) delete xlParm[i];
 }
 
-bool ExcelRegisterLanguageCalls(const char *language_name, uint32_t language_key) {
+bool ExcelRegisterLanguageCalls(const char *language_name, uint32_t language_key, bool generic) {
 
   int err;
   XLOPER12 register_id;
@@ -181,7 +181,13 @@ bool ExcelRegisterLanguageCalls(const char *language_name, uint32_t language_key
     arguments[0 + 1]->val.str[0] = (XCHAR)wcslen(wide_string);
 
     // index 2: add language name string
-    wsprintf(wide_string, L"%s%s", callTemplates[i][2], wide_name);
+
+    // UPDATE: support a generic call by _not_ appending the language name.
+    // this is for backwards compatibility. the caller needs to pick a language.
+
+    if(generic) wsprintf(wide_string, L"%s", callTemplates[i][2]);
+    else wsprintf(wide_string, L"%s.%s", callTemplates[i][2], wide_name);
+
     wcscpy_s(&(arguments[2 + 1]->val.str[1]), max_string_length - 1, wide_string);
     arguments[2 + 1]->val.str[0] = (XCHAR)wcslen(wide_string);
 

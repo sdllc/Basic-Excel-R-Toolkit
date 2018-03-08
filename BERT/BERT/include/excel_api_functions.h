@@ -14,5 +14,5 @@ void UnregisterFunctions();
 /** 
  * registers the "BERT.Exec.X" and "BERT.Call.X" functions for a language
  */
-bool ExcelRegisterLanguageCalls(const char *language_name, uint32_t language_key);
+bool ExcelRegisterLanguageCalls(const char *language_name, uint32_t language_key, bool generic = false);
 

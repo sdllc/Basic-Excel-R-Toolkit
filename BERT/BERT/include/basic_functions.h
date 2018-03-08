@@ -25,8 +25,8 @@ static LPWSTR funcTemplates[][16] = {
 };
 
 static LPWSTR callTemplates[][16] = {
-  { L"BERT_CallLanguage_", L"UQQQQQQQQQQQQQQQQQ", L"BERT.Call.", L"Function, Argument", L"2", L"BERT", L"", L"99", L"", L"", L"", L"", L"", L"", L"", L"" },
-  { L"BERT_ExecLanguage_", L"UQ", L"BERT.Exec.", L"Code", L"2", L"BERT", L"", L"97", L"Exec Language Code", L"", L"", L"", L"", L"", L"", L"" }
+  { L"BERT_CallLanguage_", L"UQQQQQQQQQQQQQQQQQ", L"BERT.Call", L"Function, Argument", L"2", L"BERT", L"", L"99", L"", L"", L"", L"", L"", L"", L"", L"" },
+  { L"BERT_ExecLanguage_", L"UQ", L"BERT.Exec", L"Code", L"2", L"BERT", L"", L"97", L"Exec Language Code", L"", L"", L"", L"", L"", L"", L"" }
 };
 
 /** exported function */

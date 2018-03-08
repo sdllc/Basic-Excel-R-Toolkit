@@ -814,8 +814,19 @@ void BERT::Init() {
 void BERT::RegisterLanguageCalls() {
   function_list_.clear();
   int index = 0;
+
+  // it might make sense to just use the first language as the generic call. 
+  // however that would be super confusing if it ever changes. let's enforce
+  // R as the generic language.
+
+  // FIXME: add a deprecation warning
+
   for (auto language_service : language_services_) {
-    ExcelRegisterLanguageCalls(language_service->name().c_str(), index++);
+    ExcelRegisterLanguageCalls(language_service->name().c_str(), index, false);
+    if (language_service->name() == "R") {
+      ExcelRegisterLanguageCalls(language_service->name().c_str(), index, true);
+    }
+    index++;
   }
 }
 
