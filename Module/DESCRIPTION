@@ -1,10 +1,10 @@
 Package: BERTModule
 Type: Package
 Title: Utilities for BERT
-Version: 2.0.9
+Version: 2.0.10
 Date: 2018-02-18
 Author: Duncan Werner
 Maintainer: Duncan Werner <dwerner@riskamp.com>
 Description: Utilities for BERT
-License: GPL (>= 2)
+License: GPL (>= 3)
 RoxygenNote: 6.0.1
