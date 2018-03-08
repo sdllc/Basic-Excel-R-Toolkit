@@ -25,7 +25,8 @@
 
     /*
     "R": {
-      "home": "%programfiles%\\R-3.4.3"
+      "home": "%programfiles%\\R-3.4.3",
+      "lib": "%bert_home%\\lib"
     },
      */
 
