@@ -900,21 +900,22 @@ export class Editor {
   /**
    * open certain files on install, and on first-install
    */
-  private OpenDefaultFiles() {
+  private async OpenDefaultFiles() {
 
     let current = Utilities.VersionToNumber(process.env.BERT_VERSION);
     let last = Utilities.VersionToNumber(this.properties_.lastReleaseNotes || "");
 
+    // fixed to order files properly. slick conditional await.
+
     if(!last){
-      
-      // this implies it was never opened.
-      // ... sample files?
-      
-      this.OpenConfig();
-   }
+      // never opened: open config file
+      await this.OpenConfig();
+
+      // FIXME: open scripting example?
+    }
 
     if(!last || last < current){
-      this.OpenReleaseNotes();
+      await this.OpenReleaseNotes();
       this.properties_.lastReleaseNotes = process.env.BERT_VERSION;
     }
 
@@ -1002,7 +1003,7 @@ export class Editor {
    */
   public OpenReleaseNotes(){
     let file_path = path.join(process.env.BERT_HOME, "welcome.md");
-    this.OpenFileInternal(file_path, {
+    return this.OpenFileInternal(file_path, {
       override_label: Constants.files.welcome,
       add_to_recent_files: false,
       type: DocumentType.rendered
@@ -1013,7 +1014,7 @@ export class Editor {
    * opens config ("preferences") in an editor tab
    */
   public OpenConfig() {
-    this.OpenFileInternal(ConfigManager.config_path, {
+    return this.OpenFileInternal(ConfigManager.config_path, {
       override_label:Constants.files.preferences,
       add_to_recent_files:false,
       type: DocumentType.config
@@ -1024,7 +1025,7 @@ export class Editor {
    * opens user stylesheet in an editor tab
    */
   public OpenUserStylesheet(){
-    this.OpenFileInternal(UserStylesheet.stylesheet_path, {
+    return this.OpenFileInternal(UserStylesheet.stylesheet_path, {
       override_label:Constants.files.userStylesheet,
       add_to_recent_files:false,
       type: DocumentType.editor
