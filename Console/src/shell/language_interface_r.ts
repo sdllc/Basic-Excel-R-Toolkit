@@ -15,8 +15,6 @@ import { DataCache } from '../common/data_cache';
 
 import * as path from 'path';
 
-window['DataCache'] = DataCache;
-
 import { VirtualList } from '../ui/virtual_list';
 
 const Constants = require("../../data/constants.json");
@@ -191,7 +189,6 @@ export class RInterface extends LanguageInterface {
     else {
       data = cacheResult.data;
     }
-    window['data'] = data;
 
     // in case user has pressed cancel while waiting
     if( dialog_result.fulfilled ) return false;
@@ -201,9 +198,6 @@ export class RInterface extends LanguageInterface {
     // get installed packages so we can indicate 
     let installed_packages = await this.pipe_.Internal(`installed.packages()`);
     
-    //console.info(installed_packages);
-    window['installed'] = installed_packages;
-
     // in case user has pressed cancel while waiting
     if( dialog_result.fulfilled ) return false;
 
@@ -441,8 +435,6 @@ export class RInterface extends LanguageInterface {
     }
 
     let repos = await this.pipe_.Internal(`getOption("repos")`);
-
-    window['data'] = data;
 
     // in case user has pressed cancel while waiting
 

@@ -6,8 +6,6 @@ import { FileWatcher } from '../common/file_watcher';
 
 fs; // otherwise it gets optimzed away: FIXME, typescript
 
-window['less'] = less;
-
 export class UserStylesheet {
 
   private static stylesheet_path_ = path.join(

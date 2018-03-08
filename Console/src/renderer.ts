@@ -63,10 +63,7 @@ let splitter = new Splitter(
 
 // dialogs
 
-window['dialog_manager'] = Dialog;
-
 let alert_manager = new AlertManager();
-window['alert_manager'] = alert_manager;
 
 // terminals and tabs
 
@@ -82,7 +79,6 @@ let language_interface_types = [
 // active languages, set by pipe connections
 
 let language_interfaces = [];
-window['language_interfaces'] = language_interfaces;
 
 // hide cursor when busy.
 // update: don't do this. it causes stray errors as the tooltip
@@ -134,7 +130,6 @@ window.addEventListener("beforeunload", event => {
 // construct editor
 
 let editor = new Editor("#editor", properties.editor);
-window['editor'] = editor;
 
 editor.events.subscribe(event => {
   if( event.type === EditorEventType.Command ){

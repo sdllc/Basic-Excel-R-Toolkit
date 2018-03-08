@@ -6,7 +6,6 @@ import * as fit from 'xterm/lib/addons/fit/fit';
 XTerm.applyAddon(fit);
 
 import { wcwidth } from 'xterm/lib/CharWidth';
-window['wcwidth'] = wcwidth;
 
 import * as CursorClientPosition from './cursor_client_position_addon';
 XTerm.applyAddon(CursorClientPosition);
@@ -296,7 +295,7 @@ export class TerminalImplementation {
   /** focus */
   Focus(){ 
     this.xterm_.focus(); 
-    window['term'] = this; // dev
+    // window['term'] = this; // dev
   }
 
   CleanUp(){
@@ -984,7 +983,7 @@ export class TerminalImplementation {
             }
             else {
               console.info("UNHANDLED HTML\n", html);
-              window['h'] = html;
+              // window['h'] = html;
             }
             break;
 
@@ -993,7 +992,7 @@ export class TerminalImplementation {
           case "image/png":
 
             //console.info("not rendering");
-            window['msg'] = console_message;
+            // window['msg'] = console_message;
             this.InsertDataImage(300, 0, console_message.mime_type, console_message.data);
             break;
         }
