@@ -1,6 +1,7 @@
 
 console
 module
+lib
 
 *.exp
 *.exe
