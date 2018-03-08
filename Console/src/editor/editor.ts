@@ -1,41 +1,36 @@
 /// <reference path="../../node_modules/monaco-editor/monaco.d.ts" />
 
-import { remote, clipboard, shell as electron_shell } from 'electron';
-const { Menu, MenuItem, dialog } = remote;
-
-import { MenuUtilities } from '../ui/menu_utilities';
-import { Utilities } from '../common/utilities';
-
-import { UserStylesheet } from '../ui/user_stylesheet';
-
-// note elsewhere we're trying to be very generic about languages
-// in the editor (notwithstanding that we know which languages we
-// actually support). this is our language tokenizer/lexer, which 
-// is independent of that (there's no native julia support in monaco).
-
-import * as JuliaLanguage from './julia_tokenizer';
-import { TabPanel, TabJustify, TabEventType, TabSpec } from '../ui/tab_panel';
-import { EditorStatusBar, EditorStackMessage } from './editor_status_bar';
-
-const Constants = require("../../data/constants.json");
-
 import * as path from 'path';
 import * as fs from 'fs';
 import * as Rx from 'rxjs';
-
-// md for static rendering. FIXME: options, tune
+import { EEXIST } from 'constants';
 
 import * as MarkdownIt from 'markdown-it';
 import * as MarkdownItTasks from 'markdown-it-task-lists';
 const MD = new MarkdownIt().use(MarkdownItTasks); 
 
+import { remote, clipboard, shell as electron_shell } from 'electron';
+const { Menu, MenuItem, dialog } = remote;
+
+const Constants = require("../../data/constants.json");
+const TabContextMenuData = require("../../data/menus/editor_tab_context_menu.json");
+const SchemaSchema = require("../../data/schemas/schema.schema.json");
+
+import { MenuUtilities } from '../ui/menu_utilities';
+import { Utilities } from '../common/utilities';
+import { UserStylesheet } from '../ui/user_stylesheet';
+import { TabPanel, TabJustify, TabEventType, TabSpec } from '../ui/tab_panel';
+import { EditorStatusBar, EditorStackMessage } from './editor_status_bar';
 import { FileWatcher } from '../common/file-watcher';
 import { ConfigManagerInstance as ConfigManager, ConfigSchema, ConfigLoadStatus } from '../common/config_manager';
-import { EEXIST } from 'constants';
+import { Document, DocumentType } from './editor_document';
 
-const TabContextMenuData = require("../../data/menus/editor_tab_context_menu.json");
+// NOTE: elsewhere we're trying to be very generic about languages
+// in the editor (notwithstanding that we know which languages we
+// actually support). this is our language tokenizer/lexer, which 
+// is independent of that (there's no native julia support in monaco).
 
-const SchemaSchema = require("../../data/schemas/schema.schema.json");
+import * as JuliaLanguage from './julia_tokenizer';
 
 // ambient, declared in html. we need this for loading monaco
 declare const amd_require: any;
@@ -43,6 +38,11 @@ declare const amd_require: any;
 // prefix for document cache in localStorage
 const CACHE_PREFIX = "cached-document-"
 
+/** 
+ * structure represents a closed file, which we retain for the 
+ * session in the event it was accidentally closed. can be reopened 
+ * preserving changes.
+ */
 interface UncloseRecord {
   id: number;
   position: number;
@@ -67,15 +67,6 @@ export interface EditorEvent {
 }
 
 /**
- * document types with different rendering behavior
- */
-enum DocumentType {
-  rendered = "rendered",
-  editor = "editor",
-  config = "config"
-}
-
-/**
  * options when opening files; used for non-source files. label
  * and type are stored with the document once it is open. 
  * add_to_recent_files is handled immediately.
@@ -84,77 +75,6 @@ interface OpenFileOptions {
   override_label?:string;
   type?:DocumentType;
   add_to_recent_files?:boolean; // default true
-}
-
-/**
- * class represents a document in the editor; has content, view state.
- * extended to support static (i.e. rendered) documents, which are 
- * displayed as html.
- * 
- * FIXME: base type, subtypes for rendered/editor documents?
- */
-class Document {
-
-  /** label: the file name, generally, or "untitled-x" */
-  label_: string;
-
-  /** path to file. null for "new" files that have never been saved. */
-  file_path_: string;
-
-  /** editor model */
-  model_: monaco.editor.IModel;
-
-  /** preserved state on tab switches */
-  view_state_: monaco.editor.ICodeEditorViewState;
-
-  /** flag */
-  dirty_ = false;
-
-  /** the last saved version, for comparison to AVID, for dirty check */
-  saved_version_ = 0; // last saved version ID
-
-  /** local ID */
-  id_: number;
-
-  /** rendered: not editable, show rendered content -- md and html? */
-  // rendered_ = false;
-  type_: DocumentType;
-
-  /** */
-  rendered_content_:string;
-
-  /** node for rendered content. not preserved. */
-  rendered_content_node_:HTMLElement;
-
-  /** override language (optional) */
-  overrideLanguage_: string;
-
-  /** save pending to prevent loop with file watcher; not preserved */
-  save_pending_ = false;
-
-  /** 
-   * revert pending to prevent side-effects (sigh). it should always be 
-   * an indication of bad design if you have to start working around side
-   * effects. 
-   */
-  revert_pending_ = false;
-
-  /** serialize */
-  toJSON() {
-    return {
-      label: this.label_,
-      file_path: this.file_path_,
-      view_state: this.view_state_,
-      dirty: this.dirty_,
-      overrideLanguage: this.overrideLanguage_,
-      uri: this.model_ ? this.model_.uri : null,
-      type: this.type_,
-      saved_version: this.saved_version_,
-      alternative_version_id: this.model_ ? this.model_.getAlternativeVersionId() : 0,
-      text: this.model_ ? this.model_.getValue() : this.rendered_content_
-    }
-  }
-
 }
 
 /**
