@@ -417,7 +417,7 @@ void SEXPXlReferenceToVariable(BERTBuffers::Variable *var, SEXP sexp) {
       
       sheet_reference->set_sheet_id(ids);
     }
-    else std::cerr << "Unexpected type in check excel ref [5]: " << type << ", " << Rf_length(slot) << std::endl;
+    // ... // else std::cerr << "Unexpected type in check excel ref [5]: " << type << ", " << Rf_length(slot) << std::endl;
   }
 
   if (sheet_reference->end_row() < sheet_reference->start_row()) sheet_reference->set_end_row(sheet_reference->start_row());

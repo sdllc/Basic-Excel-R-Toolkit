@@ -207,7 +207,7 @@ namespace SpreadsheetGraphicsDevice {
     dd->haveTransparentBg = 2;
     dd->haveRaster = 3; // yes, except for missing values
 
-    std::cout << "init device (" << name << "): " << std::dec << dd->right << ", " << dd->bottom << std::endl;
+    // std::cout << "init device (" << name << "): " << std::dec << dd->right << ", " << dd->bottom << std::endl;
     gdi_graphics_device::Device *device = new gdi_graphics_device::Device(name, width, height);
     
     device_list.push_back(device);
