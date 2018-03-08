@@ -358,20 +358,21 @@ public:
       x->xltype = xltypeBool;
       x->val.xbool = var.boolean();
       break;
+    
     case BERTBuffers::Variable::ValueCase::kInteger:
       x->xltype = xltypeInt;
       x->val.w = var.integer();
       break;
+    
     case BERTBuffers::Variable::ValueCase::kReal:
       x->xltype = xltypeNum;
       x->val.num = var.real();
       break;
+    
     case BERTBuffers::Variable::ValueCase::kStr:
       StringToXLOPER(x, var.str());
       break;
-    case BERTBuffers::Variable::ValueCase::kNil:
-      x->xltype = xltypeNil;
-      break;
+
     case BERTBuffers::Variable::ValueCase::kArr:
     {
       const BERTBuffers::Array &arr = var.arr();
@@ -411,7 +412,7 @@ public:
         int index = 0;
         for (int c = 0; c < cols; c++) {
           if (row_names && c == 0) {
-            if(col_names) StringToXLOPER(&(x->val.array.lparray[0]), "");
+            if (col_names) StringToXLOPER(&(x->val.array.lparray[0]), "");
             for (int r = r_offset; r < rows; r++) {
               StringToXLOPER(&(x->val.array.lparray[r * cols + c]), arr.rownames(r - r_offset));
             }
@@ -436,11 +437,57 @@ public:
 
       break;
     }
+
     case BERTBuffers::Variable::ValueCase::kErr:
       x->xltype = xltypeErr;
       if (var.err().type() == BERTBuffers::ErrorType::NA) x->val.err = xlerrNA;
       else x->val.err = xlerrValue;
       break;
+
+    case BERTBuffers::Variable::ValueCase::kNil:
+      x->xltype = xltypeNil;
+      break;
+
+    case BERTBuffers::Variable::ValueCase::kRef:
+    {
+      auto reference = var.ref();
+      uint64_t sheet_id = reference.sheet_id();
+      if (sheet_id) {
+
+        // sheet id, use mref
+
+        x->xltype = xltypeRef | xlbitXLFree;
+        x->val.mref.idSheet = sheet_id;
+        x->val.mref.lpmref = new XLMREF12;
+        x->val.mref.lpmref->count = 1;
+        x->val.mref.lpmref->reftbl[0].rwFirst = reference.start_row();
+        x->val.mref.lpmref->reftbl[0].rwLast = reference.end_row();
+        x->val.mref.lpmref->reftbl[0].colFirst = reference.start_column();
+        x->val.mref.lpmref->reftbl[0].colLast = reference.end_column();
+
+      }
+      else {
+
+        // no sheet id, use sref type
+
+        x->xltype = xltypeSRef;
+        x->val.sref.count = 1; 
+        x->val.sref.ref.rwFirst = reference.start_row();
+        x->val.sref.ref.rwLast = reference.end_row();
+        x->val.sref.ref.colFirst = reference.start_column();
+        x->val.sref.ref.colLast = reference.end_column();
+
+      }
+
+      break;
+    }
+
+    case BERTBuffers::Variable::ValueCase::VALUE_NOT_SET:
+    default:
+      x->xltype = xltypeErr;
+      x->val.err = xlerrNA;
+      break;
+
     }
 
     return x; // fluent

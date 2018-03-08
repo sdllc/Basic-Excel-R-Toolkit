@@ -365,6 +365,66 @@ __inline bool HandleSimpleTypes(SEXP sexp, int len, int rtype, BERTBuffers::Arra
   return true; // handled
 }
 
+void SEXPXlReferenceToVariable(BERTBuffers::Variable *var, SEXP sexp) {
+
+  int type;
+  auto sheet_reference = var->mutable_ref();
+  SEXP slot;
+
+  slot = R_do_slot(sexp, Rf_mkString("R1"));
+  if (slot) {
+    type = TYPEOF(slot);
+    if (type == INTSXP) sheet_reference->set_start_row(INTEGER(slot)[0]);
+    else if (type == REALSXP) sheet_reference->set_start_row(REAL(slot)[0]);
+    else std::cerr << "Unexpected type in check excel ref [1]: " << type << std::endl;
+  }
+
+  slot = R_do_slot(sexp, Rf_mkString("C1"));
+  if (slot) {
+    type = TYPEOF(slot);
+    if (type == INTSXP) sheet_reference->set_start_column(INTEGER(slot)[0]);
+    else if (type == REALSXP) sheet_reference->set_start_column(REAL(slot)[0]);
+    else std::cerr << "Unexpected type in check excel ref [2]: " << type << std::endl;
+  }
+
+  slot = R_do_slot(sexp, Rf_mkString("R2"));
+  if (slot) {
+    type = TYPEOF(slot);
+    if (type == INTSXP) sheet_reference->set_end_row(INTEGER(slot)[0]);
+    else if (type == REALSXP) sheet_reference->set_end_row(REAL(slot)[0]);
+    else std::cerr << "Unexpected type in check excel ref [3]: " << type << std::endl;
+  }
+
+  slot = R_do_slot(sexp, Rf_mkString("C2"));
+  if (slot) {
+    type = TYPEOF(slot);
+    if (type == INTSXP) sheet_reference->set_end_column(INTEGER(slot)[0]);
+    else if (type == REALSXP) sheet_reference->set_end_column(REAL(slot)[0]);
+    else std::cerr << "Unexpected type in check excel ref [4]: " << type << std::endl;
+  }
+  
+  slot = R_do_slot(sexp, Rf_mkString("SheetID"));
+  if (slot){
+
+    type = TYPEOF(slot);
+    if (type == INTSXP && Rf_length(slot) == 2)
+    {
+      int *p = INTEGER(slot);
+      uint64_t ids;
+      ids = p[0];
+      ids <<= 32;
+      ids |= p[1];
+      
+      sheet_reference->set_sheet_id(ids);
+    }
+    else std::cerr << "Unexpected type in check excel ref [5]: " << type << ", " << Rf_length(slot) << std::endl;
+  }
+
+  if (sheet_reference->end_row() < sheet_reference->start_row()) sheet_reference->set_end_row(sheet_reference->start_row());
+  if (sheet_reference->end_column() < sheet_reference->start_column()) sheet_reference->set_end_column(sheet_reference->start_column());
+
+}
+
 void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector <SEXP> envir_list = std::vector<SEXP>()) {
 
   if (!sexp || Rf_isNull(sexp)) {
@@ -497,7 +557,15 @@ void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector <SEXP> en
         SEXPToVariable(arr->add_data(), VECTOR_ELT(sexp, i));
       }
     }
-    
+    else if (rtype == S4SXP) {
+
+      // there's only one of these we're going to handle -- our reference type
+      if (Rf_inherits(sexp, "xlReference")) {
+        SEXPXlReferenceToVariable(var, sexp);
+      }
+
+    }
+
     SEXP names = getAttrib(sexp, R_NamesSymbol);
     if (names && TYPEOF(names) != 0) {
       int nameslen = Rf_length(names);
@@ -764,7 +832,7 @@ void UpdateSpreadsheetGraphics() {
 
   uint32_t graphics_update_id = 0;
 
-  std::vector<gdi_graphics_device::Device*> update_list = SpreadsheetGraphicsDevice::UpdatePendingGraphics();
+  std::vector<gdi_graphics_device::GraphicsUpdateRecord> update_list = SpreadsheetGraphicsDevice::UpdatePendingGraphics();
 
   if (update_list.size()) {
 
@@ -774,15 +842,15 @@ void UpdateSpreadsheetGraphics() {
 
     auto function_call = message.mutable_function_call();
     function_call->set_target(BERTBuffers::CallTarget::graphics);
-    for (auto device : update_list) {
+    for (const auto &device : update_list) {
 
       auto argument = function_call->add_arguments();
       auto graphics = argument->mutable_graphics();
 
-      graphics->set_width(device->width());
-      graphics->set_height(device->height());
-      graphics->set_name(device->name());
-      graphics->set_path(device->image_path());
+      graphics->set_width(device.width);
+      graphics->set_height(device.height);
+      graphics->set_name(device.name);
+      graphics->set_path(device.path);
 
     }
 
