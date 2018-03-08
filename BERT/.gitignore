@@ -13,6 +13,8 @@ BERT/Win32
 *.aps
 *.tmp
 
+enc_temp_folder
+
 *.vcxproj.user
 
 *.exe
