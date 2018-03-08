@@ -2,7 +2,7 @@
 const Constants = require("../../data/constants.json");
 const DefaultConfig = require("../../data/default_config.json");
 
-import { FileWatcher } from './file-watcher'; 
+import { FileWatcher } from './file_watcher'; 
 
 // FIXME: export as static class member instead?
 export const ConfigSchema = require("../../data/schemas/config.schema.json");

@@ -21,7 +21,7 @@ import { Utilities } from '../common/utilities';
 import { UserStylesheet } from '../ui/user_stylesheet';
 import { TabPanel, TabJustify, TabEventType, TabSpec } from '../ui/tab_panel';
 import { EditorStatusBar, EditorStackMessage } from './editor_status_bar';
-import { FileWatcher } from '../common/file-watcher';
+import { FileWatcher } from '../common/file_watcher';
 import { ConfigManagerInstance as ConfigManager, ConfigSchema, ConfigLoadStatus } from '../common/config_manager';
 import { Document, DocumentType } from './editor_document';
 

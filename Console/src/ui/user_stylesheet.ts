@@ -2,7 +2,7 @@
 import * as less from 'less';
 import * as path from 'path';
 import * as fs from 'fs';
-import { FileWatcher } from '../common/file-watcher'; 
+import { FileWatcher } from '../common/file_watcher'; 
 
 fs; // otherwise it gets optimzed away: FIXME, typescript
 
