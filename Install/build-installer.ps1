@@ -218,7 +218,7 @@ Write-Host ""
 #
 
 if($installer){
-	Write-Host "Building installer" -ForegroundColor green
+	Write-Host "Building installer..." -ForegroundColor green
   & 'C:\Program Files (x86)\NSIS\makensis.exe' /DVERSION=$bert_version install-script.nsi
   ExitOnError
 
@@ -237,7 +237,7 @@ Write-Host ""
 #
 
 if( $sign ) {
-	Write-Host "Signing installer" -ForegroundColor green
+	Write-Host "Signing installer..." -ForegroundColor green
 	& cmd /c 'signtool.exe' sign /t http://timestamp.comodoca.com/authenticode /a /i comodo BERT-Installer-$bert_version.exe | out-file -append -encoding "utf8"  $logfile 2>&1
 	ExitOnError ;
 }
@@ -252,7 +252,7 @@ Write-Host ""
 #
 
 if( $zip ) {
-	Write-Host "Creating zip file" -ForegroundColor green
+	Write-Host "Creating zip file..." -ForegroundColor green
   ZipFile "BERT-Installer-$bert_version.zip" "BERT-Installer-$bert_version.exe"
   ExitOnError;
 }
