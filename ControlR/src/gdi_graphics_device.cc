@@ -14,6 +14,37 @@
 
 namespace gdi_graphics_device {
 
+  std::vector < GraphicsUpdateRecord > Device::GetUpdates() {
+    std::vector < GraphicsUpdateRecord > list;
+    DWORD wait_result = WaitForSingleObject(update_lock_, 2500);
+    if (wait_result == WAIT_OBJECT_0) {
+      for (auto update_entry : update_list_) {
+        list.push_back(update_entry.second);
+      }
+      update_list_.clear();
+      ReleaseMutex(update_lock_);
+    }
+    else {
+      std::cerr << "ERR aquiring update lock [2]: " << GetLastError() << std::endl;
+    }
+    return list;
+  }
+
+  void Device::PushUpdate(GraphicsUpdateRecord &record) {
+    DWORD wait_result = WaitForSingleObject(update_lock_, 2500);
+    if (wait_result == WAIT_OBJECT_0) {
+      update_list_[record.name] = record;
+      ReleaseMutex(update_lock_);
+    }
+    else {
+      std::cerr << "ERR aquiring update lock [1]: " << GetLastError() << std::endl;
+    }
+  }
+
+  HANDLE Device::update_lock_ = CreateMutex(0, false, 0);
+
+  std::unordered_map <std::string, GraphicsUpdateRecord > Device::update_list_;
+
   __inline Gdiplus::ARGB RColor2ARGB(int color) {
     return (color & 0xff00ff00) | ((color >> 16) & 0x000000ff) | ((color << 16) & 0x00ff0000);
   }
@@ -87,13 +118,23 @@ namespace gdi_graphics_device {
 
   Device::~Device() {
 
+    Repaint(); // in case of dirty
+
     if (bitmap_) {
       Gdiplus::Bitmap *bitmap = (Gdiplus::Bitmap *)bitmap_;
       delete bitmap;
     }
     bitmap_ = 0;
 
-    DeleteFileA(temp_file_path_.c_str());
+    // the problem is that if we delete this image now, and it's repainting 
+    // asynchronously, we might delete it before it's rendered.
+
+    // actually there's a larger problem in that we are querying open devices
+    // for dirtiness; that won't work if we have deleted the device.
+
+    // ...
+
+    // DeleteFileA(temp_file_path_.c_str()); 
   }
 
   void Device::MapFont(const GraphicsContext *context, std::wstring &font_name, int32_t &style, double &font_size) {
@@ -166,9 +207,7 @@ namespace gdi_graphics_device {
   void Device::Repaint() {
 
     if (!dirty_) return;
-
     dirty_ = false;
-    // std::cout << " ** graphics update" << std::endl;
 
     std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter_;
     std::wstring wide = converter_.from_bytes(temp_file_path_);
@@ -178,7 +217,7 @@ namespace gdi_graphics_device {
       ((Gdiplus::Bitmap*)bitmap_)->Save(wide.c_str(), png_clsid, 0);
     }
 
-    // FIXME: notify excel
+    PushUpdate(GraphicsUpdateRecord({ name_, temp_file_path_, width_, height_ }));
 
   }
 

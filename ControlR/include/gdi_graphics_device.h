@@ -4,7 +4,26 @@
 #define FONT_MONO_DEFAULT	    L"Consolas"
 #define FONT_SERIF_DEFAULT	  L"Palatino Linotype"
 
+#include <unordered_map>
+
 namespace gdi_graphics_device {
+
+  /**
+   * this class (struct) is defined to support updating graphics
+   * after the associate device has been destroyed. we can no
+   * longer query the device, so we need a way to preserve notification
+   * (with information).
+   *
+   * implicit copy should be ok
+   */
+  typedef struct {
+    std::string name;
+    std::string path;
+    int width;
+    int height;
+  } GraphicsUpdateRecord;
+
+
 
   // this is clipped from r graphics, so we can use it without 
   // including that file (and all the files it includes), keeping
@@ -70,6 +89,16 @@ namespace gdi_graphics_device {
   public:
     static bool InitGDIplus(bool startup = true);
     static void * GetPngCLSID();
+
+  public:
+    static std::vector < GraphicsUpdateRecord > GetUpdates();
+
+  protected:
+    static void PushUpdate(GraphicsUpdateRecord &record);
+
+  protected:
+    static HANDLE update_lock_;
+    static std::unordered_map <std::string, GraphicsUpdateRecord >  update_list_;
 
   public:
     

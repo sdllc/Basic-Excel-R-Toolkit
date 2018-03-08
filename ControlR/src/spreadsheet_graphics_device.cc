@@ -209,6 +209,7 @@ namespace SpreadsheetGraphicsDevice {
 
     std::cout << "init device (" << name << "): " << std::dec << dd->right << ", " << dd->bottom << std::endl;
     gdi_graphics_device::Device *device = new gdi_graphics_device::Device(name, width, height);
+    
     device_list.push_back(device);
 
     dd->deviceSpecific = device;
@@ -239,15 +240,21 @@ namespace SpreadsheetGraphicsDevice {
 
   }
 
-  std::vector<gdi_graphics_device::Device*> UpdatePendingGraphics() {
-    std::vector<gdi_graphics_device::Device*> updates;
+  std::vector<gdi_graphics_device::GraphicsUpdateRecord> UpdatePendingGraphics(){
+  //std::vector<gdi_graphics_device::Device*> UpdatePendingGraphics() {
+
+    //std::vector<gdi_graphics_device::Device*> updates;
+
     for (auto device : device_list) {
       if (device->dirty()) {
         device->Repaint();
-        updates.push_back(device);
+        //updates.push_back(device);
       }
     }
-    return updates;
+
+    return gdi_graphics_device::Device::GetUpdates();
+
+    //return updates;
   }
 
 }
