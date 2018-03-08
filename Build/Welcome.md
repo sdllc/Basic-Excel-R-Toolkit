@@ -34,6 +34,10 @@ Cheers,
 
 # Release Notes #
 
+2.0.21 -- Preview Release (7 March 2018)
+
+Add Excel graphics device, bugfixes and updates
+
 2.0.20 -- Preview Release (3 March 2018)
 
 Add mirror and package selection dialogs to the console. Fixes for UTF-8 
