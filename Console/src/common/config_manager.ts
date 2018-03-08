@@ -37,6 +37,8 @@ class ConfigManager extends Rx.BehaviorSubject<ConfigState> {
     return this.getValue().status;
   }
 
+  private raw_config_file_:string;
+
   private config_path_ = path.join(
     process.env['BERT_HOME'], "bert-config.json");
 
@@ -60,6 +62,18 @@ class ConfigManager extends Rx.BehaviorSubject<ConfigState> {
   }
 
   /** 
+   * operates on a commented json file. insert should be pre-rendered 
+   * json. we can't handle arrays, just objects.
+   */
+  InsertJSON(path:string, json:string){
+    let source = this.raw_config_file_;
+    let components = path.split(".");
+
+    
+    
+  }
+
+  /** 
    * utility function: strip comments, c style and c++ style.
    * for json w/ comments
    */
@@ -75,6 +89,7 @@ class ConfigManager extends Rx.BehaviorSubject<ConfigState> {
     return new Promise((resolve, reject) => {
       fs.readFile(this.config_path, "utf8", (err, json) => {
         if(!err){
+          this.raw_config_file_ = json;
           try {
             let config = JSON.parse(this.StripComments(json));
             this.next({ config, status:ConfigLoadStatus.Loaded });
@@ -87,6 +102,7 @@ class ConfigManager extends Rx.BehaviorSubject<ConfigState> {
         else {
           console.error("err loading config file: " + err);
         }
+        this.raw_config_file_ = DefaultConfig;
         this.next({
           config:DefaultConfig, status:ConfigLoadStatus.Error
         });

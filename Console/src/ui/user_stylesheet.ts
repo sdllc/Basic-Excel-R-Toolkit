@@ -4,7 +4,10 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { FileWatcher } from '../common/file_watcher'; 
 
-fs; // otherwise it gets optimzed away: FIXME, typescript
+// this is a ts bug, will be fixed in 2.8  
+
+fs; 
+less;
 
 export class UserStylesheet {
 
