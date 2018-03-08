@@ -143,7 +143,7 @@ BERT.graphics.device <- function( name="BERT-default", bgcolor="white", width=40
 
   if( cell ){
   	ref <- BERT$.Excel(89); # xlfCaller
-	  sheetnm <- BERT$.Excel(0x4005, list(ref)); # xlSheetNm
+	  sheetnm <- BERT$.Excel(0x4005, ref); # xlSheetNm
   	name = paste0( gsub( "\\[.*?\\]", "", sheetnm ), " R", ref@R1, " C", ref@C1 );
   }
 
