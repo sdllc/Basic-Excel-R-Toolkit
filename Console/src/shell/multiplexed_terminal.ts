@@ -3,7 +3,7 @@ import { TabPanel, TabJustify } from '../ui/tab_panel';
 import { TerminalImplementation } from './terminal_implementation';
 import { TerminalState } from './terminal_state';
 import { LanguageInterface } from './language_interface';
-import { Preferences, PreferencesLoadStatus } from '../common/preferences';
+import { ConfigManagerInstance as ConfigManager, ConfigLoadStatus } from '../common/config_manager';
 
 import { remote } from 'electron';
 import * as Rx from 'rxjs';
@@ -73,7 +73,7 @@ export class MultiplexedTerminal {
     // subscribe to preference changes. the filter ignores the 
     // initial state where preferences = null.
 
-    Preferences.filter(x => x.preferences).subscribe(x => this.SetPreferences(x.preferences.shell||{}));
+    ConfigManager.filter(x => x.config).subscribe(x => this.SetPreferences(x.config.shell||{}));
 
   }
 

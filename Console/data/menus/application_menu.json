@@ -41,7 +41,7 @@
               { "label": "Top/Bottom", "type": "radio", "id": "layout-vertical" }
             ]
           },
-          { "label": "Preferences", "id": "preferences" }, 
+          { "label": "Preferences", "id": "config" }, 
           { "label": "User Stylesheet", "id": "user-stylesheet" },
           { "type": "separator" },
           { "label": "Reload", "accelerator": "Ctrl+R", "id": "reload" },

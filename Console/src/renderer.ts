@@ -19,7 +19,7 @@ import { MultiplexedTerminal } from './shell/multiplexed_terminal';
 
 import {AlertManager, AlertSpec} from './ui/alert';
 import {Editor, EditorEvent, EditorEventType} from './editor/editor';
-import {Preferences, PreferencesLoadStatus} from './common/preferences';
+import {ConfigManagerInstance as ConfigManager, ConfigLoadStatus} from './common/config_manager';
 
 import * as Rx from "rxjs";
 import * as path from 'path';
@@ -157,12 +157,12 @@ let pipe_list = (process.env['BERT_PIPE_NAME']||"").split(";"); // separator?
 // wait until we have read prefs once, then set up.
 // FIXME: is that necessary? we could just repaint.
 
-Preferences.filter(x => x.preferences).first().subscribe(x => {
+ConfigManager.filter(x => x.config).first().subscribe(x => {
 
-  let shell_preferences = x.preferences.shell || {};
+  let shell_config = x.config.shell || {};
 
   // FIXME: have terminal subscribe to prefs on its own
-  terminals.SetPreferences(shell_preferences);
+  terminals.SetPreferences(shell_config);
 
   // FIXME: after languages/tabs are initialized, select tab
   // based on stored preferences (is this going to be a long
@@ -225,24 +225,12 @@ Preferences.filter(x => x.preferences).first().subscribe(x => {
 });
 
 // subscribe to preferences to watch for errors
-let preferences_status = PreferencesLoadStatus.NotLoaded;
+let preferences_status = ConfigLoadStatus.NotLoaded;
 let preferences_error_once = false;
 
-Preferences.subscribe(x => {  
+ConfigManager.subscribe(x => {  
   if(x.status !== preferences_status){
     preferences_status = x.status;
-
-    /*
-    if(preferences_status === PreferencesLoadStatus.Error && !preferences_error_once){
-      preferences_error_once = true;
-      alert_instance.Show({
-        title: "Preferences Error",
-        message: "Please check your preferences file. BERT may not work correctly.",
-        timeout: 7
-      })
-    }
-    */
-
   }
 });
 

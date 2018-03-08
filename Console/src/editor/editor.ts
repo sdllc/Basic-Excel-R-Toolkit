@@ -29,7 +29,7 @@ import * as MarkdownItTasks from 'markdown-it-task-lists';
 const MD = new MarkdownIt().use(MarkdownItTasks); 
 
 import { FileWatcher } from '../common/file-watcher';
-import { Preferences, PreferencesSchema, PreferencesLoadStatus } from '../common/preferences';
+import { ConfigManagerInstance as ConfigManager, ConfigSchema, ConfigLoadStatus } from '../common/config_manager';
 import { EEXIST } from 'constants';
 
 const TabContextMenuData = require("../../data/menus/editor_tab_context_menu.json");
@@ -63,7 +63,7 @@ export interface EditorEvent {
 enum DocumentType {
   rendered = "rendered",
   editor = "editor",
-  preferences = "preferences"
+  config = "config"
 }
 
 interface OpenFileOptions {
@@ -475,8 +475,8 @@ export class Editor {
           this.OpenUserStylesheet();
           break;
 
-        case "main.view.preferences":
-          this.OpenPreferences();
+        case "main.view.config":
+          this.OpenConfig();
           break;
 
         case "main.help.release-notes":
@@ -627,12 +627,12 @@ export class Editor {
   }
 
   /**
-   * ensure that we have loaded preferences (or initial defaults)
+   * ensure that we have loaded config (or initial defaults)
    */
-  private EnsurePreferences() : Promise<any> {
+  private EnsureConfig() : Promise<any> {
     return new Promise(resolve => {
-      Preferences.filter(x => x.preferences).first().subscribe(prefs => {
-        this.editor_options_ = prefs['editor'] || {};
+      ConfigManager.filter(x => x.config).first().subscribe(config => {
+        this.editor_options_ = config['editor'] || {};
         resolve();
       });
     });
@@ -648,9 +648,9 @@ export class Editor {
     // if it's already been loaded once this will return immediately
     // via Promise.resolve().
     
-    // prefs is async again, so do these in parallel (...)
+    // config is async again, so do these in parallel (...)
 
-    await Promise.all([Editor.LoadMonaco(), this.EnsurePreferences()]);
+    await Promise.all([Editor.LoadMonaco(), this.EnsureConfig()]);
 
     // sanity check
 
@@ -711,15 +711,15 @@ export class Editor {
 
     // FIXME: demand load
 
-    // schema for preferences. also it allows comments (we still 
+    // schema for config file. also it allows comments (we still 
     // have to scrub these before parsing). 
 
     monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
       validate: true, allowComments: true,
       schemas: [{
-        uri: "http://bert-toolkit.com/preferences-schema",
-        fileMatch: [path.basename(Preferences.preferences_path)], 
-        schema: PreferencesSchema
+        uri: "http://bert-toolkit.com/config-schema",
+        fileMatch: [path.basename(ConfigManager.config_path)], 
+        schema: ConfigSchema
       }, {
         uri: "http://json-schema.org/draft-07/schema#",
         fileMatch: ["*.schema.json"],
@@ -728,31 +728,17 @@ export class Editor {
       ]
     });
 
-    // TODO: come back to this for managing config/preferences.
-    // the demo does not work because it's missing the triggerCharacters
-    // field, add that (triggerCharacters: ['"']) and it works, although 
-    // it's adding extra quotes. wildcards? needs some investigation. ...
-    /*
-    monaco.languages.registerCompletionItemProvider('json', {
-      triggerCharacters: ['""'],
-      provideCompletionItems: function(model, position) {
-        console.info(position);
-        return [];
-      }
-    });
-    */
-
-    // we already waited for preferences, so we are guaranteed 
-    // to have valid prefs (either user or default, based on status)
+    // we already waited for config to resolve, so we are guaranteed 
+    // to have valid config (either user or default, based on status)
 
     this.RestoreOpenFiles();
     this.OpenDefaultFiles();
 
-    // subscribe to preference changes from here on
+    // subscribe to config changes from here on
 
-    Preferences.subscribe(x => {
-      this.PreferencesStatusMessage();
-      this.UpdatePreferences(x.preferences);
+    ConfigManager.subscribe(x => {
+      this.ConfigStatusMessage();
+      this.UpdateConfig(x.config);
     });
 
     // file updates
@@ -1085,7 +1071,7 @@ export class Editor {
       // this implies it was never opened.
       // ... sample files?
       
-      this.OpenPreferences();
+      this.OpenConfig();
    }
 
     if(!last || last < current){
@@ -1185,13 +1171,13 @@ export class Editor {
   }
 
   /**
-   * opens preferences in an editor tab
+   * opens config ("preferences") in an editor tab
    */
-  public OpenPreferences() {
-    this.OpenFileInternal(Preferences.preferences_path, {
+  public OpenConfig() {
+    this.OpenFileInternal(ConfigManager.config_path, {
       override_label:Constants.files.preferences,
       add_to_recent_files:false,
-      type: DocumentType.preferences
+      type: DocumentType.config
     });
   }
 
@@ -1301,25 +1287,25 @@ export class Editor {
   }
 
   /**
-   * if we're editing preferences, always show state. otherwise, show 
-   * preferences state if there is an error.
+   * if we're editing config, always show state. otherwise, show 
+   * config state if there is an error.
    */
-  private PreferencesStatusMessage(document?:Document){
+  private ConfigStatusMessage(document?:Document){
 
     if(!document) document = this.active_document_;
 
-    this.status_bar_.PopMessage("preferences");
-    if( document && ((document.type_ === DocumentType.preferences) || Preferences.status === PreferencesLoadStatus.Error )){
-      let message = (Preferences.status === PreferencesLoadStatus.Error) ?
+    this.status_bar_.PopMessage("preferences-status");
+    if( document && ((document.type_ === DocumentType.config) || ConfigManager.status === ConfigLoadStatus.Error )){
+      let message = (ConfigManager.status === ConfigLoadStatus.Error) ?
         Constants.preferences.error : Constants.preferences.ok;
-      this.status_bar_.PushMessage(message, "preferences");
+      this.status_bar_.PushMessage(message, "preferences-status");
     }
 
   }
 
   private UpdateStatusBar(document:Document){
 
-    this.PreferencesStatusMessage(document);
+    this.ConfigStatusMessage(document);
 
     if( document.type_ === DocumentType.rendered ){
       this.status_bar_.language = Constants.status.rendered;
@@ -1338,12 +1324,6 @@ export class Editor {
         language = language.substr(0, 1).toUpperCase() + language.substr(1);
     }
 
-    /*
-    if(document.type_ === DocumentType.preferences){
-      language += " (Preferences)";
-    }
-    */
-
     this.status_bar_.language = language;
     this.status_bar_.show_position = true;
 
@@ -1359,9 +1339,9 @@ export class Editor {
     this.tabs_.Previous();
   }
 
-  private UpdatePreferences(preferences){
+  private UpdateConfig(config){
 
-    let editor_options = preferences.editor || {};
+    let editor_options = config.editor || {};
 
     // theme can't be set at runtime using updateOptions. (asymmetry?)
 
