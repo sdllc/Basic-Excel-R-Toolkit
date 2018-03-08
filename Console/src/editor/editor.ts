@@ -550,6 +550,9 @@ export class Editor {
     // schema for config file. also it allows comments (we still 
     // have to scrub these before parsing). 
 
+    // why are we including json schema schema? is that just because
+    // I was editing the schema in the editor? (...)
+
     monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
       validate: true, allowComments: true,
       schemas: [{
@@ -609,6 +612,10 @@ export class Editor {
 
   }
 
+  /**
+   * adds hover events to rendered documents, so it acts like a browser
+   * (links render in status bar).
+   */
   private SetHoverEvents(node:HTMLElement, add = true){
     let links = node.querySelectorAll("a");
     if(add){
@@ -701,25 +708,6 @@ export class Editor {
     this.AddExecActions(language_name);
   }
 
-  /** 
-   * utility for ~unique hashes (uses the java string algorithm). NOT SECURE! 
-   * 
-   * FIXME: who is using this? can we drop?
-   * /
-  private static Hash(text) {
-    let hash = 0;
-    let length = text.length;
-    if (length > 0) {
-      for (let i = 0; i < length; i++) {
-        let char = text.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash;
-      }
-    }
-    return hash;
-  }
-  */
-
   /**
    * writes document to local storage. document here includes content and
    * presentation metadata from the editor
@@ -793,8 +781,6 @@ export class Editor {
         document.label_ = unserialized.label;
         document.file_path_ = unserialized.file_path;
         document.overrideLanguage_ = unserialized.overrideLanguage;
-
-        //document.rendered_ = unserialized.rendered;
         document.type_ = unserialized.type;
         if(!document.type_) document.type_ = unserialized.rendered ? DocumentType.rendered : DocumentType.editor;
 
@@ -836,8 +822,6 @@ export class Editor {
           dirty: document.dirty_,
           data: document
         };
-
-        // if(entry === active_id) activate = tab;
 
         if (typeof position === "undefined") this.tabs_.AddTab(tab, false);
         else this.tabs_.InsertTab(tab, position, false);
@@ -917,7 +901,6 @@ export class Editor {
 
   }
 
-
   /**
    * 
    */
@@ -966,6 +949,7 @@ export class Editor {
   /** 
    * updates the menu item, on file open and on construct 
    * TODO: abbreviate super long paths with ellipses
+   * (will that not happen automatically? ...)
    */
   private UpdateRecentFilesList() {
     let recent_files = this.properties_.recent_files || [];
@@ -1018,7 +1002,7 @@ export class Editor {
   }
 
   /** 
-   * 
+   * opens user stylesheet in an editor tab
    */
   public OpenUserStylesheet(){
     this.OpenFileInternal(UserStylesheet.stylesheet_path, {
@@ -1028,13 +1012,16 @@ export class Editor {
     });
   }
 
-  /** close tab (called on button click) */
+  /** 
+   * closes tab. called on button click, or via one of the menu
+   * items (close, close others, &c).
+   */
   private CloseTab(tab: TabSpec) {
 
     // FIXME: warn if dirty
 
     if (tab === this.active_tab_) {
-      if (this.tabs_.count > 1) this.tabs_.Previous();
+      if (this.tabs_.count > 1) this.tabs_.Previous(); // FIXME: maybe have an MRU order stack? ...
     }
 
     let document = tab.data as Document;
@@ -1149,6 +1136,8 @@ export class Editor {
       return;
     }
     
+    // this is just aesthetic? whose aesthetic?
+
     let language = document.model_['_languageIdentifier'].language;
     switch (language.toLowerCase()) {
       case "json":
@@ -1268,7 +1257,11 @@ export class Editor {
 
   private LanguageFromPath(file_path) : string {
 
-    // there has to be a better way to do this
+    // there has to be a better way to do this. it's 
+    // done implicitly on load. can't find the method?
+
+    // FIXME: (lazily) create a map, then subsequent calls 
+    // can use the map.
 
     let result = "plaintext";
     let m = (file_path||"").match(/\.[^\.]*?$/);
@@ -1289,6 +1282,9 @@ export class Editor {
     return result;
   }
 
+  /**
+   * reverts file to what's on disk
+   */
   public RevertFile() { 
 
     return new Promise((resolve, reject) => {
@@ -1328,36 +1324,34 @@ export class Editor {
 
   /** 
    * creates a new file. this is like opening a file, except that there's
-   * no path, and no initial content. 
-   * 
-   * why is this async? 
+   * no path, and no initial content. language will not be set until the 
+   * file is saved, so it will default to plaintext.
    */
   public NewFile() {
-    return new Promise((resolve, reject) => {
 
-      let document = new Document();
-      document.label_ = `${Constants.files.untitled}-${this.untitled_id_generator_++}`;
-      document.model_ = monaco.editor.createModel("", "plaintext");
-      document.model_.updateOptions(this.editor_options_);
-      document.saved_version_ = document.model_.getAlternativeVersionId()
-      document.id_ = this.document_id_generator++;
+    let document = new Document();
+    document.label_ = `${Constants.files.untitled}-${this.untitled_id_generator_++}`;
+    document.model_ = monaco.editor.createModel("", "plaintext");
+    document.model_.updateOptions(this.editor_options_);
+    document.saved_version_ = document.model_.getAlternativeVersionId()
+    document.id_ = this.document_id_generator++;
 
-      let tab: TabSpec = {
-        label: document.label_,
-        // tooltip: file_path,
-        closeable: true,
-        button: true,
-        dirty: false,
-        data: document
-      };
+    let tab: TabSpec = {
+      label: document.label_,
+      // tooltip: file_path,
+      closeable: true,
+      button: true,
+      dirty: false,
+      data: document
+    };
 
-      this.tabs_.AddTabs(tab);
-      this.tabs_.ActivateTab(tab);
-      this.UpdateOpenFiles();
+    this.tabs_.AddTabs(tab);
+    this.tabs_.ActivateTab(tab);
+    this.UpdateOpenFiles();
 
-    });
   }
 
+  /** shows a fnf alert. FIXME: use our alerts? */
   private OpenFileError(){
     remote.dialog.showMessageBox({
       type: "info", 
