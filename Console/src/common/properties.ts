@@ -7,6 +7,10 @@ export interface PropertyNotifcation {
   value: any;
 }
 
+/**
+ * FIXME: like config, this class should (perhaps) inherit from
+ * subject or behavior subject
+ */
 export class PropertyManager {
 
   /** notification */
@@ -63,7 +67,7 @@ export class PropertyManager {
   ApplyTemplate(base:any, template:any){
     Object.keys(template).forEach( key => {
       if(!base.hasOwnProperty(key)){
-        base[key] = JSON.parse(JSON.stringify(template[key])); // dumb deep copy
+        base[key] = JSON.parse(JSON.stringify(template[key])); // dumb deep copy // actually smart, see benchmarks
       }
       else {
         this.ApplyTemplate(base[key], template[key]);
