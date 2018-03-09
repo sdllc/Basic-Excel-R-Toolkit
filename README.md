@@ -72,7 +72,7 @@ Requirements (Runtime)
  * R 3.4.x (optional)
   
    This version of BERT does not (at the moment) include R, so you will need
-   an R installation. A plain-vanilla [Windows R install][6] is fine, as long  
+   an R installation. A plain-vanilla [Windows R install][6] is fine, as long
    as it is version 3.4.0 or later.
 
  * Julia 0.6.2 (optional)
@@ -89,7 +89,7 @@ There are several third party tools and libraries used to build BERT:
  * Protocol Buffers
 
    BERT uses [Protocol Buffers][8] for IPC. This requires the protoc compiler
-   (to compile .proto files) as well as runtime libraries, which must be  
+   (to compile .proto files) as well as runtime libraries, which must be
    built by compiling the protobuf library. We're currently using version 
    3.5.0 and the version 3 syntax.
 
