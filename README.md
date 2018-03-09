@@ -1,8 +1,5 @@
 [<img src="bert2-logo.svg">](https://bert-toolkit.com/)
 
-BERT2
-=====
-
 The most up-to-date documentation for BERT is on the website (https://bert-toolkit.com):
 
  * [Quick Start][1]
