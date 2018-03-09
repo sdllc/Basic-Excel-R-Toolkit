@@ -1,4 +1,4 @@
-[<img src="https://cdn.rawgit.com/sdllc/Basic-Excel-R-Toolkit/90a3ba29330b7322aa3d5b84045d6df7b609fe11/bert-logo.svg">](https://bert-toolkit.com/)
+[<img src="bert2-logo.svg">](https://bert-toolkit.com/)
 
 BERT2
 =====
