@@ -52,8 +52,8 @@ FunctionEnd
 ;--------------------------------
 ;General
 
-  Icon "orange-install.ico"
-  UninstallIcon "orange-uninstall.ico"
+  Icon "bert2.ico"
+  UninstallIcon "bert2.ico"
 
   ;Name and file
   Name "BERT ${VERSION}"
@@ -77,7 +77,7 @@ FunctionEnd
   !define MUI_FINISHPAGE_RUN_PARAMETERS "/x:BERT"
   !define MUI_FINISHPAGE_RUN $ExcelPath
 
-  !define MUI_ICON "orange-install.ico"
+  !define MUI_ICON "bert2.ico"
 
 
 ;--------------------------------
