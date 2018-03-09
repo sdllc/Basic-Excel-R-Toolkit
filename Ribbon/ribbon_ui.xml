@@ -7,10 +7,11 @@
 
       <tab idMso="TabAddIns">
         <group id="g1">
-          <button id="b1" getLabel="GetLabel" size="large" onAction="ShowConsole" image="console" supertip="Open the BERT console to change settings, write code or run in real time"/>
-          <!--
-          <button id="b1" getLabel="GetLabel" size="large" onAction="ShowConsole" imageMso="CreateStoredProcedure" supertip="Open the BERT console to change settings, write code or run in real time"/>
+          <!-- 
+            label was switched to a method in order to insert a non-breaking space, to force layout.
+            that's no longer necessary if we're using the smaller button.
           -->
+          <button id="b1" getLabel="GetLabel" onAction="ShowConsole" image="console" supertip="Open the BERT console to change settings, write code or run in real time"/>
         </group>
       </tab>
 

@@ -75,6 +75,8 @@ public:
   STDMETHOD(OnStartupComplete)(SAFEARRAY **custom);
   STDMETHOD(OnBeginShutdown)(SAFEARRAY **custom);
 
+  STDMETHOD(GetImage)(int32_t image_id, VARIANT *result);
+
   CComPtr<IDispatch>      m_pApplication;
   CComPtr<IDispatch>      m_pAddInInstance;
   CComQIPtr<IRibbonUI>    m_pRibbonUI;
@@ -102,68 +104,7 @@ public:
     return RIBBON_INTERFACE::GetIDsOfNames(riid, rgszNames, cNames, lcid, rgdispid);
   }
 
-  /**
-   * thanks to
-   * http://microsoft.public.office.developer.com.add-ins.narkive.com/lyxdw2Ns/iribbonextensibility-callback-problem
-   */
-  STDMETHOD(GetImage)(int32_t image_id, VARIANT *result)
-  {
-    HRESULT hr = S_OK;
-    PICTDESC pd;
 
-    pd.cbSizeofstruct = sizeof(PICTDESC);
-    pd.picType = PICTYPE_BITMAP;
-
-    Gdiplus::GdiplusStartupInput gdiplusStartupInput;
-    ULONG_PTR gdiplusToken;
-
-    gdiplusStartupInput.DebugEventCallback = NULL;
-    gdiplusStartupInput.SuppressBackgroundThread = FALSE;
-    gdiplusStartupInput.SuppressExternalCodecs = FALSE;
-    gdiplusStartupInput.GdiplusVersion = 1;
-    GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
-
-    HRSRC hResource = FindResource(_AtlBaseModule.GetResourceInstance(), MAKEINTRESOURCE(image_id), TEXT("PNG"));
-
-    if (!hResource) return S_FALSE; 
-
-    DWORD dwImageSize = SizeofResource(_AtlBaseModule.GetResourceInstance(), hResource);
-    const void* pResourceData = LockResource(LoadResource(_AtlBaseModule.GetResourceInstance(), hResource));
-    if (!pResourceData) return S_FALSE;
-
-    HGLOBAL hBuffer = GlobalAlloc(GMEM_MOVEABLE, dwImageSize);
-    if (hBuffer){
-
-      void* pBuffer = GlobalLock(hBuffer);
-      if (pBuffer){
-
-        CopyMemory(pBuffer, pResourceData, dwImageSize);
-
-        IStream* pStream = NULL;
-        if(SUCCEEDED(::CreateStreamOnHGlobal(hBuffer, FALSE, &pStream))){
-
-          Gdiplus::Bitmap *pBitmap = Gdiplus::Bitmap::FromStream(pStream);
-          pStream->Release();
-
-          if (pBitmap){
-            pBitmap->GetHBITMAP(0, &pd.bmp.hbitmap);
-            hr = OleCreatePictureIndirect(&pd, IID_IDispatch, TRUE, (LPVOID*)(&(result->pdispVal)));
-            if (SUCCEEDED(hr)) {
-              result->pdispVal->AddRef();
-              result->vt = VT_DISPATCH;
-            }
-            delete pBitmap;
-          }
-        }
-        GlobalUnlock(pBuffer);
-      }
-      GlobalFree(hBuffer);
-    }
-
-    Gdiplus::GdiplusShutdown(gdiplusToken);
-
-    return hr;
-  }
 
   STDMETHOD(Invoke)(DISPID dispidMember, REFIID riid,
     LCID lcid, WORD wFlags, DISPPARAMS* pdispparams, VARIANT* pvarResult,
