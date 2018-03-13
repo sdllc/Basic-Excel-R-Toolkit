@@ -219,7 +219,7 @@ Write-Host ""
 
 if($installer){
 	Write-Host "Building installer..." -ForegroundColor green
-  & 'C:\Program Files (x86)\NSIS\makensis.exe' /DVERSION=$bert_version /DR=../../R install-script.nsi
+  & 'C:\Program Files (x86)\NSIS\makensis.exe' /DVERSION=$bert_version /DR=../../R install-script.nsi | out-file -append -encoding "utf8"  $logfile 2>&1
   ExitOnError
 
   # nsis holds a lock on the output file, which breaks the next command.
