@@ -72,7 +72,7 @@ let mainWindow
 function createWindow () {
 
   let window_state = WindowState({
-    defaultWidth: 1100, defaultHeight: 800
+    defaultWidth: 1200, defaultHeight: 800
   });
 
   // Create the browser window.
