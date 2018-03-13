@@ -47,16 +47,17 @@ FunctionEnd
 ;--------------------------------
 ;Delete old versions of R
 
-Function DeleteRVersions 
+!macro DeleteRVersions
 
   ; this happens both on uninstall and on update. we are breaking
-  ; it out so there's only one list to maintain.
+  ; it out so there's only one list to maintain. it has to be a macro
+  ; and not a function, otherwise we would still need separate functions.
 
   RMDir /r "$INSTDIR\R-3.4.1"
   RMDir /r "$INSTDIR\R-3.4.2"
   RMDir /r "$INSTDIR\R-3.4.3"
 
-FunctionEnd
+!macroend
 
 ;--------------------------------
 ;Includes
@@ -214,7 +215,7 @@ Section "Main" SecMain
 
   ; delete old versions of R, if we are updating
 
-  Call DeleteRVersions
+  !insertmacro DeleteRVersions
 
 !ifdef R
 
@@ -248,9 +249,9 @@ Section "Uninstall"
   RMDir /r "$INSTDIR\files"
   RMDir /r "$INSTDIR\startup"
 
-  ; R; we will need to update this list with new versions
-
-  Call DeleteRVersions
+  ; clean up R
+  
+  !insertmacro DeleteRVersions
 
   ; this is data for the console
 
