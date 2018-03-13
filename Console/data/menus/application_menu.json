@@ -65,7 +65,7 @@
     ]
   },
   "r-packages": [
-    { "label": "R Packages:", "id": "r", "enabled": false },
+    { "label": "R Packages", "id": "r", "enabled": false },
     { "label": "Choose CRAN Mirror", "id": "r-choose-mirror" },
     { "label": "Install Packages", "id": "r-install-packages" }
   ]
