@@ -595,7 +595,7 @@ int BERT::HandleCallbackOnThread(const BERTBuffers::CallResponse *call, BERTBuff
 
   int return_value = 0;
 
-  // DumpJSON(call);
+  // MessageUtilities::DumpJSON(*call);
   response->set_id(call->id());
 
   if (call->operation_case() == BERTBuffers::CallResponse::OperationCase::kFunctionCall) {
