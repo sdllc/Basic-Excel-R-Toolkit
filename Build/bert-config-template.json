@@ -9,7 +9,7 @@
   /** 
    * basic BERT configuration. paths in this section can use
    * environment variables (e.g. %userprofile% for your home 
-   * directory, or %programfiles%).
+   * directory).
    *
    * NOTE that (for now), changes to this section will not
    * be reloaded. you will need to restart Excel for changes 
@@ -17,32 +17,19 @@
    */
   "BERT": {
 
-    // per-language configuration. for the time being this is only
-    // the language home directory, but that will probably change.
+    // per-language configuration. to enable a language, uncomment
+    // the language section and (optionally) set the home directory.
+    // to disable a language, delete or comment out the block.
 
-    // to use R, uncomment this section and set "home" to point to 
-    // the base R directory. 
-
-    /*
     "R": {
-      "home": "%programfiles%\\R-3.4.3",
       "lib": "%bert_home%\\lib"
     },
-     */
 
-    // to use Julia, uncomment this section and set "home" to point to
-    // the base Julia directory. the default Julia install uses your 
-    // local app data directory, so this will normally work as-is:
-
-    /*
     "Julia": {
-      "home": "%localappdata%\\Julia-0.6.2"
     },
-     */
 
-    // the root directory for functions files. files will be 
-    // loaded at startup and reloaded when changed. use the 
-    // same directory for all languages.
+    // files in this directory will be loaded at startup and reloaded 
+    // when changed. the same directory is used for all languages.
 
     "functionsDirectory": "%userprofile%\\Documents\\BERT2\\functions"
 
@@ -53,11 +40,13 @@
    * xtermjs, so see that project for more detail. 
    */
   "shell": {
+    
     "theme": {
       "background": "#fff",
       "foreground": "#000",
       "cursor": "#000"
     },
+
     "fontFamily": "consolas",
 
     // we like cursor blinking, but (atm) there are some xtermjs 

@@ -34,6 +34,7 @@ public:
   std::string prepend_path_;
   uint32_t startup_resource_;
   std::string startup_resource_path_;
+  std::string default_home_;
 
 public:
   LanguageDescriptor(
@@ -43,6 +44,7 @@ public:
     const std::vector<std::string> &extensions,
     const std::string &command_arguments,
     const std::string &prepend_path,
+    const std::string &default_home,
     uint32_t startup_resource,
     const std::string &startup_resource_path = ""
   ) 
@@ -52,6 +54,7 @@ public:
     , extensions_(extensions)
     , command_arguments_(command_arguments)
     , prepend_path_(prepend_path)
+    , default_home_(default_home)
     , startup_resource_(startup_resource)
     , startup_resource_path_(startup_resource_path)
   {}
@@ -63,6 +66,7 @@ public:
     , extensions_(rhs.extensions_)
     , command_arguments_(rhs.command_arguments_)
     , prepend_path_(rhs.prepend_path_)
+    , default_home_(rhs.default_home_)
     , startup_resource_(rhs.startup_resource_)
     , startup_resource_path_(rhs.startup_resource_path_)
   {}

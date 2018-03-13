@@ -720,7 +720,9 @@ void BERT::Init() {
         item["prefix"].string_value(),
         extensions,
         item["command_arguments"].string_value(),
-        item["prepend_path"].string_value(), 0,
+        item["prepend_path"].string_value(), 
+        item["default_home"].string_value(),
+        0,
         startup_resource_path);
       language_descriptors.push_back(language_descriptor);
     }

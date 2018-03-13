@@ -39,9 +39,20 @@ LanguageService::LanguageService(CallbackInfo &callback_info, COMObjectMap &obje
 {
   memset(&io_, 0, sizeof(io_));
 
-  language_home_ = config["BERT"][descriptor.name_]["home"].string_value();
-  this->configured_ = language_home_.length();
-  if (!this->configured_) return;
+  // comment out language (or delete) to deactivate.
+  
+  configured_ = !(config["BERT"][descriptor.name_].is_null());
+  if (!configured_) return;
+
+  // default home or override in the config. note that for R we are relying on 
+  // the BERT_HOME env var being set at this point.
+
+  language_home_ = descriptor.default_home_;
+
+  if (config["BERT"][descriptor.name_]["home"].is_string()) language_home_ = config["BERT"][descriptor.name_]["home"].string_value();
+
+  configured_ = language_home_.length();
+  if (!configured_) return;
 
   DWORD result = ExpandEnvironmentStringsA(language_home_.c_str(), 0, 0);
   if (result) {
@@ -307,7 +318,7 @@ void LanguageService::ReadSourceFile(const std::string &file) {
   Call(response, call);
 }
 
-void LanguageService::InterpolateString(std::string &str) {
+void LanguageService::InterpolateString(std::string &str, const std::vector<std::pair<std::string, std::string>> &additional_replacements){
 
   auto replace_function = [](std::string &haystack, std::string needle, std::string replacement) {
     for (std::string::size_type i = 0; (i = haystack.find(needle, i)) != std::string::npos;)
@@ -331,6 +342,10 @@ void LanguageService::InterpolateString(std::string &str) {
   replace_function(str, "$HOME", language_home_);
   replace_function(str, "$ARCH", arch);
   replace_function(str, "$NAME", language_name_);
+
+  for (const auto &pair : additional_replacements) {
+    replace_function(str, pair.first, pair.second);
+  }
 
 }
 

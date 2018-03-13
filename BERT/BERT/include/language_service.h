@@ -222,7 +222,9 @@ public:
 
   /**
    * replace tokens in string. FIXME: make more generic
+   *
+   * UPDATE: the second parameter takes pairs of strings for needle -> replacement
    */
-  void InterpolateString(std::string &str);
+  void InterpolateString(std::string &str, const std::vector<std::pair<std::string, std::string>> &additional_replacements = {});
 
 };

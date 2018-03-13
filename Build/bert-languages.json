@@ -6,7 +6,8 @@
     "extensions": ["r", "rsrc", "rscript"],
     "command_arguments": "-r \"$HOME\"",
     "prepend_path": "$HOME\\bin\\x64",
-    "startup_resource": "startup.r"
+    "startup_resource": "startup.r",
+    "default_home": "%BERT_HOME%\\R-3.4.3"
   },
   {
     "name": "Julia", 
@@ -15,6 +16,7 @@
     "extensions": ["jl", "julia"],
     "command_arguments": "",
     "prepend_path": "$HOME\\bin",
-    "startup_resource": "startup.jl"
+    "startup_resource": "startup.jl",
+    "default_home": "%localappdata%\\Julia-0.6.2"
   }
 ]
