@@ -30,11 +30,9 @@ import { TerminalImplementation } from './terminal_implementation';
 import { MenuUtilities } from '../ui/menu_utilities';
 import { Dialog, DialogSpec, DialogButton } from '../ui/dialog';
 import { DataCache } from '../common/data_cache';
-
-import * as path from 'path';
-
 import { VirtualList } from '../ui/virtual_list';
 
+import * as path from 'path';
 const Constants = require("../../data/constants.json");
 
 // FIXME: move to different file, language-specific

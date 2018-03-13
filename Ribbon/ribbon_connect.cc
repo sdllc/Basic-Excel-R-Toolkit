@@ -138,9 +138,9 @@ STDMETHODIMP CConnect::OnBeginShutdown(SAFEARRAY ** /*custom*/)
 }
 
 /**
-* thanks to
-* http://microsoft.public.office.developer.com.add-ins.narkive.com/lyxdw2Ns/iribbonextensibility-callback-problem
-*/
+ * thanks to
+ * http://microsoft.public.office.developer.com.add-ins.narkive.com/lyxdw2Ns/iribbonextensibility-callback-problem
+ */
 STDMETHODIMP CConnect::GetImage(int32_t image_id, VARIANT *result)
 {
   // FIXME: we need a different image for high-dpi screens
