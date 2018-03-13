@@ -45,6 +45,20 @@ Function CheckExcelVersion
 FunctionEnd
 
 ;--------------------------------
+;Delete old versions of R
+
+Function DeleteRVersions 
+
+  ; this happens both on uninstall and on update. we are breaking
+  ; it out so there's only one list to maintain.
+
+  RMDir /r "$INSTDIR\R-3.4.1"
+  RMDir /r "$INSTDIR\R-3.4.2"
+  RMDir /r "$INSTDIR\R-3.4.3"
+
+FunctionEnd
+
+;--------------------------------
 ;Includes
 
   !include "MUI2.nsh"
@@ -78,7 +92,7 @@ FunctionEnd
   !define MUI_FINISHPAGE_RUN $ExcelPath
 
   !define MUI_ICON "bert2.ico"
-
+  !define MUI_UNICON "bert2.ico"
 
 ;--------------------------------
 ;Pages
@@ -198,6 +212,21 @@ Section "Main" SecMain
   SetOutPath "$INSTDIR"
   File ..\Build\Welcome.md 
 
+  ; delete old versions of R, if we are updating
+
+  Call DeleteRVersions
+
+!ifdef R
+
+  ; R. this is somewhat convoluted because I can't figure out how to get 
+  ; NSIS to install a directory without using a containing directory.
+  ; this will install whatever is in the passed directory, which should 
+  ; contain the current version of R (and nothing else).
+
+  File /r ${R}\*.*
+
+!endif
+
 SectionEnd
 
 ;--------------------------------
@@ -218,6 +247,10 @@ Section "Uninstall"
   RMDir /r "$INSTDIR\module"
   RMDir /r "$INSTDIR\files"
   RMDir /r "$INSTDIR\startup"
+
+  ; R; we will need to update this list with new versions
+
+  Call DeleteRVersions
 
   ; this is data for the console
 

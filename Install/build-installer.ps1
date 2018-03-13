@@ -180,7 +180,7 @@ if($console){
   ExitOnError
 }
 else {
-	Write-Host "Skipping build" -foregroundcolor gray
+	Write-Host "Skipping console" -foregroundcolor gray
 }
 
 Write-Host ""
@@ -219,7 +219,7 @@ Write-Host ""
 
 if($installer){
 	Write-Host "Building installer..." -ForegroundColor green
-  & 'C:\Program Files (x86)\NSIS\makensis.exe' /DVERSION=$bert_version install-script.nsi
+  & 'C:\Program Files (x86)\NSIS\makensis.exe' /DVERSION=$bert_version /DR=../../R install-script.nsi
   ExitOnError
 
   # nsis holds a lock on the output file, which breaks the next command.
