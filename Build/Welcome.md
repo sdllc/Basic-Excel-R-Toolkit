@@ -2,42 +2,41 @@
 
 # Welcome to the BERT console! # 
 
-This is a preview release of BERT version 2. To get started, you 
-will need to configure BERT to connect to R or Julia. This release
-does not include either language.
+BERT connects Excel with the statistics language [R][1]. The console has
+an editor for writing functions, and an R shell for testing code. You can 
+also control Excel directly from R in the shell. See the file 
+excel-scripting.R (in your Documents folder, under BERT2) for an example.
 
-**BERT requires specific versions of each language**. For R, you can use 
-the current release (3.4.3) or any 3.4.x version. For Julia, you 
-must use the current release (0.6.2). You can use an existing install or
-download default installers for [R][1] or [Julia][2].
+When it starts, BERT loads functions from the functions directory, in 
+your Documents folder under BERT2. You should see some example functions 
+installed in Excel called `R.TestAdd` and `R.EigenValues`.
 
-Open the preferences file using the menu **View** > **Preferences**. For 
-either R or Julia (or both), set "home" to point to the language root 
-directory.
-
-After you set the directory, you will need to restart Excel for 
-the changes to take effect. Re-open the console and you should
-see a tab for your installed language or languages. BERT loads functions
-from the functions directory; this is installed in your Documents folder
-under BERT2. You should see some example functions installed in Excel
-called `R.TestAdd` and `R.EigenValues` (or `Jl.TestAdd` and `Jl.EigenValues`).
+You can also use BERT with the statistics language [Julia][2]. See 
+[this page][3] for more information. 
 
 Have suggestions, feedback, questions, comments?  Let us know!  
 
 Cheers,
 
- -- [The BERT team][3]
+ -- [The BERT team][4]
 
 [1]: https://cran.r-project.org/
 [2]: https://julialang.org/downloads/
-[3]: https://bert-toolkit.com/contact
+[3]: https://bert-toolkit.com/using-julia-with-bert
+[4]: https://bert-toolkit.com/contact
 
 # Release Notes #
+
+2.0.23 -- Release Candidate (14 March 2018)
+
+Add R to default install. Simplify configuration, add language defaults.
+Julia should now work automatically if installed to the default directory.
+Add `BERT.Call` and `BERT.Exec` for backwards compatibility.
 
 2.0.21 -- Preview Release (7 March 2018)
 
 Add Excel graphics device, bugfixes and updates. Moved `BERT.Call.X`
-and `BERT.Excel.X` to macro category (limit to VBA calls).
+and `BERT.Exec.X` to macro category (limit to VBA calls).
 
 2.0.20 -- Preview Release (3 March 2018)
 
@@ -72,10 +71,9 @@ from the spreadsheet and limited to VBA.
 
 # Credits #
 
-The BERT console is built using [Electron][4], [Monaco][5] and 
-[xtermjs][6]. 
+The BERT console is built using [Electron][5], [Monaco][6] and 
+[xtermjs][7]. 
 
-[4]: https://electronjs.org/
-[5]: https://github.com/Microsoft/monaco-editor
-[6]: https://xtermjs.org/
-
+[5]: https://electronjs.org/
+[6]: https://github.com/Microsoft/monaco-editor
+[7]: https://xtermjs.org/
