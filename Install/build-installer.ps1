@@ -30,7 +30,7 @@ Param(  [switch]$sign = $false,
         [switch]$clean = $false,
         [switch]$zip = $false,
         [switch]$all = $false,
-        [string]$logfile = "build-log.txt" );
+        [string]$logfile = ".\build-log.txt" );
 
 if( $all ) {
   $console = $TRUE;
@@ -42,7 +42,8 @@ if( $all ) {
   $zip = $TRUE;
 };
 
-$logfile = Resolve-Path $logfile
+$logfile = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($logfile)
+# $logfile = Resolve-Path $logfile
 
 #-------------------------------------------------------------------------------
 # functions
