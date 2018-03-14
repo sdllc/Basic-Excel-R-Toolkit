@@ -94,6 +94,10 @@ interface OpenFileOptions {
   override_label?:string;
   type?:DocumentType;
   add_to_recent_files?:boolean; // default true
+
+  // suppress file not found error (dialog), fail silently
+
+  suppress_error?:boolean;
 }
 
 /**
@@ -908,10 +912,41 @@ export class Editor {
     // fixed to order files properly. slick conditional await.
 
     if(!last){
+
       // never opened: open config file
-      await this.OpenConfig();
+      // await this.OpenConfig();
 
       // FIXME: open scripting example?
+
+      let functions_path;
+      try {
+        functions_path = ConfigManager.config.BERT.functionsDirectory;
+      }
+      catch(e){
+        console.error(e);
+      }
+
+      if( functions_path ){
+
+        // this appears to work irrespective of casing. it's not clear 
+        // to me why this is the case, unless there's a trap in process.env.
+
+        functions_path = functions_path.replace(/%([^%]+)%/g, function(_,n) {
+          return process.env[n];
+        })
+
+        // using await here should ensure these are in the order we want.
+
+        // fixme: parameterize defaults?
+
+        await this.OpenFileInternal(path.join(functions_path, "..", "examples", "excel-scripting.r"), {
+          type:DocumentType.editor, suppress_error:true });
+
+        await this.OpenFileInternal(path.join(functions_path, "functions.r"), {
+          type:DocumentType.editor, suppress_error:true });
+            
+      }
+
     }
 
     if(!last || last < current){
@@ -1414,7 +1449,7 @@ export class Editor {
       fs.readFile(file_path, "utf8", (err, data) => {
 
         if (err) {
-          this.OpenFileError();
+          if(!options.suppress_error) this.OpenFileError();
           this.UpdateRecentFiles(file_path, false);
           return reject(err);
         }
