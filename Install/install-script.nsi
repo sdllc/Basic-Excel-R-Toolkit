@@ -63,6 +63,10 @@ FunctionEnd
 ;Includes
 
   !include "MUI2.nsh"
+  
+  ; for GetTime
+
+  !include "FileFunc.nsh"
 
 ;--------------------------------
 ;General
@@ -213,6 +217,10 @@ Section "Main" SecMain
   SetOutPath "$INSTDIR"
   File ..\Build\Welcome.md 
 
+  ; icon for add/remove programs
+
+  File "bert2.ico"
+
   ; delete old versions of R, if we are updating
 
   !insertmacro DeleteRVersions
@@ -227,6 +235,28 @@ Section "Main" SecMain
   File /r ${R}\*.*
 
 !endif
+
+  ; add uninstall info
+
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\BERT2" "DisplayName" "BERT Tookit"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\BERT2" "DisplayIcon" "$\"$INSTDIR\bert2.ico$\""
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\BERT2" "DisplayVersion" ${VERSION}
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\BERT2" "Publisher" "Structured Data LLC"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\BERT2" "UninstallString" "$\"$INSTDIR\uninstall.exe$\""
+  WriteRegDWORD HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\BERT2" "NoModify" 1
+  WriteRegDWORD HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\BERT2" "NoRepair" 1
+
+  ${GetTime} "" "L" $0 $1 $2 $3 $4 $5 $6
+	; $0="01"      day
+	; $1="04"      month
+	; $2="2005"    year
+	; $3="Friday"  day of week name
+	; $4="16"      hour
+	; $5="05"      minute
+	; $6="50"      seconds
+
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\BERT2" "InstallDate" "$2$1$0"
+
 
 SectionEnd
 
@@ -271,6 +301,7 @@ Section "Uninstall"
   Delete "$INSTDIR\user-stylesheet-template.json"
   Delete "$INSTDIR\bert-languages.json"
   Delete "$INSTDIR\Welcome.md"
+  Delete "$INSTDIR\bert2.ico"
 
   ; uninstaller
 
@@ -278,5 +309,6 @@ Section "Uninstall"
   RMDir "$INSTDIR"
 
   ; DeleteRegKey /ifempty HKCU "Software\BERT2"
+  DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\BERT2"
 
 SectionEnd

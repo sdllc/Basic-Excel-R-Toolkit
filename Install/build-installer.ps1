@@ -42,8 +42,11 @@ if( $all ) {
   $zip = $TRUE;
 };
 
+#
+# https://stackoverflow.com/questions/3038337/powershell-resolve-path-that-might-not-exist
+#
+
 $logfile = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($logfile)
-# $logfile = Resolve-Path $logfile
 
 #-------------------------------------------------------------------------------
 # functions
