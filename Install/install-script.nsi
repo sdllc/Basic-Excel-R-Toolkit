@@ -242,6 +242,7 @@ Section "Main" SecMain
   File ..\Examples\functions.*
   File ..\Examples\excel-scripting.r
   File ..\Examples\excel-scripting.jl
+  File ..\Examples\excel-functions.r
 
   CreateDirectory "$DOCUMENTS\BERT2\examples"
   CreateDirectory "$DOCUMENTS\BERT2\functions"
@@ -259,6 +260,9 @@ Section "Main" SecMain
 
   IfFileExists "$DOCUMENTS\BERT2\functions\functions.jl" +2
   CopyFiles "$INSTDIR\files\functions.jl" "$DOCUMENTS\BERT2\functions\functions.jl"
+
+  IfFileExists "$DOCUMENTS\BERT2\examples\excel-functions.r" +2
+  CopyFiles "$INSTDIR\files\excel-functions.r" "$DOCUMENTS\BERT2\examples\excel-functions.r"
 
   ; intro/release notes
 
