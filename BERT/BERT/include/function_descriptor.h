@@ -52,8 +52,18 @@ typedef std::vector<std::shared_ptr<ArgumentDescriptor>> ARGUMENT_LIST;
 class FunctionDescriptor {
 
 public:
+
+  /* 
+   * optional alias. if there's an alias, this will be the value used in the Excel function.
+   * the name value (not the alias) will get passed back to the language service. if alias
+   * is empty, then name will be used for both (as now).
+   */
+  std::string alias_;
+
   std::string name_;
+
   std::string category_;
+
   std::string description_;
   
   /** it's a waste to carry this around, but it seems convenient */
@@ -67,6 +77,13 @@ public:
 
   ARGUMENT_LIST arguments_;
 
+  /** 
+   * flags is an opaque field, for use by languages. it is currently 
+   * intended for R to indicate remapped functions. there are supporting fields in 
+   * PB function descriptors and function calls.
+   */
+  uint32_t flags_;
+
   /**
    * this ID is assigned when we call xlfRegister, and we need to keep
    * it around to call xlfUnregister if we are rebuilding the functions.
@@ -75,12 +92,14 @@ public:
   double register_id_;
 
 public:
-  FunctionDescriptor(const std::string &name, const std::string &language_name, uint32_t language_key, const std::string &category = "", const std::string &description = "", const ARGUMENT_LIST &args = {})
+  FunctionDescriptor(const std::string &name, const std::string &alias, const std::string &language_name, uint32_t language_key, const std::string &category = "", const std::string &description = "", const ARGUMENT_LIST &args = {}, uint32_t flags = 0)
     : name_(name)
+    , alias_(alias)
     , language_name_(language_name)
     , language_key_(language_key)
     , category_(category)
     , description_(description)
+    , flags_(flags)
     , register_id_(0)
   {
     for (auto arg : args) arguments_.push_back(arg);
@@ -92,8 +111,10 @@ public:
 
   FunctionDescriptor(const FunctionDescriptor &rhs) {
     name_ = rhs.name_;
+    alias_ = rhs.alias_;
     language_name_ = rhs.language_name_;
     category_ = rhs.category_;
+    flags_ = rhs.flags_;
     description_ = rhs.description_;
     register_id_ = rhs.register_id_;
     language_key_ = rhs.language_key_;

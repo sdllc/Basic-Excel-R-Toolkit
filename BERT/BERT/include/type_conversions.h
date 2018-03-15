@@ -392,6 +392,18 @@ public:
       StringToXLOPER(x, var.str());
       break;
 
+    case BERTBuffers::Variable::ValueCase::kCpx:
+    {
+      std::stringstream ss;
+      auto complex = var.cpx();
+      ss << complex.r();
+      if (complex.i() >= 0) ss << "+";
+      ss << complex.i();
+      ss << "i"; // FIXME: customizable
+      StringToXLOPER(x, ss.str());
+      break;
+    }
+
     case BERTBuffers::Variable::ValueCase::kArr:
     {
       const BERTBuffers::Array &arr = var.arr();

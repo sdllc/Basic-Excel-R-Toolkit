@@ -55,8 +55,69 @@ library(BERTModule, lib.loc=paste0(Sys.getenv("BERT_HOME"), "module"));
       .Call("BERT.Callback", "remap-functions", list(), PACKAGE="(embedding)");
     }
 
+    #===========================================================================
+
+    .function.map <- new.env();
+
+    #--------------------------------------------------------
+    # map all functions in an environment.  the ... arguments
+    # are passed to ls(), so use pattern='X' to subset 
+    # functions in the environment. 
+    #--------------------------------------------------------
+    UseEnvironment <- function(env, prefix, category, ...){
+      count <- 0;
+      if( missing( prefix )){ prefix = ""; }
+      else { prefix = paste0( prefix, "." ); }
+      if( missing( category )){ category = ""; }
+      if(is.character(env)){ env = as.environment(env); }
+      lapply( ls( env, ... ), function( name ){
+        func <- get( name, envir=env );
+        if( is.function(func)){
+          func.formals <- formals(func);
+          arguments=lapply(names(func.formals), function(b){ list(name=b, default=func.formals[[b]])});
+          fname <- paste0( prefix, name );
+          assign( fname, list( name=fname, expr=name, envir=env, category=category, arguments=arguments ), envir=.function.map );
+          count <<- count + 1;
+        }
+      });
+      if( count > 0 ){ 
+        remap.functions();
+      }
+      return( count > 0 );
+    }
+
+    #--------------------------------------------------------
+    # this is an alias for UseEnvironment that prepends the
+    # package: for convenience.
+    #--------------------------------------------------------
+    UsePackage <- function( pkg, prefix, category, ... ){
+      require( pkg, character.only=T );
+      UseEnvironment( paste0( "package:", pkg ), prefix, category, ... );
+    }
+
+    #--------------------------------------------------------
+    # remove mapped environment/package functions
+    #--------------------------------------------------------
+    ClearMappedFunctions <- function(){
+      rm( list=ls(.function.map), envir=.function.map );
+      remap.functions();
+    }
+
+    #--------------------------------------------------------
+    # pass through
+    #--------------------------------------------------------
+    .call.mapped.function <- function(name, ...){
+      ref <- BERT$.function.map[[name]];
+      do.call(ref$expr, list(...), envir=ref$envir);
+    }
+
+    #===========================================================================
+
     #
     # autocomplete for the console/shell. we add a custom completer later.
+    # 
+    # FIXME: are we using this one or the one in the module? and why are there
+    # two?
     #
     .Autocomplete <- function(...){
       
@@ -77,16 +138,6 @@ library(BERTModule, lib.loc=paste0(Sys.getenv("BERT_HOME"), "module"));
     }
 
     #
-    # basic callback function. command is a string, by convention, and 
-    # data is usually a list of arguments (but can be omitted). 
-    # 
-    # FIXME: move this into a closure to prevent external access (?)
-    #
-    #.Callback <- function( command, data=NULL ){
-    #  .Call("BERT.Callback", command, data, PACKAGE="(embedding)");
-    #}
-
-    #
     # lists functions in the global environment (or specified environment) 
     # for loading into Excel. using custom environments is not enabled in 
     # BERT2, but we're not deprecating it yet -- it might come back.
@@ -95,13 +146,20 @@ library(BERTModule, lib.loc=paste0(Sys.getenv("BERT_HOME"), "module"));
       funcs <- ls(envir=envir, all.names=F);
       if(length(funcs) == 0){ return(NULL); }
       funcs <- funcs[sapply(funcs, function(a){ mode(get(a, envir=envir))=="function"; })];
+
       function.list <- lapply(funcs, function(a){
         func <- get(a, envir=envir);
         f <- formals(func);
         attrib <- attributes(func)[names(attributes(func)) != "srcref" ];
-        list(name=a, arguments=lapply(names(f), function(b){ list(name=b, default=f[[b]])}), attributes=attrib);
+        list(name=a, flags=0, arguments=lapply(names(f), function(b){ list(name=b, default=f[[b]])}), attributes=attrib);
       });
-      function.list;
+
+      # mapped functions 
+      mapped.list <- lapply(BERT$.function.map, function(a){
+        list(name=a$name, flags=1, arguments=a$arguments );
+      });
+      function.list <- c(function.list, mapped.list);
+
       class(function.list) <- "exported.function.list"; # see below
       function.list;
     }
@@ -179,7 +237,7 @@ library(BERTModule, lib.loc=paste0(Sys.getenv("BERT_HOME"), "module"));
         }
         paste0(arg$name, "=", arg$default);
       });
-      cat(paste0("  ", func$name, "(", paste(arg.list, collapse=", "), ")\n"));
+      cat(paste0(" ", "(", func$flags, ") ", func$name, "(", paste(arg.list, collapse=", "), ")\n"));
     }));
     cat("\n");
   }

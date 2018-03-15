@@ -540,7 +540,7 @@ FUNCTION_LIST LanguageService::CreateFunctionList(const BERTBuffers::CallRespons
         }
         arglist.push_back(std::make_shared<ArgumentDescriptor>(argument.name(), value.str()));
       }
-      function_list.push_back(std::make_shared<FunctionDescriptor>(descriptor.function().name(), name, key, "", "", arglist));
+      function_list.push_back(std::make_shared<FunctionDescriptor>(descriptor.function().name(), descriptor.function().name(), name, key, "", "", arglist, descriptor.flags()));
     }
   }
 

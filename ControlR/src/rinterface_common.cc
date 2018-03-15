@@ -282,36 +282,60 @@ SEXP RCallSEXP(const BERTBuffers::CompositeFunctionCall &fc, bool wait, int &err
   // auto fc = call.function_call();
   err = 0;
   int len = fc.arguments().size();
+  int flags = fc.flags();
 
-  SEXP sargs = Rf_allocVector(VECSXP, len);
-  for (int i = 0; i < len; i++) {
-    SET_VECTOR_ELT(sargs, i, VariableToSEXP(fc.arguments(i)));
-  }
+  if (flags == 1) {
 
-  SEXP env = R_GlobalEnv;
-  std::vector<std::string> parts;
-  StringUtilities::Split(fc.function().c_str(), '$', 0, parts, true);
+    // this is a mapped function, use special calling syntax...
 
-  // resolve qualified name
+    SEXP sargs = Rf_allocVector(VECSXP, len+1);
+    SET_VECTOR_ELT(sargs, 0, Rf_mkString(fc.function().c_str()));
 
-  // if you're going to do this, you also need to handle packages,
-  // both exported (::) and unexported (:::). I think this is useful,
-  // but it's probably expensive.
-
-  // OTOH, if there is a module, it will be the first (and likely only)
-  // qualifier.  
-
-  // also note that you can get() the function and pass that to do.call,
-  // instead of using the name, which may be easier
-
-  if (parts.size() > 1) {
-    for (int i = 0; !err && i < parts.size() - 1; i++) {
-      SEXP s = R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString(parts[i].c_str())), env, &err);
-      if (!err && Rf_isEnvironment(s)) env = s;
+    for (int i = 0; i < len; i++) {
+      SET_VECTOR_ELT(sargs, i + 1, VariableToSEXP(fc.arguments(i)));
     }
-  }
 
-  return R_tryEval(Rf_lang3(Rf_install("do.call"), Rf_mkString(parts[parts.size() - 1].c_str()), sargs), env, &err);
+    SEXP env = R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString("BERT")), R_GlobalEnv, &err);
+    if (!err && Rf_isEnvironment(env)) {
+      return R_tryEval(Rf_lang3(Rf_install("do.call"), Rf_mkString(".call.mapped.function"), sargs), env, &err);
+    }
+
+    return R_NilValue;
+
+  }
+  else {
+
+    SEXP sargs = Rf_allocVector(VECSXP, len);
+    for (int i = 0; i < len; i++) {
+      SET_VECTOR_ELT(sargs, i, VariableToSEXP(fc.arguments(i)));
+    }
+
+    SEXP env = R_GlobalEnv;
+    std::vector<std::string> parts;
+    StringUtilities::Split(fc.function().c_str(), '$', 0, parts, true);
+
+    // resolve qualified name
+
+    // if you're going to do this, you also need to handle packages,
+    // both exported (::) and unexported (:::). I think this is useful,
+    // but it's probably expensive.
+
+    // OTOH, if there is a module, it will be the first (and likely only)
+    // qualifier.  
+
+    // also note that you can get() the function and pass that to do.call,
+    // instead of using the name, which may be easier
+
+    if (parts.size() > 1) {
+      for (int i = 0; !err && i < parts.size() - 1; i++) {
+        SEXP s = R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString(parts[i].c_str())), env, &err);
+        if (!err && Rf_isEnvironment(s)) env = s;
+      }
+    }
+
+    return R_tryEval(Rf_lang3(Rf_install("do.call"), Rf_mkString(parts[parts.size() - 1].c_str()), sargs), env, &err);
+
+  }
 
 }
 
@@ -350,6 +374,17 @@ __inline bool HandleSimpleTypes(SEXP sexp, int len, int rtype, BERTBuffers::Arra
       if (level > 0 && levels_size >= level) ptr->set_str(levels[level-1]); // factors are 1-based
       else ptr->set_integer(level);
     }
+  }
+  else if (Rf_isComplex(sexp)) {
+
+    // handle complex before the catchall rf_isnumber below
+    for (int i = 0; i < len; i++) {
+      auto ptr = arr ? arr->add_data() : var;
+      auto complex = ptr->mutable_cpx();
+      complex->set_i(COMPLEX(sexp)[i].i);
+      complex->set_r(COMPLEX(sexp)[i].r);
+    }
+
   }
   else if (Rf_isInteger(sexp) || rtype == INTSXP)
   {
@@ -654,6 +689,8 @@ BERTBuffers::CallResponse& ListScriptFunctions(BERTBuffers::CallResponse &respon
       BERTBuffers::Variable var;
       SEXPToVariable(&var, result);
 
+      // MessageUtilities::DumpJSON(var);
+
       // ok so var should now have a list, should be easier to walk
 
       for (auto function_entry : var.arr().data()) {
@@ -664,6 +701,12 @@ BERTBuffers::CallResponse& ListScriptFunctions(BERTBuffers::CallResponse &respon
           const std::string &name = element.name();
           if (!name.compare("name")) {
             descriptor->mutable_function()->set_name(element.str());
+          }
+          else if (!name.compare("flags")) {
+            if (element.value_case() == BERTBuffers::Variable::ValueCase::kInteger)
+              descriptor->set_flags(element.integer());
+            else if (element.value_case() == BERTBuffers::Variable::ValueCase::kReal)
+              descriptor->set_flags(element.real());
           }
           else if (!name.compare("arguments")) {
             for (auto argument : element.arr().data()) {

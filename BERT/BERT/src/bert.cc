@@ -646,6 +646,14 @@ int BERT::HandleCallbackOnThread(const std::string &language, const BERTBuffers:
       }
       if (key < language_services_.size()) {
 
+        // NOTE: regarding unregistering (and registering) functions for one 
+        // language only: as currently implemented, function calls use indexes into
+        // the functions list. so if you were to remove and then add at the back, 
+        // this indexing would go askew.
+        //
+        // if you wanted to do per-language add/remove then that requires changing
+        // how lookups are done in function calls (see BERTFunctionCall()).
+
         UnregisterFunctions(); // FIXME: language only
 
         FUNCTION_LIST temporary_list = LanguageService::CreateFunctionList(*call, key, language);

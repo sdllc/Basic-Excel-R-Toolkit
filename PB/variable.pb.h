@@ -1290,6 +1290,12 @@ class CompositeFunctionCall : public ::google::protobuf::Message /* @@protoc_ins
   ::BERTBuffers::CallTarget target() const;
   void set_target(::BERTBuffers::CallTarget value);
 
+  // uint32 flags = 7;
+  void clear_flags();
+  static const int kFlagsFieldNumber = 7;
+  ::google::protobuf::uint32 flags() const;
+  void set_flags(::google::protobuf::uint32 value);
+
   // @@protoc_insertion_point(class_scope:BERTBuffers.CompositeFunctionCall)
  private:
 
@@ -1300,6 +1306,7 @@ class CompositeFunctionCall : public ::google::protobuf::Message /* @@protoc_ins
   ::google::protobuf::uint32 index_;
   int type_;
   int target_;
+  ::google::protobuf::uint32 flags_;
   mutable int _cached_size_;
   friend struct ::protobuf_variable_2eproto::TableStruct;
   friend void ::protobuf_variable_2eproto::InitDefaultsCompositeFunctionCallImpl();
@@ -2551,10 +2558,10 @@ class FunctionDescriptor : public ::google::protobuf::Message /* @@protoc_insert
 
   // accessors -------------------------------------------------------
 
-  // repeated .BERTBuffers.FunctionElement arguments = 3;
+  // repeated .BERTBuffers.FunctionElement arguments = 4;
   int arguments_size() const;
   void clear_arguments();
-  static const int kArgumentsFieldNumber = 3;
+  static const int kArgumentsFieldNumber = 4;
   const ::BERTBuffers::FunctionElement& arguments(int index) const;
   ::BERTBuffers::FunctionElement* mutable_arguments(int index);
   ::BERTBuffers::FunctionElement* add_arguments();
@@ -2578,6 +2585,12 @@ class FunctionDescriptor : public ::google::protobuf::Message /* @@protoc_insert
   ::BERTBuffers::CallType call_type() const;
   void set_call_type(::BERTBuffers::CallType value);
 
+  // uint32 flags = 3;
+  void clear_flags();
+  static const int kFlagsFieldNumber = 3;
+  ::google::protobuf::uint32 flags() const;
+  void set_flags(::google::protobuf::uint32 value);
+
   // @@protoc_insertion_point(class_scope:BERTBuffers.FunctionDescriptor)
  private:
 
@@ -2585,6 +2598,7 @@ class FunctionDescriptor : public ::google::protobuf::Message /* @@protoc_insert
   ::google::protobuf::RepeatedPtrField< ::BERTBuffers::FunctionElement > arguments_;
   ::BERTBuffers::FunctionElement* function_;
   int call_type_;
+  ::google::protobuf::uint32 flags_;
   mutable int _cached_size_;
   friend struct ::protobuf_variable_2eproto::TableStruct;
   friend void ::protobuf_variable_2eproto::InitDefaultsArrayImpl();
@@ -4448,6 +4462,20 @@ inline void CompositeFunctionCall::set_target(::BERTBuffers::CallTarget value) {
   // @@protoc_insertion_point(field_set:BERTBuffers.CompositeFunctionCall.target)
 }
 
+// uint32 flags = 7;
+inline void CompositeFunctionCall::clear_flags() {
+  flags_ = 0u;
+}
+inline ::google::protobuf::uint32 CompositeFunctionCall::flags() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.CompositeFunctionCall.flags)
+  return flags_;
+}
+inline void CompositeFunctionCall::set_flags(::google::protobuf::uint32 value) {
+  
+  flags_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.CompositeFunctionCall.flags)
+}
+
 // -------------------------------------------------------------------
 
 // GraphicsUpdate
@@ -6176,7 +6204,21 @@ inline void FunctionDescriptor::set_call_type(::BERTBuffers::CallType value) {
   // @@protoc_insertion_point(field_set:BERTBuffers.FunctionDescriptor.call_type)
 }
 
-// repeated .BERTBuffers.FunctionElement arguments = 3;
+// uint32 flags = 3;
+inline void FunctionDescriptor::clear_flags() {
+  flags_ = 0u;
+}
+inline ::google::protobuf::uint32 FunctionDescriptor::flags() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.FunctionDescriptor.flags)
+  return flags_;
+}
+inline void FunctionDescriptor::set_flags(::google::protobuf::uint32 value) {
+  
+  flags_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.FunctionDescriptor.flags)
+}
+
+// repeated .BERTBuffers.FunctionElement arguments = 4;
 inline int FunctionDescriptor::arguments_size() const {
   return arguments_.size();
 }

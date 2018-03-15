@@ -119,9 +119,12 @@ void RegisterFunctions() {
     ss.clear();
     ss.str("");
 
+    // using alias here instead of name; call will still use name.
+
     ss << language_service->prefix();
     ss << ".";
-    ss << entry->name_;
+    if (entry->alias_.length()) ss << entry->alias_;
+    else ss << entry->name_;
     Convert::StringToXLOPER(xlParm[3], ss.str(), false);
 
     ss.clear();
@@ -130,6 +133,8 @@ void RegisterFunctions() {
     Convert::StringToXLOPER(xlParm[4], ss.str().c_str() + 2, false);
 
     Convert::StringToXLOPER(xlParm[5], "1", false);
+
+    // FIXME: category?
 
     ss.clear();
     ss.str("");

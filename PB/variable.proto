@@ -153,6 +153,11 @@ message CompositeFunctionCall {
   // new [enum or string?]
 
   CallTarget target = 6;
+
+  // see FunctionDescriptor
+
+  uint32 flags = 7;
+
 }
 
 enum GraphicsUpdateCommand {
@@ -281,7 +286,15 @@ message FunctionElement {
 message FunctionDescriptor {
   FunctionElement function = 1;
   CallType call_type = 2;
-  repeated FunctionElement arguments = 3;
+
+  // adding flags: this is an opaque field that languages can use.
+  // it is designed to flag remapped functions in R, but potentially
+  // it has other uses.
+  // 
+  // FIXME: could be consolidated with call_type?
+
+  uint32 flags = 3;
+  repeated FunctionElement arguments = 4;
 }
 
 /** 

@@ -600,6 +600,7 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::CompositeFunctionCall, index_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::CompositeFunctionCall, type_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::CompositeFunctionCall, target_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::CompositeFunctionCall, flags_),
   ~0u,  // no _has_bits_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::GraphicsUpdate, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -690,6 +691,7 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   ~0u,  // no _weak_field_map_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::FunctionDescriptor, function_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::FunctionDescriptor, call_type_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::FunctionDescriptor, flags_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::FunctionDescriptor, arguments_),
   ~0u,  // no _has_bits_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::BERTBuffers::FunctionList, _internal_metadata_),
@@ -744,19 +746,19 @@ static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROT
   { 34, -1, sizeof(::BERTBuffers::Variable)},
   { 53, -1, sizeof(::BERTBuffers::Code)},
   { 60, -1, sizeof(::BERTBuffers::CompositeFunctionCall)},
-  { 71, -1, sizeof(::BERTBuffers::GraphicsUpdate)},
-  { 81, -1, sizeof(::BERTBuffers::GraphicsCommand)},
-  { 98, -1, sizeof(::BERTBuffers::Color)},
-  { 107, -1, sizeof(::BERTBuffers::GraphicsContext)},
-  { 125, -1, sizeof(::BERTBuffers::MIMEData)},
-  { 132, -1, sizeof(::BERTBuffers::Console)},
-  { 144, -1, sizeof(::BERTBuffers::FunctionElement)},
-  { 154, -1, sizeof(::BERTBuffers::FunctionDescriptor)},
-  { 162, -1, sizeof(::BERTBuffers::FunctionList)},
-  { 168, -1, sizeof(::BERTBuffers::EnumValue)},
-  { 175, -1, sizeof(::BERTBuffers::EnumType)},
-  { 182, -1, sizeof(::BERTBuffers::ExternalPointer)},
-  { 191, -1, sizeof(::BERTBuffers::CallResponse)},
+  { 72, -1, sizeof(::BERTBuffers::GraphicsUpdate)},
+  { 82, -1, sizeof(::BERTBuffers::GraphicsCommand)},
+  { 99, -1, sizeof(::BERTBuffers::Color)},
+  { 108, -1, sizeof(::BERTBuffers::GraphicsContext)},
+  { 126, -1, sizeof(::BERTBuffers::MIMEData)},
+  { 133, -1, sizeof(::BERTBuffers::Console)},
+  { 145, -1, sizeof(::BERTBuffers::FunctionElement)},
+  { 155, -1, sizeof(::BERTBuffers::FunctionDescriptor)},
+  { 164, -1, sizeof(::BERTBuffers::FunctionList)},
+  { 170, -1, sizeof(::BERTBuffers::EnumValue)},
+  { 177, -1, sizeof(::BERTBuffers::EnumType)},
+  { 184, -1, sizeof(::BERTBuffers::ExternalPointer)},
+  { 193, -1, sizeof(::BERTBuffers::CallResponse)},
 };
 
 static ::google::protobuf::Message const * const file_default_instances[] = {
@@ -823,68 +825,69 @@ void AddDescriptorsImpl() {
       ".BERTBuffers.ExternalPointerH\000\022/\n\010graphi"
       "cs\030\r \001(\0132\033.BERTBuffers.GraphicsUpdateH\000\022"
       "\014\n\004name\030\017 \001(\tB\007\n\005value\"%\n\004Code\022\014\n\004line\030\001"
-      " \003(\t\022\017\n\007startup\030\002 \001(\010\"\301\001\n\025CompositeFunct"
+      " \003(\t\022\017\n\007startup\030\002 \001(\010\"\320\001\n\025CompositeFunct"
       "ionCall\022\020\n\010function\030\001 \001(\t\022(\n\targuments\030\002"
       " \003(\0132\025.BERTBuffers.Variable\022\017\n\007pointer\030\003"
       " \001(\004\022\r\n\005index\030\004 \001(\r\022#\n\004type\030\005 \001(\0162\025.BERT"
       "Buffers.CallType\022\'\n\006target\030\006 \001(\0162\027.BERTB"
-      "uffers.CallTarget\"\200\001\n\016GraphicsUpdate\0223\n\007"
-      "command\030\001 \001(\0162\".BERTBuffers.GraphicsUpda"
-      "teCommand\022\014\n\004name\030\002 \001(\t\022\014\n\004path\030\003 \001(\t\022\r\n"
-      "\005width\030\004 \001(\r\022\016\n\006height\030\005 \001(\r\"\345\001\n\017Graphic"
-      "sCommand\022\017\n\007command\030\001 \001(\t\022\t\n\001x\030\002 \003(\001\022\t\n\001"
-      "y\030\003 \003(\001\022\t\n\001r\030\004 \001(\001\022\013\n\003rot\030\005 \001(\001\022\014\n\004text\030"
-      "\006 \001(\t\022\016\n\006filled\030\007 \001(\010\022\014\n\004hadj\030\010 \001(\001\022\016\n\006r"
-      "aster\030\t \001(\014\022\023\n\013interpolate\030\n \001(\010\022\023\n\013devi"
-      "ce_type\030\016 \001(\t\022-\n\007context\030\017 \001(\0132\034.BERTBuf"
-      "fers.GraphicsContext\"3\n\005Color\022\t\n\001a\030\001 \001(\r"
-      "\022\t\n\001r\030\002 \001(\r\022\t\n\001g\030\003 \001(\r\022\t\n\001b\030\004 \001(\r\"\375\001\n\017Gr"
-      "aphicsContext\022\037\n\003col\030\001 \001(\0132\022.BERTBuffers"
-      ".Color\022 \n\004fill\030\002 \001(\0132\022.BERTBuffers.Color"
-      "\022\r\n\005gamma\030\003 \001(\001\022\013\n\003lwd\030\004 \001(\001\022\013\n\003lty\030\005 \001("
-      "\005\022\014\n\004lend\030\006 \001(\005\022\r\n\005ljoin\030\007 \001(\005\022\016\n\006lmitre"
-      "\030\010 \001(\001\022\013\n\003cex\030\t \001(\001\022\n\n\002ps\030\n \001(\001\022\022\n\nlineh"
-      "eight\030\013 \001(\001\022\020\n\010fontface\030\014 \001(\005\022\022\n\nfontfam"
-      "ily\030\r \001(\t\"+\n\010MIMEData\022\021\n\tmime_type\030\001 \001(\t"
-      "\022\014\n\004data\030\002 \001(\014\"\315\001\n\007Console\022\016\n\004text\030\001 \001(\t"
-      "H\000\022\r\n\003err\030\002 \001(\tH\000\022\020\n\006prompt\030\003 \001(\tH\000\0220\n\010g"
-      "raphics\030\004 \001(\0132\034.BERTBuffers.GraphicsComm"
-      "andH\000\022*\n\tmime_data\030\005 \001(\0132\025.BERTBuffers.M"
-      "IMEDataH\000\022(\n\007history\030\006 \001(\0132\025.BERTBuffers"
-      ".VariableH\000B\t\n\007message\"\204\001\n\017FunctionEleme"
-      "nt\022\014\n\004name\030\001 \001(\t\022\021\n\ttype_name\030\002 \001(\t\022,\n\rd"
-      "efault_value\030\003 \001(\0132\025.BERTBuffers.Variabl"
-      "e\022\023\n\013description\030\004 \001(\t\022\r\n\005index\030\005 \001(\r\"\237\001"
-      "\n\022FunctionDescriptor\022.\n\010function\030\001 \001(\0132\034"
-      ".BERTBuffers.FunctionElement\022(\n\tcall_typ"
-      "e\030\002 \001(\0162\025.BERTBuffers.CallType\022/\n\targume"
-      "nts\030\003 \003(\0132\034.BERTBuffers.FunctionElement\""
-      "B\n\014FunctionList\0222\n\tfunctions\030\001 \003(\0132\037.BER"
-      "TBuffers.FunctionDescriptor\"(\n\tEnumValue"
-      "\022\014\n\004name\030\001 \001(\t\022\r\n\005value\030\002 \001(\005\"@\n\010EnumTyp"
-      "e\022\014\n\004name\030\001 \001(\t\022&\n\006values\030\002 \003(\0132\026.BERTBu"
-      "ffers.EnumValue\"\224\001\n\017ExternalPointer\022\026\n\016i"
-      "nterface_name\030\001 \001(\t\022\017\n\007pointer\030\002 \001(\004\0222\n\t"
-      "functions\030\003 \003(\0132\037.BERTBuffers.FunctionDe"
-      "scriptor\022$\n\005enums\030\004 \003(\0132\025.BERTBuffers.En"
-      "umType\"\303\002\n\014CallResponse\022\n\n\002id\030\001 \001(\r\022\014\n\004w"
-      "ait\030\002 \001(\010\022\r\n\003err\030\003 \001(\tH\000\022\'\n\006result\030\004 \001(\013"
-      "2\025.BERTBuffers.VariableH\000\022\'\n\007console\030\005 \001"
-      "(\0132\024.BERTBuffers.ConsoleH\000\022!\n\004code\030\006 \001(\013"
-      "2\021.BERTBuffers.CodeH\000\022\027\n\rshell_command\030\007"
-      " \001(\tH\000\022;\n\rfunction_call\030\010 \001(\0132\".BERTBuff"
-      "ers.CompositeFunctionCallH\000\0222\n\rfunction_"
-      "list\030\t \001(\0132\031.BERTBuffers.FunctionListH\000B"
-      "\013\n\toperation*N\n\tErrorType\022\013\n\007GENERIC\020\000\022\006"
-      "\n\002NA\020\001\022\007\n\003INF\020\002\022\t\n\005PARSE\020\003\022\r\n\tEXECUTION\020"
-      "\004\022\t\n\005OTHER\020\017*(\n\010CallType\022\n\n\006method\020\000\022\007\n\003"
-      "get\020\001\022\007\n\003put\020\002*=\n\nCallTarget\022\014\n\010language"
-      "\020\000\022\007\n\003COM\020\001\022\n\n\006system\020\002\022\014\n\010graphics\020\003*3\n"
-      "\025GraphicsUpdateCommand\022\n\n\006update\020\000\022\016\n\nqu"
-      "ery_size\020\001B\002H\001b\006proto3"
+      "uffers.CallTarget\022\r\n\005flags\030\007 \001(\r\"\200\001\n\016Gra"
+      "phicsUpdate\0223\n\007command\030\001 \001(\0162\".BERTBuffe"
+      "rs.GraphicsUpdateCommand\022\014\n\004name\030\002 \001(\t\022\014"
+      "\n\004path\030\003 \001(\t\022\r\n\005width\030\004 \001(\r\022\016\n\006height\030\005 "
+      "\001(\r\"\345\001\n\017GraphicsCommand\022\017\n\007command\030\001 \001(\t"
+      "\022\t\n\001x\030\002 \003(\001\022\t\n\001y\030\003 \003(\001\022\t\n\001r\030\004 \001(\001\022\013\n\003rot"
+      "\030\005 \001(\001\022\014\n\004text\030\006 \001(\t\022\016\n\006filled\030\007 \001(\010\022\014\n\004"
+      "hadj\030\010 \001(\001\022\016\n\006raster\030\t \001(\014\022\023\n\013interpolat"
+      "e\030\n \001(\010\022\023\n\013device_type\030\016 \001(\t\022-\n\007context\030"
+      "\017 \001(\0132\034.BERTBuffers.GraphicsContext\"3\n\005C"
+      "olor\022\t\n\001a\030\001 \001(\r\022\t\n\001r\030\002 \001(\r\022\t\n\001g\030\003 \001(\r\022\t\n"
+      "\001b\030\004 \001(\r\"\375\001\n\017GraphicsContext\022\037\n\003col\030\001 \001("
+      "\0132\022.BERTBuffers.Color\022 \n\004fill\030\002 \001(\0132\022.BE"
+      "RTBuffers.Color\022\r\n\005gamma\030\003 \001(\001\022\013\n\003lwd\030\004 "
+      "\001(\001\022\013\n\003lty\030\005 \001(\005\022\014\n\004lend\030\006 \001(\005\022\r\n\005ljoin\030"
+      "\007 \001(\005\022\016\n\006lmitre\030\010 \001(\001\022\013\n\003cex\030\t \001(\001\022\n\n\002ps"
+      "\030\n \001(\001\022\022\n\nlineheight\030\013 \001(\001\022\020\n\010fontface\030\014"
+      " \001(\005\022\022\n\nfontfamily\030\r \001(\t\"+\n\010MIMEData\022\021\n\t"
+      "mime_type\030\001 \001(\t\022\014\n\004data\030\002 \001(\014\"\315\001\n\007Consol"
+      "e\022\016\n\004text\030\001 \001(\tH\000\022\r\n\003err\030\002 \001(\tH\000\022\020\n\006prom"
+      "pt\030\003 \001(\tH\000\0220\n\010graphics\030\004 \001(\0132\034.BERTBuffe"
+      "rs.GraphicsCommandH\000\022*\n\tmime_data\030\005 \001(\0132"
+      "\025.BERTBuffers.MIMEDataH\000\022(\n\007history\030\006 \001("
+      "\0132\025.BERTBuffers.VariableH\000B\t\n\007message\"\204\001"
+      "\n\017FunctionElement\022\014\n\004name\030\001 \001(\t\022\021\n\ttype_"
+      "name\030\002 \001(\t\022,\n\rdefault_value\030\003 \001(\0132\025.BERT"
+      "Buffers.Variable\022\023\n\013description\030\004 \001(\t\022\r\n"
+      "\005index\030\005 \001(\r\"\256\001\n\022FunctionDescriptor\022.\n\010f"
+      "unction\030\001 \001(\0132\034.BERTBuffers.FunctionElem"
+      "ent\022(\n\tcall_type\030\002 \001(\0162\025.BERTBuffers.Cal"
+      "lType\022\r\n\005flags\030\003 \001(\r\022/\n\targuments\030\004 \003(\0132"
+      "\034.BERTBuffers.FunctionElement\"B\n\014Functio"
+      "nList\0222\n\tfunctions\030\001 \003(\0132\037.BERTBuffers.F"
+      "unctionDescriptor\"(\n\tEnumValue\022\014\n\004name\030\001"
+      " \001(\t\022\r\n\005value\030\002 \001(\005\"@\n\010EnumType\022\014\n\004name\030"
+      "\001 \001(\t\022&\n\006values\030\002 \003(\0132\026.BERTBuffers.Enum"
+      "Value\"\224\001\n\017ExternalPointer\022\026\n\016interface_n"
+      "ame\030\001 \001(\t\022\017\n\007pointer\030\002 \001(\004\0222\n\tfunctions\030"
+      "\003 \003(\0132\037.BERTBuffers.FunctionDescriptor\022$"
+      "\n\005enums\030\004 \003(\0132\025.BERTBuffers.EnumType\"\303\002\n"
+      "\014CallResponse\022\n\n\002id\030\001 \001(\r\022\014\n\004wait\030\002 \001(\010\022"
+      "\r\n\003err\030\003 \001(\tH\000\022\'\n\006result\030\004 \001(\0132\025.BERTBuf"
+      "fers.VariableH\000\022\'\n\007console\030\005 \001(\0132\024.BERTB"
+      "uffers.ConsoleH\000\022!\n\004code\030\006 \001(\0132\021.BERTBuf"
+      "fers.CodeH\000\022\027\n\rshell_command\030\007 \001(\tH\000\022;\n\r"
+      "function_call\030\010 \001(\0132\".BERTBuffers.Compos"
+      "iteFunctionCallH\000\0222\n\rfunction_list\030\t \001(\013"
+      "2\031.BERTBuffers.FunctionListH\000B\013\n\toperati"
+      "on*N\n\tErrorType\022\013\n\007GENERIC\020\000\022\006\n\002NA\020\001\022\007\n\003"
+      "INF\020\002\022\t\n\005PARSE\020\003\022\r\n\tEXECUTION\020\004\022\t\n\005OTHER"
+      "\020\017*(\n\010CallType\022\n\n\006method\020\000\022\007\n\003get\020\001\022\007\n\003p"
+      "ut\020\002*=\n\nCallTarget\022\014\n\010language\020\000\022\007\n\003COM\020"
+      "\001\022\n\n\006system\020\002\022\014\n\010graphics\020\003*3\n\025GraphicsU"
+      "pdateCommand\022\n\n\006update\020\000\022\016\n\nquery_size\020\001"
+      "B\002H\001b\006proto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 3102);
+      descriptor, 3132);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "variable.proto", &protobuf_RegisterTypes);
 }
@@ -3582,6 +3585,7 @@ const int CompositeFunctionCall::kPointerFieldNumber;
 const int CompositeFunctionCall::kIndexFieldNumber;
 const int CompositeFunctionCall::kTypeFieldNumber;
 const int CompositeFunctionCall::kTargetFieldNumber;
+const int CompositeFunctionCall::kFlagsFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 CompositeFunctionCall::CompositeFunctionCall()
@@ -3603,16 +3607,16 @@ CompositeFunctionCall::CompositeFunctionCall(const CompositeFunctionCall& from)
     function_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.function_);
   }
   ::memcpy(&pointer_, &from.pointer_,
-    static_cast<size_t>(reinterpret_cast<char*>(&target_) -
-    reinterpret_cast<char*>(&pointer_)) + sizeof(target_));
+    static_cast<size_t>(reinterpret_cast<char*>(&flags_) -
+    reinterpret_cast<char*>(&pointer_)) + sizeof(flags_));
   // @@protoc_insertion_point(copy_constructor:BERTBuffers.CompositeFunctionCall)
 }
 
 void CompositeFunctionCall::SharedCtor() {
   function_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   ::memset(&pointer_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&target_) -
-      reinterpret_cast<char*>(&pointer_)) + sizeof(target_));
+      reinterpret_cast<char*>(&flags_) -
+      reinterpret_cast<char*>(&pointer_)) + sizeof(flags_));
   _cached_size_ = 0;
 }
 
@@ -3657,8 +3661,8 @@ void CompositeFunctionCall::Clear() {
   arguments_.Clear();
   function_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   ::memset(&pointer_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&target_) -
-      reinterpret_cast<char*>(&pointer_)) + sizeof(target_));
+      reinterpret_cast<char*>(&flags_) -
+      reinterpret_cast<char*>(&pointer_)) + sizeof(flags_));
   _internal_metadata_.Clear();
 }
 
@@ -3757,6 +3761,20 @@ bool CompositeFunctionCall::MergePartialFromCodedStream(
         break;
       }
 
+      // uint32 flags = 7;
+      case 7: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(56u /* 56 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
+                 input, &flags_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0) {
@@ -3822,6 +3840,11 @@ void CompositeFunctionCall::SerializeWithCachedSizes(
       6, this->target(), output);
   }
 
+  // uint32 flags = 7;
+  if (this->flags() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt32(7, this->flags(), output);
+  }
+
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
@@ -3875,6 +3898,11 @@ void CompositeFunctionCall::SerializeWithCachedSizes(
   if (this->target() != 0) {
     target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
       6, this->target(), target);
+  }
+
+  // uint32 flags = 7;
+  if (this->flags() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(7, this->flags(), target);
   }
 
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
@@ -3938,6 +3966,13 @@ size_t CompositeFunctionCall::ByteSizeLong() const {
       ::google::protobuf::internal::WireFormatLite::EnumSize(this->target());
   }
 
+  // uint32 flags = 7;
+  if (this->flags() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::UInt32Size(
+        this->flags());
+  }
+
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = cached_size;
@@ -3984,6 +4019,9 @@ void CompositeFunctionCall::MergeFrom(const CompositeFunctionCall& from) {
   if (from.target() != 0) {
     set_target(from.target());
   }
+  if (from.flags() != 0) {
+    set_flags(from.flags());
+  }
 }
 
 void CompositeFunctionCall::CopyFrom(const ::google::protobuf::Message& from) {
@@ -4016,6 +4054,7 @@ void CompositeFunctionCall::InternalSwap(CompositeFunctionCall* other) {
   swap(index_, other->index_);
   swap(type_, other->type_);
   swap(target_, other->target_);
+  swap(flags_, other->flags_);
   _internal_metadata_.Swap(&other->_internal_metadata_);
   swap(_cached_size_, other->_cached_size_);
 }
@@ -7651,6 +7690,7 @@ void FunctionDescriptor::InitAsDefaultInstance() {
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int FunctionDescriptor::kFunctionFieldNumber;
 const int FunctionDescriptor::kCallTypeFieldNumber;
+const int FunctionDescriptor::kFlagsFieldNumber;
 const int FunctionDescriptor::kArgumentsFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
@@ -7673,14 +7713,16 @@ FunctionDescriptor::FunctionDescriptor(const FunctionDescriptor& from)
   } else {
     function_ = NULL;
   }
-  call_type_ = from.call_type_;
+  ::memcpy(&call_type_, &from.call_type_,
+    static_cast<size_t>(reinterpret_cast<char*>(&flags_) -
+    reinterpret_cast<char*>(&call_type_)) + sizeof(flags_));
   // @@protoc_insertion_point(copy_constructor:BERTBuffers.FunctionDescriptor)
 }
 
 void FunctionDescriptor::SharedCtor() {
   ::memset(&function_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&call_type_) -
-      reinterpret_cast<char*>(&function_)) + sizeof(call_type_));
+      reinterpret_cast<char*>(&flags_) -
+      reinterpret_cast<char*>(&function_)) + sizeof(flags_));
   _cached_size_ = 0;
 }
 
@@ -7727,7 +7769,9 @@ void FunctionDescriptor::Clear() {
     delete function_;
   }
   function_ = NULL;
-  call_type_ = 0;
+  ::memset(&call_type_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&flags_) -
+      reinterpret_cast<char*>(&call_type_)) + sizeof(flags_));
   _internal_metadata_.Clear();
 }
 
@@ -7768,10 +7812,24 @@ bool FunctionDescriptor::MergePartialFromCodedStream(
         break;
       }
 
-      // repeated .BERTBuffers.FunctionElement arguments = 3;
+      // uint32 flags = 3;
       case 3: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(26u /* 26 & 0xFF */)) {
+            static_cast< ::google::protobuf::uint8>(24u /* 24 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
+                 input, &flags_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // repeated .BERTBuffers.FunctionElement arguments = 4;
+      case 4: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(34u /* 34 & 0xFF */)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(input, add_arguments()));
         } else {
           goto handle_unusual;
@@ -7817,11 +7875,16 @@ void FunctionDescriptor::SerializeWithCachedSizes(
       2, this->call_type(), output);
   }
 
-  // repeated .BERTBuffers.FunctionElement arguments = 3;
+  // uint32 flags = 3;
+  if (this->flags() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt32(3, this->flags(), output);
+  }
+
+  // repeated .BERTBuffers.FunctionElement arguments = 4;
   for (unsigned int i = 0,
       n = static_cast<unsigned int>(this->arguments_size()); i < n; i++) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      3, this->arguments(static_cast<int>(i)), output);
+      4, this->arguments(static_cast<int>(i)), output);
   }
 
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
@@ -7851,12 +7914,17 @@ void FunctionDescriptor::SerializeWithCachedSizes(
       2, this->call_type(), target);
   }
 
-  // repeated .BERTBuffers.FunctionElement arguments = 3;
+  // uint32 flags = 3;
+  if (this->flags() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(3, this->flags(), target);
+  }
+
+  // repeated .BERTBuffers.FunctionElement arguments = 4;
   for (unsigned int i = 0,
       n = static_cast<unsigned int>(this->arguments_size()); i < n; i++) {
     target = ::google::protobuf::internal::WireFormatLite::
       InternalWriteMessageToArray(
-        3, this->arguments(static_cast<int>(i)), deterministic, target);
+        4, this->arguments(static_cast<int>(i)), deterministic, target);
   }
 
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
@@ -7876,7 +7944,7 @@ size_t FunctionDescriptor::ByteSizeLong() const {
       ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
   }
-  // repeated .BERTBuffers.FunctionElement arguments = 3;
+  // repeated .BERTBuffers.FunctionElement arguments = 4;
   {
     unsigned int count = static_cast<unsigned int>(this->arguments_size());
     total_size += 1UL * count;
@@ -7898,6 +7966,13 @@ size_t FunctionDescriptor::ByteSizeLong() const {
   if (this->call_type() != 0) {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::EnumSize(this->call_type());
+  }
+
+  // uint32 flags = 3;
+  if (this->flags() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::UInt32Size(
+        this->flags());
   }
 
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
@@ -7936,6 +8011,9 @@ void FunctionDescriptor::MergeFrom(const FunctionDescriptor& from) {
   if (from.call_type() != 0) {
     set_call_type(from.call_type());
   }
+  if (from.flags() != 0) {
+    set_flags(from.flags());
+  }
 }
 
 void FunctionDescriptor::CopyFrom(const ::google::protobuf::Message& from) {
@@ -7965,6 +8043,7 @@ void FunctionDescriptor::InternalSwap(FunctionDescriptor* other) {
   arguments_.InternalSwap(&other->arguments_);
   swap(function_, other->function_);
   swap(call_type_, other->call_type_);
+  swap(flags_, other->flags_);
   _internal_metadata_.Swap(&other->_internal_metadata_);
   swap(_cached_size_, other->_cached_size_);
 }

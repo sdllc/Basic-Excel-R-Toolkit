@@ -1873,7 +1873,8 @@ proto.BERTBuffers.CompositeFunctionCall.toObject = function(includeInstance, msg
     pointer: jspb.Message.getFieldWithDefault(msg, 3, 0),
     index: jspb.Message.getFieldWithDefault(msg, 4, 0),
     type: jspb.Message.getFieldWithDefault(msg, 5, 0),
-    target: jspb.Message.getFieldWithDefault(msg, 6, 0)
+    target: jspb.Message.getFieldWithDefault(msg, 6, 0),
+    flags: jspb.Message.getFieldWithDefault(msg, 7, 0)
   };
 
   if (includeInstance) {
@@ -1934,6 +1935,10 @@ proto.BERTBuffers.CompositeFunctionCall.deserializeBinaryFromReader = function(m
     case 6:
       var value = /** @type {!proto.BERTBuffers.CallTarget} */ (reader.readEnum());
       msg.setTarget(value);
+      break;
+    case 7:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setFlags(value);
       break;
     default:
       reader.skipField();
@@ -2004,6 +2009,13 @@ proto.BERTBuffers.CompositeFunctionCall.serializeBinaryToWriter = function(messa
   if (f !== 0.0) {
     writer.writeEnum(
       6,
+      f
+    );
+  }
+  f = message.getFlags();
+  if (f !== 0) {
+    writer.writeUint32(
+      7,
       f
     );
   }
@@ -2113,6 +2125,21 @@ proto.BERTBuffers.CompositeFunctionCall.prototype.getTarget = function() {
 /** @param {!proto.BERTBuffers.CallTarget} value */
 proto.BERTBuffers.CompositeFunctionCall.prototype.setTarget = function(value) {
   jspb.Message.setProto3EnumField(this, 6, value);
+};
+
+
+/**
+ * optional uint32 flags = 7;
+ * @return {number}
+ */
+proto.BERTBuffers.CompositeFunctionCall.prototype.getFlags = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 7, 0));
+};
+
+
+/** @param {number} value */
+proto.BERTBuffers.CompositeFunctionCall.prototype.setFlags = function(value) {
+  jspb.Message.setProto3IntField(this, 7, value);
 };
 
 
@@ -4491,7 +4518,7 @@ if (goog.DEBUG && !COMPILED) {
  * @private {!Array<number>}
  * @const
  */
-proto.BERTBuffers.FunctionDescriptor.repeatedFields_ = [3];
+proto.BERTBuffers.FunctionDescriptor.repeatedFields_ = [4];
 
 
 
@@ -4524,6 +4551,7 @@ proto.BERTBuffers.FunctionDescriptor.toObject = function(includeInstance, msg) {
   var f, obj = {
     pb_function: (f = msg.getFunction()) && proto.BERTBuffers.FunctionElement.toObject(includeInstance, f),
     callType: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    flags: jspb.Message.getFieldWithDefault(msg, 3, 0),
     argumentsList: jspb.Message.toObjectList(msg.getArgumentsList(),
     proto.BERTBuffers.FunctionElement.toObject, includeInstance)
   };
@@ -4572,6 +4600,10 @@ proto.BERTBuffers.FunctionDescriptor.deserializeBinaryFromReader = function(msg,
       msg.setCallType(value);
       break;
     case 3:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setFlags(value);
+      break;
+    case 4:
       var value = new proto.BERTBuffers.FunctionElement;
       reader.readMessage(value,proto.BERTBuffers.FunctionElement.deserializeBinaryFromReader);
       msg.addArguments(value);
@@ -4620,10 +4652,17 @@ proto.BERTBuffers.FunctionDescriptor.serializeBinaryToWriter = function(message,
       f
     );
   }
+  f = message.getFlags();
+  if (f !== 0) {
+    writer.writeUint32(
+      3,
+      f
+    );
+  }
   f = message.getArgumentsList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      3,
+      4,
       f,
       proto.BERTBuffers.FunctionElement.serializeBinaryToWriter
     );
@@ -4677,18 +4716,33 @@ proto.BERTBuffers.FunctionDescriptor.prototype.setCallType = function(value) {
 
 
 /**
- * repeated FunctionElement arguments = 3;
+ * optional uint32 flags = 3;
+ * @return {number}
+ */
+proto.BERTBuffers.FunctionDescriptor.prototype.getFlags = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+};
+
+
+/** @param {number} value */
+proto.BERTBuffers.FunctionDescriptor.prototype.setFlags = function(value) {
+  jspb.Message.setProto3IntField(this, 3, value);
+};
+
+
+/**
+ * repeated FunctionElement arguments = 4;
  * @return {!Array.<!proto.BERTBuffers.FunctionElement>}
  */
 proto.BERTBuffers.FunctionDescriptor.prototype.getArgumentsList = function() {
   return /** @type{!Array.<!proto.BERTBuffers.FunctionElement>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.BERTBuffers.FunctionElement, 3));
+    jspb.Message.getRepeatedWrapperField(this, proto.BERTBuffers.FunctionElement, 4));
 };
 
 
 /** @param {!Array.<!proto.BERTBuffers.FunctionElement>} value */
 proto.BERTBuffers.FunctionDescriptor.prototype.setArgumentsList = function(value) {
-  jspb.Message.setRepeatedWrapperField(this, 3, value);
+  jspb.Message.setRepeatedWrapperField(this, 4, value);
 };
 
 
@@ -4698,7 +4752,7 @@ proto.BERTBuffers.FunctionDescriptor.prototype.setArgumentsList = function(value
  * @return {!proto.BERTBuffers.FunctionElement}
  */
 proto.BERTBuffers.FunctionDescriptor.prototype.addArguments = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 3, opt_value, proto.BERTBuffers.FunctionElement, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 4, opt_value, proto.BERTBuffers.FunctionElement, opt_index);
 };
 
 

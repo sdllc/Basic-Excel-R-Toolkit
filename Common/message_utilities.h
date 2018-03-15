@@ -24,6 +24,8 @@
 
 #include "variable.pb.h"
 
+// #define INCLUDE_DUMP_JSON
+
 #ifdef INCLUDE_DUMP_JSON
 #include <google\protobuf\util\json_util.h>
 #endif

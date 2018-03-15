@@ -65,7 +65,8 @@ LPXLOPER12 BERTFunctionCall(
 
   auto function_descriptor = bert->function_list_[index];
 
-	function_call->set_function(function_descriptor->name_);
+  function_call->set_function(function_descriptor->name_);
+  function_call->set_flags(function_descriptor->flags_);
 
 	int argcount = 16;
 	for (; argcount && arglist[argcount - 1]->xltype == xltypeMissing; argcount--);
