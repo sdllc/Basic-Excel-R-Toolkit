@@ -27,7 +27,7 @@
           },
           "additionalProperties": false
         },
-        "startConsole": {
+        "openConsole": {
           "type": "boolean"
         }
       },

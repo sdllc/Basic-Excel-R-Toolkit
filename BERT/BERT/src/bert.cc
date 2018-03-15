@@ -826,7 +826,7 @@ void BERT::Init() {
   bool start_console = false;
 
   std::string command_line = GetCommandLineA();
-  if (command_line.find("/x:BERT") != std::string::npos || config_["BERT"]["startConsole"].bool_value()) {
+  if (command_line.find("/x:BERT") != std::string::npos || config_["BERT"]["openConsole"].bool_value()) {
     start_console = true;
   }
   
