@@ -133,7 +133,7 @@ pad.excel.array <- function(rslt){
 #' parameter to 1).
 #'
 #' @export 
-BERT.graphics.device <- function( name="BERT-default", bgcolor="white", width=400, height=400, pointsize=14, scale=Sys.getenv("BERTGraphicsScale"), cell=F ){
+BERT.graphics.device <- function( name="BERT-default", bgcolor="white", width=400, height=400, pointsize=12, scale=Sys.getenv("BERTGraphicsScale"), cell=F ){
 
   scale <- as.numeric(scale);
   if(is.na(scale) | is.null(scale)){ scale = 1; }
@@ -158,11 +158,21 @@ BERT.graphics.device <- function( name="BERT-default", bgcolor="white", width=40
 #' Create a console graphics device.
 #'
 #' \code{BERT.console.graphics.device} creates a graphics device that 
-#' renders to the shell.
+#' renders to the shell. type is either "svg" or "png".
 #'
 #' @export 
-BERT.console.graphics.device <- function( bgcolor="white", width=600, height=400, pointsize=14, type="png"){
-  .Call( "console_device", bgcolor, width, height, pointsize, type, PACKAGE='BERTModule' );
+BERT.console.graphics.device <- function( bgcolor="white", width=500, height=350, pointsize=12, type="png"){
+
+  # default to png, enforce
+  if(type != "svg"){ type = "png"; }
+
+  name <- paste("BERT Console (", type, ")");
+	x <- dev.list();
+	if((length(x) > 0) & (name %in% names(x))){ dev.set( x[[name]]) }
+  else {
+    .Call( "console_device", bgcolor, width, height, pointsize, type, PACKAGE='BERTModule' );
+  }
+
 }
 
 #==============================================================================

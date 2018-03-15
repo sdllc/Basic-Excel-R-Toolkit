@@ -5,7 +5,7 @@
 \title{Create a BERT graphics device.}
 \usage{
 BERT.graphics.device(name = "BERT-default", bgcolor = "white",
-  width = 400, height = 400, pointsize = 14,
+  width = 400, height = 400, pointsize = 12,
   scale = Sys.getenv("BERTGraphicsScale"), cell = F)
 }
 \description{

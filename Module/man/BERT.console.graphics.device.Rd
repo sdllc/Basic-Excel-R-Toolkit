@@ -4,10 +4,10 @@
 \alias{BERT.console.graphics.device}
 \title{Create a console graphics device.}
 \usage{
-BERT.console.graphics.device(bgcolor = "white", width = 600, height = 400,
-  pointsize = 14, type = "png")
+BERT.console.graphics.device(bgcolor = "white", width = 500, height = 350,
+  pointsize = 12, type = "png")
 }
 \description{
 \code{BERT.console.graphics.device} creates a graphics device that 
-renders to the shell.
+renders to the shell. type is either "svg" or "png".
 }
