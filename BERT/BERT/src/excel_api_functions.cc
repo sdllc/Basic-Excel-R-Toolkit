@@ -134,11 +134,10 @@ void RegisterFunctions() {
 
     Convert::StringToXLOPER(xlParm[5], "1", false);
 
-    // FIXME: category?
-
     ss.clear();
     ss.str("");
-    ss << "Exported " << language_service->name() << " Functions";
+    if (entry->category_.length()) ss << entry->category_;
+    else ss << "Exported " << language_service->name() << " Functions";
     Convert::StringToXLOPER(xlParm[6], ss.str().c_str(), false);
 
     ss.clear();
@@ -146,12 +145,26 @@ void RegisterFunctions() {
     ss << index;
     Convert::StringToXLOPER(xlParm[8], ss.str(), false);
 
-    Convert::StringToXLOPER(xlParm[9], "Exported Function", false);
+    if(entry->description_.length()) Convert::StringToXLOPER(xlParm[9], entry->description_, false);
+    else Convert::StringToXLOPER(xlParm[9], "Exported Function", false);
 
-    // { L"BERT_Call", L"UQQQQQQQQQQQQQQQQ", L"BERT.Call", L"R Function, Argument", L"1", L"BERT", L"", L"99", L"Test BERT", L"", L"", L"", L"", L"", L"", L"" },
+    for (int i = 10; i < 32; i++) {
+      int index = i - 10;
+      xlParm[i]->xltype = xltypeMissing;
+      if (entry->arguments_.size() > index){
+        if (entry->arguments_[index]->description_.length()) {
+          Convert::StringToXLOPER(xlParm[i], entry->arguments_[index]->description_, false);
+        }
+        else if (entry->arguments_[index]->default_value_.length()) {
+          std::string value = "Default ";
+          value += entry->arguments_[index]->default_value_;
+          Convert::StringToXLOPER(xlParm[i], value, false);
+        }
+      }
+    }
 
     xlRegisterID.xltype = xltypeMissing;
-    err = Excel12v(xlfRegister, &xlRegisterID, 16, xlParm);
+    err = Excel12v(xlfRegister, &xlRegisterID, 32, xlParm);
     if (!err) {
       if( xlRegisterID.xltype == xltypeNum ) entry->register_id_ = (int32_t)xlRegisterID.val.num;
       else if( xlRegisterID.xltype == xltypeInt ) entry->register_id_ = (int32_t)xlRegisterID.val.w;

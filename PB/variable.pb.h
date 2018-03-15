@@ -2558,10 +2558,10 @@ class FunctionDescriptor : public ::google::protobuf::Message /* @@protoc_insert
 
   // accessors -------------------------------------------------------
 
-  // repeated .BERTBuffers.FunctionElement arguments = 4;
+  // repeated .BERTBuffers.FunctionElement arguments = 5;
   int arguments_size() const;
   void clear_arguments();
-  static const int kArgumentsFieldNumber = 4;
+  static const int kArgumentsFieldNumber = 5;
   const ::BERTBuffers::FunctionElement& arguments(int index) const;
   ::BERTBuffers::FunctionElement* mutable_arguments(int index);
   ::BERTBuffers::FunctionElement* add_arguments();
@@ -2569,6 +2569,20 @@ class FunctionDescriptor : public ::google::protobuf::Message /* @@protoc_insert
       mutable_arguments();
   const ::google::protobuf::RepeatedPtrField< ::BERTBuffers::FunctionElement >&
       arguments() const;
+
+  // string category = 4;
+  void clear_category();
+  static const int kCategoryFieldNumber = 4;
+  const ::std::string& category() const;
+  void set_category(const ::std::string& value);
+  #if LANG_CXX11
+  void set_category(::std::string&& value);
+  #endif
+  void set_category(const char* value);
+  void set_category(const char* value, size_t size);
+  ::std::string* mutable_category();
+  ::std::string* release_category();
+  void set_allocated_category(::std::string* category);
 
   // .BERTBuffers.FunctionElement function = 1;
   bool has_function() const;
@@ -2596,6 +2610,7 @@ class FunctionDescriptor : public ::google::protobuf::Message /* @@protoc_insert
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
   ::google::protobuf::RepeatedPtrField< ::BERTBuffers::FunctionElement > arguments_;
+  ::google::protobuf::internal::ArenaStringPtr category_;
   ::BERTBuffers::FunctionElement* function_;
   int call_type_;
   ::google::protobuf::uint32 flags_;
@@ -6218,7 +6233,60 @@ inline void FunctionDescriptor::set_flags(::google::protobuf::uint32 value) {
   // @@protoc_insertion_point(field_set:BERTBuffers.FunctionDescriptor.flags)
 }
 
-// repeated .BERTBuffers.FunctionElement arguments = 4;
+// string category = 4;
+inline void FunctionDescriptor::clear_category() {
+  category_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& FunctionDescriptor::category() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.FunctionDescriptor.category)
+  return category_.GetNoArena();
+}
+inline void FunctionDescriptor::set_category(const ::std::string& value) {
+  
+  category_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:BERTBuffers.FunctionDescriptor.category)
+}
+#if LANG_CXX11
+inline void FunctionDescriptor::set_category(::std::string&& value) {
+  
+  category_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:BERTBuffers.FunctionDescriptor.category)
+}
+#endif
+inline void FunctionDescriptor::set_category(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  category_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:BERTBuffers.FunctionDescriptor.category)
+}
+inline void FunctionDescriptor::set_category(const char* value, size_t size) {
+  
+  category_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:BERTBuffers.FunctionDescriptor.category)
+}
+inline ::std::string* FunctionDescriptor::mutable_category() {
+  
+  // @@protoc_insertion_point(field_mutable:BERTBuffers.FunctionDescriptor.category)
+  return category_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* FunctionDescriptor::release_category() {
+  // @@protoc_insertion_point(field_release:BERTBuffers.FunctionDescriptor.category)
+  
+  return category_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void FunctionDescriptor::set_allocated_category(::std::string* category) {
+  if (category != NULL) {
+    
+  } else {
+    
+  }
+  category_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), category);
+  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.FunctionDescriptor.category)
+}
+
+// repeated .BERTBuffers.FunctionElement arguments = 5;
 inline int FunctionDescriptor::arguments_size() const {
   return arguments_.size();
 }

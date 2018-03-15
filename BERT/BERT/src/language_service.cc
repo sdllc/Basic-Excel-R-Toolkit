@@ -524,9 +524,10 @@ FUNCTION_LIST LanguageService::CreateFunctionList(const BERTBuffers::CallRespons
       for (auto argument : descriptor.arguments()) {
         std::stringstream value;
         auto default_value = argument.default_value();
+        int value_case = default_value.value_case();
         switch (default_value.value_case()) {
         case BERTBuffers::Variable::ValueCase::kBoolean:
-          value << default_value.boolean() ? "TRUE" : "FALSE";
+          value << (default_value.boolean() ? "TRUE" : "FALSE");
           break;
         case BERTBuffers::Variable::ValueCase::kReal:
           value << default_value.real();
@@ -538,9 +539,9 @@ FUNCTION_LIST LanguageService::CreateFunctionList(const BERTBuffers::CallRespons
           value << '"' << default_value.str() << '"';
           break;
         }
-        arglist.push_back(std::make_shared<ArgumentDescriptor>(argument.name(), value.str()));
+        arglist.push_back(std::make_shared<ArgumentDescriptor>(argument.name(), value.str(), argument.description()));
       }
-      function_list.push_back(std::make_shared<FunctionDescriptor>(descriptor.function().name(), descriptor.function().name(), name, key, "", "", arglist, descriptor.flags()));
+      function_list.push_back(std::make_shared<FunctionDescriptor>(descriptor.function().name(), descriptor.function().name(), name, key, descriptor.category(), descriptor.function().description(), arglist, descriptor.flags()));
     }
   }
 

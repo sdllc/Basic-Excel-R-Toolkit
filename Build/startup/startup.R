@@ -156,7 +156,7 @@ library(BERTModule, lib.loc=paste0(Sys.getenv("BERT_HOME"), "module"));
 
       # mapped functions 
       mapped.list <- lapply(BERT$.function.map, function(a){
-        list(name=a$name, flags=1, arguments=a$arguments );
+        list(name=a$name, flags=1, arguments=a$arguments, attributes=list(category=a$category));
       });
       function.list <- c(function.list, mapped.list);
 

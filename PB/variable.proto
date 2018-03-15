@@ -294,7 +294,9 @@ message FunctionDescriptor {
   // FIXME: could be consolidated with call_type?
 
   uint32 flags = 3;
-  repeated FunctionElement arguments = 4;
+  string category = 4;
+
+  repeated FunctionElement arguments = 5;
 }
 
 /** 

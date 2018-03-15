@@ -500,6 +500,9 @@ void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector <SEXP> en
 
     if (len > 1) std::cerr << "WARNING: SYMSXP len > 1" << std::endl;
 
+    // FIXME: variables with default value of F (presumably T as well) are 
+    // symbols. we need to handle.
+
     var->set_missing(true);
     return;
   }
@@ -596,7 +599,7 @@ void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector <SEXP> en
 
     if (HandleSimpleTypes(sexp, len, rtype, arr, var)) {
       // ...
-    }
+    } 
     else if (rtype == EXTPTRSXP) {
 
       auto com_pointer = var->mutable_com_pointer();
@@ -689,18 +692,40 @@ BERTBuffers::CallResponse& ListScriptFunctions(BERTBuffers::CallResponse &respon
       BERTBuffers::Variable var;
       SEXPToVariable(&var, result);
 
-      // MessageUtilities::DumpJSON(var);
-
       // ok so var should now have a list, should be easier to walk
 
       for (auto function_entry : var.arr().data()) {
 
         auto descriptor = function_list->add_functions();
+        std::vector<std::string> descriptions;
 
+        // we need description sooner rather than later, so let's look for it
+        for (auto element : function_entry.arr().data()) {
+          if (element.name() == "attributes"){
+            if (element.value_case() == BERTBuffers::Variable::ValueCase::kArr) {
+              for (auto attribute : element.arr().data()) {
+                if (attribute.name() == "description") {
+                  if (attribute.value_case() == BERTBuffers::Variable::ValueCase::kArr) {
+                    for (auto description : attribute.arr().data()) {
+                      descriptions.push_back(description.str());
+                    }
+                  }
+                }
+                else if (attribute.name() == "category") {
+                  descriptor->set_category(attribute.str());
+                }
+              }
+            }
+            break;
+          }
+        }
+        
         for (auto element : function_entry.arr().data()) {
           const std::string &name = element.name();
           if (!name.compare("name")) {
-            descriptor->mutable_function()->set_name(element.str());
+            auto function = descriptor->mutable_function();
+            function->set_name(element.str());
+            if (descriptions.size() > 0) function->set_description(descriptions[0]);
           }
           else if (!name.compare("flags")) {
             if (element.value_case() == BERTBuffers::Variable::ValueCase::kInteger)
@@ -709,8 +734,10 @@ BERTBuffers::CallResponse& ListScriptFunctions(BERTBuffers::CallResponse &respon
               descriptor->set_flags(element.real());
           }
           else if (!name.compare("arguments")) {
+            int description_index = 1;
             for (auto argument : element.arr().data()) {
               auto argument_entry = descriptor->add_arguments();
+              if (descriptions.size() > description_index) argument_entry->set_description(descriptions[description_index]);
               for (auto entry : argument.arr().data()) {
                 const std::string &entry_name = entry.name();
                 if (!entry_name.compare("name")) argument_entry->set_name(entry.str());
@@ -718,10 +745,8 @@ BERTBuffers::CallResponse& ListScriptFunctions(BERTBuffers::CallResponse &respon
                   argument_entry->mutable_default_value()->CopyFrom(entry);
                 }
               }
+              description_index++;
             }
-          }
-          else if (!name.compare("attributes")) {
-            // ...
           }
 
         }
