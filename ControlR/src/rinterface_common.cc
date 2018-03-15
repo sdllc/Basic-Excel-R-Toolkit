@@ -624,10 +624,8 @@ void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector <SEXP> en
 }
 
 
-BERTBuffers::CallResponse& ListScriptFunctions(BERTBuffers::CallResponse &response, const BERTBuffers::CallResponse &call) {
-
-  response.set_id(call.id());
-
+BERTBuffers::CallResponse& ListScriptFunctions(BERTBuffers::CallResponse &response) {
+  
   ParseStatus ps;
 
   SEXP cmds = PROTECT(Rf_allocVector(STRSXP, 1));
@@ -947,16 +945,21 @@ SEXP RCallback(SEXP command, SEXP data) {
     }
     return R_NilValue;
   }
-
+  
   BERTBuffers::CallResponse *call = new BERTBuffers::CallResponse;
   BERTBuffers::CallResponse *response = new BERTBuffers::CallResponse;
 
   call->set_id(callback_id++);
   call->set_wait(true);
-  auto callback = call->mutable_function_call();
-  callback->set_function(string_command);
 
-  if (data) SEXPToVariable(callback->add_arguments(), reinterpret_cast<SEXP>(data));
+  if (!string_command.compare("remap-functions")) {
+    ListScriptFunctions(*call);
+  }
+  else {
+    auto callback = call->mutable_function_call();
+    callback->set_function(string_command);
+    if (data) SEXPToVariable(callback->add_arguments(), reinterpret_cast<SEXP>(data));
+  }
 
   bool success = Callback(*call, *response);
   if (success) sexp_result = VariableToSEXP(response->result());

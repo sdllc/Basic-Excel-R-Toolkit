@@ -57,7 +57,7 @@ BERTBuffers::CallResponse& RExec(BERTBuffers::CallResponse &rsp, const BERTBuffe
 /** 
  * returns a list of functions exported to Excel
  */
-BERTBuffers::CallResponse& ListScriptFunctions(BERTBuffers::CallResponse &rsp, const BERTBuffers::CallResponse &call);
+BERTBuffers::CallResponse& ListScriptFunctions(BERTBuffers::CallResponse &message);
 
 /**
  * send a message to the console. this includes stdio as well as graphics and notifications
