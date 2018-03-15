@@ -2,16 +2,16 @@
 
 # Welcome to the BERT console! # 
 
-BERT connects Excel with the statistics language [R][1]. The console has
-an editor for writing functions, and an R shell for testing code. You can 
-also control Excel directly from R in the shell. See the file 
-excel-scripting.R (in your Documents folder, under BERT2) for an example.
+The console has an editor for writing functions (this side), and an R shell 
+for testing code. You can also control Excel directly from R in the shell; 
+see `excel-scripting.R` (in your Documents folder, under BERT2) for 
+an example.
 
-When it starts, BERT loads functions from the functions directory, in 
-your Documents folder under BERT2. You should see some example functions 
-installed in Excel called `R.TestAdd` and `R.EigenValues`.
+When it starts, BERT loads functions from the functions directory, 
+Documents\BERT2. You should see some example functions installed in Excel 
+called `R.TestAdd` and `R.EigenValues`.
 
-You can also use BERT with the statistics language [Julia][2]. See 
+You can also use BERT with the statistics language Julia. See 
 [this page][3] for more information. 
 
 Have suggestions, feedback, questions, comments?  Let us know!  
@@ -24,6 +24,13 @@ Cheers,
 [2]: https://julialang.org/downloads/
 [3]: https://bert-toolkit.com/using-julia-with-bert
 [4]: https://bert-toolkit.com/contact
+
+# Upgrading from BERT v1? #
+
+If you are upgrading from an older version of BERT, [check our website][5] for
+some additional information. 
+
+[5]: https://bert-toolkit.com/whats-new#upgrading-from-bert-1
 
 # Release Notes #
 
@@ -71,9 +78,9 @@ from the spreadsheet and limited to VBA.
 
 # Credits #
 
-The BERT console is built using [Electron][5], [Monaco][6] and 
-[xtermjs][7]. 
+The BERT console is built using [Electron][20], [Monaco][21] and 
+[xtermjs][22]. 
 
-[5]: https://electronjs.org/
-[6]: https://github.com/Microsoft/monaco-editor
-[7]: https://xtermjs.org/
+[20]: https://electronjs.org/
+[21]: https://github.com/Microsoft/monaco-editor
+[22]: https://xtermjs.org/
