@@ -168,10 +168,9 @@ BERT.console.graphics.device <- function( bgcolor="white", width=500, height=350
 
   name <- paste("BERT Console (", type, ")");
 	x <- dev.list();
-	if((length(x) > 0) & (name %in% names(x))){ dev.set( x[[name]]) }
-  else {
-    .Call( "console_device", bgcolor, width, height, pointsize, type, PACKAGE='BERTModule' );
-  }
+	if((length(x) > 0) & (name %in% names(x))){ dev.off( x[[name]]); }
+
+  .Call( "console_device", bgcolor, width, height, pointsize, type, PACKAGE='BERTModule' );
 
 }
 
