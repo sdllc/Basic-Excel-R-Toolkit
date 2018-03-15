@@ -161,12 +161,12 @@ BERT.graphics.device <- function( name="BERT-default", bgcolor="white", width=40
 #' renders to the shell. type is either "svg" or "png".
 #'
 #' @export 
-BERT.console.graphics.device <- function( bgcolor="white", width=500, height=350, pointsize=12, type="png"){
+BERT.console.graphics.device <- function( bgcolor="white", width=500, height=350, pointsize=14, type="png"){
 
   # default to png, enforce
   if(type != "svg"){ type = "png"; }
 
-  name <- paste("BERT Console (", type, ")");
+  name <- paste0("BERT Console (", type, ")");
 	x <- dev.list();
 	if((length(x) > 0) & (name %in% names(x))){ dev.off( x[[name]]); }
 

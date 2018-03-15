@@ -5,7 +5,7 @@
 \title{Create a console graphics device.}
 \usage{
 BERT.console.graphics.device(bgcolor = "white", width = 500, height = 350,
-  pointsize = 12, type = "png")
+  pointsize = 14, type = "png")
 }
 \description{
 \code{BERT.console.graphics.device} creates a graphics device that 
