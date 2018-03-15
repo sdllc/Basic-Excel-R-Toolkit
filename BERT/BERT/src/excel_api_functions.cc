@@ -57,19 +57,27 @@ void resetXlOper(LPXLOPER12 x)
 
 }
 
-void UnregisterFunctions() {
+void UnregisterFunctions(const std::string &language) {
 
   XLOPER12 register_id;
   int err;
+  bool remove_all = (language == "");
   BERT *bert = BERT::Instance();
   for (auto entry : bert->function_list_) {
-    register_id.xltype = xltypeNum;
-    register_id.val.num = entry->register_id;
-    err = Excel12(xlfUnregister, 0, 1, &register_id);
-    if (err) {
-      DebugOut("Err unregistering function: %d\n", err);
+    if (remove_all || language == entry->language_name_) {
+      register_id.xltype = xltypeNum;
+      register_id.val.num = entry->register_id_;
+      err = Excel12(xlfUnregister, 0, 1, &register_id);
+      if (err) {
+        DebugOut("Err unregistering function: %d\n", err);
+      }
+
+      // FIXME: name also needs to be removed. but this may or may not work -- see
+      // https://msdn.microsoft.com/en-us/library/office/bb687866.aspx
+      
+
+      entry->register_id_ = 0;
     }
-    entry->register_id = 0;
   }
 }
 
@@ -113,12 +121,12 @@ void RegisterFunctions() {
 
     ss << language_service->prefix();
     ss << ".";
-    ss << entry->name;
+    ss << entry->name_;
     Convert::StringToXLOPER(xlParm[3], ss.str(), false);
 
     ss.clear();
     ss.str("");
-    for (auto arg : entry->arguments) ss << ", " << arg->name;
+    for (auto arg : entry->arguments_) ss << ", " << arg->name_;
     Convert::StringToXLOPER(xlParm[4], ss.str().c_str() + 2, false);
 
     Convert::StringToXLOPER(xlParm[5], "1", false);
@@ -140,8 +148,8 @@ void RegisterFunctions() {
     xlRegisterID.xltype = xltypeMissing;
     err = Excel12v(xlfRegister, &xlRegisterID, 16, xlParm);
     if (!err) {
-      if( xlRegisterID.xltype == xltypeNum ) entry->register_id = (int32_t)xlRegisterID.val.num;
-      else if( xlRegisterID.xltype == xltypeInt ) entry->register_id = (int32_t)xlRegisterID.val.w;
+      if( xlRegisterID.xltype == xltypeNum ) entry->register_id_ = (int32_t)xlRegisterID.val.num;
+      else if( xlRegisterID.xltype == xltypeInt ) entry->register_id_ = (int32_t)xlRegisterID.val.w;
     }
     Excel12(xlFree, 0, 1, &xlRegisterID);
 

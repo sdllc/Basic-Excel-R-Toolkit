@@ -65,7 +65,7 @@ LPXLOPER12 BERTFunctionCall(
 
   auto function_descriptor = bert->function_list_[index];
 
-	function_call->set_function(function_descriptor->name);
+	function_call->set_function(function_descriptor->name_);
 
 	int argcount = 16;
 	for (; argcount && arglist[argcount - 1]->xltype == xltypeMissing; argcount--);
@@ -181,8 +181,8 @@ int BERT_Console() {
 /**
  * switch contexts (get on the main thread) 
  */
-int BERT_ContextSwitch() {
-  return BERT::Instance()->HandleCallbackOnThread();
+int BERT_ContextSwitch(LPXLOPER12 argument) {
+  return BERT::Instance()->HandleCallbackOnThread(Convert::XLOPERToString(argument));
 }
 
 /**

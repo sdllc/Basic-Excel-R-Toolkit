@@ -28,7 +28,7 @@ void RegisterFunctions();
  * FIXME: if it's safe to call this with no registered functions, then perhaps
  * it should just be rolled in to the register function.
  */
-void UnregisterFunctions();
+void UnregisterFunctions(const std::string &language = "");
 
 /** 
  * registers the "BERT.Exec.X" and "BERT.Call.X" functions for a language

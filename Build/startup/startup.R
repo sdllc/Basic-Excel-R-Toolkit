@@ -48,6 +48,12 @@ library(BERTModule, lib.loc=paste0(Sys.getenv("BERT_HOME"), "module"));
       .Call("BERT.Callback", "excel", list(command, ...), PACKAGE="(embedding)");
     }
 
+    #
+    # rebuild the functions map
+    #
+    remap.functions <- function(){
+      .Call("BERT.Callback", "remap-functions", list(), PACKAGE="(embedding)");
+    }
 
     #
     # autocomplete for the console/shell. we add a custom completer later.

@@ -185,7 +185,7 @@ void LanguageService::RunCallbackThread() {
             MessageUtilities::Unframe(call, buffer, bytes);
           }
 
-          bert->HandleCallback();
+          bert->HandleCallback(language_name_);
           //DumpJSON(response);
 
           if (call.wait()) {
@@ -462,7 +462,7 @@ void LanguageService::Call(BERTBuffers::CallResponse &response, BERTBuffers::Cal
 
             // temp, use existing
             //callback_info_.callback_call_.CopyFrom(response);
-            bert->HandleCallbackOnThread(&response);
+            bert->HandleCallbackOnThread(language_name_, &response);
 
             // write
             ResetEvent(io_.hEvent);
@@ -502,7 +502,7 @@ void LanguageService::Call(BERTBuffers::CallResponse &response, BERTBuffers::Cal
       else {
         ResetEvent(callback_info_.default_unsignaled_event_);
         DebugOut("other handle signaled, do something\n");
-        bert->HandleCallbackOnThread();
+        bert->HandleCallbackOnThread(language_name_);
         SetEvent(callback_info_.default_signaled_event_); // signal callback thread
       }
     }
@@ -512,27 +512,14 @@ void LanguageService::Call(BERTBuffers::CallResponse &response, BERTBuffers::Cal
 
 }
 
-FUNCTION_LIST LanguageService::MapLanguageFunctions(uint32_t key) {
+FUNCTION_LIST LanguageService::CreateFunctionList(const BERTBuffers::CallResponse &message, uint32_t key, const std::string &name) {
 
   FUNCTION_LIST function_list;
 
-  if (!connected_) return function_list;
+  if (message.operation_case() == BERTBuffers::CallResponse::OperationCase::kErr) return function_list; // error: no functions
+  else if (message.operation_case() == BERTBuffers::CallResponse::OperationCase::kFunctionList) {
 
-  BERTBuffers::CallResponse call;
-  BERTBuffers::CallResponse rsp;
-
-  call.mutable_function_call()->set_function("list-functions");
-  call.mutable_function_call()->set_target(BERTBuffers::CallTarget::system);
-  call.set_wait(true);
-
-  Call(rsp, call);
-
-  // DumpJSON(rsp, "c:\\temp\\dumped.json");
-
-  if (rsp.operation_case() == BERTBuffers::CallResponse::OperationCase::kErr) return function_list; // error: no functions
-  else if (rsp.operation_case() == BERTBuffers::CallResponse::OperationCase::kFunctionList) {
-
-    for (auto descriptor : rsp.function_list().functions()) {
+    for (auto descriptor : message.function_list().functions()) {
       ARGUMENT_LIST arglist;
       for (auto argument : descriptor.arguments()) {
         std::stringstream value;
@@ -553,11 +540,29 @@ FUNCTION_LIST LanguageService::MapLanguageFunctions(uint32_t key) {
         }
         arglist.push_back(std::make_shared<ArgumentDescriptor>(argument.name(), value.str()));
       }
-      function_list.push_back(std::make_shared<FunctionDescriptor>(descriptor.function().name(), key, "", "", arglist));
+      function_list.push_back(std::make_shared<FunctionDescriptor>(descriptor.function().name(), name, key, "", "", arglist));
     }
   }
 
   return function_list;
+
+}
+
+FUNCTION_LIST LanguageService::MapLanguageFunctions(uint32_t key) {
+
+  if (!connected_) return {}; 
+
+  BERTBuffers::CallResponse call;
+  BERTBuffers::CallResponse response;
+
+  call.mutable_function_call()->set_function("list-functions");
+  call.mutable_function_call()->set_target(BERTBuffers::CallTarget::system);
+  call.set_wait(true);
+
+  Call(response, call);
+  
+  return LanguageService::CreateFunctionList(response, key, name());
+
 }
 
 int LanguageService::StartChildProcess(HANDLE job_handle) {

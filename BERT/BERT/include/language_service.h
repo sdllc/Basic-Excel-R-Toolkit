@@ -227,4 +227,11 @@ public:
    */
   void InterpolateString(std::string &str, const std::vector<std::pair<std::string, std::string>> &additional_replacements = {});
 
+public:
+
+  /** 
+   * FIXME: move to conversion lib? 
+   */
+  static FUNCTION_LIST CreateFunctionList(const BERTBuffers::CallResponse &message, uint32_t key, const std::string &name);
+
 };

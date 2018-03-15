@@ -529,7 +529,7 @@ int BERT::StartConsoleProcess() {
   return rslt;
 }
 
-void BERT::HandleCallback() {
+void BERT::HandleCallback(const std::string &language) {
 
   // this function gets called from a thread (i.e. not the main excel thread),
   // so we cannot call the excel API but we can call excel via COM using the 
@@ -565,7 +565,9 @@ void BERT::HandleCallback() {
         CComQIPtr<Excel::_Application> application(dispatch_pointer);
         if (application) {
           CComVariant variant_macro = "BERT.ContextSwitch";
-          CComVariant variant_result = application->Run(variant_macro);
+          CComBSTR language_bstr(language.c_str());
+          CComVariant variant_argument = language_bstr;
+          CComVariant variant_result = application->Run(variant_macro, variant_argument);
         }
         else response.set_err("qi failed");
         dispatch_pointer->Release();
@@ -588,7 +590,7 @@ void BERT::HandleCallback() {
   }
 }
 
-int BERT::HandleCallbackOnThread(const BERTBuffers::CallResponse *call, BERTBuffers::CallResponse *response) {
+int BERT::HandleCallbackOnThread(const std::string &language, const BERTBuffers::CallResponse *call, BERTBuffers::CallResponse *response) {
 
   if (!call) call = &(callback_info_.callback_call_);
   if (!response) response = &(callback_info_.callback_response_);
@@ -614,6 +616,11 @@ int BERT::HandleCallbackOnThread(const BERTBuffers::CallResponse *call, BERTBuff
           object_map_.RemoveCOMPointer(static_cast<ULONG_PTR>(pointer));
         }
       }
+      /*
+      else if (!function.compare("remap-functions")) {
+        response->mutable_result()->set_boolean(false);
+      }
+      */
       else {
         response->mutable_result()->set_boolean(false);
       }
@@ -627,6 +634,33 @@ int BERT::HandleCallbackOnThread(const BERTBuffers::CallResponse *call, BERTBuff
     else {
       response->mutable_result()->set_boolean(false);
     }
+  }
+  else if (call->operation_case() == BERTBuffers::CallResponse::OperationCase::kFunctionList) {
+
+    // remap. check this parameter...
+    if (language.length()) {
+
+      uint32_t key = 0;
+      for (; key < language_services_.size(); key++) {
+        if (language_services_[key]->name() == language) break;
+      }
+      if (key < language_services_.size()) {
+
+        UnregisterFunctions(); // FIXME: language only
+
+        FUNCTION_LIST temporary_list = LanguageService::CreateFunctionList(*call, key, language);
+        for (auto function_pointer : function_list_) {
+          if (language.compare(function_pointer->language_name_)) temporary_list.push_back(function_pointer);
+        }
+        function_list_ = temporary_list;
+
+        RegisterFunctions(); // FIXME: language only
+
+      }
+    }
+
+    response->mutable_result()->set_boolean(true);
+
   }
   else {
     response->mutable_result()->set_boolean(false);

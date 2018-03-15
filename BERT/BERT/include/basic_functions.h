@@ -37,7 +37,7 @@ static LPWSTR funcTemplates[][16] = {
   // these are constructed at runtime
   
   { L"BERT_Console", L"J", L"BERT.Console", L"", L"2", L"BERT", L"", L"95", L"", L"", L"", L"", L"", L"", L"", L"" },
-  { L"BERT_ContextSwitch", L"J", L"BERT.ContextSwitch", L"", L"2", L"BERT", L"", L"94", L"", L"", L"", L"", L"", L"", L"", L"" },
+  { L"BERT_ContextSwitch", L"JQ", L"BERT.ContextSwitch", L"", L"2", L"BERT", L"", L"94", L"", L"", L"", L"", L"", L"", L"", L"" },
   { L"BERT_UpdateFunctions", L"J", L"BERT.UpdateFunctions", L"", L"2", L"BERT", L"", L"93", L"", L"", L"", L"", L"", L"", L"", L"" },
 
 	{ 0 }
@@ -55,7 +55,7 @@ int BERT_SetPointers(ULONG_PTR excel_pointer, ULONG_PTR ribbon_pointer);
 int BERT_Console();
 
 /** exported function */
-int BERT_ContextSwitch();
+int BERT_ContextSwitch(LPXLOPER12 argument);
 
 __inline LPXLOPER12 BERT_Call_Generic(uint32_t language_index, LPXLOPER12 func,
   LPXLOPER12 arg0, LPXLOPER12 arg1, LPXLOPER12 arg2, LPXLOPER12 arg3,

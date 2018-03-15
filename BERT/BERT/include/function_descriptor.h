@@ -25,20 +25,20 @@
  */
 class ArgumentDescriptor {
 public:
-  std::string name;
-  std::string description;
-  std::string default_value; // not necessarily a string, this is just a representation
+  std::string name_;
+  std::string description_;
+  std::string default_value_; // not necessarily a string, this is just a representation
 
 public:
   ArgumentDescriptor(const std::string &name = "", const std::string &default_value = "", const std::string &description = "")
-    :name(name)
-    , description(description)
-    , default_value(default_value) {}
+    : name_(name)
+    , description_(description)
+    , default_value_(default_value) {}
 
   ArgumentDescriptor(const ArgumentDescriptor &rhs) {
-    name = rhs.name;
-    description = rhs.description;
-    default_value = rhs.default_value;
+    name_ = rhs.name_;
+    description_ = rhs.description_;
+    default_value_ = rhs.default_value_;
   }
 };
 
@@ -52,9 +52,9 @@ typedef std::vector<std::shared_ptr<ArgumentDescriptor>> ARGUMENT_LIST;
 class FunctionDescriptor {
 
 public:
-  std::string name;
-  std::string category;
-  std::string description;
+  std::string name_;
+  std::string category_;
+  std::string description_;
   
   /** it's a waste to carry this around, but it seems convenient */
   // std::string language_prefix_;
@@ -62,24 +62,28 @@ public:
   /** since we have the key, and prefix is a one-time lookup, create a lookup */
   uint32_t language_key_;
 
-  ARGUMENT_LIST arguments;
+  /** for flush lookup. FIXME: merge or remove the two keys */
+  std::string language_name_;
+
+  ARGUMENT_LIST arguments_;
 
   /**
    * this ID is assigned when we call xlfRegister, and we need to keep
    * it around to call xlfUnregister if we are rebuilding the functions.
    * (excel uses num (i.e. double) for this)
    */
-  double register_id;
+  double register_id_;
 
 public:
-  FunctionDescriptor(const std::string &name, uint32_t language_key, const std::string &category = "", const std::string &description = "", const ARGUMENT_LIST &args = {})
-    : name(name)
+  FunctionDescriptor(const std::string &name, const std::string &language_name, uint32_t language_key, const std::string &category = "", const std::string &description = "", const ARGUMENT_LIST &args = {})
+    : name_(name)
+    , language_name_(language_name)
     , language_key_(language_key)
-    , category(category)
-    , description(description)
-    , register_id(0)
+    , category_(category)
+    , description_(description)
+    , register_id_(0)
   {
-    for (auto arg : args) arguments.push_back(arg);
+    for (auto arg : args) arguments_.push_back(arg);
   }
 
   ~FunctionDescriptor() {
@@ -87,12 +91,13 @@ public:
   }
 
   FunctionDescriptor(const FunctionDescriptor &rhs) {
-    name = rhs.name;
-    category = rhs.category;
-    description = rhs.description;
-    register_id = rhs.register_id;
+    name_ = rhs.name_;
+    language_name_ = rhs.language_name_;
+    category_ = rhs.category_;
+    description_ = rhs.description_;
+    register_id_ = rhs.register_id_;
     language_key_ = rhs.language_key_;
-    for (auto arg : rhs.arguments) arguments.push_back(arg);
+    for (auto arg : rhs.arguments_) arguments_.push_back(arg);
   }
 };
 
