@@ -45,6 +45,48 @@ Function CheckExcelVersion
 FunctionEnd
 
 ;--------------------------------
+;Check for BERT1
+
+Function CheckOldBERT
+
+  StrCpy $1 ""
+
+  SetRegView 32
+  ReadRegStr $0 HKCU "Software\Microsoft\Office\Excel\Addins\BERTRibbon.Connect" "Description"
+  StrCmp $0 "" CheckOldBERT_Check64
+  ReadRegDWORD $0 HKCU "Software\Microsoft\Office\Excel\Addins\BERTRibbon.Connect" "LoadBehavior"
+  IntCmp $0 3 +2
+  Goto CheckOldBERT_Check64
+  MessageBox MB_OKCANCEL|MB_ICONQUESTION "Installer found an old BERT (v1) installation.$\nOkay to disable it?" IDCANCEL CheckOldBERT_Cancel
+  WriteRegDWORD HKCU "Software\Microsoft\Office\Excel\Addins\BERTRibbon.Connect" "LoadBehavior" 2
+  StrCpy $1 "Disable"
+
+CheckOldBERT_Check64:
+
+  SetRegView 64
+  ReadRegStr $0 HKCU "Software\Microsoft\Office\Excel\Addins\BERTRibbon.Connect" "Description"
+  StrCmp $0 "" CheckOldBERT_End
+  ReadRegDWORD $0 HKCU "Software\Microsoft\Office\Excel\Addins\BERTRibbon.Connect" "LoadBehavior"
+  IntCmp $0 3 +2
+  Goto CheckOldBERT_End
+  MessageBox MB_OKCANCEL|MB_ICONQUESTION "Installer found an old BERT (v1) installation.$\nOkay to disable it?" IDCANCEL CheckOldBERT_Cancel
+  WriteRegDWORD HKCU "Software\Microsoft\Office\Excel\Addins\BERTRibbon.Connect" "LoadBehavior" 2
+  StrCpy $1 "Disable"
+  Goto CheckOldBERT_End
+
+CheckOldBERT_Cancel:
+  Abort "Install canceled. Please see the BERT website for more information about upgrading."
+
+CheckOldBERT_End:
+  SetRegView default
+  StrCmp $1 "" CheckOldBERT_Exit
+
+  MessageBox MB_OK|MB_ICONINFORMATION "Your old BERT installation was disabled, but not deleted. Please see the BERT website for more information on upgrading from BERT v1."
+
+CheckOldBERT_Exit:
+FunctionEnd
+
+;--------------------------------
 ;Delete old versions of R
 
 !macro DeleteRVersions
@@ -132,6 +174,8 @@ Section "Main" SecMain
 
   Call CheckExcelVersion
 
+  Call CheckOldBERT
+
 ;  StrCmp $ExcelFlavor "Win64" +3
 ;  MessageBox MB_ICONSTOP|MB_OK "Sorry, 32-bit Excel is not supported in this release."
 ;  Abort "Install error - invalid Excel version detected"
@@ -149,6 +193,10 @@ Section "Main" SecMain
   File ..\Build\bert-languages.json
 
   ; excel modules
+  ;
+  ; FIXME: since we know, we only need to install the appropriate version.
+  ; (although we still need the File command to build the installer)
+  ;
   File ..\Build\BERT64.xll
   File ..\Build\BERT32.xll
   File ..\Build\BERTRibbon2x64.dll
