@@ -9,10 +9,10 @@ The most up-to-date documentation for BERT is on the website (https://bert-toolk
 
 To install BERT, download the [latest release][5].
 
-[1]: http://bert-toolkit.com/bert-quick-start
-[2]: http://bert-toolkit.com/bert-example-functions
-[3]: http://bert-toolkit.com/talking-to-excel-from-r
-[4]: http://bert-toolkit.com/excel-scripting-interface-in-r
+[1]: https://bert-toolkit.com/bert-quick-start
+[2]: https://bert-toolkit.com/bert-example-functions
+[3]: https://bert-toolkit.com/talking-to-excel-from-r
+[4]: https://bert-toolkit.com/excel-scripting-interface-in-r
 [5]: https://github.com/sdllc/Basic-Excel-R-Toolkit/releases/latest
 
 Overview
