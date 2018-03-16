@@ -395,7 +395,7 @@ export class RInterface extends LanguageInterface {
       if(selected_count >= 0){
         let selected = data.filter(x => x.selected).map(x => `"${x.name}"`);
         console.info("install", selected_count, selected);
-        let command = `install.packages(${selected.join(", ")})\n`;
+        let command = `install.packages(c(${selected.join(", ")}))\n`;
         this.next({type: "paste", data:command});
         success = true;
       }
