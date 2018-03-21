@@ -42,7 +42,11 @@ if( $all ) {
   $zip = $TRUE;
 };
 
-#
+# FIXME: parameterize
+
+$timestamp_server = "http://timestamp.verisign.com/scripts/timestamp.dll"
+
+# thanks to
 # https://stackoverflow.com/questions/3038337/powershell-resolve-path-that-might-not-exist
 #
 
@@ -242,7 +246,7 @@ Write-Host ""
 
 if( $sign ) {
 	Write-Host "Signing installer..." -ForegroundColor green
-	& cmd /c 'signtool.exe' sign /t http://timestamp.comodoca.com/authenticode /a /i comodo BERT-Installer-$bert_version.exe | out-file -append -encoding "utf8"  $logfile 2>&1
+	& cmd /c 'signtool.exe' sign /t $timestamp_server /a /i comodo BERT-Installer-$bert_version.exe | out-file -append -encoding "utf8"  $logfile 2>&1
 	ExitOnError ;
 }
 else {
