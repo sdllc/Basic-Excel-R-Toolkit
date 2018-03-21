@@ -34,6 +34,10 @@ some additional information.
 
 # Release Notes #
 
+2.2.0 -- Update for R 3.4.4
+
+Updates R to 3.4.4. Minor updates and bug fixes.
+
 2.1.0 -- First Release of BERT 2 (15 March 2018)
 
 Version 2 represents a complete rewrite and rearchitecting of BERT. In 

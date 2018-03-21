@@ -98,6 +98,7 @@ FunctionEnd
   RMDir /r "$INSTDIR\R-3.4.1"
   RMDir /r "$INSTDIR\R-3.4.2"
   RMDir /r "$INSTDIR\R-3.4.3"
+  RMDir /r "$INSTDIR\R-3.4.4"
 
 !macroend
 

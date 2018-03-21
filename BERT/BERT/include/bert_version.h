@@ -19,5 +19,5 @@
 
 #pragma once
 
-#define BERT_VERSION L"2.1.0"
+#define BERT_VERSION L"2.2.0"
 
