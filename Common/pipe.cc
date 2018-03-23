@@ -113,7 +113,8 @@ int Pipe::NextWrite() {
     // if we are currently in a write operation, 
     // check if it's complete.
 
-    result = GetOverlappedResultEx(handle_, &write_io_, &bytes, 0, FALSE);
+//    result = GetOverlappedResultEx(handle_, &write_io_, &bytes, 0, FALSE);
+    result = GetOverlappedResult(handle_, &write_io_, &bytes, FALSE);
     if (!result) {
       DWORD err = GetLastError();
       switch (err) {
@@ -138,7 +139,8 @@ int Pipe::NextWrite() {
     std::string message = write_stack_.front();
     write_stack_.pop_front();
     WriteFile(handle_, message.c_str(), (DWORD)message.length(), NULL, &write_io_);
-    result = GetOverlappedResultEx(handle_, &write_io_, &bytes, 0, FALSE);
+    //result = GetOverlappedResultEx(handle_, &write_io_, &bytes, 0, FALSE);
+    result = GetOverlappedResult(handle_, &write_io_, &bytes, FALSE);
     if (result) {
       // std::cout << "immediate write success (" << bytes << ")" << std::endl;
       ResetEvent(write_io_.hEvent);
@@ -166,7 +168,8 @@ DWORD Pipe::Read(std::string &buf, bool block) {
   // that implies we will need to hold on to the buffer.
 
   DWORD bytes = 0;
-  DWORD success = GetOverlappedResultEx(handle_, &read_io_, &bytes, block ? INFINITE : 0, FALSE);
+//  DWORD success = GetOverlappedResultEx(handle_, &read_io_, &bytes, block ? INFINITE : 0, FALSE);
+  DWORD success = GetOverlappedResult(handle_, &read_io_, &bytes, block ? TRUE : FALSE);
 
   if (success) {
     if (message_buffer_.length()) {
@@ -245,7 +248,11 @@ DWORD Pipe::Start(std::string name, bool wait) {
   while (true) {
 
     DWORD bytes;
-    DWORD rslt = GetOverlappedResultEx(handle_, &read_io_, &bytes, 1000, FALSE);
+    //DWORD rslt = GetOverlappedResultEx(handle_, &read_io_, &bytes, 1000, FALSE);
+
+    WaitForSingleObject(handle_, 1000);
+    DWORD rslt = GetOverlappedResult(handle_, &read_io_, &bytes, FALSE);
+
 
     if (rslt) {
       std::cout << "connected (" << name << ")" << std::endl;

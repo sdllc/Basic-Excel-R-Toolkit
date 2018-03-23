@@ -356,12 +356,14 @@ unsigned BERT::InstanceConsoleThreadFunction(){
       std::string message = console_notifications_[0];
       console_notifications_.erase(console_notifications_.begin());
       WriteFile(handle, message.c_str(), (DWORD)message.length(), &bytes_written, &write_io);
-      result = GetOverlappedResultEx(handle, &write_io, &bytes_written, INFINITE, FALSE);
+      //result = GetOverlappedResultEx(handle, &write_io, &bytes_written, INFINITE, FALSE);
+      result = GetOverlappedResult(handle, &write_io, &bytes_written, TRUE);
     }
     else if (result == WAIT_OBJECT_0) {
       ResetEvent(read_io.hEvent);
       reading = false;
-      result = GetOverlappedResultEx(handle, &read_io, &bytes_read, 0, FALSE);
+      //result = GetOverlappedResultEx(handle, &read_io, &bytes_read, 0, FALSE);
+      result = GetOverlappedResult(handle, &read_io, &bytes_read, FALSE);
       if (result) {
         if (!connected) {
           std::cout << " * connected to mgmt pipe " << std::endl;

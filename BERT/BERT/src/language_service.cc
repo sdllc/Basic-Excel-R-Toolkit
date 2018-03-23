@@ -167,7 +167,8 @@ void LanguageService::RunCallbackThread() {
       DWORD result = WaitForSingleObject(io.hEvent, 1000);
       if (result == WAIT_OBJECT_0) {
         ResetEvent(io.hEvent);
-        DWORD rslt = GetOverlappedResultEx(callback_pipe_handle, &io, &bytes, 0, FALSE);
+        //DWORD rslt = GetOverlappedResultEx(callback_pipe_handle, &io, &bytes, 0, FALSE);
+        DWORD rslt = GetOverlappedResult(callback_pipe_handle, &io, &bytes, FALSE);
         if (rslt) {
 
           BERTBuffers::CallResponse &call = callback_info_.callback_call_;
@@ -191,7 +192,8 @@ void LanguageService::RunCallbackThread() {
           if (call.wait()) {
             std::string str_response = MessageUtilities::Frame(response);
             WriteFile(callback_pipe_handle, str_response.c_str(), (int32_t)str_response.size(), &bytes, &io);
-            result = GetOverlappedResultEx(callback_pipe_handle, &io, &bytes, INFINITE, FALSE);
+            //result = GetOverlappedResultEx(callback_pipe_handle, &io, &bytes, INFINITE, FALSE);
+            result = GetOverlappedResult(callback_pipe_handle, &io, &bytes, TRUE);
           }
 
           // restart
@@ -419,7 +421,8 @@ void LanguageService::Call(BERTBuffers::CallResponse &response, BERTBuffers::Cal
   // wait for the write to complete. FIXME: there's no need to wait if we don't need a 
   // result, but in that case we will need to make sure it's clear before we send another message.
 
-  GetOverlappedResultEx(pipe_handle_, &io_, &bytes, INFINITE, false);
+//  GetOverlappedResultEx(pipe_handle_, &io_, &bytes, INFINITE, false);
+  GetOverlappedResult(pipe_handle_, &io_, &bytes, TRUE);
 
   if (call.wait()) {
 
@@ -436,7 +439,8 @@ void LanguageService::Call(BERTBuffers::CallResponse &response, BERTBuffers::Cal
       DWORD signaled = WaitForMultipleObjectsEx(2, handles, FALSE, INFINITE, FALSE);
       if (signaled == WAIT_OBJECT_0) {
 
-        DWORD rslt = GetOverlappedResultEx(pipe_handle_, &io_, &bytes, INFINITE, FALSE);
+        //DWORD rslt = GetOverlappedResultEx(pipe_handle_, &io_, &bytes, INFINITE, FALSE);
+        DWORD rslt = GetOverlappedResult(pipe_handle_, &io_, &bytes, TRUE);
         if (rslt) {
 
           if (message_buffer.length()) {
@@ -470,7 +474,8 @@ void LanguageService::Call(BERTBuffers::CallResponse &response, BERTBuffers::Cal
             WriteFile(pipe_handle_, framed_message.c_str(), (int32_t)framed_message.length(), NULL, &io_);
 
             // wait?
-            GetOverlappedResultEx(pipe_handle_, &io_, &bytes, INFINITE, FALSE);
+            //GetOverlappedResultEx(pipe_handle_, &io_, &bytes, INFINITE, FALSE);
+            GetOverlappedResult(pipe_handle_, &io_, &bytes, TRUE);
 
             // ok
             ResetEvent(io_.hEvent);
