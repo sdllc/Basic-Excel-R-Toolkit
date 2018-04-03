@@ -225,6 +225,21 @@ library(BERTModule, lib.loc=paste0(Sys.getenv("BERT_HOME"), "module"));
 
   });
 
+  #===========================================================================
+
+  BERT.version <- (function(){
+    version.string <- Sys.getenv('BERT_VERSION');
+    version <- list();
+    version['build.date'] <- Sys.getenv('BERT_BUILD_DATE');
+    parts <- as.numeric(unlist(strsplit(version.string, '\\.')));
+    version['major'] <- parts[1];
+    version['minor'] <- parts[2];
+    version['patch'] <- parts[3];
+    version['version.string'] <- version.string;
+    return(version);
+  })();
+
+
   #
   # helpful for dev, can go
   #
