@@ -26,7 +26,7 @@ import { PromptMessage, TerminalImplementation } from './shell/terminal_implemen
 import { LanguageInterface } from './shell/language_interface';
 import { RInterface } from './shell/language_interface_r';
 import { JuliaInterface } from './shell/language_interface_julia';
-import { Julia07Interface } from './shell/language_interface_julia-0.7';
+//import { Julia07Interface } from './shell/language_interface_julia-0.7';
 
 import {Splitter, SplitterOrientation, SplitterEvent} from './ui/splitter';
 import {TabPanel, TabJustify, TabEventType} from './ui/tab_panel';
@@ -92,7 +92,7 @@ let terminals = new MultiplexedTerminal("#terminals");
 // FIXME: parameterize, or make these dynamic. in fact, do that (make them dynamic).
 
 let language_interface_types = [
-  RInterface, JuliaInterface, Julia07Interface
+  RInterface, JuliaInterface // , Julia07Interface
 ];
 
 // active languages, set by pipe connections
@@ -204,9 +204,9 @@ ConfigManager.filter(x => x.config).first().subscribe(x => {
                     if(interface_class.language_name_ === language ){
 
                       // FIXME: figure out a way to make this generic
-                      if( language === "Julia" && minor > 6){
-                        if(interface_class.target_version_[1] <= 6) return false;
-                      }
+                      //if( language === "Julia" && minor > 6){
+                      //  if(interface_class.target_version_[1] <= 6) return false;
+                      //}
 
                       let instance = new interface_class();
                       instance.label_ = language;

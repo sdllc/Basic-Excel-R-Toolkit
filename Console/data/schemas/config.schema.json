@@ -10,6 +10,7 @@
         "R": {
           "type": "object",
           "properties": {
+            "tag": { "type": "string" },
             "home": { "type": "string" },
             "lib": { "type": "string" },
             "CRAN": { "type": "string" },
@@ -21,6 +22,7 @@
           "type": "object",
           "properties": {
             "home": { "type": "string" },
+            "tag": { "type": "string", "enum": [ "0.6", "0.7" ] },
             "fastMath": { "type": "string", "enum": [ "on", "off", "default" ] },
             "useCompileCache": { "type": "string", "enum": [ "yes", "no" ] },
             "usePrecompiled": { "type": "string", "enum": [ "yes", "no" ] }
