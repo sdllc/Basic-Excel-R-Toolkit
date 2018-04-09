@@ -331,8 +331,8 @@ module BERT
     function_list = filter(x -> (x != "ans" && getfield(Main, x) isa Function), names(Main)) 
     map(function(x)
       m = match( r"\(([^\(]*)\) in", string(methods(getfield(Main, x))))
-      arguments = map(x -> strip(x), split(m[1], ",", keep=false))
-      [string(x), arguments...]
+      arguments = map(x -> String(strip(x)), split(m[1], ",", keep=false))
+      [String(x), arguments...]
     end, function_list )
   end
   

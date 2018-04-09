@@ -1128,37 +1128,10 @@ void ListScriptFunctions(BERTBuffers::CallResponse &response, const BERTBuffers:
             auto data = (jl_value_t**)(jl_array_data(jl_array));
             auto function_descriptor = function_list->add_functions();
 
-            // FIXME: any other metadata
-
             function_descriptor->mutable_function()->set_name(jl_string(data[0]));
             for (int i = 1; i < array_length; i++) {
               function_descriptor->add_arguments()->set_name(jl_string(data[i]));
             }
-
-          }
-          else if (eltype == jl_abstractstring_type) {
-
-            auto data = (jl_value_t**)(jl_array_data(jl_array));
-            const char *string_ptr = jl_string_ptr(data[0]);
-            int32_t string_len = jl_string_len(data[0]);
-
-            auto function_descriptor = function_list->add_functions();
-            function_descriptor->mutable_function()->set_name(std::string(string_ptr, string_len));
- 
-            /*
-            for (int32_t i = 1; i < array_length; i++) {
-
-              auto data2 = jl_arrayref(jl_array, i);
-              const char *ptr = jl_string_ptr(data2);
-              int32_t len = jl_string_len(data2);
-
-              / *
-              const char *ptr = jl_string_ptr(data[i]);
-              int32_t len = jl_string_len(data[i]);
-              * /
-              function_descriptor->add_arguments()->set_name(std::string(ptr, len));
-            }
-            */
 
           }
           else {
