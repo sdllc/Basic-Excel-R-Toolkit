@@ -331,6 +331,13 @@ module BERT
     function_list = filter(x -> (x != "ans" && getfield(Main, x) isa Function), names(Main)) 
     map(function(x)
       m = match( r"\(([^\(]*)\) in", string(methods(getfield(Main, x))))
+
+      # note `String()`` (vs. `string()`); not sure if this changed or if we 
+      # were just always doing it wrong. These are `SubString` types. 
+      # `String()` converts to String (always UTF8). `string()` doesn't do 
+      # anything, possibly because `SubString` already inherits from 
+      # AbstractString.
+
       arguments = map(x -> String(strip(x)), split(m[1], ",", keep=false))
       [String(x), arguments...]
     end, function_list )
