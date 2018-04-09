@@ -14,9 +14,13 @@ and execute).
 =#
 
 #
-# get the active workbook
+# get the active workbook. create one if it doesn't exist
+# (you're on the start screen?)
 #
 wb = EXCEL.Application.get_ActiveWorkbook()
+if( wb == nothing )
+  wb = EXCEL.Application.get_Workbooks().Add()
+end
 
 #
 # get the worksheets pointer and add a new sheet
@@ -42,6 +46,7 @@ new_sheet.get_Range("B2:F21").put_Value(data)
 #
 # add some headers. NOTE: transponse does not work on 
 # strings in julia? seems like an oversight. 
+# [NB: it's `permutedims`]
 #
 header_range = new_sheet.get_Range("B1:F1")
 header_range.put_Value(hcat("A", "B", "C", "D", "E"))

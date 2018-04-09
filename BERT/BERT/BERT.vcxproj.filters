@@ -13,9 +13,6 @@
     <Filter Include="PB">
       <UniqueIdentifier>{7cf281e1-904c-4b27-a3bc-37af0696e5a2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="language-services">
-      <UniqueIdentifier>{1842e8ea-b1af-4f61-84ac-231b63ca436b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Common">
       <UniqueIdentifier>{26c08613-c867-4dc2-a9ef-70457c409b79}</UniqueIdentifier>
     </Filter>
@@ -58,9 +55,6 @@
     <ClInclude Include="include\callback_info.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\language_service.h">
-      <Filter>language-services</Filter>
-    </ClInclude>
     <ClInclude Include="include\file_change_watcher.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -76,9 +70,6 @@
     <ClInclude Include="..\..\Common\string_utilities.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\language_desc.h">
-      <Filter>language-services</Filter>
-    </ClInclude>
     <ClInclude Include="include\excel_api_functions.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -92,6 +83,12 @@
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="include\bert_graphics.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\language_desc.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\language_service.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
@@ -128,9 +125,6 @@
     <ClCompile Include="src\excel_api_functions.cc">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="src\language_service.cc">
-      <Filter>language-services</Filter>
-    </ClCompile>
     <ClCompile Include="src\file_change_watcher.cc">
       <Filter>source</Filter>
     </ClCompile>
@@ -147,6 +141,12 @@
       <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="src\bert_graphics.cc">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\language_service.cc">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\language_desc.cc">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

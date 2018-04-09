@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 #include <inttypes.h>
+#include "json11/json11.hpp"
 
 /** moving to config, struct for now */
 class LanguageDescriptor {
@@ -29,12 +30,15 @@ public:
   std::string name_;
   std::string executable_;
   std::string prefix_;
+  std::string tag_;
   std::vector<std::string> extensions_;
   std::string command_arguments_;
   std::string prepend_path_;
   uint32_t startup_resource_;
   std::string startup_resource_path_;
-  std::string default_home_;
+  std::string home_;
+
+  int32_t priority_;
 
 public:
   LanguageDescriptor(
@@ -44,7 +48,7 @@ public:
     const std::vector<std::string> &extensions,
     const std::string &command_arguments,
     const std::string &prepend_path,
-    const std::string &default_home,
+    const std::string &home,
     uint32_t startup_resource,
     const std::string &startup_resource_path = ""
   ) 
@@ -54,22 +58,35 @@ public:
     , extensions_(extensions)
     , command_arguments_(command_arguments)
     , prepend_path_(prepend_path)
-    , default_home_(default_home)
+    , home_(home)
     , startup_resource_(startup_resource)
     , startup_resource_path_(startup_resource_path)
   {}
+
+  LanguageDescriptor() : priority_(0) {}
 
   LanguageDescriptor(const LanguageDescriptor &rhs)
     : name_(rhs.name_)
     , executable_(rhs.executable_)
     , prefix_(rhs.prefix_)
+    , priority_(rhs.priority_)
+    , tag_(rhs.tag_)
     , extensions_(rhs.extensions_)
     , command_arguments_(rhs.command_arguments_)
     , prepend_path_(rhs.prepend_path_)
-    , default_home_(rhs.default_home_)
+    , home_(rhs.home_)
     , startup_resource_(rhs.startup_resource_)
     , startup_resource_path_(rhs.startup_resource_path_)
   {}
+
+public:
+
+  /**
+   * copies values from passed JSON object to language descriptor.
+   * this is designed to support overlay from version, so that 
+   * we can overlay as much or as little data as necessary/useful.
+   */
+  void FromJSON(const json11::Json& json, const std::string &home_directory);
 
 };
 

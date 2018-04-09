@@ -7,16 +7,30 @@
     "command_arguments": "-r \"$HOME\"",
     "prepend_path": "$HOME\\bin\\x64",
     "startup_resource": "startup.r",
-    "default_home": "%BERT_HOME%\\R-3.4.4"
+    "home": "%BERT_HOME%\\R-3.4.4"
   },
   {
     "name": "Julia", 
-    "executable": "controlJulia.exe", 
     "prefix": "Jl",
     "extensions": ["jl", "julia"],
     "command_arguments": "",
     "prepend_path": "$HOME\\bin",
-    "startup_resource": "startup.jl",
-    "default_home": "%localappdata%\\Julia-0.6.2"
+    "versions": [
+      {
+        "tag": "0.7",
+        "executable": "controlJulia07.exe", 
+        "startup_resource": "startup-0.7.jl",
+        "home": "%localappdata%\\Julia-0.7.0-DEV",
+        "priority": 2
+      },
+      {
+        "tag": "0.6",
+        "executable": "controlJulia.exe", 
+        "prepend_path": "$HOME\\bin",
+        "startup_resource": "startup-0.6.jl",
+        "home": "%localappdata%\\Julia-0.6.2",
+        "priority": 1
+      }
+    ]
   }
 ]

@@ -28,51 +28,122 @@
 // this may cause a problem if it rolls over.
 uint32_t LanguageService::transaction_id_ = 1;
 
-LanguageService::LanguageService(CallbackInfo &callback_info, COMObjectMap &object_map, DWORD dev_flags, const json11::Json &config, const std::string &home_directory, const LanguageDescriptor &descriptor)
+//LanguageService::LanguageService(CallbackInfo &callback_info, COMObjectMap &object_map, DWORD dev_flags, const json11::Json &config, const std::string &home_directory, const LanguageDescriptor &descriptor)
+LanguageService::LanguageService(CallbackInfo &callback_info, COMObjectMap &object_map, DWORD dev_flags, const json11::Json &config, const std::string &home_directory, const json11::Json &json)
   : callback_info_(callback_info)
   , object_map_(object_map)
   , dev_flags_(dev_flags)
   , connected_(false)
   , configured_(false)
-  , resource_id_(0)
-  , language_descriptor_(descriptor)
+  // , resource_id_(0)
+  // , language_descriptor_(descriptor)
 {
   memset(&io_, 0, sizeof(io_));
 
+  // we're now receiving the json descriptor instead of the object, but we still
+  // want to construct the object. the json descriptor may have multiple versions
+  // for a given language; in that case, we want to overlay and compare.
+
+  language_descriptor_.FromJSON(json, home_directory);
+
   // comment out language (or delete) to deactivate.
   
-  configured_ = !(config["BERT"][descriptor.name_].is_null());
+  configured_ = !(config["BERT"][language_descriptor_.name_].is_null());
   if (!configured_) return;
+
+  std::string override_home;
+  if (config["BERT"][language_descriptor_.name_]["home"].is_string()) override_home = config["BERT"][language_descriptor_.name_]["home"].string_value();
+
+  if (json["versions"].is_array()) {
+
+    configured_ = false;
+
+    // to force a particular version, use the "tag" field; if we find a matching
+    // "tag", we use that one. it's a straight string match, not >=. if there's 
+    // no matching tag, bail.
+
+    if (config["BERT"][language_descriptor_.name_]["tag"].is_string()) {
+      std::string tag = config["BERT"][language_descriptor_.name_]["tag"].string_value();
+      for (const auto &version : json["versions"].array_items()) {
+        LanguageDescriptor descriptor(language_descriptor_);
+        descriptor.FromJSON(version, home_directory);
+        if (descriptor.tag_ == tag) {
+          std::cout << "found matching tag: " << tag << std::endl;
+          configured_ = true;
+          language_descriptor_ = descriptor;
+          break;
+        }
+      }
+    }
+    else {
+
+      // if there's no tag, we order by priority and check for existence of
+      // the home directory. 1 is highest priority, then 2, etc. 0 is not used.
+      // (neither are negative numbers. we used to use zero).
+
+      int32_t priority = 0;
+      for (const auto &version : json["versions"].array_items()) {
+        LanguageDescriptor descriptor(language_descriptor_);
+        descriptor.FromJSON(version, home_directory);
+
+        // lower priority? we can skip.
+        if (priority > 0 && descriptor.priority_ > priority) continue;
+
+        // home directory exists?
+
+        // FIXME: so how do we know, absent a tag, what version this is? 
+        if (override_home.length()) descriptor.home_ = override_home;
+
+        // maybe need to expand
+        DWORD expanded_length = ExpandEnvironmentStringsA(descriptor.home_.c_str(), 0, 0);
+        if (expanded_length) {
+          char *buffer = new char[expanded_length + 1];
+          expanded_length = ExpandEnvironmentStringsA(descriptor.home_.c_str(), buffer, expanded_length + 1);
+          if (expanded_length) descriptor.home_ = buffer;
+          delete[] buffer;
+        }
+
+        DWORD attributes = GetFileAttributesA(descriptor.home_.c_str());
+        if (attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY)) {
+          priority = descriptor.priority_;
+          configured_ = true;
+          language_descriptor_ = descriptor;
+        }
+
+      }
+
+    }
+
+
+    if (!configured_) {
+      std::cout << "No tag, not using versions" << std::endl;
+      configured_ = false;
+      return;
+    }
+
+  }
 
   // default home or override in the config. note that for R we are relying on 
   // the BERT_HOME env var being set at this point.
 
-  language_home_ = descriptor.default_home_;
+  if (config["BERT"][language_descriptor_.name_]["home"].is_string()) {
+    language_descriptor_.home_ = config["BERT"][language_descriptor_.name_]["home"].string_value();
+  }
 
-  if (config["BERT"][descriptor.name_]["home"].is_string()) language_home_ = config["BERT"][descriptor.name_]["home"].string_value();
-
-  configured_ = language_home_.length();
+  configured_ = language_descriptor_.home_.length();
   if (!configured_) return;
 
-  DWORD result = ExpandEnvironmentStringsA(language_home_.c_str(), 0, 0);
+  DWORD result = ExpandEnvironmentStringsA(language_descriptor_.home_.c_str(), 0, 0);
   if (result) {
     char *buffer = new char[result + 1];
-    result = ExpandEnvironmentStringsA(language_home_.c_str(), buffer, result + 1);
-    if (result) language_home_ = buffer;
+    result = ExpandEnvironmentStringsA(language_descriptor_.home_.c_str(), buffer, result + 1);
+    if (result) language_descriptor_.home_ = buffer;
     delete[] buffer;
   }
 
-  file_extensions_ = descriptor.extensions_;
-  language_prefix_ = descriptor.prefix_;
-  language_name_ = descriptor.name_;
-
-  resource_id_ = descriptor.startup_resource_;
-  prepend_path_ = descriptor.prepend_path_;
-  command_line_arguments_ = descriptor.command_arguments_;
-
   child_path_ = home_directory;
   child_path_.append("\\");
-  child_path_.append(descriptor.executable_);
+  child_path_.append(language_descriptor_.executable_);
 
   if (dev_flags_) {
     std::string override_key = "BERT2.Override$NAMEPipeName";
@@ -82,7 +153,7 @@ LanguageService::LanguageService(CallbackInfo &callback_info, COMObjectMap &obje
 
   if (!pipe_name_.length()) {
     std::stringstream ss;
-    ss << "BERT2-PIPE-" << descriptor.prefix_ << "-" << _getpid();
+    ss << "BERT2-PIPE-" << language_descriptor_.prefix_ << "-" << _getpid();
     pipe_name_ = ss.str();
   }
 
@@ -186,7 +257,7 @@ void LanguageService::RunCallbackThread() {
             MessageUtilities::Unframe(call, buffer, bytes);
           }
 
-          bert->HandleCallback(language_name_);
+          bert->HandleCallback(language_descriptor_.name_);
           //DumpJSON(response);
 
           if (call.wait()) {
@@ -341,9 +412,9 @@ void LanguageService::InterpolateString(std::string &str, const std::vector<std:
   const char arch[] = "i386";
 #endif
 
-  replace_function(str, "$HOME", language_home_);
+  replace_function(str, "$HOME", language_descriptor_.home_);
   replace_function(str, "$ARCH", arch);
-  replace_function(str, "$NAME", language_name_);
+  replace_function(str, "$NAME", language_descriptor_.name_);
 
   for (const auto &pair : additional_replacements) {
     replace_function(str, pair.first, pair.second);
@@ -373,7 +444,7 @@ bool LanguageService::ValidFile(const std::string &file) {
   char *extension = PathFindExtensionA(path);
   if (extension && *extension) {
     extension++;
-    for (auto compare : file_extensions_) {
+    for (auto compare : language_descriptor_.extensions_) {
       if (!StringUtilities::ICaseCompare(compare, extension)) {
         return true;
       }
@@ -466,7 +537,7 @@ void LanguageService::Call(BERTBuffers::CallResponse &response, BERTBuffers::Cal
 
             // temp, use existing
             //callback_info_.callback_call_.CopyFrom(response);
-            bert->HandleCallbackOnThread(language_name_, &response);
+            bert->HandleCallbackOnThread(language_descriptor_.name_, &response);
 
             // write
             ResetEvent(io_.hEvent);
@@ -507,7 +578,7 @@ void LanguageService::Call(BERTBuffers::CallResponse &response, BERTBuffers::Cal
       else {
         ResetEvent(callback_info_.default_unsignaled_event_);
         DebugOut("other handle signaled, do something\n");
-        bert->HandleCallbackOnThread(language_name_);
+        bert->HandleCallbackOnThread(language_descriptor_.name_);
         SetEvent(callback_info_.default_signaled_event_); // signal callback thread
       }
     }
@@ -576,13 +647,13 @@ int LanguageService::StartChildProcess(HANDLE job_handle) {
   // cache
   std::string old_path = APIFunctions::GetPath();
 
-  std::string prepend = prepend_path_;
+  std::string prepend = language_descriptor_.prepend_path_;
   InterpolateString(prepend);
 
   // NOTE: this doesn't work when appending path -- only prepending. why?
   APIFunctions::PrependPath(prepend);
 
-  std::string arguments = command_line_arguments_;
+  std::string arguments = language_descriptor_.command_arguments_; 
   InterpolateString(arguments);
 
   std::stringstream command;

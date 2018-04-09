@@ -59,6 +59,7 @@
     <ClCompile Include="src\bert_graphics.cc" />
     <ClCompile Include="src\com_object_map.cc" />
     <ClCompile Include="src\file_change_watcher.cc" />
+    <ClCompile Include="src\language_desc.cc" />
     <ClCompile Include="src\language_service.cc" />
     <ClCompile Include="src\basic_functions.cc" />
     <ClCompile Include="src\bert.cc" />
@@ -169,7 +170,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;BERT_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>E:\BERT2\protobuf-3.5.0\src;ExcelLib;..\..\PB;..\..\common;include;PB;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\protobuf-3.5.0\src;ExcelLib;..\..\PB;..\..\common;include;PB;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <DisableSpecificWarnings>4146</DisableSpecificWarnings>
     </ClCompile>
@@ -179,7 +180,7 @@
       <ModuleDefinitionFile>src/BERT.def</ModuleDefinitionFile>
       <AdditionalDependencies>libprotobufd.lib;Ws2_32.lib;psapi.lib;Userenv.lib;Iphlpapi.lib;Kernel32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
-      <AdditionalLibraryDirectories>E:\BERT2\protobuf-3.5.0\cmake\build\solution\DebugDLL;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\..\protobuf-3.5.0\cmake\build\solution\DebugDLL;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

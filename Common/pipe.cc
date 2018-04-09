@@ -215,7 +215,7 @@ DWORD Pipe::Start(std::string name, bool wait) {
     DEFAULT_BUFFER_SIZE,
     100,
     NULL);
-  
+
   if (NULL == handle_ || handle_ == INVALID_HANDLE_VALUE) {
     std::cerr << "create pipe failed" << std::endl;
     return -1;

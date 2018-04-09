@@ -34,6 +34,8 @@ some additional information.
 
 # Release Notes #
 
+2.2.1 -- Fix for Windows 7 x64
+
 2.2.0 -- Update for R 3.4.4
 
 Updates R to 3.4.4. Minor updates and bug fixes.

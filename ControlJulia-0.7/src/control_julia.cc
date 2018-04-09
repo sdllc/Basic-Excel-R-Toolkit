@@ -19,8 +19,7 @@
 
 #include "control_julia.h"
 #include "julia_interface.h"
-
-std::string language_tag;
+#include "io_redirector.h"
 
 // handle for signaling break (ctrl+c); set as first
 // handle in pipe loop set
@@ -39,6 +38,7 @@ Pipe stdout_pipe, stderr_pipe;
 
 extern void JuliaRunUVLoop(bool until_done);
 
+std::string language_tag;
 
 void NextPipeInstance(bool block, std::string &name) {
   Pipe *pipe = new Pipe;
@@ -153,7 +153,7 @@ bool SystemCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallResp
   std::string function = call.function_call().function();
 
   if (!function.compare("get-language")) {
-    response.mutable_result()->set_str(language_tag);
+    response.mutable_result()->set_str(language_tag); //  "Julia");
   }
   else if (!function.compare("read-source-file")) {
     std::string file = call.function_call().arguments(0).str();
@@ -360,10 +360,11 @@ void TruncateBuffer(std::string &buffer, uint32_t target_length = 1024 * 8) {
 
 }
 
+/*
 unsigned __stdcall StdioThreadFunction(void *data) {
 
   //Pipe *pipe = (Pipe*)data;
-  Pipe **pipes = (Pipe**)data;
+  Pipe **pipes_array = (Pipe**)data;
   std::string str;
 
   // FIXME: we should cap these buffers, as they could potentially 
@@ -372,7 +373,7 @@ unsigned __stdcall StdioThreadFunction(void *data) {
   std::string stdout_buffer;
   std::string stderr_buffer;
 
-  HANDLE handles[] = { pipes[0]->wait_handle_read(), pipes[1]->wait_handle_read(), stdout_pipe.wait_handle_read(), stderr_pipe.wait_handle_read() };
+  HANDLE handles[] = { pipes_array[0]->wait_handle_read(), pipes_array[1]->wait_handle_read(), stdout_pipe.wait_handle_read(), stderr_pipe.wait_handle_read() };
   while (true) {
     DWORD wait_result = WaitForMultipleObjects(4, handles, FALSE, 1000);
     int index = wait_result - WAIT_OBJECT_0;
@@ -405,9 +406,9 @@ unsigned __stdcall StdioThreadFunction(void *data) {
     }
 
     else  if (index >= 0 && index < 2) {
-      ResetEvent(pipes[index]->wait_handle_read());
-      if (!pipes[index]->connected()) {
-        pipes[index]->Connect(true);
+      ResetEvent(pipes_array[index]->wait_handle_read());
+      if (!pipes_array[index]->connected()) {
+        pipes_array[index]->Connect(true);
         std::cout << "connect stdio pipe " << index << std::endl;
       }
       else {
@@ -416,8 +417,8 @@ unsigned __stdcall StdioThreadFunction(void *data) {
         // we should implement some minimal amount of buffering
         // to try to clean this up... could be as small as 10ms
         
-        DWORD read_result = pipes[index]->Read(str, false);
-        pipes[index]->StartRead();
+        DWORD read_result = pipes_array[index]->Read(str, false);
+        pipes_array[index]->StartRead();
 
         if (index) {
           if (stderr_pipe.connected()) {
@@ -430,9 +431,11 @@ unsigned __stdcall StdioThreadFunction(void *data) {
         else {
           if (stdout_pipe.connected()) {
             stdout_pipe.PushWrite(str);
+            //std::cout << "OUT [2]: " << str << std::endl;
           }
           else {
             TruncateBuffer(stdout_buffer.append(str));
+            //std::cout << "OUT [1]: " << str << std::endl;
           }
         }
       }
@@ -448,7 +451,98 @@ unsigned __stdcall StdioThreadFunction(void *data) {
 
   return 0;
 }
+*/
 
+unsigned __stdcall StdioThreadFunction(void *data) {
+
+  IORedirector **io_redirectors = (IORedirector**)data;
+  std::string str;
+
+  // FIXME: we should cap these buffers, as they could potentially 
+  // grow very large.
+
+  std::string stdout_buffer;
+  std::string stderr_buffer;
+
+  HANDLE handles[] = { io_redirectors[0]->data_available_, io_redirectors[1]->data_available_, stdout_pipe.wait_handle_read(), stderr_pipe.wait_handle_read() };
+  while (true) {
+    DWORD wait_result = WaitForMultipleObjects(4, handles, FALSE, 1000);
+    int index = wait_result - WAIT_OBJECT_0;
+
+    if (index == 2) {
+      ResetEvent(stdout_pipe.wait_handle_read());
+      if (!stdout_pipe.connected()) {
+        stdout_pipe.Connect();
+        //std::cout << "Connect stdout pipe, buffer: ``" << stdout_buffer << "''" << std::endl;
+        if (stdout_buffer.length()) stdout_pipe.PushWrite(stdout_buffer);
+        stdout_buffer.clear();
+      }
+      else {
+        int result = stdout_pipe.Read(str, false);
+        if (stdout_pipe.error()) stdout_pipe.Reset();
+      }
+    }
+    else if (index == 3) {
+      ResetEvent(stderr_pipe.wait_handle_read());
+      if (!stderr_pipe.connected()) {
+        stderr_pipe.Connect();
+        //std::cout << "Connect stderr pipe, buffer: ``" << stderr_buffer << "''" << std::endl;
+        if (stderr_buffer.length()) stderr_pipe.PushWrite(stderr_buffer);
+        stderr_buffer.clear();
+      }
+      else {
+        int result = stderr_pipe.Read(str, false);
+        if (stderr_pipe.error()) stderr_pipe.Reset();
+      }
+    }
+
+    else  if (index >= 0 && index < 2) {
+      ResetEvent(io_redirectors[index]->data_available_);
+      //if (!pipes_array[index]->connected()) {
+      //  pipes_array[index]->Connect(true);
+      //  std::cout << "connect stdio pipe " << index << std::endl;
+      //}
+      //else 
+      {
+
+        // FIXME: we're getting a lot of one-byte strings here.
+        // we should implement some minimal amount of buffering
+        // to try to clean this up... could be as small as 10ms
+
+        io_redirectors[index]->GetData(str);
+
+        if (index) {
+          if (stderr_pipe.connected()) {
+            stderr_pipe.PushWrite(str);
+          }
+          else {
+            TruncateBuffer(stderr_buffer.append(str));
+          }
+        }
+        else {
+          if (stdout_pipe.connected()) {
+            stdout_pipe.PushWrite(str);
+            //std::cout << "OUT [2]: " << str << std::endl;
+          }
+          else {
+            TruncateBuffer(stdout_buffer.append(str));
+            //std::cout << "OUT [1]: " << str << std::endl;
+          }
+        }
+
+      }
+
+    }
+    else if (wait_result == WAIT_TIMEOUT) {
+      // std::cerr << "timeout" << std::endl;
+    }
+    else {
+      std::cerr << "ERR in wait: " << GetLastError() << std::endl;
+    }
+  }
+
+  return 0;
+}
 
 void SetBreak() {
   std::cout << "SET BREAK" << std::endl;
@@ -581,10 +675,6 @@ int main(int argc, char **argv) {
   JuliaGetVersion(&major, &minor, &patch);
   std::cout << "Julia version reports " << major << "." << minor << "." << patch << std::endl;
 
-  std::stringstream ss;
-  ss << "Julia::" << major << "." << minor << "." << patch;
-  language_tag = ss.str();
-
   // FIXME: constants for version checks, return values
   // we can probably use ranges as well, at least for minor.
   // major versions may require specific versions of this controller
@@ -593,10 +683,14 @@ int main(int argc, char **argv) {
     std::cerr << "invalid major version" << std::endl;
     return PROCESS_ERROR_UNSUPPORTED_VERSION;
   }
-  if (minor != 6) {
+  if (minor != 7) {
     std::cerr << "invalid minor version" << std::endl;
     return PROCESS_ERROR_UNSUPPORTED_VERSION;
   }
+
+  std::stringstream ss;
+  ss << "Julia::" << major << "." << minor << "." << patch;
+  language_tag = ss.str();
 
   for (int i = 0; i < argc; i++) {
     if (!strncmp(argv[i], "-p", 2) && i < argc - 1) {
@@ -646,18 +740,32 @@ int main(int argc, char **argv) {
   }
 
   prompt_event_handle = CreateEvent(0, TRUE, FALSE, 0);
+
+  /*
   Pipe *stdio_pipes[] = { new Pipe, new Pipe };
 
   stdio_pipes[0]->Start("stdout", false);
-  HANDLE stdout_write_handle = CreateFile(stdio_pipes[0]->full_name().c_str(), FILE_ALL_ACCESS, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+  HANDLE stdout_write_handle = CreateFile(stdio_pipes[0]->full_name().c_str(), GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
   
   stdio_pipes[1]->Start("stderr", false);
-  HANDLE stderr_write_handle = CreateFile(stdio_pipes[1]->full_name().c_str(), FILE_ALL_ACCESS, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-  
-  _dup2(_open_osfhandle((intptr_t)stdout_write_handle, 0), 1); // _O_TEXT), 1); // stdout
-  _dup2(_open_osfhandle((intptr_t)stderr_write_handle, 0), 2); // _O_TEXT), 2); // stderr
+  HANDLE stderr_write_handle = CreateFile(stdio_pipes[1]->full_name().c_str(), GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+
+  //int file_stdout = _open_osfhandle((intptr_t)stdout_write_handle, _O_TEXT);
+  //_dup2(file_stdout, 1);
+//  _dup2(_open_osfhandle((intptr_t)stdout_write_handle, _O_TEXT), 1);
+
+  _dup2(_open_osfhandle((intptr_t)stdout_write_handle, _O_TEXT), 1); // _O_TEXT), 1); // stdout
+  _dup2(_open_osfhandle((intptr_t)stderr_write_handle, _O_TEXT), 2); // _O_TEXT), 1); // stderr
 
   uintptr_t io_thread_handle = _beginthreadex(0, 0, StdioThreadFunction, stdio_pipes, 0, 0);
+  */
+
+  std::cout << "starting IO redirectors" << std::endl;
+
+  IORedirector *io_redirectors[] = { new IORedirector, new IORedirector };
+  io_redirectors[0]->Start(stdout);
+  io_redirectors[1]->Start(stderr);
+  uintptr_t io_thread_handle = _beginthreadex(0, 0, StdioThreadFunction, io_redirectors, 0, 0);
 
   // start the callback pipe first. doesn't block.
 

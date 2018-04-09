@@ -739,14 +739,20 @@ void BERT::Init() {
   config_file_path.append(CONFIG_FILE_NAME);
   config_ = ReadConfigFile(config_file_path);
 
-  std::vector<LanguageDescriptor> language_descriptors;
+  // we now support multiple versions of languages, basically just to 
+  // support Julia 0.7 (which is not API compatible with 0.6, although
+  // the differences are minor).
 
-  // FIXME: move this into a separate function
+  // also because 0.7 is (atm) in dev state, we want 0.6.2 to be default
+  // (except on windows 7 where it doesn't work).
+
+  // std::vector<LanguageDescriptor> language_descriptors;
 
   config_file_path = home_directory_;
   config_file_path.append(LANGUAGE_CONFIG_FILE_NAME);
   json11::Json language_config = ReadConfigFile(config_file_path);
 
+  /*
   if (language_config.is_array()) {
     for (const auto &item : language_config.array_items()) {
       std::vector<std::string> extensions;
@@ -771,6 +777,7 @@ void BERT::Init() {
       language_descriptors.push_back(language_descriptor);
     }
   }
+  */
 
   // the job object created here is used to kill child processes
   // in the event of an excel exit (for any reason).
@@ -794,17 +801,23 @@ void BERT::Init() {
   SetEnvironmentVariableA("BERT_HOME", home_directory_.c_str());
 
   // who uses this one? [it's in the banners]
+  // [also adding BERT.version]
   SetEnvironmentVariableW(L"BERT_VERSION", BERT_VERSION);
+  SetEnvironmentVariableA("BERT_BUILD_DATE", __TIMESTAMP__);
 
   // set up initial languages 
   // connect all first; then initialize
-  for (const auto &descriptor : language_descriptors) {
-    auto service = std::make_shared<LanguageService>(callback_info_, object_map_, dev_flags_, config_, home_directory_, descriptor);
-    if (service->configured()) {
-      service->Connect(job_handle_); // is this synchronous? we can do these in parallel
-      language_services_.push_back(service);
+  //for (const auto &descriptor : language_descriptors) {
+  if (language_config.is_array()) {
+    for (const auto &item : language_config.array_items()) {
+      //auto service = std::make_shared<LanguageService>(callback_info_, object_map_, dev_flags_, config_, home_directory_, descriptor);
+      auto service = std::make_shared<LanguageService>(callback_info_, object_map_, dev_flags_, config_, home_directory_, item);
+      if (service->configured()) {
+        service->Connect(job_handle_); // is this synchronous? we can do these in parallel
+        language_services_.push_back(service);
+      }
+      else std::cerr << "r service not configured, skipping" << std::endl;
     }
-    else std::cerr << "r service not configured, skipping" << std::endl;
   }
 
   // ... insert callback thread ...

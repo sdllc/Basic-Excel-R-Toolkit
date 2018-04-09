@@ -73,13 +73,13 @@ protected:
   HANDLE pipe_handle_;
 
   /** file extensions (lowercase) */
-  std::vector< std::string > file_extensions_;
+  //std::vector< std::string > file_extensions_;
 
   /** prefix for function names */
-  std::string language_prefix_;
+  //std::string language_prefix_;
 
   /** name for ui/reference */
-  std::string language_name_;
+  //std::string language_name_;
 
   /** overlapped structure for nonblocking io */
   OVERLAPPED io_;
@@ -111,20 +111,21 @@ protected:
    * resource ID of startup code 
    * (TEMP, FIXME: move startup code to control processes)
    */
-  int32_t resource_id_;
+  // int32_t resource_id_;
 
   /** extra command-line arguments (parameterized) */
-  std::string command_line_arguments_;
+  //std::string command_line_arguments_;
 
   /** home directory */
-  std::string language_home_;
+  //std::string language_home_;
 
   /** will be prepended to the path; parameterized */
-  std::string prepend_path_;
+  //std::string prepend_path_;
 
 public:
 
-  LanguageService(CallbackInfo &callback_info, COMObjectMap &object_map, DWORD dev_flags, const json11::Json &config, const std::string &home_directory, const LanguageDescriptor &descriptor);
+  //LanguageService(CallbackInfo &callback_info, COMObjectMap &object_map, DWORD dev_flags, const json11::Json &config, const std::string &home_directory, const LanguageDescriptor &descriptor);
+  LanguageService(CallbackInfo &callback_info, COMObjectMap &object_map, DWORD dev_flags, const json11::Json &config, const std::string &home_directory, const json11::Json &descriptor);
 
   /** preferentially use the shutdown method instead of destructor */
   ~LanguageService() {}
@@ -143,10 +144,10 @@ public:
   bool connected() { return connected_; }
 
   /** accessor */
-  std::string prefix() { return language_prefix_;  }
+  std::string prefix() { return language_descriptor_.prefix_;  }
 
   /** accessor */
-  std::string name() { return language_name_; }
+  std::string name() { return language_descriptor_.name_; }
 
   /** accessor */
   std::string pipe_name() { return pipe_name_; }
