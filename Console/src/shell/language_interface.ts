@@ -35,6 +35,9 @@ export class LanguageInterface extends Rx.Subject<LanguageNotification> {
   // language name. needs to match what comes out of the pipe
   static language_name_: string;
 
+  // version, basically for julia 0.6 vs 0.7
+  static target_version_ = [0, 0, 0];
+
   // label for tab/id
   label_: string;
 

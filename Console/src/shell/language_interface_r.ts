@@ -42,6 +42,7 @@ const ApplicationMenu = require( "../../data/menus/application_menu.json");
 export class RInterface extends LanguageInterface {
 
   static language_name_ = "R";
+  static target_version_ = [ 3, 4, 4 ];
 
   formatter_ = new RTextFormatter();
 

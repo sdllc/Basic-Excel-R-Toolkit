@@ -26,6 +26,7 @@ import { PromptMessage, TerminalImplementation } from './shell/terminal_implemen
 import { LanguageInterface } from './shell/language_interface';
 import { RInterface } from './shell/language_interface_r';
 import { JuliaInterface } from './shell/language_interface_julia';
+import { Julia07Interface } from './shell/language_interface_julia-0.7';
 
 import {Splitter, SplitterOrientation, SplitterEvent} from './ui/splitter';
 import {TabPanel, TabJustify, TabEventType} from './ui/tab_panel';
@@ -91,7 +92,7 @@ let terminals = new MultiplexedTerminal("#terminals");
 // FIXME: parameterize, or make these dynamic. in fact, do that (make them dynamic).
 
 let language_interface_types = [
-  RInterface, JuliaInterface
+  RInterface, JuliaInterface, Julia07Interface
 ];
 
 // active languages, set by pipe connections
@@ -190,25 +191,38 @@ ConfigManager.filter(x => x.config).first().subscribe(x => {
             pipe.SysCall("get-language").then(response => {
               if( response ){
                 console.info( "Pipe", pipe_name, "language response:", response );
-                language = response.toString();
-                editor.SupportLanguage(language);
 
-                let found = language_interface_types.some(interface_class => {
-                  if(interface_class.language_name_ === response ){
-                    let instance = new interface_class();
-                    instance.label_ = language;
-                    language_interfaces.push(instance);
-                    instance.InitPipe(pipe, pipe_name);
-                    terminals.Add(instance);
+                let details = response.match(/(.*?)\:\:(\d+)\.(\d+)\.(\d+)$/);
+                if( details ){
 
-                    // MenuUtilities.SetEnabled(`main.packages.${language.toLowerCase()}`, true);
+                  language = details[1];
+                  let major = Number(details[2]);
+                  let minor = Number(details[3]);
+                  editor.SupportLanguage(language);
 
-                    return true;
+                  let found = language_interface_types.some(interface_class => {
+                    if(interface_class.language_name_ === language ){
+
+                      // FIXME: figure out a way to make this generic
+                      if( language === "Julia" && minor > 6){
+                        if(interface_class.target_version_[1] <= 6) return false;
+                      }
+
+                      let instance = new interface_class();
+                      instance.label_ = language;
+                      language_interfaces.push(instance);
+                      instance.InitPipe(pipe, pipe_name);
+                      terminals.Add(instance);
+
+                      // MenuUtilities.SetEnabled(`main.packages.${language.toLowerCase()}`, true);
+
+                      return true;
+                    }
+                    return false;
+                  });
+                  if(found){
+                    pipe.RegisterConsoleMessages();
                   }
-                  return false;
-                });
-                if(found){
-                  pipe.RegisterConsoleMessages();
                 }
               }
               console.info( "resolving", language)

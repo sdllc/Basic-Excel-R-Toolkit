@@ -25,10 +25,10 @@ import {StdIOPipe} from '../io/stdio_pipe';
 import { MenuUtilities } from '../ui/menu_utilities';
 
 /** specialization: Julia */
-export class JuliaInterface extends LanguageInterface {
+export class Julia07Interface extends LanguageInterface {
 
   static language_name_ = "Julia";
-  static target_version_ = [ 0, 6, 0 ];
+  static target_version_ = [ 0, 7, 0 ];
 
   constructor(){
     super();
@@ -55,6 +55,8 @@ export class JuliaInterface extends LanguageInterface {
   }
 
   async AutocompleteCallback(buffer:string, position:number) {
+
+    return null;
 
     // FIXME: need to normalize AC data structure (output)
 

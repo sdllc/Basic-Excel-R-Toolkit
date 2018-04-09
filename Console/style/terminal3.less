@@ -51,6 +51,23 @@
 
 }
 
+// some overrides for custom terminal: we allow wide buffers 
+// with horizontal scrolling (...)
+
+.terminal.xterm {
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  right: 0px;
+  left: 0px;
+}
+
+.terminal.xterm .xterm-viewport {
+  overflow-x: scroll;
+  z-index: 2;
+  background-color: transparent !important;
+}
+
 .xterm-graphics-node {
 
   /* 

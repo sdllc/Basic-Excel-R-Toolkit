@@ -20,7 +20,8 @@
 import { Terminal as XTerm, ITerminalOptions, ITheme as ITerminalTheme } from 'xterm';
 import { Base64 } from 'js-base64';
 
-import * as fit from 'xterm/lib/addons/fit/fit';
+//import * as fit from 'xterm/lib/addons/fit/fit';
+import * as fit from './custom-fit';
 XTerm.applyAddon(fit);
 
 import * as weblinks from 'xterm/lib/addons/webLinks/webLinks';
@@ -255,6 +256,8 @@ export class TerminalImplementation {
   private autocomplete_: Autocomplete;
   private static function_tip_node_:HTMLElement;
 
+  private viewport_rect:DOMRect;
+
   /** options is constructed from base, then preferences are overlaid */
   private options_:ITerminalOptions; 
 
@@ -296,6 +299,12 @@ export class TerminalImplementation {
     // nulls out theme for some reason)
 
     Object.keys(this.options_).forEach(key => {
+      /*
+      if( key === "background"){
+        console.info("not applying background", this.options_[key]);
+      }
+      else 
+      */
       this.xterm_.setOption(key, this.options_[key]);
     });
 
@@ -432,7 +441,47 @@ export class TerminalImplementation {
       this.Write(key);
     }
     line_info.append_or_insert(key);
+    this.EnsureCursorVisible();
     this.RunAutocomplete();
+  }
+
+  /**
+   * in the event we're horizontal scrolling, ensure cursor is on
+   * the screen
+   */
+  EnsureCursorVisible(){
+
+    // FIXME: cache [no]
+    let viewport = (this.xterm_ as any).viewport;
+    let dimensions = (this.xterm_ as any).renderer.dimensions;
+    let screenElement = (this.xterm_ as any).screenElement;
+    let viewportElement = (this.xterm_ as any).viewportElement;
+    
+    let cursor = this.state_.line_info.cursor_position;
+    let offset = cursor + this.state_.line_info.prompt.length;
+
+    // FIXME: gate on scrollable, otherwise this is just noise
+
+    if(dimensions.canvasWidth <= this.viewport_rect.width) return;
+
+    // if cursor is at zero, always jump back to the start.
+    // actually do that if it's within 1/2 screen width...
+
+    let cursor_position = offset * dimensions.scaledCellWidth;
+        
+    if( cursor_position <= this.viewport_rect.width/2){
+      viewportElement.scrollLeft = 0;
+    }
+
+    // and otherwise, scroll right so that cursor is near 1/2 the buffer
+    // actually make that 3/4? or based on cursor going l or r? (...)
+
+    else {
+      viewportElement.scrollLeft = Math.round(cursor_position - this.viewport_rect.width/2);
+    }
+
+    //console.info("SL", cursor, cursor_position, viewport.viewportElement.scrollLeft);
+    
   }
 
   OffsetHistory(dir: number) {
@@ -513,6 +562,7 @@ export class TerminalImplementation {
       this.state_.line_info.set(""); 
       this.node_.classList.add("busy"); // should already be busy
       this.state_.Execute(line).then(x => this.Prompt(x));
+      this.EnsureCursorVisible();
     }
     else this.node_.classList.remove("busy");
 
@@ -649,6 +699,7 @@ export class TerminalImplementation {
 
   ClearShell() {
     this.xterm_.clear();
+    (this.xterm_ as any).fit();
   }
 
   /** 
@@ -799,6 +850,7 @@ export class TerminalImplementation {
             if (this.state_.line_info.cursor_position > 0) {
               this.Escape(this.state_.line_info.CharWidthAt(this.state_.line_info.cursor_position-1) + "D");
               this.state_.line_info.cursor_position--;
+              this.EnsureCursorVisible();
             }
             break;
 
@@ -806,6 +858,7 @@ export class TerminalImplementation {
             if(!this.state_.line_info.cursor_at_end){
               this.Escape(this.state_.line_info.CharWidthAt(this.state_.line_info.cursor_position) + "C");
               this.state_.line_info.cursor_position++;
+              this.EnsureCursorVisible();
             }
             break;
 
@@ -824,6 +877,7 @@ export class TerminalImplementation {
               this.MoveCursor(this.state_.line_info.char_width_right);
             }
             this.state_.line_info.cursor_position = this.state_.line_info.buffer.length;
+            this.EnsureCursorVisible();
             break;
 
           case "Home":
@@ -831,15 +885,18 @@ export class TerminalImplementation {
               this.MoveCursor(-this.state_.line_info.char_width_left);
             }
             this.state_.line_info.cursor_position = 0;
+            this.EnsureCursorVisible();
             break;
 
           case "Backspace":
             this.DeleteText(-1);
+            this.EnsureCursorVisible();
             if (this.autocomplete_.visible_) this.RunAutocomplete();
             break;
 
           case "Delete":
             this.DeleteText(1);
+            this.EnsureCursorVisible();
             break;
 
           case "Enter":
@@ -885,6 +942,7 @@ export class TerminalImplementation {
 
               this.node_.classList.add("busy");
               this.state_.Execute(line).then(x => this.Prompt(x));
+              this.EnsureCursorVisible();
 
             }
             this.state_.dismissed_tip_ = null;
@@ -902,7 +960,9 @@ export class TerminalImplementation {
   }
 
   Resize(){
+    
     (this.xterm_ as any).fit();
+    this.viewport_rect = (this.xterm_ as any).viewportElement.getBoundingClientRect();
 
     // FIXME: pass through to languages to adjust terminal size
 
@@ -1048,7 +1108,16 @@ export class TerminalImplementation {
     // it. that's not necessarily useful to us if we want to keep track.
     // so make another copy.
 
-    this.xterm_ = new XTerm(JSON.parse(JSON.stringify(this.options_)));
+    let copy = JSON.parse(JSON.stringify(this.options_));
+
+    /*
+    if(copy.theme.background){
+      console.info("Removing ctb");
+      copy.theme.background = "transparent";
+    }
+    */
+
+    this.xterm_ = new XTerm(copy);
 
     // so this is for layout. unfortunate.
     let inner_node = document.createElement("div");
@@ -1064,6 +1133,9 @@ export class TerminalImplementation {
     (this.xterm_ as any).annotation_manager.Init();
 
     this.Resize();
+    // (this.xterm_ as any).fit();
+
+    // this.xterm_.RebuildLayout();
 
     //
     // set cursor to vertical bar. otherwise it's a rectangular block, 
