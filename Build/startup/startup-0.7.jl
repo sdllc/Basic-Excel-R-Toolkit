@@ -59,6 +59,19 @@ module BERT
     Application = nothing
   end
 
+  #---------------------------------------------------------------------------- 
+  # BERT version, like in R; TODO: more tags
+  #---------------------------------------------------------------------------- 
+
+  """
+  
+  ```
+  BERT.VERSION
+  ```
+  
+  A `VersionNumber` object describing the current BERT version. 
+  """
+  VERSION = VersionNumber(map(x -> parse(Int32,x), split(ENV["BERT_VERSION"], ".", keep=false))...)
 
   #---------------------------------------------------------------------------- 
   #
