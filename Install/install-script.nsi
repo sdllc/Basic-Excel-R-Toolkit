@@ -226,6 +226,7 @@ Section "Main" SecMain
   ; controllers
   File ..\Build\ControlR.exe
   File ..\Build\ControlJulia.exe
+  File ..\Build\ControlJulia07.exe
 
   ;Store installation folder
   WriteRegStr HKCU "Software\BERT2" "InstallDir" "$INSTDIR"
@@ -350,6 +351,7 @@ Section "Uninstall"
   Delete "$INSTDIR\BERTRibbon2x86.dll"
   Delete "$INSTDIR\ControlR.exe"
   Delete "$INSTDIR\ControlJulia.exe"
+  Delete "$INSTDIR\ControlJulia07.exe"
   Delete "$INSTDIR\bert-config-template.json"
   Delete "$INSTDIR\user-stylesheet-template.json"
   Delete "$INSTDIR\bert-languages.json"
