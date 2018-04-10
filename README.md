@@ -1,4 +1,4 @@
-[<img src="bert2-logo.svg">](https://bert-toolkit.com/)
+[<img src="logo-transparent.svg">](https://bert-toolkit.com/)
 
 The most up-to-date documentation for BERT is on the website (https://bert-toolkit.com):
 

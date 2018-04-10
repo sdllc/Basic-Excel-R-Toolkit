@@ -17,7 +17,7 @@
       "main.js",
       "index.html"
     ],
-    "icon": "bert2.ico"
+    "icon": "logo-transparent.ico"
   },
   "scripts": {
     "start": "electron .",
