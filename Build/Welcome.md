@@ -54,7 +54,7 @@ Version 2 includes support for R and Julia. In keeping with earlier BERT
 releases, we include R in the default install, but you will need to install
 Julia separately to use it.
 
-[11]: https://bert-toolkit.com/using-julia-with-bert#julia-0-7
+[11]: https://bert-toolkit.com/using-julia-with-bert#julia-07
 
 # Credits #
 
