@@ -34,6 +34,8 @@ some additional information.
 
 # Release Notes #
 
+2.3.0 -- Add support for Julia 0.7. [See our website for details][11].
+
 2.2.1 -- Fix for Windows 7 x64
 
 2.2.0 -- Update for R 3.4.4
@@ -50,6 +52,8 @@ language services. We can also connect 32-bit Excel to 64-bit R.
 Version 2 includes support for R and Julia. In keeping with earlier BERT 
 releases, we include R in the default install, but you will need to install
 Julia separately to use it.
+
+[11]: https://bert-toolkit.com/using-julia-with-bert#julia-0-7
 
 # Credits #
 
