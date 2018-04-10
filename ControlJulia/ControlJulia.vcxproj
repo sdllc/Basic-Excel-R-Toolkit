@@ -119,7 +119,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\PB;..\Common\;E:\BERT2\protobuf-3.5.0\src;C:\Users\duncan\AppData\Local\Julia-0.6.2\include\julia;./include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\PB;..\Common\;..\..\protobuf-3.5.0\src;C:\Users\duncan\AppData\Local\Julia-0.6.2\include\julia;./include</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4146</DisableSpecificWarnings>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>

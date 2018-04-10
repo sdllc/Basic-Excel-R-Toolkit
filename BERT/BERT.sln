@@ -60,7 +60,6 @@ Global
 		{E94424C4-D404-42CC-8D18-EF3462C4D7FB}.Release|x64.ActiveCfg = Release|x64
 		{E94424C4-D404-42CC-8D18-EF3462C4D7FB}.Release|x64.Build.0 = Release|x64
 		{E94424C4-D404-42CC-8D18-EF3462C4D7FB}.Release|x86.ActiveCfg = Release|Win32
-		{E94424C4-D404-42CC-8D18-EF3462C4D7FB}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

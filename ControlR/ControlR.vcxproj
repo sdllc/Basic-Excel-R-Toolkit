@@ -159,7 +159,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions);WIN32;_WIN32</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>E:\BERT2\PB;E:\BERT2\protobuf-3.5.0\src;E:\BERT\R-3.4.1\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;..\common;..\PB;..\..\protobuf-3.5.0\src;E:\BERT\R-3.4.1\include</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4146</DisableSpecificWarnings>
     </ClCompile>
     <Link>
