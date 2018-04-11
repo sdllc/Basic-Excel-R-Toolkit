@@ -9,9 +9,13 @@
 #
 
 #
-# get a reference to the workbook
+# get a reference to the workbook. create a new one if 
+# it doesn't exist (you're on the start screen?)
 #
 wb <- EXCEL$Application$get_ActiveWorkbook();
+if(is.null(wb)){
+  wb <- EXCEL$Application$get_Workbooks()$Add();
+}
 
 #
 # add a sheet
