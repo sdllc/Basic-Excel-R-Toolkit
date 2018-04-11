@@ -91,6 +91,9 @@ public:
   static void VariantToVariable(BERTBuffers::Variable *variable, const CComVariant &variant) {
 
     switch (variant.vt) {
+    case VT_DATE:
+      variable->set_real(variant.date);
+      break;
     case VT_I4:
     case VT_I8:
       variable->set_integer(variant.intVal);
