@@ -4,7 +4,7 @@
   "name": "bert2-console",
   "build": {
     "directories": {
-      "output": "../build/console"
+      "output": "../Build/Console"
     },
     "win": {
       "target": "dir"
