@@ -34,7 +34,8 @@ import {Dialog, DialogSpec, DialogButton} from './ui/dialog';
 import {PropertyManager} from './common/properties';
 import {MenuUtilities} from './ui/menu_utilities';
 
-import { MultiplexedTerminal } from './shell/multiplexed_terminal';
+import {MultiplexedTerminal } from './shell/multiplexed_terminal';
+import {UpdateCheck} from './common/update_check';
 
 import {AlertManager, AlertSpec} from './ui/alert';
 import {Editor, EditorEvent, EditorEventType} from './editor/editor';
@@ -246,6 +247,8 @@ ConfigManager.filter(x => x.config).first().subscribe(x => {
     });
 
     // setTimeout(() => { language_interfaces[0].SelectPackages(); }, 100)
+
+    UpdateCheck.CheckForUpdates(properties, alert_manager);
 
   });
 

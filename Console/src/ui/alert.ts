@@ -17,7 +17,8 @@
  * along with BERT.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { MenuUtilities } from './menu_utilities';
+import {MenuUtilities} from './menu_utilities';
+const Constants = require("../../data/constants.json");
 
 export interface AlertSpec {
 
@@ -45,7 +46,7 @@ export interface AlertSpec {
 }
 
 export interface AlertResult {
-  result: "button" | "escape" | "enter" | "timeout";
+  result: "button" | "escape" | "enter" | "timeout" | "link";
   data?: any;
 }
 
@@ -113,7 +114,7 @@ export class AlertManager {
       AlertManager.container_node_.querySelector(".alert_title>div.content").textContent = spec.title || "";
       AlertManager.container_node_.querySelector(".alert_message>div.content").innerHTML = spec.message || "";
 
-      let button_text = "<button>OK</button>";
+      let button_text = `<button>${Constants.dialogs.buttons.ok}</button>`;
       if(spec.buttons && spec.buttons.length){
         button_text = spec.buttons.map(label => `<button>${label}</button>`).join("\n");
       }
@@ -140,10 +141,24 @@ export class AlertManager {
 
       this.click_listener_ = {
         handleEvent: (event) => {
+
+          let data;
           let target = event.target as HTMLElement;
-          if (/button/i.test(target.tagName || "")) {
-            this.DelayResolution(resolve, { result: "button", data: target.textContent });
+          
+          if( target ){
+            if(target.hasAttribute("data-result")) data = target.getAttribute("data-result");
+            else data = target.textContent;
           }
+
+          if (/button/i.test(target.tagName || "")) {
+            this.DelayResolution(resolve, { result: "button", data });
+          }
+          else if(/a/i.test(target.tagName || "")){
+            event.stopPropagation();
+            event.preventDefault();
+            this.DelayResolution(resolve, { result: "link", data });
+          }
+
         }
       };
       AlertManager.container_node_.addEventListener("click", this.click_listener_);

@@ -1,5 +1,5 @@
 {
-  "version": "2.1.5",
+  "version": "2.2.1",
   "main": "main.js",
   "name": "bert2-console",
   "build": {
@@ -17,7 +17,7 @@
       "main.js",
       "index.html"
     ],
-    "icon": "logo-transparent.ico"
+    "icon": "bert2.ico"
   },
   "scripts": {
     "start": "electron .",

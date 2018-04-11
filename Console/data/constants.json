@@ -57,6 +57,12 @@
     }
   },
 
+  "updates": {
+    "title": "Version $VERSION is available",
+    "downloadLink": "Download Page",
+    "suppressLink": "Don't Notify me Again"
+  },
+
   "preferences": {
     "ok": "Preferences OK",
     "error": "Preferences Error"
