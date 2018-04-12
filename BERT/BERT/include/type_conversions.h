@@ -91,6 +91,9 @@ public:
   static void VariantToVariable(BERTBuffers::Variable *variable, const CComVariant &variant) {
 
     switch (variant.vt) {
+    case VT_CY:
+      variable->set_real(variant.cyVal.int64/10000.0); // what happens in 32-bit excel?
+      break;
     case VT_DATE:
       variable->set_real(variant.date);
       break;
