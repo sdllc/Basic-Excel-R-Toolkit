@@ -497,10 +497,10 @@ public:
         x->val.mref.idSheet = sheet_id;
         x->val.mref.lpmref = new XLMREF12;
         x->val.mref.lpmref->count = 1;
-        x->val.mref.lpmref->reftbl[0].rwFirst = reference.start_row();
-        x->val.mref.lpmref->reftbl[0].rwLast = reference.end_row();
-        x->val.mref.lpmref->reftbl[0].colFirst = reference.start_column();
-        x->val.mref.lpmref->reftbl[0].colLast = reference.end_column();
+        x->val.mref.lpmref->reftbl[0].rwFirst = reference.start_row() - 1;
+        x->val.mref.lpmref->reftbl[0].rwLast = reference.end_row() - 1;
+        x->val.mref.lpmref->reftbl[0].colFirst = reference.start_column() - 1;
+        x->val.mref.lpmref->reftbl[0].colLast = reference.end_column() - 1;
 
       }
       else {
@@ -509,10 +509,10 @@ public:
 
         x->xltype = xltypeSRef;
         x->val.sref.count = 1; 
-        x->val.sref.ref.rwFirst = reference.start_row();
-        x->val.sref.ref.rwLast = reference.end_row();
-        x->val.sref.ref.colFirst = reference.start_column();
-        x->val.sref.ref.colLast = reference.end_column();
+        x->val.sref.ref.rwFirst = reference.start_row() - 1;
+        x->val.sref.ref.rwLast = reference.end_row() - 1;
+        x->val.sref.ref.colFirst = reference.start_column() - 1;
+        x->val.sref.ref.colLast = reference.end_column() - 1;
 
       }
 
