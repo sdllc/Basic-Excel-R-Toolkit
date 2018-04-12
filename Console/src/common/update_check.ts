@@ -15,12 +15,21 @@ export namespace UpdateCheck {
    */
   export async function CheckForUpdates(prefs, alert_manager:AlertManager){
 
-    // FIXME: 1 day cache or something, handle that server side 
-    // and then drop the cache option
+    // there's a chrome bug (not a bug) that prevents setting the UA 
+    // header, but electron is helpfully adding our process name/version 
+    // anyway.
+
+    // (as I recall we can set headers using old-style XHRs, if necessary)
+    
+    /*
+    let headers = new Headers({
+      "User-Agent": "BERT-Console-" + process.env.BERT_VERSION
+    });
+    */
 
     let response = await fetch("https://bert-toolkit.com/version.json", {cache: "no-cache"});
     let version_object = await response.json();
-    
+
     let version_number = 
       version_object.version.split(".").reduce((a,x) => a * 1000 + Number(x), 0);
 
