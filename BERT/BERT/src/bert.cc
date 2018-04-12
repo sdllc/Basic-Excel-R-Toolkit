@@ -716,9 +716,25 @@ int BERT::ExcelCallback(const BERTBuffers::CallResponse &call, BERTBuffers::Call
     if (command) {
       XLOPER12 excel_result;
       std::vector<LPXLOPER12> excel_arguments;
-      for (int i = 1; i < count; i++) {
-        LPXLOPER12 argument = new XLOPER12;
-        excel_arguments.push_back(Convert::VariableToXLOPER(argument, arguments_array.data(i)));
+
+      // this got changed, unfortunately. we should normalize. the old way
+      // always passed a list of arguments (even for no arguments). I don't 
+      // think there's ever a case where an array is an actual argument, so this 
+      // is probably safe. 
+
+      if (count == 2 && arguments_array.data(1).value_case() == BERTBuffers::Variable::ValueCase::kArr) {
+        auto argument_list = arguments_array.data(1).arr();
+        int argument_list_count = argument_list.data_size();
+        for (int i = 0; i < argument_list_count; i++) {
+          LPXLOPER12 argument = new XLOPER12;
+          excel_arguments.push_back(Convert::VariableToXLOPER(argument, argument_list.data(i)));
+        }
+      }
+      else {
+        for (int i = 1; i < count; i++) {
+          LPXLOPER12 argument = new XLOPER12;
+          excel_arguments.push_back(Convert::VariableToXLOPER(argument, arguments_array.data(i)));
+        }
       }
       if (excel_arguments.size()) success = Excel12v(command, &excel_result, (int32_t)excel_arguments.size(), &(excel_arguments[0]));
       else success = Excel12(command, &excel_result, 0, 0);
