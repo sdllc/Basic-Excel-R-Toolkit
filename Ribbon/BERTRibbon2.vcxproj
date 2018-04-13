@@ -298,7 +298,8 @@
     </Xml>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="images\console.png" />
+    <Image Include="images\console-16.png" />
+    <Image Include="images\console-32.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

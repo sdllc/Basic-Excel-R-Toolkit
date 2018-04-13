@@ -121,7 +121,15 @@ public:
       return S_OK;
 
     case DispIds::GetImage:
-      return GetImage(IDB_PNG1, pvarResult);
+    {
+      HDC screen = GetDC(NULL);
+      double scale = GetDeviceCaps(screen, LOGPIXELSX) / 96.0;
+      ReleaseDC(NULL, screen);
+      if (scale > 1) {
+        return GetImage(IDB_CONSOLE_32, pvarResult);
+      }
+      return GetImage(IDB_CONSOLE_16, pvarResult);
+    }
 
     case DispIds::ShowConsole:
       return HandleControlInvocation("BERT.Console()");
