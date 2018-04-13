@@ -363,7 +363,7 @@ void LanguageService::Connect(HANDLE job_handle) {
 
         DWORD err = GetLastError();
         DebugOut("err opening pipe [2]: %d\n", err);
-        if (errs++ > 10) break;
+        if (errs++ > 30) break;
         Sleep(100);
       }
       else {
