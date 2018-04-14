@@ -57,6 +57,34 @@ library(BERTModule, lib.loc=paste0(Sys.getenv("BERT_HOME"), "module"));
 
     #===========================================================================
 
+    .user.button.env <- new.env();
+
+    AddUserButton <- function(label, FUN, image.mso = "R"){
+      id <- .Call("BERT.Callback", "add-user-button", list(label, image.mso), PACKAGE="(embedding)");
+      if(!is.numeric(id) || id == 0){
+        stop("add button failed");
+      }
+      .user.button.env[[toString(id)]] = list(label=label, FUN=FUN, image.mso=image.mso, id=id);
+      return(id);
+    }
+
+    ClearUserButtons <- function(){
+      .Call("BERT.Callback", "clear-user-buttons", list(), PACKAGE="(embedding)");
+      rm(list=ls(.user.button.env), envir=.user.button.env);
+    }
+
+    RemoveUserButton <- function(id){
+      .Call("BERT.Callback", "remove-user-button", list(id), PACKAGE="(embedding)");
+      rm(toString(id), envir=.user.button.env);
+    }
+
+    ExecUserButton <- function(id){
+      button <- .user.button.env[[toString(id)]];
+      button$FUN();
+    }
+
+    #===========================================================================
+
     .function.map <- new.env();
 
     #--------------------------------------------------------

@@ -78,6 +78,7 @@
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <TargetName>BERT$(ProjectName)2x64D</TargetName>
     <TargetExt>.dll</TargetExt>
+    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IgnoreImportLibrary>true</IgnoreImportLibrary>
@@ -94,6 +95,7 @@
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <TargetName>BERT$(ProjectName)2x64</TargetName>
     <TargetExt>.dll</TargetExt>
+    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -277,6 +279,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Common\user_button.h" />
     <ClInclude Include="ribbon_connect.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />

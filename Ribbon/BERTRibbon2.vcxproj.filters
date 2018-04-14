@@ -27,6 +27,9 @@
     <ClInclude Include="ribbon_connect.h">
       <Filter>includes</Filter>
     </ClInclude>
+    <ClInclude Include="..\Common\user_button.h">
+      <Filter>common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="BERTRibbon2.rgs">
@@ -45,6 +48,9 @@
     </Filter>
     <Filter Include="resources">
       <UniqueIdentifier>{94ac2df8-10d8-41d0-943f-dae108c7f6a0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common">
+      <UniqueIdentifier>{debf9a20-ce85-4f8f-bddf-087cd2805028}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

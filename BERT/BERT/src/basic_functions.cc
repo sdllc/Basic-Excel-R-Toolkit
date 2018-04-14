@@ -187,6 +187,18 @@ int BERT_ContextSwitch(LPXLOPER12 argument) {
 }
 
 /**
+ * button from the ribbon menu
+ */
+int BERT_ButtonCallback(LPXLOPER12 button_id, LPXLOPER12 language) {
+  int id = 0;
+  if (button_id->xltype == xltypeInt) id = button_id->val.w;
+  else if (button_id->xltype == xltypeNum) id = button_id->val.num;
+  std::string language_string = Convert::XLOPERToString(language);
+  BERT::Instance()->ExecUserButton(id, language_string);
+  return 0;
+}
+
+/**
  * update functions (flush then reload); this is called via com to get on the main thread 
  */
 int BERT_UpdateFunctions() {

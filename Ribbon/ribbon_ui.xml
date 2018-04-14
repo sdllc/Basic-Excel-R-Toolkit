@@ -13,6 +13,28 @@
           -->
           <button id="b1" getLabel="GetLabel" onAction="ShowConsole" image="console" supertip="Open the BERT console to change settings, write code or run in real time"/>
         </group>
+
+        <group id="g2" label="BERT User Functions" getVisible="GetUserButtonsVisible">
+          <button id="user1" getImage="GetUserButtonImage" getLabel="GetUserButtonLabel" getVisible="GetUserButtonVisible" onAction="UserButtonAction" tag="1"/>
+          <button id="user2" getImage="GetUserButtonImage" getLabel="GetUserButtonLabel" getVisible="GetUserButtonVisible" onAction="UserButtonAction" tag="2"/>
+          <button id="user3" getImage="GetUserButtonImage" getLabel="GetUserButtonLabel" getVisible="GetUserButtonVisible" onAction="UserButtonAction" tag="3"/>
+          <button id="user4" getImage="GetUserButtonImage" getLabel="GetUserButtonLabel" getVisible="GetUserButtonVisible" onAction="UserButtonAction" tag="4"/>
+          <button id="user5" getImage="GetUserButtonImage" getLabel="GetUserButtonLabel" getVisible="GetUserButtonVisible" onAction="UserButtonAction" tag="5"/>
+          <button id="user6" getImage="GetUserButtonImage" getLabel="GetUserButtonLabel" getVisible="GetUserButtonVisible" onAction="UserButtonAction" tag="6"/>
+          <button id="user7" getImage="GetUserButtonImage" getLabel="GetUserButtonLabel" getVisible="GetUserButtonVisible" onAction="UserButtonAction" tag="7"/>
+          <button id="user8" getImage="GetUserButtonImage" getLabel="GetUserButtonLabel" getVisible="GetUserButtonVisible" onAction="UserButtonAction" tag="8"/>
+          <button id="user9" getImage="GetUserButtonImage" getLabel="GetUserButtonLabel" getVisible="GetUserButtonVisible" onAction="UserButtonAction" tag="9"/>
+          <button id="user10" getImage="GetUserButtonImage" getLabel="GetUserButtonLabel" getVisible="GetUserButtonVisible" onAction="UserButtonAction" tag="10"/>
+          <button id="user11" getImage="GetUserButtonImage" getLabel="GetUserButtonLabel" getVisible="GetUserButtonVisible" onAction="UserButtonAction" tag="11"/>
+          <button id="user12" getImage="GetUserButtonImage" getLabel="GetUserButtonLabel" getVisible="GetUserButtonVisible" onAction="UserButtonAction" tag="12"/>
+          <button id="user13" getImage="GetUserButtonImage" getLabel="GetUserButtonLabel" getVisible="GetUserButtonVisible" onAction="UserButtonAction" tag="13"/>
+          <button id="user14" getImage="GetUserButtonImage" getLabel="GetUserButtonLabel" getVisible="GetUserButtonVisible" onAction="UserButtonAction" tag="14"/>
+          <button id="user15" getImage="GetUserButtonImage" getLabel="GetUserButtonLabel" getVisible="GetUserButtonVisible" onAction="UserButtonAction" tag="15"/>
+          <button id="user16" getImage="GetUserButtonImage" getLabel="GetUserButtonLabel" getVisible="GetUserButtonVisible" onAction="UserButtonAction" tag="16"/>
+          <button id="user17" getImage="GetUserButtonImage" getLabel="GetUserButtonLabel" getVisible="GetUserButtonVisible" onAction="UserButtonAction" tag="17"/>
+          <button id="user18" getImage="GetUserButtonImage" getLabel="GetUserButtonLabel" getVisible="GetUserButtonVisible" onAction="UserButtonAction" tag="18"/>
+        </group>
+
       </tab>
 
     </tabs>

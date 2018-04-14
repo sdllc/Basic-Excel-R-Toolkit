@@ -49,6 +49,11 @@
  */
 BERTBuffers::CallResponse& RCall(BERTBuffers::CallResponse &rsp, const BERTBuffers::CallResponse &call);
 
+/**
+ * callback from user control ("button")
+ */
+BERTBuffers::CallResponse& ExecUserCommand(BERTBuffers::CallResponse &response, const BERTBuffers::CallResponse &call);
+
 /** 
  * runs arbitrary R code
  */

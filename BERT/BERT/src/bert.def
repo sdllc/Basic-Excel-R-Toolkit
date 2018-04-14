@@ -54,6 +54,8 @@ BERT_SetPointers
 BERT_ContextSwitch
 BERT_UpdateFunctions
 
+BERT_ButtonCallback
+
 ;-------------------------------------------------------
 ;
 ; placeholder functions follow

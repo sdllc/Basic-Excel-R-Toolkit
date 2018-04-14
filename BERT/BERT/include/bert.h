@@ -33,6 +33,7 @@
 #include "language_service.h"
 #include "callback_info.h"
 #include "file_change_watcher.h"
+#include "user_button.h"
 
 #define CONFIG_FILE_NAME "bert-config.json"
 #define LANGUAGE_CONFIG_FILE_NAME "bert-languages.json"
@@ -44,6 +45,10 @@ private:
   static BERT *instance_;
 
 private:
+
+  uint32_t next_user_button_id_;
+
+  std::vector< UserButton > pending_user_buttons_;
 
   /** home directory comes from registry (for the time being) */
   std::string home_directory_;
@@ -59,6 +64,9 @@ private:
 
   /** excel COM pointer */
   LPDISPATCH application_dispatch_;
+
+  /** pointer to ribbon menu */
+  LPDISPATCH ribbon_menu_dispatch_;
 
   CallbackInfo callback_info_;
 
@@ -209,6 +217,20 @@ public:
 
   /** Excel API function callback */
   int ExcelCallback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response);
+
+  HRESULT AddUserButtonInternal(const UserButton &button);
+
+  /** */
+  int AddUserButton(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response, const std::string &language);
+
+  /** */
+  void RemoveUserButton(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response);
+
+  /** */
+  void ExecUserButton(uint32_t id, const std::string &language);
+
+  /** */
+  void ClearUserButtons();
 
   /** handles callback functions from R */
   int HandleCallbackOnThread(const std::string &language, const BERTBuffers::CallResponse *call = 0, BERTBuffers::CallResponse *response = 0);

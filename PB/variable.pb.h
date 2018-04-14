@@ -3136,6 +3136,7 @@ class CallResponse : public ::google::protobuf::Message /* @@protoc_insertion_po
     kShellCommand = 7,
     kFunctionCall = 8,
     kFunctionList = 9,
+    kUserCommand = 10,
     OPERATION_NOT_SET = 0,
   };
 
@@ -3283,6 +3284,15 @@ class CallResponse : public ::google::protobuf::Message /* @@protoc_insertion_po
   ::BERTBuffers::FunctionList* mutable_function_list();
   void set_allocated_function_list(::BERTBuffers::FunctionList* function_list);
 
+  // uint32 user_command = 10;
+  private:
+  bool has_user_command() const;
+  public:
+  void clear_user_command();
+  static const int kUserCommandFieldNumber = 10;
+  ::google::protobuf::uint32 user_command() const;
+  void set_user_command(::google::protobuf::uint32 value);
+
   OperationCase operation_case() const;
   // @@protoc_insertion_point(class_scope:BERTBuffers.CallResponse)
  private:
@@ -3293,6 +3303,7 @@ class CallResponse : public ::google::protobuf::Message /* @@protoc_insertion_po
   void set_has_shell_command();
   void set_has_function_call();
   void set_has_function_list();
+  void set_has_user_command();
 
   inline bool has_operation() const;
   void clear_operation();
@@ -3310,6 +3321,7 @@ class CallResponse : public ::google::protobuf::Message /* @@protoc_insertion_po
     ::google::protobuf::internal::ArenaStringPtr shell_command_;
     ::BERTBuffers::CompositeFunctionCall* function_call_;
     ::BERTBuffers::FunctionList* function_list_;
+    ::google::protobuf::uint32 user_command_;
   } operation_;
   mutable int _cached_size_;
   ::google::protobuf::uint32 _oneof_case_[1];
@@ -7059,6 +7071,35 @@ inline ::BERTBuffers::FunctionList* CallResponse::mutable_function_list() {
   }
   // @@protoc_insertion_point(field_mutable:BERTBuffers.CallResponse.function_list)
   return operation_.function_list_;
+}
+
+// uint32 user_command = 10;
+inline bool CallResponse::has_user_command() const {
+  return operation_case() == kUserCommand;
+}
+inline void CallResponse::set_has_user_command() {
+  _oneof_case_[0] = kUserCommand;
+}
+inline void CallResponse::clear_user_command() {
+  if (has_user_command()) {
+    operation_.user_command_ = 0u;
+    clear_has_operation();
+  }
+}
+inline ::google::protobuf::uint32 CallResponse::user_command() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.CallResponse.user_command)
+  if (has_user_command()) {
+    return operation_.user_command_;
+  }
+  return 0u;
+}
+inline void CallResponse::set_user_command(::google::protobuf::uint32 value) {
+  if (!has_user_command()) {
+    clear_operation();
+    set_has_user_command();
+  }
+  operation_.user_command_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.CallResponse.user_command)
 }
 
 inline bool CallResponse::has_operation() const {

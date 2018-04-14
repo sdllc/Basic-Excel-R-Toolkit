@@ -760,6 +760,21 @@ BERTBuffers::CallResponse& ListScriptFunctions(BERTBuffers::CallResponse &respon
   return response;
 }
 
+BERTBuffers::CallResponse& ExecUserCommand(BERTBuffers::CallResponse &response, const BERTBuffers::CallResponse &call) {
+
+  uint32_t id = call.user_command();
+  int err = 0;
+
+  SEXP arguments = Rf_allocVector(VECSXP, 1);
+  SET_VECTOR_ELT(arguments, 0, Rf_ScalarInteger(id));
+
+  SEXP env = R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString("BERT")), R_GlobalEnv, &err);
+  if (!err && Rf_isEnvironment(env)) {
+    R_tryEval(Rf_lang3(Rf_install("do.call"), Rf_mkString("ExecUserButton"), arguments), env, &err);
+  }
+
+  return response;
+}
 
 BERTBuffers::CallResponse& RCall(BERTBuffers::CallResponse &rsp, const BERTBuffers::CallResponse &call) {
 

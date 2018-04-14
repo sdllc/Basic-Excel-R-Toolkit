@@ -379,6 +379,8 @@ message CallResponse {
 
     FunctionList function_list = 9; // can we just include a "repeated" element as a union member? [A: no]
 
+    uint32 user_command = 10;
+
   }
 }
 

@@ -134,7 +134,9 @@ BERT::BERT()
   : dev_flags_(0)
   , file_watcher_(BERT::FileWatcherCallback, this)
   , stream_pointer_(0)
+  , ribbon_menu_dispatch_(0)
   , console_notification_handle_(0)
+  , next_user_button_id_(1000)
 {
   APIFunctions::GetRegistryDWORD(dev_flags_, "BERT2.DevOptions");
   home_directory_ = ModuleFunctions::ModulePath();
@@ -250,6 +252,13 @@ void BERT::ShowConsole() {
 }
 
 void BERT::SetPointers(ULONG_PTR excel_pointer, ULONG_PTR ribbon_pointer) {
+
+  ribbon_menu_dispatch_ = reinterpret_cast<LPDISPATCH>(ribbon_pointer);
+
+  if (pending_user_buttons_.size()) {
+    for (auto button : pending_user_buttons_) AddUserButtonInternal(button);
+    pending_user_buttons_.clear();
+  }
 
   application_dispatch_ = reinterpret_cast<LPDISPATCH>(excel_pointer);
 
@@ -611,6 +620,13 @@ int BERT::HandleCallbackOnThread(const std::string &language, const BERTBuffers:
       if (!function.compare("excel")) {
         return_value = ExcelCallback(*call, *response);
       }
+      else if (!function.compare("clear-user-buttons")) {
+        ClearUserButtons();
+        return_value = 0;
+      }
+      else if (!function.compare("add-user-button")) {
+        return_value = AddUserButton(*call, *response, language);
+      }
       else if (!function.compare("release-pointer")) {
         if (callback.arguments_size() > 0) {
           uint64_t pointer = callback.arguments(0).com_pointer().pointer();
@@ -695,6 +711,95 @@ void BERT::UpdateGraphics(const BERTBuffers::CompositeFunctionCall &call, BERTBu
     }
   }
 
+}
+
+void BERT::RemoveUserButton(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response) {
+}
+
+void BERT::ClearUserButtons() {
+
+  if (!ribbon_menu_dispatch_) {
+    pending_user_buttons_.clear();
+    return;
+  }
+
+  DISPID dispid;
+  CComBSTR function = L"ClearUserButtons";
+  HRESULT hresult = ribbon_menu_dispatch_->GetIDsOfNames(IID_NULL, &function.m_str, 1, 1033, &dispid);
+
+  DISPPARAMS dispparams;
+  dispparams.cArgs = 0;
+  dispparams.cNamedArgs = 0;
+  dispparams.rgvarg = 0;
+
+  CComVariant cvResult;
+
+  if (SUCCEEDED(hresult)) {
+    hresult = ribbon_menu_dispatch_->Invoke(dispid, IID_NULL, 1033, DISPATCH_METHOD, &dispparams, &cvResult, NULL, NULL);
+  }
+
+}
+
+HRESULT BERT::AddUserButtonInternal(const UserButton &button) {
+
+  DISPID dispid;
+  CComBSTR function = L"AddUserButton";
+  HRESULT hresult = ribbon_menu_dispatch_->GetIDsOfNames(IID_NULL, &function.m_str, 1, 1033, &dispid);
+
+  std::vector<CComVariant> com_arguments;
+
+  // reverse order
+  com_arguments.push_back(CComVariant(button.id_));
+  com_arguments.push_back(CComVariant(button.language_tag_.c_str()));
+  com_arguments.push_back(CComVariant(button.image_mso_.c_str()));
+  com_arguments.push_back(CComVariant(button.label_.c_str()));
+
+  DISPPARAMS dispparams;
+  dispparams.cArgs = 0;
+  dispparams.cNamedArgs = 0;
+  dispparams.rgvarg = 0;
+
+  CComVariant cvResult;
+
+  if (SUCCEEDED(hresult)) {
+    dispparams.cArgs = com_arguments.size();
+    dispparams.rgvarg = &(com_arguments[0]);
+    hresult = ribbon_menu_dispatch_->Invoke(dispid, IID_NULL, 1033, DISPATCH_METHOD, &dispparams, &cvResult, NULL, NULL);
+  }
+
+  return hresult;
+
+}
+
+int BERT::AddUserButton(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response, const std::string &language) {
+
+  auto callback = call.function_call();
+  auto arguments = callback.arguments();
+
+  auto result = response.mutable_result();
+
+  CComBSTR label;
+  CComBSTR image_mso;
+  CComBSTR language_tag(language.c_str());
+
+  uint32_t id = next_user_button_id_++;
+
+  if (callback.arguments_size() == 1) {
+    auto argument = callback.arguments(0);
+    if (argument.value_case() == BERTBuffers::Variable::ValueCase::kArr) {
+      auto argument_list = argument.arr();
+      if (argument_list.data_size() > 0) label = argument_list.data(0).str().c_str();
+      if (argument_list.data_size() > 1) image_mso = argument_list.data(1).str().c_str();
+    }
+  }
+  
+  UserButton button(label.m_str, image_mso.m_str, language_tag.m_str, id);
+  if (!ribbon_menu_dispatch_) pending_user_buttons_.push_back(button);
+  else AddUserButtonInternal(button);
+
+  result->set_integer(id);
+
+  return 0;
 }
 
 int BERT::ExcelCallback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response) {
@@ -934,6 +1039,24 @@ void BERT::MapFunctions() {
 
 std::shared_ptr<LanguageService> BERT::GetLanguageService(uint32_t key) {
   return language_services_[key];
+}
+
+void BERT::ExecUserButton(uint32_t id, const std::string &language) {
+  
+  std::shared_ptr<LanguageService> service = 0;
+  for (auto language_service : language_services_) {
+    if (language_service->name() == language) {
+      service = language_service;
+      break;
+    }
+  }
+  if (service) {
+    BERTBuffers::CallResponse call, response;
+    call.set_wait(true);
+    call.set_user_command(id);
+    service->Call(response, call);
+  }
+
 }
 
 void BERT::CallLanguage(uint32_t language_key, BERTBuffers::CallResponse &response, BERTBuffers::CallResponse &call) {

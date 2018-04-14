@@ -5614,7 +5614,7 @@ if (goog.DEBUG && !COMPILED) {
  * @private {!Array<!Array<number>>}
  * @const
  */
-proto.BERTBuffers.CallResponse.oneofGroups_ = [[3,4,5,6,7,8,9]];
+proto.BERTBuffers.CallResponse.oneofGroups_ = [[3,4,5,6,7,8,9,10]];
 
 /**
  * @enum {number}
@@ -5627,7 +5627,8 @@ proto.BERTBuffers.CallResponse.OperationCase = {
   CODE: 6,
   SHELL_COMMAND: 7,
   FUNCTION_CALL: 8,
-  FUNCTION_LIST: 9
+  FUNCTION_LIST: 9,
+  USER_COMMAND: 10
 };
 
 /**
@@ -5674,7 +5675,8 @@ proto.BERTBuffers.CallResponse.toObject = function(includeInstance, msg) {
     code: (f = msg.getCode()) && proto.BERTBuffers.Code.toObject(includeInstance, f),
     shellCommand: jspb.Message.getFieldWithDefault(msg, 7, ""),
     functionCall: (f = msg.getFunctionCall()) && proto.BERTBuffers.CompositeFunctionCall.toObject(includeInstance, f),
-    functionList: (f = msg.getFunctionList()) && proto.BERTBuffers.FunctionList.toObject(includeInstance, f)
+    functionList: (f = msg.getFunctionList()) && proto.BERTBuffers.FunctionList.toObject(includeInstance, f),
+    userCommand: jspb.Message.getFieldWithDefault(msg, 10, 0)
   };
 
   if (includeInstance) {
@@ -5751,6 +5753,10 @@ proto.BERTBuffers.CallResponse.deserializeBinaryFromReader = function(msg, reade
       var value = new proto.BERTBuffers.FunctionList;
       reader.readMessage(value,proto.BERTBuffers.FunctionList.deserializeBinaryFromReader);
       msg.setFunctionList(value);
+      break;
+    case 10:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setUserCommand(value);
       break;
     default:
       reader.skipField();
@@ -5847,6 +5853,13 @@ proto.BERTBuffers.CallResponse.serializeBinaryToWriter = function(message, write
       9,
       f,
       proto.BERTBuffers.FunctionList.serializeBinaryToWriter
+    );
+  }
+  f = /** @type {number} */ (jspb.Message.getField(message, 10));
+  if (f != null) {
+    writer.writeUint32(
+      10,
+      f
     );
   }
 };
@@ -6089,6 +6102,35 @@ proto.BERTBuffers.CallResponse.prototype.clearFunctionList = function() {
  */
 proto.BERTBuffers.CallResponse.prototype.hasFunctionList = function() {
   return jspb.Message.getField(this, 9) != null;
+};
+
+
+/**
+ * optional uint32 user_command = 10;
+ * @return {number}
+ */
+proto.BERTBuffers.CallResponse.prototype.getUserCommand = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 10, 0));
+};
+
+
+/** @param {number} value */
+proto.BERTBuffers.CallResponse.prototype.setUserCommand = function(value) {
+  jspb.Message.setOneofField(this, 10, proto.BERTBuffers.CallResponse.oneofGroups_[0], value);
+};
+
+
+proto.BERTBuffers.CallResponse.prototype.clearUserCommand = function() {
+  jspb.Message.setOneofField(this, 10, proto.BERTBuffers.CallResponse.oneofGroups_[0], undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {!boolean}
+ */
+proto.BERTBuffers.CallResponse.prototype.hasUserCommand = function() {
+  return jspb.Message.getField(this, 10) != null;
 };
 
 
