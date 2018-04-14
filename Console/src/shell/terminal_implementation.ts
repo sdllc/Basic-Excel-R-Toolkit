@@ -795,7 +795,7 @@ export class TerminalImplementation {
 
   KeyDown(key: string, event: any) {
 
-    if (event.ctrlKey) {
+    if (event.ctrlKey && !event.altKey) {
       switch (event.key) {
         case "PageUp":
           TerminalImplementation.events_.next({ type: "previous-tab" });
@@ -818,7 +818,7 @@ export class TerminalImplementation {
       }
       this.FunctionTip(); // hide
     }
-    else if (event.altKey) {
+    else if (event.altKey && !event.ctrlKey) {
       switch(event.key){
         case 'F8':
           this.ClearShell();
