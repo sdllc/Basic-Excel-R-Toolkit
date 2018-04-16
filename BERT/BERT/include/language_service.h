@@ -152,6 +152,9 @@ public:
   /** accessor */
   std::string pipe_name() { return pipe_name_; }
 
+  /** accessor */
+  bool named_arguments() { return language_descriptor_.named_arguments_;  }
+
 protected:
 
   /** abstracts process launch (we use common properties) */

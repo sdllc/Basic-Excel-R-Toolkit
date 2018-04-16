@@ -71,7 +71,8 @@ LPXLOPER12 BERTFunctionCall(
 	int argcount = 16;
 	for (; argcount && arglist[argcount - 1]->xltype == xltypeMissing; argcount--);
 
-  int function_arguments = function_descriptor->arguments_.size();
+  int function_arguments = function_descriptor->language_service_->named_arguments() ? 
+    function_descriptor->arguments_.size() : 0;
 
 	for (int i = 0; i < argcount; i++) {
 		auto argument = function_call->add_arguments();
