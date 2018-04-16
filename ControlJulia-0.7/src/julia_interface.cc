@@ -218,6 +218,9 @@ jl_value_t * VariableToJlValue(const BERTBuffers::Variable *variable) {
 
   if (variable->name().length()) {
 
+    fprintf(stderr, "warning: names\n");
+
+    /*
     // create tuple with name, value. the below creates a "DataType" type.
     // I'd prefer this to be a typed tuple, but one thing at a time.
 
@@ -230,7 +233,7 @@ jl_value_t * VariableToJlValue(const BERTBuffers::Variable *variable) {
 //    return jl_new_structv(jl_any_type, tuple, 2);
 
     return (jl_value_t*) jl_apply_tuple_type(svec);
-
+    */
 
   }
 
