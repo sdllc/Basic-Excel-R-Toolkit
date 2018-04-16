@@ -658,9 +658,14 @@ int BERT::HandleCallbackOnThread(const std::string &language, const BERTBuffers:
     // remap. check this parameter...
     if (language.length()) {
 
+      std::shared_ptr<LanguageService> language_service = 0;
+
       uint32_t key = 0;
       for (; key < language_services_.size(); key++) {
-        if (language_services_[key]->name() == language) break;
+        if (language_services_[key]->name() == language) {
+          language_service = language_services_[key];
+          break;
+        }
       }
       if (key < language_services_.size()) {
 
@@ -674,7 +679,7 @@ int BERT::HandleCallbackOnThread(const std::string &language, const BERTBuffers:
 
         UnregisterFunctions(); // FIXME: language only
 
-        FUNCTION_LIST temporary_list = LanguageService::CreateFunctionList(*call, key, language);
+        FUNCTION_LIST temporary_list = LanguageService::CreateFunctionList(*call, key, language, language_service);
         for (auto function_pointer : function_list_) {
           if (language.compare(function_pointer->language_name_)) temporary_list.push_back(function_pointer);
         }
@@ -1032,7 +1037,7 @@ void BERT::MapFunctions() {
   function_list_.clear();
   int index = 0;
   for (auto language_service : language_services_) {
-    FUNCTION_LIST functions = language_service->MapLanguageFunctions(index++);
+    FUNCTION_LIST functions = language_service->MapLanguageFunctions(index++, language_service);
     function_list_.insert(function_list_.end(), functions.begin(), functions.end());
   }
 }

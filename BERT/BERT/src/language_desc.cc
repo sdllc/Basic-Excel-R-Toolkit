@@ -37,6 +37,9 @@ void LanguageDescriptor::FromJSON(const json11::Json& item, const std::string &h
     startup_resource_path_ = startup_resource_path;
   }
 
+  // can probably just call bool_value() regardless, should return false if not present
+  if (!item["named_arguments"].is_null()) named_arguments_ = item["named_arguments"].bool_value();
+
   if (!item["name"].is_null()) name_ = item["name"].string_value();
   if (!item["executable"].is_null()) executable_ = item["executable"].string_value();
   if (!item["prefix"].is_null()) prefix_ = item["prefix"].string_value();

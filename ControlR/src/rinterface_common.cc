@@ -305,11 +305,28 @@ SEXP RCallSEXP(const BERTBuffers::CompositeFunctionCall &fc, bool wait, int &err
   }
   else {
 
-    SEXP sargs = Rf_allocVector(VECSXP, len);
+    int index = 0;
+    std::vector<std::string> names;
+
     for (int i = 0; i < len; i++) {
-      SET_VECTOR_ELT(sargs, i, VariableToSEXP(fc.arguments(i)));
+      const auto &argument = fc.arguments(i);
+      if (argument.value_case() != BERTBuffers::Variable::ValueCase::kMissing) {
+        if (argument.name() == "...") names.push_back("");
+        else names.push_back(argument.name());
+      }
     }
 
+    SEXP sargs = Rf_allocVector(VECSXP, names.size());
+
+    for (int i = 0; i < len; i++) {
+      const auto &argument = fc.arguments(i);
+      if (argument.value_case() != BERTBuffers::Variable::ValueCase::kMissing) {
+        SET_VECTOR_ELT(sargs, index++, VariableToSEXP(argument));
+      }
+    }
+
+    SetNames(sargs, names);
+    
     SEXP env = R_GlobalEnv;
     std::vector<std::string> parts;
     StringUtilities::Split(fc.function().c_str(), '$', 0, parts, true);

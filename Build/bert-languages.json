@@ -7,6 +7,7 @@
     "command_arguments": "-r \"$HOME\"",
     "prepend_path": "$HOME\\bin\\x64",
     "startup_resource": "startup.r",
+    "named_arguments": true,
     "home": "%BERT_HOME%\\R-3.4.4"
   },
   {
@@ -15,6 +16,7 @@
     "extensions": ["jl", "julia"],
     "command_arguments": "",
     "prepend_path": "$HOME\\bin",
+    "named_arguments": false,
     "versions": [
       {
         "tag": "0.7",

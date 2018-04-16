@@ -37,7 +37,7 @@ public:
   uint32_t startup_resource_;
   std::string startup_resource_path_;
   std::string home_;
-
+  bool named_arguments_;
   int32_t priority_;
 
 public:
@@ -50,7 +50,8 @@ public:
     const std::string &prepend_path,
     const std::string &home,
     uint32_t startup_resource,
-    const std::string &startup_resource_path = ""
+    const std::string &startup_resource_path = "",
+    const bool named_arguments = false
   ) 
     : name_(name)
     , executable_(executable)
@@ -61,9 +62,10 @@ public:
     , home_(home)
     , startup_resource_(startup_resource)
     , startup_resource_path_(startup_resource_path)
+    , named_arguments_(named_arguments)
   {}
 
-  LanguageDescriptor() : priority_(0) {}
+  LanguageDescriptor() : priority_(0), named_arguments_(false) {}
 
   LanguageDescriptor(const LanguageDescriptor &rhs)
     : name_(rhs.name_)
@@ -77,6 +79,7 @@ public:
     , home_(rhs.home_)
     , startup_resource_(rhs.startup_resource_)
     , startup_resource_path_(rhs.startup_resource_path_)
+    , named_arguments_(rhs.named_arguments_)
   {}
 
 public:

@@ -19,6 +19,9 @@
 
 #pragma once
 
+// fwd
+class LanguageService;
+
 /**
  * class representing a function argument: name, description, default value.
  * FIXME: type?
@@ -77,6 +80,8 @@ public:
 
   ARGUMENT_LIST arguments_;
 
+  std::shared_ptr<LanguageService> language_service_;
+
   /** 
    * flags is an opaque field, for use by languages. it is currently 
    * intended for R to indicate remapped functions. there are supporting fields in 
@@ -92,7 +97,7 @@ public:
   double register_id_;
 
 public:
-  FunctionDescriptor(const std::string &name, const std::string &alias, const std::string &language_name, uint32_t language_key, const std::string &category = "", const std::string &description = "", const ARGUMENT_LIST &args = {}, uint32_t flags = 0)
+  FunctionDescriptor(const std::string &name, const std::string &alias, const std::string &language_name, uint32_t language_key, const std::string &category = "", const std::string &description = "", const ARGUMENT_LIST &args = {}, uint32_t flags = 0, std::shared_ptr<LanguageService> language_service = 0)
     : name_(name)
     , alias_(alias)
     , language_name_(language_name)
@@ -101,6 +106,7 @@ public:
     , description_(description)
     , flags_(flags)
     , register_id_(0)
+    , language_service_(language_service)
   {
     for (auto arg : args) arguments_.push_back(arg);
   }
@@ -118,6 +124,7 @@ public:
     description_ = rhs.description_;
     register_id_ = rhs.register_id_;
     language_key_ = rhs.language_key_;
+    language_service_ = rhs.language_service_;
     for (auto arg : rhs.arguments_) arguments_.push_back(arg);
   }
 };

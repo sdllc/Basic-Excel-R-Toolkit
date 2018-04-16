@@ -588,7 +588,7 @@ void LanguageService::Call(BERTBuffers::CallResponse &response, BERTBuffers::Cal
 
 }
 
-FUNCTION_LIST LanguageService::CreateFunctionList(const BERTBuffers::CallResponse &message, uint32_t key, const std::string &name) {
+FUNCTION_LIST LanguageService::CreateFunctionList(const BERTBuffers::CallResponse &message, uint32_t key, const std::string &name, std::shared_ptr<LanguageService> language_service_pointer) {
 
   FUNCTION_LIST function_list;
 
@@ -617,7 +617,11 @@ FUNCTION_LIST LanguageService::CreateFunctionList(const BERTBuffers::CallRespons
         }
         arglist.push_back(std::make_shared<ArgumentDescriptor>(argument.name(), value.str(), argument.description()));
       }
-      function_list.push_back(std::make_shared<FunctionDescriptor>(descriptor.function().name(), descriptor.function().name(), name, key, descriptor.category(), descriptor.function().description(), arglist, descriptor.flags()));
+      function_list.push_back(std::make_shared<FunctionDescriptor>(
+        descriptor.function().name(), 
+        descriptor.function().name(), 
+        name, key, descriptor.category(), descriptor.function().description(), 
+        arglist, descriptor.flags(), language_service_pointer));
     }
   }
 
@@ -625,7 +629,7 @@ FUNCTION_LIST LanguageService::CreateFunctionList(const BERTBuffers::CallRespons
 
 }
 
-FUNCTION_LIST LanguageService::MapLanguageFunctions(uint32_t key) {
+FUNCTION_LIST LanguageService::MapLanguageFunctions(uint32_t key, std::shared_ptr<LanguageService> language_service) {
 
   if (!connected_) return {}; 
 
@@ -638,7 +642,7 @@ FUNCTION_LIST LanguageService::MapLanguageFunctions(uint32_t key) {
 
   Call(response, call);
   
-  return LanguageService::CreateFunctionList(response, key, name());
+  return LanguageService::CreateFunctionList(response, key, name(), language_service);
 
 }
 

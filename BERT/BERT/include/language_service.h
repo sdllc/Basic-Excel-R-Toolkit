@@ -211,7 +211,7 @@ public:
   /** 
    * generate function descriptions. generic.
    */
-  FUNCTION_LIST MapLanguageFunctions(uint32_t key);
+  FUNCTION_LIST MapLanguageFunctions(uint32_t key, std::shared_ptr<LanguageService> language_service);
 
   /** 
    * make a function call (or other type of call). note that call is not const; we are going 
@@ -233,6 +233,6 @@ public:
   /** 
    * FIXME: move to conversion lib? 
    */
-  static FUNCTION_LIST CreateFunctionList(const BERTBuffers::CallResponse &message, uint32_t key, const std::string &name);
+  static FUNCTION_LIST CreateFunctionList(const BERTBuffers::CallResponse &message, uint32_t key, const std::string &name, std::shared_ptr<LanguageService> service_pointer);
 
 };

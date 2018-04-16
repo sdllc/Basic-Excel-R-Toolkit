@@ -71,12 +71,16 @@ LPXLOPER12 BERTFunctionCall(
 	int argcount = 16;
 	for (; argcount && arglist[argcount - 1]->xltype == xltypeMissing; argcount--);
 
+  int function_arguments = function_descriptor->arguments_.size();
+
 	for (int i = 0; i < argcount; i++) {
 		auto argument = function_call->add_arguments();
 		Convert::XLOPERToVariable(argument, arglist[i]);
+    if(i < function_arguments) argument->set_name(function_descriptor->arguments_[i]->name_);
 	}
 
-  bert->CallLanguage(function_descriptor->language_key_, response, call);
+  //bert->CallLanguage(function_descriptor->language_key_, response, call);
+  function_descriptor->language_service_->Call(response, call);
 
   if (response.operation_case() == BERTBuffers::CallResponse::OperationCase::kResult) {
     Convert::VariableToXLOPER(&rslt, response.result());
