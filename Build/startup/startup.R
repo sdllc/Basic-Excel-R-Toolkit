@@ -207,7 +207,14 @@ library(BERTModule, lib.loc=paste0(Sys.getenv("BERT_HOME"), "module"));
         func <- get(a, envir=envir);
         f <- formals(func);
         attrib <- attributes(func)[names(attributes(func)) != "srcref" ];
-        list(name=a, flags=0, arguments=lapply(names(f), function(b){ list(name=b, default=f[[b]])}), attributes=attrib);
+        list(name=a, flags=0, arguments=lapply(names(f), function(b){ 
+          dflt <- "";
+          dflt.type <- typeof(f[[b]]);
+          if(dflt.type == "language"){ dflt <- capture.output(f[[b]]); }
+          else if(dflt.type == "character"){ dflt <- paste0('"', f[[b]], '"'); }
+          else if(dflt.type != "symbol"){ dflt <- f[[b]]; }
+          list(name=b, default=dflt);
+        }), attributes=attrib);
       });
 
       # mapped functions 

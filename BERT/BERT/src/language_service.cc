@@ -612,7 +612,8 @@ FUNCTION_LIST LanguageService::CreateFunctionList(const BERTBuffers::CallRespons
           value << default_value.integer();
           break;
         case BERTBuffers::Variable::ValueCase::kStr:
-          value << '"' << default_value.str() << '"';
+          // value << '"' << default_value.str() << '"';
+          value << default_value.str();
           break;
         }
         arglist.push_back(std::make_shared<ArgumentDescriptor>(argument.name(), value.str(), argument.description()));
