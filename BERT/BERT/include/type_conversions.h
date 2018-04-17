@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <iomanip>
+
 /**
  * conversion utilities. converting between Excel/COM/PB types.
  *
@@ -398,6 +400,14 @@ public:
       StringToXLOPER(x, var.str());
       break;
 
+    case BERTBuffers::Variable::ValueCase::kCacheReference:
+    {
+      std::stringstream ss;
+      ss << "{OBJECT:" << std::hex << var.cache_reference() << "}";
+      StringToXLOPER(x, ss.str());
+      break;
+    }
+
     case BERTBuffers::Variable::ValueCase::kCpx:
     {
       std::stringstream ss;
@@ -534,7 +544,13 @@ public:
   static BERTBuffers::Variable * XLOPERToVariable(BERTBuffers::Variable *var, LPXLOPER12 x) {
 
     if (x->xltype & xltypeStr) {
-      var->set_str(XLOPERToString(x));
+      if (x->val.str[0] > 9 && !wcsncmp(x->val.str + 1, L"{OBJECT:", 8)) {
+        std::wistringstream text(x->val.str + 9);
+        uint32_t value;
+        text >> std::hex >> value;
+        var->set_cache_reference(value);
+      }
+      else var->set_str(XLOPERToString(x));
     }
     else if (x->xltype & xltypeNum) {
       var->set_real(x->val.num);

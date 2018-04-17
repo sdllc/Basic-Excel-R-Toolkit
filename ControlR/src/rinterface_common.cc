@@ -29,6 +29,8 @@
 #undef clear
 #undef length
 
+SEXP ResolveCacheReference(uint32_t reference);
+
 void ReleaseExternalPointer(SEXP external_pointer) {
   RCallback(Rf_mkString("release-pointer"), external_pointer);
 }
@@ -268,12 +270,30 @@ SEXP VariableToSEXP(const BERTBuffers::Variable &var) {
   }
   break;
 
+  case BERTBuffers::Variable::ValueCase::kCacheReference:
+    return ResolveCacheReference(var.cache_reference());
+    break;
+
   case BERTBuffers::Variable::ValueCase::kErr:
     if (var.err().type() == BERTBuffers::ErrorType::NA) return Rf_ScalarInteger(NA_INTEGER);
 
   default:
     return R_NilValue;
   }
+
+}
+
+SEXP ResolveCacheReference(uint32_t reference) {
+
+  int err = 0;
+  SEXP env = R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString("BERT")), R_GlobalEnv, &err);
+
+  if (!err && Rf_isEnvironment(env)) {
+    SEXP object = R_tryEvalSilent(Rf_lang2(Rf_install(".get.cached.object"), Rf_ScalarInteger(reference)), env, &err);
+    if (!err) return object;
+  }
+
+  return R_NilValue;
 
 }
 
@@ -634,6 +654,17 @@ void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector <SEXP> en
       // there's only one of these we're going to handle -- our reference type
       if (Rf_inherits(sexp, "xlReference")) {
         SEXPXlReferenceToVariable(var, sexp);
+      }
+      else if (Rf_inherits(sexp, "BERTCacheReference")) {
+
+        uint32_t reference = 0;
+        SEXP slot = R_do_slot(sexp, Rf_mkString("reference"));
+        if (slot) {
+          int type = TYPEOF(slot);
+          if (type == INTSXP) reference = INTEGER(slot)[0];
+          else if (type == REALSXP) reference = REAL(slot)[0];
+        }
+        var->set_cache_reference(reference);
       }
 
     }

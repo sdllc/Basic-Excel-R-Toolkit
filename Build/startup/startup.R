@@ -56,6 +56,10 @@ library(BERTModule, lib.loc=paste0(Sys.getenv("BERT_HOME"), "module"));
     }
 
     #===========================================================================
+    #
+    # user buttons 
+    #
+    #===========================================================================
 
     .user.button.env <- new.env();
 
@@ -81,6 +85,30 @@ library(BERTModule, lib.loc=paste0(Sys.getenv("BERT_HOME"), "module"));
     ExecUserButton <- function(id){
       button <- .user.button.env[[toString(id)]];
       button$FUN();
+    }
+
+    #===========================================================================
+    #
+    # object cache
+    #
+    #===========================================================================
+
+    .object.cache.env <- new.env();
+    .cache.token <- 1000;
+
+    setClass( "BERTCacheReference", 
+      slots = c(reference = "numeric"),
+      prototype = list( reference = 0 ));
+
+    return.cache.reference <- function(obj){
+      token <- BERT$.cache.token;
+      assign(".cache.token", envir=BERT, token+1);
+      .object.cache.env[[toString(token)]] = obj;
+      new("BERTCacheReference", reference=token)
+    }
+
+    .get.cached.object <- function(ref){
+      .object.cache.env[[toString(ref)]];
     }
 
     #===========================================================================

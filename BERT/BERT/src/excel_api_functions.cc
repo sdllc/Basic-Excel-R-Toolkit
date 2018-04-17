@@ -33,6 +33,7 @@ void resetXlOper(LPXLOPER12 x)
   if (x->xltype == (xltypeStr | xlbitDLLFree) && x->val.str)
   {
     // we pass a static string with zero length -- don't delete that
+    // FIXME: we do? where? 
 
     if (x->val.str[0]) delete[] x->val.str;
     x->val.str = 0;
