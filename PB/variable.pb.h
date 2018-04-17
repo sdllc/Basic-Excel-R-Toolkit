@@ -805,6 +805,7 @@ class Variable : public ::google::protobuf::Message /* @@protoc_insertion_point(
     kRef = 11,
     kComPointer = 12,
     kGraphics = 13,
+    kCacheReference = 14,
     VALUE_NOT_SET = 0,
   };
 
@@ -991,6 +992,15 @@ class Variable : public ::google::protobuf::Message /* @@protoc_insertion_point(
   ::BERTBuffers::GraphicsUpdate* mutable_graphics();
   void set_allocated_graphics(::BERTBuffers::GraphicsUpdate* graphics);
 
+  // uint32 cache_reference = 14;
+  private:
+  bool has_cache_reference() const;
+  public:
+  void clear_cache_reference();
+  static const int kCacheReferenceFieldNumber = 14;
+  ::google::protobuf::uint32 cache_reference() const;
+  void set_cache_reference(::google::protobuf::uint32 value);
+
   ValueCase value_case() const;
   // @@protoc_insertion_point(class_scope:BERTBuffers.Variable)
  private:
@@ -1006,6 +1016,7 @@ class Variable : public ::google::protobuf::Message /* @@protoc_insertion_point(
   void set_has_ref();
   void set_has_com_pointer();
   void set_has_graphics();
+  void set_has_cache_reference();
 
   inline bool has_value() const;
   void clear_value();
@@ -1027,6 +1038,7 @@ class Variable : public ::google::protobuf::Message /* @@protoc_insertion_point(
     ::BERTBuffers::SheetReference* ref_;
     ::BERTBuffers::ExternalPointer* com_pointer_;
     ::BERTBuffers::GraphicsUpdate* graphics_;
+    ::google::protobuf::uint32 cache_reference_;
   } value_;
   mutable int _cached_size_;
   ::google::protobuf::uint32 _oneof_case_[1];
@@ -4195,6 +4207,35 @@ inline ::BERTBuffers::GraphicsUpdate* Variable::mutable_graphics() {
   }
   // @@protoc_insertion_point(field_mutable:BERTBuffers.Variable.graphics)
   return value_.graphics_;
+}
+
+// uint32 cache_reference = 14;
+inline bool Variable::has_cache_reference() const {
+  return value_case() == kCacheReference;
+}
+inline void Variable::set_has_cache_reference() {
+  _oneof_case_[0] = kCacheReference;
+}
+inline void Variable::clear_cache_reference() {
+  if (has_cache_reference()) {
+    value_.cache_reference_ = 0u;
+    clear_has_value();
+  }
+}
+inline ::google::protobuf::uint32 Variable::cache_reference() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.Variable.cache_reference)
+  if (has_cache_reference()) {
+    return value_.cache_reference_;
+  }
+  return 0u;
+}
+inline void Variable::set_cache_reference(::google::protobuf::uint32 value) {
+  if (!has_cache_reference()) {
+    clear_value();
+    set_has_cache_reference();
+  }
+  value_.cache_reference_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.Variable.cache_reference)
 }
 
 // string name = 15;

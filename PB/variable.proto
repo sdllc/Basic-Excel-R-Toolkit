@@ -107,6 +107,8 @@ message Variable {
 
     GraphicsUpdate graphics = 13;
 
+    uint32 cache_reference = 14;
+
   }	
   string name = 15;
 }

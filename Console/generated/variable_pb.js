@@ -953,7 +953,7 @@ if (goog.DEBUG && !COMPILED) {
  * @private {!Array<!Array<number>>}
  * @const
  */
-proto.BERTBuffers.Variable.oneofGroups_ = [[1,2,3,5,6,7,8,9,10,11,12,13]];
+proto.BERTBuffers.Variable.oneofGroups_ = [[1,2,3,5,6,7,8,9,10,11,12,13,14]];
 
 /**
  * @enum {number}
@@ -971,7 +971,8 @@ proto.BERTBuffers.Variable.ValueCase = {
   ARR: 10,
   REF: 11,
   COM_POINTER: 12,
-  GRAPHICS: 13
+  GRAPHICS: 13,
+  CACHE_REFERENCE: 14
 };
 
 /**
@@ -1022,6 +1023,7 @@ proto.BERTBuffers.Variable.toObject = function(includeInstance, msg) {
     ref: (f = msg.getRef()) && proto.BERTBuffers.SheetReference.toObject(includeInstance, f),
     comPointer: (f = msg.getComPointer()) && proto.BERTBuffers.ExternalPointer.toObject(includeInstance, f),
     graphics: (f = msg.getGraphics()) && proto.BERTBuffers.GraphicsUpdate.toObject(includeInstance, f),
+    cacheReference: jspb.Message.getFieldWithDefault(msg, 14, 0),
     name: jspb.Message.getFieldWithDefault(msg, 15, "")
   };
 
@@ -1112,6 +1114,10 @@ proto.BERTBuffers.Variable.deserializeBinaryFromReader = function(msg, reader) {
       var value = new proto.BERTBuffers.GraphicsUpdate;
       reader.readMessage(value,proto.BERTBuffers.GraphicsUpdate.deserializeBinaryFromReader);
       msg.setGraphics(value);
+      break;
+    case 14:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setCacheReference(value);
       break;
     case 15:
       var value = /** @type {string} */ (reader.readString());
@@ -1234,6 +1240,13 @@ proto.BERTBuffers.Variable.serializeBinaryToWriter = function(message, writer) {
       13,
       f,
       proto.BERTBuffers.GraphicsUpdate.serializeBinaryToWriter
+    );
+  }
+  f = /** @type {number} */ (jspb.Message.getField(message, 14));
+  if (f != null) {
+    writer.writeUint32(
+      14,
+      f
     );
   }
   f = message.getName();
@@ -1603,6 +1616,35 @@ proto.BERTBuffers.Variable.prototype.clearGraphics = function() {
  */
 proto.BERTBuffers.Variable.prototype.hasGraphics = function() {
   return jspb.Message.getField(this, 13) != null;
+};
+
+
+/**
+ * optional uint32 cache_reference = 14;
+ * @return {number}
+ */
+proto.BERTBuffers.Variable.prototype.getCacheReference = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 14, 0));
+};
+
+
+/** @param {number} value */
+proto.BERTBuffers.Variable.prototype.setCacheReference = function(value) {
+  jspb.Message.setOneofField(this, 14, proto.BERTBuffers.Variable.oneofGroups_[0], value);
+};
+
+
+proto.BERTBuffers.Variable.prototype.clearCacheReference = function() {
+  jspb.Message.setOneofField(this, 14, proto.BERTBuffers.Variable.oneofGroups_[0], undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {!boolean}
+ */
+proto.BERTBuffers.Variable.prototype.hasCacheReference = function() {
+  return jspb.Message.getField(this, 14) != null;
 };
 
 
