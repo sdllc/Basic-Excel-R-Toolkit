@@ -670,13 +670,23 @@ void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector <SEXP> en
     }
 
     SEXP names = getAttrib(sexp, R_NamesSymbol);
-    if (names && TYPEOF(names) != 0) {
+    int names_type = TYPEOF(names);
+    if (names && names_type != 0) {
       int nameslen = Rf_length(names);
-      for (int i = 0; i < len && i < nameslen; i++) {
+
+      // NOTE: issue #117 was caused by returning a LANGSXP type, 
+      // which we don't handle because it's not representable. this 
+      // parameter had names, but the array was not sized to match
+      // (because we are not handling that type).
+
+      int array_len = arr ? arr->data_size() : 1;
+
+      for (int i = 0; i < len && i < nameslen && i < array_len; i++) {
         auto ref = arr ? arr->mutable_data(i) : var;
         SEXP name = STRING_ELT(names, i);
         std::string str(CHAR(Rf_asChar(name)));
         if (str.length()) { ref->set_name(str); }
+
       }
     }
 
