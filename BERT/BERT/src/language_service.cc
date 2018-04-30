@@ -381,6 +381,7 @@ void LanguageService::Connect(HANDLE job_handle) {
 void LanguageService::ReadSourceFile(const std::string &file) {
 
   BERTBuffers::CallResponse call, response;
+  call.set_wait(true); // prevent race
 
   auto function_call = call.mutable_function_call();
   function_call->set_function("read-source-file");
