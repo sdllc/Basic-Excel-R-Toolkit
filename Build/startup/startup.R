@@ -63,12 +63,12 @@ library(BERTModule, lib.loc=paste0(Sys.getenv("BERT_HOME"), "module"));
 
     .user.button.env <- new.env();
 
-    AddUserButton <- function(label, FUN, image.mso = "R"){
-      id <- .Call("BERT.Callback", "add-user-button", list(label, image.mso), PACKAGE="(embedding)");
+    AddUserButton <- function(label, FUN, image.mso = "R", tip=""){
+      id <- .Call("BERT.Callback", "add-user-button", list(label, image.mso, tip), PACKAGE="(embedding)");
       if(!is.numeric(id) || id == 0){
         stop("add button failed");
       }
-      .user.button.env[[toString(id)]] = list(label=label, FUN=FUN, image.mso=image.mso, id=id);
+      .user.button.env[[toString(id)]] = list(label=label, FUN=FUN, image.mso=image.mso, id=id, tip=tip);
       return(id);
     }
 

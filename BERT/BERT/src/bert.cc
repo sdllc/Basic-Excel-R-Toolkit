@@ -758,6 +758,7 @@ HRESULT BERT::AddUserButtonInternal(const UserButton &button) {
   com_arguments.push_back(CComVariant(button.language_tag_.c_str()));
   com_arguments.push_back(CComVariant(button.image_mso_.c_str()));
   com_arguments.push_back(CComVariant(button.label_.c_str()));
+  com_arguments.push_back(CComVariant(button.tip_.c_str()));
 
   DISPPARAMS dispparams;
   dispparams.cArgs = 0;
@@ -786,6 +787,7 @@ int BERT::AddUserButton(const BERTBuffers::CallResponse &call, BERTBuffers::Call
   CComBSTR label;
   CComBSTR image_mso;
   CComBSTR language_tag(language.c_str());
+  CComBSTR tip;
 
   uint32_t id = next_user_button_id_++;
 
@@ -795,10 +797,11 @@ int BERT::AddUserButton(const BERTBuffers::CallResponse &call, BERTBuffers::Call
       auto argument_list = argument.arr();
       if (argument_list.data_size() > 0) label = argument_list.data(0).str().c_str();
       if (argument_list.data_size() > 1) image_mso = argument_list.data(1).str().c_str();
+      if (argument_list.data_size() > 2) tip = argument_list.data(2).str().c_str();
     }
   }
   
-  UserButton button(label.m_str, image_mso.m_str, language_tag.m_str, id);
+  UserButton button(label.m_str, image_mso.m_str, language_tag.m_str, tip.m_str, id);
   if (!ribbon_menu_dispatch_) pending_user_buttons_.push_back(button);
   else AddUserButtonInternal(button);
 

@@ -44,6 +44,7 @@ typedef enum {
   GetUserButtonVisible,
   GetUserButtonsVisible,
   GetUserButtonLabel,
+  GetUserButtonTip,
   UserButtonAction,
 
   RibbonLoaded
@@ -116,6 +117,7 @@ public:
       else if (!wcscmp(rgszNames[0], L"GetUserButtonVisible")) disp_id = DispIds::GetUserButtonVisible;
       else if (!wcscmp(rgszNames[0], L"GetUserButtonsVisible")) disp_id = DispIds::GetUserButtonsVisible;
       else if (!wcscmp(rgszNames[0], L"GetUserButtonLabel")) disp_id = DispIds::GetUserButtonLabel;
+      else if (!wcscmp(rgszNames[0], L"GetUserButtonTip")) disp_id = DispIds::GetUserButtonTip;
       else if (!wcscmp(rgszNames[0], L"UserButtonAction")) disp_id = DispIds::UserButtonAction;
       else if (!wcscmp(rgszNames[0], L"UpdateRibbon")) disp_id = DispIds::UpdateRibbon;
       else if (!wcscmp(rgszNames[0], L"AddUserButton")) disp_id = DispIds::AddUserButton;
@@ -162,14 +164,17 @@ public:
 
     case DispIds::AddUserButton:
     {
-      if (pdispparams->cArgs == 4) {
+      if (pdispparams->cArgs >= 4) {
 
         uint32_t id = pdispparams->rgvarg[0].intVal;
         CComBSTR image(pdispparams->rgvarg[1].bstrVal);
         CComBSTR language_tag(pdispparams->rgvarg[2].bstrVal);
         CComBSTR label(pdispparams->rgvarg[3].bstrVal);
+        
+        CComBSTR tip = L"";
+        if (pdispparams->cArgs == 5) tip = pdispparams->rgvarg[4].bstrVal;
 
-        UserButton button(label.m_str, language_tag.m_str, image.m_str, id);
+        UserButton button(label.m_str, language_tag.m_str, image.m_str, tip.m_str, id);
         user_buttons_.push_back(button);
         
         if (m_pRibbonUI) m_pRibbonUI->Invalidate();
@@ -217,6 +222,15 @@ public:
       result = "";
       if (tag > 0 && user_buttons_.size() > tag - 1) {
         result = user_buttons_[tag - 1].label_.c_str();
+      }
+      result.Detach(pvarResult);
+      return S_OK;
+
+    case DispIds::GetUserButtonTip:
+      tag = ButtonTag(pdispparams);
+      result = "";
+      if (tag > 0 && user_buttons_.size() > tag - 1) {
+        result = user_buttons_[tag - 1].tip_.c_str();
       }
       result.Detach(pvarResult);
       return S_OK;
