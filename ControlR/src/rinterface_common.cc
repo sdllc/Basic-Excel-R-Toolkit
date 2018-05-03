@@ -388,14 +388,14 @@ bool ReadSourceFile(const std::string &file, bool notify) {
   return !err;
 }
 
-__inline bool HandleSimpleTypes(SEXP sexp, int len, int rtype, BERTBuffers::Array *arr, BERTBuffers::Variable *var, const std::vector<std::string> &levels = {}) {
+__inline bool HandleSimpleTypes(SEXP sexp, int len, int rtype, BERTBuffers::Array *arr, BERTBuffers::Variable *var) { // , const std::vector<std::string> &levels = {}) {
 
   if (Rf_isLogical(sexp) || rtype == LGLSXP)
   {
     for (int i = 0; i < len; i++) {
       auto ptr = arr ? arr->add_data() : var;
       int lgl = (INTEGER(sexp))[i];
-      if (lgl == NA_LOGICAL) {
+      if( NA_LOGICAL == lgl ){
         ptr->mutable_err()->set_type(BERTBuffers::ErrorType::NA);
       }
       else {
@@ -404,11 +404,26 @@ __inline bool HandleSimpleTypes(SEXP sexp, int len, int rtype, BERTBuffers::Arra
     }
   }
   else if (Rf_isFactor(sexp)) {
-    int levels_size = levels.size();
+
+    std::vector<std::string> level_strings;
+
+    SEXP levels = getAttrib(sexp, R_LevelsSymbol);
+    if (levels && Rf_isString(levels)) {
+      int level_count = Rf_length(levels);
+      for (int level = 0; level < level_count; level++) {
+        SEXP strsxp = STRING_ELT(levels, level);
+        level_strings.push_back(CHAR(Rf_asChar(strsxp)));
+      }
+    }
+
+    int levels_count = level_strings.size();
     for (int i = 0; i < len; i++) {
       auto ptr = arr ? arr->add_data() : var;
       int level = INTEGER(sexp)[i];
-      if (level > 0 && levels_size >= level) ptr->set_str(levels[level-1]); // factors are 1-based
+      if (level == NA_INTEGER) {
+        ptr->mutable_err()->set_type(BERTBuffers::ErrorType::NA);
+      }
+      else if (level > 0 && levels_count >= level) ptr->set_str(level_strings[level-1]); // factors are 1-based
       else ptr->set_integer(level);
     }
   }
@@ -418,8 +433,13 @@ __inline bool HandleSimpleTypes(SEXP sexp, int len, int rtype, BERTBuffers::Arra
     for (int i = 0; i < len; i++) {
       auto ptr = arr ? arr->add_data() : var;
       auto complex = ptr->mutable_cpx();
-      complex->set_i(COMPLEX(sexp)[i].i);
-      complex->set_r(COMPLEX(sexp)[i].r);
+      if (ISNA(COMPLEX(sexp)[i].i) || ISNA(COMPLEX(sexp)[i].r)) {
+        ptr->mutable_err()->set_type(BERTBuffers::ErrorType::NA);
+      }
+      else {
+        complex->set_i(COMPLEX(sexp)[i].i);
+        complex->set_r(COMPLEX(sexp)[i].r);
+      }
     }
 
   }
@@ -427,14 +447,20 @@ __inline bool HandleSimpleTypes(SEXP sexp, int len, int rtype, BERTBuffers::Arra
   {
     for (int i = 0; i < len; i++) {
       auto ptr = arr ? arr->add_data() : var;
-      ptr->set_integer(INTEGER(sexp)[i]);
+      if (NA_INTEGER == INTEGER(sexp)[i]) {
+        ptr->mutable_err()->set_type(BERTBuffers::ErrorType::NA);
+      }
+      else ptr->set_integer(INTEGER(sexp)[i]);
     }
   }
   else if (isReal(sexp) || Rf_isNumber(sexp) || rtype == REALSXP)
   {
     for (int i = 0; i < len; i++) {
       auto ptr = arr ? arr->add_data() : var;
-      ptr->set_real(REAL(sexp)[i]);
+      if (ISNA(REAL(sexp)[i])) {
+        ptr->mutable_err()->set_type(BERTBuffers::ErrorType::NA);
+      }
+      else ptr->set_real(REAL(sexp)[i]);
     }
   }
   else if (isString(sexp) || rtype == STRSXP)
@@ -442,11 +468,16 @@ __inline bool HandleSimpleTypes(SEXP sexp, int len, int rtype, BERTBuffers::Arra
     for (int i = 0; i < len; i++) {
       auto ptr = arr ? arr->add_data() : var;
       SEXP strsxp = STRING_ELT(sexp, i);
-      const char *sexp_string = CHAR(Rf_asChar(strsxp));
-      if (!ValidUTF8(sexp_string, 0)) {
-        ptr->set_str(WindowsCPToUTF8_2(sexp_string, 0));
+      if (NA_STRING == strsxp){
+        ptr->mutable_err()->set_type(BERTBuffers::ErrorType::NA);
       }
-      else ptr->set_str(sexp_string);
+      else {
+        const char *sexp_string = CHAR(Rf_asChar(strsxp));
+        if (!ValidUTF8(sexp_string, 0)) {
+          ptr->set_str(WindowsCPToUTF8_2(sexp_string, 0));
+        }
+        else ptr->set_str(sexp_string);
+      }
     }
   }
   else return false;
@@ -579,21 +610,8 @@ void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector <SEXP> en
         SEXP column_list = VECTOR_ELT(sexp, col);
         int column_type = TYPEOF(column_list);
         int column_len = Rf_length(column_list);
-
-        std::vector<std::string> level_strings;
-
-        if (Rf_isFactor(column_list)) {
-          SEXP levels = getAttrib(column_list, R_LevelsSymbol);
-          if (levels && Rf_isString(levels)) {
-            int level_count = Rf_length(levels);
-            for (int level = 0; level < level_count; level++) {
-              SEXP strsxp = STRING_ELT(levels, level);
-              level_strings.push_back(CHAR(Rf_asChar(strsxp)));
-            }
-          }
-        }
-
-        HandleSimpleTypes(column_list, column_len, column_type, arr, var, level_strings);
+        
+        HandleSimpleTypes(column_list, column_len, column_type, arr, var);
 
       }
 
