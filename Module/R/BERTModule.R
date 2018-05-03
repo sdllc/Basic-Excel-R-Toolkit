@@ -50,26 +50,28 @@ data.env <- new.env();
 #' into a data frame, optionally with column headers.
 #'
 #' @export range.to.data.frame
-range.to.data.frame <- function( rng, headers=F ){
+range.to.data.frame <- function(rng, headers = FALSE, stringsAsFactors = default.stringsAsFactors()) {
 
-	# remove headers from data if necessary
-	data <- if(headers) rng[-1,] else rng;
+  # fix for issue #121
+  rng <- replace(rng, rng=="NULL", NA);
 
-	# format data
-  if( is.null( ncol(data))){
-    # special case 
-    df <- as.data.frame( unlist( data ));
+  # remove headers from data if necessary
+  data <- if (headers) rng[-1, ] else rng;
+
+  # format data
+  if (is.null(ncol(data))) {
+
+    # special case
+    df <- as.data.frame(unlist(data), stringsAsFactors = stringsAsFactors);
   }
   else {
-  	df <- as.data.frame( lapply( split( data, col(data)), unlist ));
+    df <- as.data.frame(lapply(split(data, col(data)), unlist), stringsAsFactors = stringsAsFactors);
   }
 
-	# add headers if available
-	if( headers ){ colnames(df) <- rng[1,]; }
+  # add headers if available
+  if (headers) { colnames(df) <- rng[1,]; }
 
-	# done
-	df;  
-
+  df
 }
 
 #' pad an excel array with empty strings
