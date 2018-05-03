@@ -4,7 +4,8 @@
 \alias{range.to.data.frame}
 \title{Convert a list of lists into a data frame}
 \usage{
-\method{range}{to.data.frame}(rng, headers = F)
+\method{range}{to.data.frame}(rng, headers = FALSE,
+  stringsAsFactors = default.stringsAsFactors())
 }
 \description{
 Spreadsheet functions that accept a range as an argument and range values 
