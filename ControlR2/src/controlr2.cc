@@ -106,18 +106,20 @@ int SystemCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallRespo
     }
     response.mutable_result()->set_boolean(success);
   }
-  else if (!function.compare("shutdown")) {
-    ConsoleControlMessage("shutdown");
+  else 
+  */
+  if (!function.compare("shutdown")) {
+    // ConsoleControlMessage("shutdown");
     // Shutdown(0);
     return SYSTEMCALL_SHUTDOWN;
   }
+  /*
   else if (!function.compare("close")) {
     CloseClient(pipe_index);
     return SYSTEMCALL_OK; //  break; // no response?
   }
-  else
   */
-  if (!function.compare("console")) {
+  else if (!function.compare("console")) {
     if (console_client < 0) {
       console_client = pipe_index;
       std::cout << "set console client -> " << pipe_index << std::endl;
