@@ -14,7 +14,10 @@ MODULES= rinterface_common rinterface_linux \
 
 OBJ_FILES=$(MODULES:%=build/%.o)
 
-all: build/controlr2
+all: build build/controlr2
+
+build:
+	mkdir -p build
 
 build/%.o: src/%.cc
 	$(CC) -o $@ -MD -MP $(INCLUDE) -c $<
