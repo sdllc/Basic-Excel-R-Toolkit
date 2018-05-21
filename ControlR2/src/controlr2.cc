@@ -371,8 +371,10 @@ void on_new_connection(uv_stream_t *server, int status) {
  * socket this should fail (correctly).
  */
 void RemoveDomainSocketFile(const std::string &name){
+#ifndef _WIN32
   int result = unlink(name.c_str());
   if(result) std::cerr << "err in unlink: " << uv_err_name(result) << std::endl;
+#endif
 }
 
 std::string DecoratePipeName(const std::string &base_name) {
