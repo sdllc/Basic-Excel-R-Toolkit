@@ -19,6 +19,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ControlJulia", "..\ControlJ
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ControlJulia07", "..\ControlJulia-0.7\ControlJulia07.vcxproj", "{E94424C4-D404-42CC-8D18-EF3462C4D7FB}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ControlR2", "..\ControlR2\ControlR2.vcxproj", "{9A7DA977-7CAC-4272-B44B-C48E7A79F6E8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -60,6 +62,14 @@ Global
 		{E94424C4-D404-42CC-8D18-EF3462C4D7FB}.Release|x64.ActiveCfg = Release|x64
 		{E94424C4-D404-42CC-8D18-EF3462C4D7FB}.Release|x64.Build.0 = Release|x64
 		{E94424C4-D404-42CC-8D18-EF3462C4D7FB}.Release|x86.ActiveCfg = Release|Win32
+		{9A7DA977-7CAC-4272-B44B-C48E7A79F6E8}.Debug|x64.ActiveCfg = Debug|x64
+		{9A7DA977-7CAC-4272-B44B-C48E7A79F6E8}.Debug|x64.Build.0 = Debug|x64
+		{9A7DA977-7CAC-4272-B44B-C48E7A79F6E8}.Debug|x86.ActiveCfg = Debug|Win32
+		{9A7DA977-7CAC-4272-B44B-C48E7A79F6E8}.Debug|x86.Build.0 = Debug|Win32
+		{9A7DA977-7CAC-4272-B44B-C48E7A79F6E8}.Release|x64.ActiveCfg = Release|x64
+		{9A7DA977-7CAC-4272-B44B-C48E7A79F6E8}.Release|x64.Build.0 = Release|x64
+		{9A7DA977-7CAC-4272-B44B-C48E7A79F6E8}.Release|x86.ActiveCfg = Release|Win32
+		{9A7DA977-7CAC-4272-B44B-C48E7A79F6E8}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
