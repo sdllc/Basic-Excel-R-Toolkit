@@ -115,6 +115,9 @@
             "bar"
           ]
         },
+        "scrollback": {
+          "type": "number"
+        },
         "cursorBlink": {
           "type": "boolean"
         },
