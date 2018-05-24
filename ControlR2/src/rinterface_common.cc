@@ -123,6 +123,7 @@ SEXP VariableToSEXP(const BERTBuffers::Variable &var) {
       if (type_flags & MessageUtilities::TypeFlags::integer) {
         if (!cols) list = Rf_allocVector(INTSXP, count);
         else list = Rf_allocMatrix(INTSXP, rows, cols);
+        PROTECT(list);
         int *p = INTEGER(list);
         for (int i = 0; i < count; i++) {
           auto value_case = arr.data(i).value_case();
@@ -133,6 +134,7 @@ SEXP VariableToSEXP(const BERTBuffers::Variable &var) {
       else {
         if (!cols) list = Rf_allocVector(REALSXP, count);
         else list = Rf_allocMatrix(REALSXP, rows, cols);
+        PROTECT(list);
         double *p = REAL(list);
         for (int i = 0; i < count; i++) {
           auto value_case = arr.data(i).value_case();
@@ -145,6 +147,7 @@ SEXP VariableToSEXP(const BERTBuffers::Variable &var) {
     else if (type_flags & MessageUtilities::TypeFlags::logical) {
       if (!cols) list = Rf_allocVector(LGLSXP, count);
       else list = Rf_allocMatrix(LGLSXP, rows, cols);
+      PROTECT(list);
       int *p = LOGICAL(list);
       for (int i = 0; i < count; i++) {
         auto value_case = arr.data(i).value_case();
@@ -155,6 +158,7 @@ SEXP VariableToSEXP(const BERTBuffers::Variable &var) {
     else if (type_flags & MessageUtilities::TypeFlags::string) {
       if (!cols) list = Rf_allocVector(STRSXP, count);
       else list = Rf_allocMatrix(STRSXP, rows, cols);
+      PROTECT(list);
       for (int i = 0; i < count; i++) {
         auto value_case = arr.data(i).value_case();
         if ((value_case == BERTBuffers::Variable::ValueCase::kNil) || (value_case == BERTBuffers::Variable::ValueCase::kMissing)) {
@@ -168,6 +172,7 @@ SEXP VariableToSEXP(const BERTBuffers::Variable &var) {
     else {
       if (!cols) list = Rf_allocVector(VECSXP, count);
       else list = Rf_allocMatrix(VECSXP, rows, cols);
+      PROTECT(list);
       for (int i = 0; i < count; i++) {
         SEXP elt = SET_VECTOR_ELT(list, i, VariableToSEXP(arr.data(i)));
       }
@@ -181,6 +186,7 @@ SEXP VariableToSEXP(const BERTBuffers::Variable &var) {
       Rf_setAttrib(list, R_NamesSymbol, names);
     }
 
+    UNPROTECT(1);
     return list;
   }
   case BERTBuffers::Variable::ValueCase::kComPointer:
@@ -339,6 +345,7 @@ SEXP RCallSEXP(const BERTBuffers::CompositeFunctionCall &fc, bool wait, int &err
     }
 
     SEXP sargs = Rf_allocVector(VECSXP, names.size());
+    PROTECT(sargs);
 
     for (int i = 0; i < len; i++) {
       const auto &argument = fc.arguments(i);
@@ -372,7 +379,9 @@ SEXP RCallSEXP(const BERTBuffers::CompositeFunctionCall &fc, bool wait, int &err
       }
     }
 
-    return R_tryEval(Rf_lang3(Rf_install("do.call"), Rf_mkString(parts[parts.size() - 1].c_str()), sargs), env, &err);
+    SEXP call_result = R_tryEval(Rf_lang3(Rf_install("do.call"), Rf_mkString(parts[parts.size() - 1].c_str()), sargs), env, &err);
+    UNPROTECT(1);
+    return call_result;
 
   }
 
