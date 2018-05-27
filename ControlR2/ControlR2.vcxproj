@@ -113,7 +113,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;..\..\libuv-1.20.3\include;..\common;..\..\R\R-3.4.4\include;..\PB;..\..\protobuf-3.5.0\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;..\..\libuv-1.20.3\include;..\common;..\..\R\R-3.4.4\include;..\PB;..\..\protobuf-3.5.0\src;H:\TREB\treb-ipc\MMIPC2</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4146</DisableSpecificWarnings>
     </ClCompile>
     <Link>

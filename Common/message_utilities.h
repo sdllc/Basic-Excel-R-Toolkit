@@ -61,6 +61,12 @@ namespace MessageUtilities {
    */
   TypeFlags CheckArrayType(const BERTBuffers::Array &arr, bool allow_nil = true, bool allow_missing = true);
 
+  /** check packet message size, in case it's < len */
+  int32_t MessageLength(const char *data, uint32_t len);
+
+  /** check packet message size, in case it's < len */
+  int32_t MessageLength(const std::string &str);
+
   /**
    * unframe and return message
    */

@@ -51,7 +51,17 @@ namespace MessageUtilities {
     }
     return result;
   }
-  
+
+  int32_t MessageLength(const std::string &str) {
+    return MessageLength(str.c_str(), str.length());
+  }
+
+  int32_t MessageLength(const char *data, uint32_t len) {
+    int32_t bytes;
+    memcpy(reinterpret_cast<void*>(&bytes), data, sizeof(int32_t));
+    return bytes;
+  }
+
   bool Unframe(google::protobuf::Message &message, const char *data, uint32_t len) {
     int32_t bytes;
     memcpy(reinterpret_cast<void*>(&bytes), data, sizeof(int32_t));

@@ -11,6 +11,11 @@
 #undef min
 #endif
 
+//#include "mm_ipc.h"
+
+//MMIPC2::IPC mm_reader;
+//MMIPC2::IPC mm_writer;
+
 // FIXME: remove these or make them class members (and make this a class)
 std::string language_tag;
 std::string rhome;
@@ -53,12 +58,67 @@ void Write(const std::string &data, uv_pipe_t *client);
 
 // dummy
 bool Callback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response) {
+  std::cout << "notimpl: callback" << std::endl;
   return true;
 }
 
-// dummy 
+// fwd
+void Write(const std::string &data, uv_pipe_t *client); 
+
 bool ConsoleCallback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response) {
-  return true;
+
+  if (console_client < 0) return false; // fail
+
+  Write(MessageUtilities::Frame(call), clients_[console_client]);
+
+  // here we hijack the loop until we get a response. FIXME: some error handling, timeouts?
+  while (true) {
+
+    // reset timeout
+    int r = uv_timer_again(&wait_timeout);
+
+    uv_run(uv_default_loop(), UV_RUN_DEFAULT);
+
+    if (pending_messages_.size()) {
+      auto client_message = pending_messages_[0];
+      pending_messages_.pop_front();
+      response.CopyFrom(client_message.message);
+      return true;
+    }
+
+  }
+
+
+  /*
+  Pipe *pipe = pipes[console_client];
+
+  if (!pipe->connected()) return false;
+
+  pipe->PushWrite(MessageUtilities::Frame(call));
+  pipe->StartRead(); // probably not necessary
+
+                     // we need a blocking write...
+
+                     // temp (ugh)
+  while (pipe->writing()) {
+    pipe->NextWrite();
+    Sleep(1);
+  }
+
+  std::string data;
+  DWORD result;
+  do {
+    result = pipe->Read(data, true);
+  } while (result == ERROR_MORE_DATA);
+
+  if (!result) MessageUtilities::Unframe(response, data);
+
+  pipe->StartRead(); // probably not necessary either
+  return (result == 0);
+   */
+
+  return false;
+
 }
 
 void QueueConsoleWrites() {
@@ -158,6 +218,50 @@ void ConsolePrompt(const char *prompt, uint32_t id) {
   PushConsoleMessage(message);
 }
 
+/**
+ * splitting handling for messages that don't need to be inlined.
+ * this method should return 0 if it can handle the message without
+ * breaking the event loop. that will be true for anything except 
+ * shell commmands and shutdown (for now, at least)
+ */
+int HandleMessage(BERTBuffers::CallResponse &call, uint32_t client_id) {
+
+  BERTBuffers::CallResponse response;
+
+  response.set_id(call.id());
+  switch (call.operation_case()) {
+
+  case BERTBuffers::CallResponse::kFunctionCall:
+    switch (call.function_call().target()) {
+    case BERTBuffers::CallTarget::system:
+      if (SYSTEMCALL_SHUTDOWN == SystemCall(response, call, client_id)) {
+        return -1; // FIXME: need a flag for this or something // will terminate R loop
+      }
+      break;
+    default:
+      RCall(response, call);
+      break;
+    }
+    if (call.wait()) {
+      Write(MessageUtilities::Frame(response), clients_[client_id]);
+    }
+    break;
+
+  case BERTBuffers::CallResponse::kCode:
+    RExec(response, call);
+    if (call.wait()) {
+      Write(MessageUtilities::Frame(response), clients_[client_id]);
+    }
+    break;
+
+  default:
+    return -1;
+  }
+
+  return 0;
+
+}
+
 int InputStreamRead(const char *prompt, char *buf, int len, int addtohistory, bool is_continuation) {
 
   static uint32_t prompt_transaction_id = 0;
@@ -176,6 +280,7 @@ int InputStreamRead(const char *prompt, char *buf, int len, int addtohistory, bo
     uv_run(loop, UV_RUN_DEFAULT);
 
     if(pending_messages_.size()) {
+
       //for (auto client_message : pending_messages_) 
       while(pending_messages_.size())
       {
@@ -189,6 +294,9 @@ int InputStreamRead(const char *prompt, char *buf, int len, int addtohistory, bo
         switch (call.operation_case()) {
 
         case BERTBuffers::CallResponse::kFunctionCall:
+
+          std::cout << "...wrong case in isr (1)..." << std::endl;
+
           //call_depth++;
           //active_pipe.push(index);
           switch (call.function_call().target()) {
@@ -210,7 +318,11 @@ int InputStreamRead(const char *prompt, char *buf, int len, int addtohistory, bo
           }
           break;
 
+        /*
         case BERTBuffers::CallResponse::kCode:
+
+          std::cout << "...wrong case in isr (2)..." << std::endl;
+
           //call_depth++;
           //active_pipe.push(index);
           RExec(response, call);
@@ -221,16 +333,14 @@ int InputStreamRead(const char *prompt, char *buf, int len, int addtohistory, bo
             Write(MessageUtilities::Frame(response), clients_[client_message.client_id]);
           }
           break;
+        */
 
         case BERTBuffers::CallResponse::kShellCommand:
           len = std::min(len - 2, (int)call.shell_command().length());
-          //strcpy_s(buf, len + 1, call.shell_command().c_str());
           memcpy(buf, call.shell_command().c_str(), len+1);
           buf[len++] = '\n';
           buf[len++] = 0;
           prompt_transaction_id = call.id();
-          //pipe->StartRead();
-
 
           // start read and then exit this function; that will cycle the R REPL loop.
           // the (implicit/explicit) response from this command is going to be the next 
@@ -316,14 +426,26 @@ void Read(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
 
     if (data->buffer.length()) str = data->buffer;
     str.append(buf->base, nread);
+
+    // actually maybe that's unlikely since we're basically requiring ACKs on this.
+    // we might have a problem on the other end, though, since there are console 
+    // messages that don't get a reply. graphics.
+
+    int32_t packet_len = MessageUtilities::MessageLength(str);
+    if (packet_len < str.length() - 4) {
+      std::cout << "Packet too small! " << packet_len << ", " << str.length() << std::endl;
+    }
+
     success = MessageUtilities::Unframe(message, str);
     if (success) {
-      uv_stop(loop);
       data->buffer = "";
-      ClientMessage cm;
-      cm.client_id = data->index;
-      cm.message = message;
-      pending_messages_.push_back(cm);
+      if (HandleMessage(message, data->index)) {
+        ClientMessage cm;
+        cm.client_id = data->index;
+        cm.message = message;
+        uv_stop(loop);
+        pending_messages_.push_back(cm);
+      }
     }
     else {
       std::cout << "onread [" << data->index << "]: " << nread << ", message failed; buffering" << std::endl;
@@ -334,6 +456,53 @@ void Read(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
   free(buf->base);
   
 }
+
+/*
+void IPCRead(); // 
+
+void ExecRead(uv_work_t* req) {
+  mm_reader.StartRead();
+}
+
+void FinishRead(uv_work_t* req, int status) {
+  std::string buffer = mm_reader.FinishRead();
+  BERTBuffers::CallResponse message;
+  bool success = MessageUtilities::Unframe(message, buffer);
+  if (success) {
+
+    if (HandleMessage(message, 0)) {
+      ClientMessage cm;
+      cm.client_id = 0;
+      cm.message = message;
+      uv_stop(uv_default_loop());
+      pending_messages_.push_back(cm);
+    }
+
+  }
+  IPCRead();
+  delete req;
+}
+
+void IPCRead() {
+  uv_work_t *req = new uv_work_t;
+  uv_queue_work(uv_default_loop(), req, ExecRead, FinishRead);
+}
+
+void InitIPC(const std::string &name) {
+
+  std::string reader_name(name);
+  reader_name += "_read";
+
+  std::string writer_name(name);
+  writer_name += "_write";
+
+  mm_reader.Create(reader_name, 2e6);
+  mm_writer.Create(writer_name, 2e6);
+
+  IPCRead();
+
+}
+*/
 
 void on_new_connection(uv_stream_t *server, int status) {
 
@@ -524,6 +693,7 @@ int main(int argc, char **argv) {
     else if (!strncmp(argv[i], "-r", 2) && i < argc - 1) {
       rhome = argv[++i];
     }
+    else std::cout << "other arg? " << argv[i] << std::endl;
   }
 
   if (!pipename.length()) {
@@ -563,15 +733,19 @@ int main(int argc, char **argv) {
   RemoveDomainSocketFile(full_name);
 #endif
 
-  if ((r = uv_pipe_bind(&server, full_name.c_str()))) {
-    std::cerr << "Bind error " << uv_err_name(r) << std::endl;
-    return 1;
+//  InitIPC(pipename);
+
+  {
+    if ((r = uv_pipe_bind(&server, full_name.c_str()))) {
+      std::cerr << "Bind error " << uv_err_name(r) << std::endl;
+      return 1;
+    }
+    if ((r = uv_listen((uv_stream_t*)&server, 128, on_new_connection))) {
+      std::cerr << "Listen error " << uv_err_name(r) << std::endl;
+      return 2;
+    }
+    // return uv_run(loop, UV_RUN_DEFAULT);
   }
-  if ((r = uv_listen((uv_stream_t*)&server, 128, on_new_connection))) {
-    std::cerr << "Listen error " << uv_err_name(r) << std::endl;
-    return 2;
-  }
-  // return uv_run(loop, UV_RUN_DEFAULT);
 
   StartR();
 
