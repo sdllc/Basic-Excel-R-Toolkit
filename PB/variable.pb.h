@@ -805,7 +805,8 @@ class Variable : public ::google::protobuf::Message /* @@protoc_insertion_point(
     kRef = 11,
     kComPointer = 12,
     kGraphics = 13,
-    kCacheReference = 14,
+    kDate = 14,
+    kCacheReference = 16,
     VALUE_NOT_SET = 0,
   };
 
@@ -992,12 +993,21 @@ class Variable : public ::google::protobuf::Message /* @@protoc_insertion_point(
   ::BERTBuffers::GraphicsUpdate* mutable_graphics();
   void set_allocated_graphics(::BERTBuffers::GraphicsUpdate* graphics);
 
-  // uint32 cache_reference = 14;
+  // uint32 date = 14;
+  private:
+  bool has_date() const;
+  public:
+  void clear_date();
+  static const int kDateFieldNumber = 14;
+  ::google::protobuf::uint32 date() const;
+  void set_date(::google::protobuf::uint32 value);
+
+  // uint32 cache_reference = 16;
   private:
   bool has_cache_reference() const;
   public:
   void clear_cache_reference();
-  static const int kCacheReferenceFieldNumber = 14;
+  static const int kCacheReferenceFieldNumber = 16;
   ::google::protobuf::uint32 cache_reference() const;
   void set_cache_reference(::google::protobuf::uint32 value);
 
@@ -1016,6 +1026,7 @@ class Variable : public ::google::protobuf::Message /* @@protoc_insertion_point(
   void set_has_ref();
   void set_has_com_pointer();
   void set_has_graphics();
+  void set_has_date();
   void set_has_cache_reference();
 
   inline bool has_value() const;
@@ -1038,6 +1049,7 @@ class Variable : public ::google::protobuf::Message /* @@protoc_insertion_point(
     ::BERTBuffers::SheetReference* ref_;
     ::BERTBuffers::ExternalPointer* com_pointer_;
     ::BERTBuffers::GraphicsUpdate* graphics_;
+    ::google::protobuf::uint32 date_;
     ::google::protobuf::uint32 cache_reference_;
   } value_;
   mutable int _cached_size_;
@@ -4209,7 +4221,36 @@ inline ::BERTBuffers::GraphicsUpdate* Variable::mutable_graphics() {
   return value_.graphics_;
 }
 
-// uint32 cache_reference = 14;
+// uint32 date = 14;
+inline bool Variable::has_date() const {
+  return value_case() == kDate;
+}
+inline void Variable::set_has_date() {
+  _oneof_case_[0] = kDate;
+}
+inline void Variable::clear_date() {
+  if (has_date()) {
+    value_.date_ = 0u;
+    clear_has_value();
+  }
+}
+inline ::google::protobuf::uint32 Variable::date() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.Variable.date)
+  if (has_date()) {
+    return value_.date_;
+  }
+  return 0u;
+}
+inline void Variable::set_date(::google::protobuf::uint32 value) {
+  if (!has_date()) {
+    clear_value();
+    set_has_date();
+  }
+  value_.date_ = value;
+  // @@protoc_insertion_point(field_set:BERTBuffers.Variable.date)
+}
+
+// uint32 cache_reference = 16;
 inline bool Variable::has_cache_reference() const {
   return value_case() == kCacheReference;
 }

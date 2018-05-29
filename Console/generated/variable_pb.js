@@ -953,7 +953,7 @@ if (goog.DEBUG && !COMPILED) {
  * @private {!Array<!Array<number>>}
  * @const
  */
-proto.BERTBuffers.Variable.oneofGroups_ = [[1,2,3,5,6,7,8,9,10,11,12,13,14]];
+proto.BERTBuffers.Variable.oneofGroups_ = [[1,2,3,5,6,7,8,9,10,11,12,13,14,16]];
 
 /**
  * @enum {number}
@@ -972,7 +972,8 @@ proto.BERTBuffers.Variable.ValueCase = {
   REF: 11,
   COM_POINTER: 12,
   GRAPHICS: 13,
-  CACHE_REFERENCE: 14
+  DATE: 14,
+  CACHE_REFERENCE: 16
 };
 
 /**
@@ -1023,7 +1024,8 @@ proto.BERTBuffers.Variable.toObject = function(includeInstance, msg) {
     ref: (f = msg.getRef()) && proto.BERTBuffers.SheetReference.toObject(includeInstance, f),
     comPointer: (f = msg.getComPointer()) && proto.BERTBuffers.ExternalPointer.toObject(includeInstance, f),
     graphics: (f = msg.getGraphics()) && proto.BERTBuffers.GraphicsUpdate.toObject(includeInstance, f),
-    cacheReference: jspb.Message.getFieldWithDefault(msg, 14, 0),
+    date: jspb.Message.getFieldWithDefault(msg, 14, 0),
+    cacheReference: jspb.Message.getFieldWithDefault(msg, 16, 0),
     name: jspb.Message.getFieldWithDefault(msg, 15, "")
   };
 
@@ -1116,6 +1118,10 @@ proto.BERTBuffers.Variable.deserializeBinaryFromReader = function(msg, reader) {
       msg.setGraphics(value);
       break;
     case 14:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setDate(value);
+      break;
+    case 16:
       var value = /** @type {number} */ (reader.readUint32());
       msg.setCacheReference(value);
       break;
@@ -1246,6 +1252,13 @@ proto.BERTBuffers.Variable.serializeBinaryToWriter = function(message, writer) {
   if (f != null) {
     writer.writeUint32(
       14,
+      f
+    );
+  }
+  f = /** @type {number} */ (jspb.Message.getField(message, 16));
+  if (f != null) {
+    writer.writeUint32(
+      16,
       f
     );
   }
@@ -1620,21 +1633,21 @@ proto.BERTBuffers.Variable.prototype.hasGraphics = function() {
 
 
 /**
- * optional uint32 cache_reference = 14;
+ * optional uint32 date = 14;
  * @return {number}
  */
-proto.BERTBuffers.Variable.prototype.getCacheReference = function() {
+proto.BERTBuffers.Variable.prototype.getDate = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 14, 0));
 };
 
 
 /** @param {number} value */
-proto.BERTBuffers.Variable.prototype.setCacheReference = function(value) {
+proto.BERTBuffers.Variable.prototype.setDate = function(value) {
   jspb.Message.setOneofField(this, 14, proto.BERTBuffers.Variable.oneofGroups_[0], value);
 };
 
 
-proto.BERTBuffers.Variable.prototype.clearCacheReference = function() {
+proto.BERTBuffers.Variable.prototype.clearDate = function() {
   jspb.Message.setOneofField(this, 14, proto.BERTBuffers.Variable.oneofGroups_[0], undefined);
 };
 
@@ -1643,8 +1656,37 @@ proto.BERTBuffers.Variable.prototype.clearCacheReference = function() {
  * Returns whether this field is set.
  * @return {!boolean}
  */
-proto.BERTBuffers.Variable.prototype.hasCacheReference = function() {
+proto.BERTBuffers.Variable.prototype.hasDate = function() {
   return jspb.Message.getField(this, 14) != null;
+};
+
+
+/**
+ * optional uint32 cache_reference = 16;
+ * @return {number}
+ */
+proto.BERTBuffers.Variable.prototype.getCacheReference = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 16, 0));
+};
+
+
+/** @param {number} value */
+proto.BERTBuffers.Variable.prototype.setCacheReference = function(value) {
+  jspb.Message.setOneofField(this, 16, proto.BERTBuffers.Variable.oneofGroups_[0], value);
+};
+
+
+proto.BERTBuffers.Variable.prototype.clearCacheReference = function() {
+  jspb.Message.setOneofField(this, 16, proto.BERTBuffers.Variable.oneofGroups_[0], undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {!boolean}
+ */
+proto.BERTBuffers.Variable.prototype.hasCacheReference = function() {
+  return jspb.Message.getField(this, 16) != null;
 };
 
 

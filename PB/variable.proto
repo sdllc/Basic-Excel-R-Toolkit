@@ -107,7 +107,9 @@ message Variable {
 
     GraphicsUpdate graphics = 13;
 
-    uint32 cache_reference = 14;
+    uint32 date = 14;
+
+    uint32 cache_reference = 16; // anything > 15 uses two bytes, and is slower
 
   }	
   string name = 15;
