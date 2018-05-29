@@ -26,7 +26,6 @@ uv_timer_t wait_timeout;
 
 const int32_t Timeout = 100;
 
-int pipe_count = 0;
 int console_client = -1;
 
 typedef struct {
@@ -419,10 +418,45 @@ void Read(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
     std::cerr << "on_read error [" << data->index << "] " << nread << ": " << uv_err_name(nread) << std::endl;
     if (nread == UV_EOF) {
       std::cerr << "probably pipe closed" << std::endl;
-      if (data->index == console_client) {
+      uint32_t index = data->index;
+      if (index == console_client) {
         std::cerr << "this was console client, unsetting" << std::endl;
         console_client = -1;
       }
+
+      // let's clean up the list... first: if console_client > index, 
+      // reduce it by 1
+
+      if (console_client > index) {
+        std::cout << "console client is " << console_client << "; reducing" << std::endl;
+        console_client--;
+      }
+
+      // now remove this one from the vector and delete it (actually free). 
+      // at the same time we need to decrement any index that's > this index
+
+      std::vector < uv_pipe_t* > new_list;
+      for (int i = 0; i < index; i++) {
+        std::cout << "preserving index " << i << std::endl;
+        new_list.push_back(clients_[i]);
+      }
+      for (int i = index + 1; i < clients_.size(); i++) {
+        auto client = clients_[i];
+        PipeData *data = static_cast<PipeData*>(client->data);
+        std::cout << "setting index " << data->index << " -> " << (data->index-1) << std::endl;
+        data->index--;
+        new_list.push_back(client);
+      }
+      
+      clients_ = new_list;
+
+      std::cout << "new length is " << clients_.size() << std::endl;
+
+      uv_read_stop(stream);
+
+      delete data;
+      free(stream);
+      
     }
   }
   else {
@@ -528,7 +562,7 @@ void on_new_connection(uv_stream_t *server, int status) {
   uv_pipe_init(loop, client, 0);
 
   PipeData *data = new PipeData;
-  data->index = pipe_count++;
+  data->index = clients_.size();
   client->data = static_cast<void*>(data);
   clients_.push_back(client);
 
