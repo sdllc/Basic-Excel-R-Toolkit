@@ -415,7 +415,16 @@ void Read(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
   uv_loop_t *loop = uv_default_loop();
   PipeData *data = static_cast<PipeData*>(stream->data);
 
-  if (nread < 0) std::cerr << "on_read error [" << data->index << "] " << nread << ": " << uv_err_name(nread) << std::endl;
+  if (nread < 0) {
+    std::cerr << "on_read error [" << data->index << "] " << nread << ": " << uv_err_name(nread) << std::endl;
+    if (nread == UV_EOF) {
+      std::cerr << "probably pipe closed" << std::endl;
+      if (data->index == console_client) {
+        std::cerr << "this was console client, unsetting" << std::endl;
+        console_client = -1;
+      }
+    }
+  }
   else {
     BERTBuffers::CallResponse message;
     bool success;
