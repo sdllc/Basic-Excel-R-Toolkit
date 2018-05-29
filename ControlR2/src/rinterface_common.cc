@@ -466,12 +466,23 @@ __inline bool HandleSimpleTypes(SEXP sexp, int len, int rtype, BERTBuffers::Arra
   }
   else if (isReal(sexp) || Rf_isNumber(sexp) || rtype == REALSXP)
   {
-    for (int i = 0; i < len; i++) {
-      auto ptr = arr ? arr->add_data() : var;
-      if (ISNA(REAL(sexp)[i])) {
-        ptr->mutable_err()->set_type(BERTBuffers::ErrorType::NA);
+    if (Rf_inherits(sexp, "Date")) {
+      for (int i = 0; i < len; i++) {
+        auto ptr = arr ? arr->add_data() : var;
+        if (ISNA(REAL(sexp)[i])) {
+          ptr->mutable_err()->set_type(BERTBuffers::ErrorType::NA);
+        }
+        else ptr->set_date(REAL(sexp)[i]);
       }
-      else ptr->set_real(REAL(sexp)[i]);
+    }
+    else {
+      for (int i = 0; i < len; i++) {
+        auto ptr = arr ? arr->add_data() : var;
+        if (ISNA(REAL(sexp)[i])) {
+          ptr->mutable_err()->set_type(BERTBuffers::ErrorType::NA);
+        }
+        else ptr->set_real(REAL(sexp)[i]);
+      }
     }
   }
   else if (isString(sexp) || rtype == STRSXP)
