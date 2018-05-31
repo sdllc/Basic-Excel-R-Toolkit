@@ -51,6 +51,9 @@
     <ClInclude Include="include\spreadsheet_graphics_device.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\message_graphics_device.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\controlr2.cc">
@@ -78,6 +81,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\spreadsheet_graphics_device.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\message_graphics_device.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -22,6 +22,8 @@
 #include "console_graphics_device.h"
 #include "convert.h"
 
+#include "message_graphics_device.h"
+
 #ifdef _WIN32
 #include "spreadsheet_graphics_device.h"
 #include "gdi_graphics_device.h"
@@ -1098,6 +1100,26 @@ SEXP RCallback(SEXP command, SEXP data) {
     pointer = R_ExternalPtrAddr(VECTOR_ELT(data, 5));
 
     return ConsoleGraphicsDevice::CreateConsoleDevice(background, width, height, pointsize, type, pointer);
+  }
+  else if (!string_command.compare("treb-spreadsheet-device")) {
+
+    if (TYPEOF(data) != VECSXP) return Rf_ScalarLogical(0);
+    if (Rf_length(data) != 7) return Rf_ScalarLogical(0);
+
+    std::string background, type, name;
+    double width, height, pointsize;
+    void *pointer;
+
+    name = CHAR(Rf_asChar(VECTOR_ELT(data, 0)));
+    background = CHAR(Rf_asChar(VECTOR_ELT(data, 1)));
+    width = Rf_asReal(VECTOR_ELT(data, 2));
+    height = Rf_asReal(VECTOR_ELT(data, 3));
+    pointsize = Rf_asReal(VECTOR_ELT(data, 4));
+    type = CHAR(Rf_asChar(VECTOR_ELT(data, 5)));
+    pointer = R_ExternalPtrAddr(VECTOR_ELT(data, 6));
+
+    return MessageGraphicsDevice::CreateMessageDevice(name, background, width, height, pointsize, type, pointer);
+
   }
 #ifdef _WIN32  
   else if (!string_command.compare("spreadsheet-device")) {

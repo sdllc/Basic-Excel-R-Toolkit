@@ -28,6 +28,7 @@
     <ClInclude Include="include\controlr_common.h" />
     <ClInclude Include="include\convert.h" />
     <ClInclude Include="include\gdi_graphics_device.h" />
+    <ClInclude Include="include\message_graphics_device.h" />
     <ClInclude Include="include\spreadsheet_graphics_device.h" />
   </ItemGroup>
   <ItemGroup>
@@ -37,6 +38,7 @@
     <ClCompile Include="src\controlr2.cc" />
     <ClCompile Include="src\convert.cc" />
     <ClCompile Include="src\gdi_graphics_device.cc" />
+    <ClCompile Include="src\message_graphics_device.cc" />
     <ClCompile Include="src\rinterface_common.cc" />
     <ClCompile Include="src\rinterface_win.cc" />
     <ClCompile Include="src\spreadsheet_graphics_device.cc" />

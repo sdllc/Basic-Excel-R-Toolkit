@@ -1628,6 +1628,20 @@ class GraphicsCommand : public ::google::protobuf::Message /* @@protoc_insertion
   ::std::string* release_raster();
   void set_allocated_raster(::std::string* raster);
 
+  // string device_name = 13;
+  void clear_device_name();
+  static const int kDeviceNameFieldNumber = 13;
+  const ::std::string& device_name() const;
+  void set_device_name(const ::std::string& value);
+  #if LANG_CXX11
+  void set_device_name(::std::string&& value);
+  #endif
+  void set_device_name(const char* value);
+  void set_device_name(const char* value, size_t size);
+  ::std::string* mutable_device_name();
+  ::std::string* release_device_name();
+  void set_allocated_device_name(::std::string* device_name);
+
   // string device_type = 14;
   void clear_device_type();
   static const int kDeviceTypeFieldNumber = 14;
@@ -1692,6 +1706,7 @@ class GraphicsCommand : public ::google::protobuf::Message /* @@protoc_insertion
   ::google::protobuf::internal::ArenaStringPtr command_;
   ::google::protobuf::internal::ArenaStringPtr text_;
   ::google::protobuf::internal::ArenaStringPtr raster_;
+  ::google::protobuf::internal::ArenaStringPtr device_name_;
   ::google::protobuf::internal::ArenaStringPtr device_type_;
   ::BERTBuffers::GraphicsContext* context_;
   double r_;
@@ -5028,6 +5043,59 @@ inline void GraphicsCommand::set_interpolate(bool value) {
   
   interpolate_ = value;
   // @@protoc_insertion_point(field_set:BERTBuffers.GraphicsCommand.interpolate)
+}
+
+// string device_name = 13;
+inline void GraphicsCommand::clear_device_name() {
+  device_name_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& GraphicsCommand::device_name() const {
+  // @@protoc_insertion_point(field_get:BERTBuffers.GraphicsCommand.device_name)
+  return device_name_.GetNoArena();
+}
+inline void GraphicsCommand::set_device_name(const ::std::string& value) {
+  
+  device_name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:BERTBuffers.GraphicsCommand.device_name)
+}
+#if LANG_CXX11
+inline void GraphicsCommand::set_device_name(::std::string&& value) {
+  
+  device_name_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:BERTBuffers.GraphicsCommand.device_name)
+}
+#endif
+inline void GraphicsCommand::set_device_name(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  device_name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:BERTBuffers.GraphicsCommand.device_name)
+}
+inline void GraphicsCommand::set_device_name(const char* value, size_t size) {
+  
+  device_name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:BERTBuffers.GraphicsCommand.device_name)
+}
+inline ::std::string* GraphicsCommand::mutable_device_name() {
+  
+  // @@protoc_insertion_point(field_mutable:BERTBuffers.GraphicsCommand.device_name)
+  return device_name_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* GraphicsCommand::release_device_name() {
+  // @@protoc_insertion_point(field_release:BERTBuffers.GraphicsCommand.device_name)
+  
+  return device_name_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void GraphicsCommand::set_allocated_device_name(::std::string* device_name) {
+  if (device_name != NULL) {
+    
+  } else {
+    
+  }
+  device_name_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), device_name);
+  // @@protoc_insertion_point(field_set_allocated:BERTBuffers.GraphicsCommand.device_name)
 }
 
 // string device_type = 14;

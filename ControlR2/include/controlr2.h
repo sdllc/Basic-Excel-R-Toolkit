@@ -48,6 +48,9 @@ bool ConsoleCallback(const BERTBuffers::CallResponse &call, BERTBuffers::CallRes
  */
 void PushConsoleMessage(google::protobuf::Message &message);
 
+/** similar, push message to the spreadsheet. graphics. */
+void PushSpreadsheetMessage(google::protobuf::Message &message);
+
 /**
 * idle or periodic event handler -- implementation is platform-specific
 */

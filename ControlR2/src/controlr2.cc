@@ -365,6 +365,19 @@ int InputStreamRead(const char *prompt, char *buf, int len, int addtohistory, bo
   return 0;
 }
 
+void PushSpreadsheetMessage(google::protobuf::Message &message) {
+  std::string framed = MessageUtilities::Frame(message);
+  /*
+  if (console_client >= 0) {
+    Write(framed, clients_[console_client]);
+  }
+  else {
+    console_buffer_.push_back(framed);
+  }
+  */
+}
+
+
 void PushConsoleMessage(google::protobuf::Message &message) {
   std::string framed = MessageUtilities::Frame(message);
   if (console_client >= 0) {

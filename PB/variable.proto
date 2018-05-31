@@ -198,6 +198,7 @@ message GraphicsCommand  {
   bool interpolate = 10;  // flag
 
   // device type
+  string device_name = 13;
   string device_type = 14;
   GraphicsContext context = 15;
 }

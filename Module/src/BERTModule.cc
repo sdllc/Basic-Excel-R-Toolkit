@@ -158,6 +158,52 @@ SEXP CreateSpreadsheetDevice(SEXP name, SEXP background, SEXP width, SEXP height
   
 }
 
+
+/**
+ * generic message-based device
+ */ 
+SEXP CreateMessageDevice(SEXP name, SEXP type, SEXP background, SEXP width, SEXP height, SEXP pointsize){
+
+  R_GE_checkVersionOrDie(R_GE_version);
+
+  // this will raise an error. there's an alternative which 
+  // returns boolean, which might allow more graceful failure.
+
+  R_CheckDeviceAvailable(); 
+
+  // create the device. we'll need to wrap this in an EXTPTR 
+  // struct in case it's a 64 bit pointer
+
+  pDevDesc dev = device_new_simple(); // bg, width, height, pointsize);
+  if(!dev) return R_NilValue;
+
+  // this is another calloc we need to leave on this 
+  // side of the wall
+
+  pGEDevDesc gd = GEcreateDevDesc(dev);
+
+  SEXP argument_list = PROTECT(Rf_allocVector(VECSXP, 7));
+  SET_VECTOR_ELT(argument_list, 0, name);
+  SET_VECTOR_ELT(argument_list, 1, background);
+  SET_VECTOR_ELT(argument_list, 2, width);
+  SET_VECTOR_ELT(argument_list, 3, height);
+  SET_VECTOR_ELT(argument_list, 4, pointsize);
+  SET_VECTOR_ELT(argument_list, 5, type);
+
+  // note we're now passing the pGEDevDesc instead of the inner 
+  // pDevDesc, because we need both and we can access the one 
+  // from the other
+
+  SET_VECTOR_ELT(argument_list, 6, PROTECT(R_MakeExternalPtr(gd, R_NilValue, R_NilValue)));
+
+  SEXP device = Callback2(Rf_mkString("message-device"), argument_list); 
+
+  UNPROTECT(2);
+
+  return device;
+  
+}
+
 void CloseConsole(){
   Callback2(Rf_mkString("close-console"), 0);
 }
@@ -172,6 +218,7 @@ extern "C" {
     static R_CallMethodDef methods[]  = {
       { "spreadsheet_device", (DL_FUNC)&CreateSpreadsheetDevice, 5},
       { "console_device", (DL_FUNC)&CreateConsoleDevice, 5},
+      { "message_device", (DL_FUNC)&CreateConsoleDevice, 6},
       { "history", (DL_FUNC)&History, 1},
       { "close_console", (DL_FUNC)&CloseConsole, 0},
       { NULL, NULL, 0 }

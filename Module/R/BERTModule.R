@@ -176,6 +176,18 @@ BERT.console.graphics.device <- function( bgcolor="white", width=500, height=350
 
 }
 
+#' Create a generic message-based graphics device.
+#'
+#' @export 
+BERT.message.device <- function(name, bgcolor="white", width=500, height=350, pointsize=14, type="png"){
+  if(type != "svg"){ type = "png"; }
+  x <- dev.list();
+	if((length(x) > 0) & (name %in% names(x))){ dev.set( x[[name]]) }
+	else {
+    .Call( "message_device", name, type, bgcolor, width, height, pointsize, PACKAGE='BERTModule' );
+  }
+}
+
 #==============================================================================
 #
 # progress bars
