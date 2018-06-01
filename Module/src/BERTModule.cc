@@ -218,7 +218,7 @@ extern "C" {
     static R_CallMethodDef methods[]  = {
       { "spreadsheet_device", (DL_FUNC)&CreateSpreadsheetDevice, 5},
       { "console_device", (DL_FUNC)&CreateConsoleDevice, 5},
-      { "message_device", (DL_FUNC)&CreateConsoleDevice, 6},
+      { "message_device", (DL_FUNC)&CreateMessageDevice, 6},
       { "history", (DL_FUNC)&History, 1},
       { "close_console", (DL_FUNC)&CloseConsole, 0},
       { NULL, NULL, 0 }
