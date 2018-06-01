@@ -65,11 +65,11 @@ bool Callback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &
 // fwd
 void Write(const std::string &data, uv_pipe_t *client); 
 
-bool ConsoleCallback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response) {
+bool DirectCallback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response, int32_t client) {
 
-  if (console_client < 0) return false; // fail
+  if (client < 0) return false; // fail
 
-  Write(MessageUtilities::Frame(call), clients_[console_client]);
+  Write(MessageUtilities::Frame(call), clients_[client]);
 
   // here we hijack the loop until we get a response. FIXME: some error handling, timeouts?
   while (true) {
@@ -119,6 +119,14 @@ bool ConsoleCallback(const BERTBuffers::CallResponse &call, BERTBuffers::CallRes
 
   return false;
 
+}
+
+bool ConsoleCallback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response) {
+  return DirectCallback(call, response, console_client);
+}
+
+bool SpreadsheetCallback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response) {
+  return DirectCallback(call, response, spreadsheet_client);
 }
 
 void QueueConsoleWrites() {
@@ -235,6 +243,10 @@ int HandleMessage(BERTBuffers::CallResponse &call, uint32_t client_id) {
 
   BERTBuffers::CallResponse response;
 
+  return -1;
+
+  std::cout << "HAM " << call.operation_case() << std::endl;
+
   response.set_id(call.id());
   switch (call.operation_case()) {
 
@@ -262,6 +274,9 @@ int HandleMessage(BERTBuffers::CallResponse &call, uint32_t client_id) {
     break;
 
   default:
+
+    std::cout << "(passing)" << std::endl;
+
     return -1;
   }
 
@@ -273,7 +288,7 @@ int InputStreamRead(const char *prompt, char *buf, int len, int addtohistory, bo
 
   static uint32_t prompt_transaction_id = 0;
 
-  std::cout << "ISR start" << std::endl;
+  // std::cout << "ISR start" << std::endl;
   uv_loop_t *loop = uv_default_loop();
 
   ConsolePrompt(prompt, prompt_transaction_id);
@@ -302,7 +317,7 @@ int InputStreamRead(const char *prompt, char *buf, int len, int addtohistory, bo
 
         case BERTBuffers::CallResponse::kFunctionCall:
 
-          std::cout << "...wrong case in isr (1)..." << std::endl;
+          // std::cout << "...wrong case in isr (1)..." << std::endl;
 
           //call_depth++;
           //active_pipe.push(index);
@@ -325,10 +340,9 @@ int InputStreamRead(const char *prompt, char *buf, int len, int addtohistory, bo
           }
           break;
 
-        /*
         case BERTBuffers::CallResponse::kCode:
 
-          std::cout << "...wrong case in isr (2)..." << std::endl;
+          // std::cout << "...wrong case in isr (2)..." << std::endl;
 
           //call_depth++;
           //active_pipe.push(index);
@@ -340,7 +354,6 @@ int InputStreamRead(const char *prompt, char *buf, int len, int addtohistory, bo
             Write(MessageUtilities::Frame(response), clients_[client_message.client_id]);
           }
           break;
-        */
 
         case BERTBuffers::CallResponse::kShellCommand:
           len = std::min(len - 2, (int)call.shell_command().length());
@@ -374,21 +387,14 @@ int InputStreamRead(const char *prompt, char *buf, int len, int addtohistory, bo
 }
 
 void PushSpreadsheetMessage(google::protobuf::Message &message) {
+
+  // not cached
+
   std::string framed = MessageUtilities::Frame(message);
   if (spreadsheet_client >= 0) {
     Write(framed, clients_[spreadsheet_client]);
   }
-  /*
-  if (console_client >= 0) {
-    Write(framed, clients_[console_client]);
-  }
-  else {
-    console_buffer_.push_back(framed);
-  }
-  */
-  std::cout << "osm" << std::endl;
 }
-
 
 void PushConsoleMessage(google::protobuf::Message &message) {
   std::string framed = MessageUtilities::Frame(message);
@@ -516,8 +522,12 @@ void Read(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
 
     success = MessageUtilities::Unframe(message, str);
     if (success) {
+
       data->buffer = "";
-      if (HandleMessage(message, data->index)) {
+
+      // this is breaking callbacks. figure out why...
+
+      if(true){ // if (HandleMessage(message, data->index)) {
         ClientMessage cm;
         cm.client_id = data->index;
         cm.message = message;

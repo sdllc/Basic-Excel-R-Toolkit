@@ -158,6 +158,14 @@ SEXP CreateSpreadsheetDevice(SEXP name, SEXP background, SEXP width, SEXP height
   
 }
 
+SEXP RepaintMessageDevice(SEXP name, SEXP type){
+  SEXP argument_list = PROTECT(Rf_allocVector(VECSXP, 2));
+  SET_VECTOR_ELT(argument_list, 0, name);
+  SET_VECTOR_ELT(argument_list, 1, type);
+  Callback2(Rf_mkString("repaint-message-device"), argument_list); 
+  UNPROTECT(1);
+  return R_NilValue;
+}
 
 /**
  * generic message-based device
@@ -219,6 +227,7 @@ extern "C" {
       { "spreadsheet_device", (DL_FUNC)&CreateSpreadsheetDevice, 5},
       { "console_device", (DL_FUNC)&CreateConsoleDevice, 5},
       { "message_device", (DL_FUNC)&CreateMessageDevice, 6},
+      { "repaint_message_device", (DL_FUNC)&RepaintMessageDevice, 2},
       { "history", (DL_FUNC)&History, 1},
       { "close_console", (DL_FUNC)&CloseConsole, 0},
       { NULL, NULL, 0 }

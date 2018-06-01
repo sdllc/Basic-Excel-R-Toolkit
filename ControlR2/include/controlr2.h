@@ -43,6 +43,8 @@ bool Callback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &
  */
 bool ConsoleCallback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response);
 
+bool SpreadsheetCallback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response);
+
 /**
  * send a message to the console. this includes stdio as well as graphics and notifications
  */

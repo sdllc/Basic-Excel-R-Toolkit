@@ -37,7 +37,11 @@
 #undef length
 #endif
 
+#include <unordered_map>
+
 namespace MessageGraphicsDevice {
+
+  std::unordered_map< std::string, void * > local_device_list;
 
   class MessageDeviceData {
   public:
@@ -100,6 +104,33 @@ namespace MessageGraphicsDevice {
 
   void NewPage(const pGEcontext gc, pDevDesc dd) {
     // std::cout << "g: new page: " << dd->right << ", " << dd->bottom << std::endl;
+
+    //device->UpdateSize();
+
+    {
+      BERTBuffers::CallResponse message, response;
+      auto graphics = message.mutable_console()->mutable_graphics();
+      SetDeviceInfo(graphics, dd);
+      SetMessageContext(graphics->mutable_context(), gc);
+
+      auto device_info = (MessageDeviceData*)(dd->deviceSpecific);
+      graphics->set_device_type(device_info->type);
+      graphics->set_device_name(device_info->name);
+      graphics->set_command("get-size");
+
+      bool success = SpreadsheetCallback(message, response);
+      if (success) {
+        if (response.operation_case() == BERTBuffers::CallResponse::OperationCase::kConsole) {
+          auto graphics = response.console().graphics();
+          if (graphics.x_size()) dd->right = dd->left + graphics.x(0);
+          if (graphics.y_size()) dd->bottom = dd->top + graphics.y(0);
+
+          std::cout << "update dimensions: " << (dd->right - dd->left) << ", " << (dd->bottom - dd->top) << std::endl;
+
+        }
+      }
+    }
+
     BERTBuffers::CallResponse message;
     auto graphics = message.mutable_console()->mutable_graphics();
     SetDeviceInfo(graphics, dd);
@@ -170,7 +201,7 @@ namespace MessageGraphicsDevice {
     graphics->set_command("measure-text");
     graphics->set_text(str);
 
-    bool success = ConsoleCallback(message, response);
+    bool success = SpreadsheetCallback(message, response);
     if (success) {
       if (response.operation_case() == BERTBuffers::CallResponse::OperationCase::kConsole) {
         auto graphics = response.console().graphics();
@@ -240,7 +271,6 @@ namespace MessageGraphicsDevice {
     *top = dd->top;
   }
 
-
   void GetMetricInfo(int c, const pGEcontext gc, double* ascent, double* descent, double* width, pDevDesc dd) {
 
     static char str[8];
@@ -263,7 +293,7 @@ namespace MessageGraphicsDevice {
     graphics->set_command("font-metrics");
     graphics->set_text(str);
 
-    bool success = ConsoleCallback(message, response);
+    bool success = SpreadsheetCallback(message, response);
     if (success) {
       if (response.operation_case() == BERTBuffers::CallResponse::OperationCase::kConsole) {
         auto graphics = response.console().graphics();
@@ -321,7 +351,70 @@ namespace MessageGraphicsDevice {
     PushSpreadsheetMessage(message);
   }
 
+  /**
+   * we don't need to pass a w/h here because it will start with the new
+   * call, which itself will query the size.
+   */
+  void RepaintDevice(const std::string &name, const std::string &type) {
+
+    std::string key = name;
+    key += "_";
+    key += type;
+
+    auto iterator = local_device_list.find(key);
+    if (iterator != local_device_list.end()) {
+      pGEDevDesc gd = (pGEDevDesc)(iterator->second);
+      if (gd) {
+
+        /*
+        ///////
+
+        int i, xthis, savedDevice, plotok;
+        SEXP theList;
+
+        /* If the device is not registered with the engine (which might
+        happen in a device callback before it has been registered or
+        while it is being killed) we might get the null device and
+        should do nothing.
+        Also do nothing if displayList is empty (which should be the
+        case for the null device).
+        * /
+        xthis = GEdeviceNumber(gd);
+        if (xthis == 0) return;
+        theList = gd->displayList;
+        if (theList == R_NilValue) return;
+
+        /* Get each graphics system to restore state required for
+        * replaying the display list
+        * /
+        for (i = 0; i < MAX_GRAPHICS_SYSTEMS; i++)
+          if (gd->gesd[i] != NULL)
+            (gd->gesd[i]->callback)(GE_RestoreState, gd, theList);
+
+        ////////
+
+
+        pDevDesc dd = gd->dev;
+        dd->right = dd->left + width;
+        dd->bottom = dd->top + height;
+        */
+
+        GEplayDisplayList(gd);
+      }
+    }
+
+  }
+
   void CloseDevice(pDevDesc dd) {
+
+    auto device_info = (MessageDeviceData*)(dd->deviceSpecific);
+    std::string key = device_info->name;
+    key += "_";
+    key += device_info->type;
+
+    auto iterator = local_device_list.find(key);
+    if (iterator != local_device_list.end()) local_device_list.erase(iterator);
+
     if (dd->deviceSpecific) delete (dd->deviceSpecific);
     dd->deviceSpecific = 0;
   }
@@ -401,6 +494,12 @@ namespace MessageGraphicsDevice {
     device_data->name = name;
     device_data->type = normalized_type;
 
+    std::string key = name;
+    key += "_";
+    key += normalized_type;
+
+    local_device_list.insert({ key, (void*)gd });
+
     /*
     std::string *normalized_type = new std::string("svg");
     if (!type.compare("png")) (*normalized_type) = "png";
@@ -417,6 +516,8 @@ namespace MessageGraphicsDevice {
 
     GEaddDevice2(gd, name.c_str());
     GEinitDisplayList(gd);
+    gd->displayListOn = TRUE;
+
     int device = GEdeviceNumber(gd) + 1; // to match what R says
 
     return Rf_ScalarInteger(device);

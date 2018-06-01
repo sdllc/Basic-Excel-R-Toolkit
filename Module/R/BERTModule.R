@@ -188,6 +188,13 @@ BERT.message.device <- function(name, bgcolor="white", width=500, height=350, po
   }
 }
 
+#' Repaint a device (replay display list)
+#'
+#'
+repaint.message.device <- function(name, type){
+  .Call( "repaint_message_device", name, type, PACKAGE='BERTModule' );
+}
+
 #==============================================================================
 #
 # progress bars

@@ -25,6 +25,7 @@
 namespace MessageGraphicsDevice {
 
   SEXP CreateMessageDevice(const std::string &name, const std::string &background, double width, double height, double pointsize, const std::string &type, void * pointer);
+  void RepaintDevice(const std::string &name, const std::string &type);
 
 };
 

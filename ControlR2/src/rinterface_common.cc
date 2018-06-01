@@ -1101,6 +1101,22 @@ SEXP RCallback(SEXP command, SEXP data) {
 
     return ConsoleGraphicsDevice::CreateConsoleDevice(background, width, height, pointsize, type, pointer);
   }
+  else if (!string_command.compare("repaint-message-device")) {
+    if (TYPEOF(data) != VECSXP) return Rf_ScalarLogical(0);
+    if (Rf_length(data) != 2) return Rf_ScalarLogical(0);
+
+    std::string name, type;
+    //double width, height;
+
+    name = CHAR(Rf_asChar(VECTOR_ELT(data, 0)));
+    type= CHAR(Rf_asChar(VECTOR_ELT(data, 1)));
+    //width = Rf_asReal(VECTOR_ELT(data, 2));
+    //height = Rf_asReal(VECTOR_ELT(data, 3));
+
+    MessageGraphicsDevice::RepaintDevice(name, type);
+    return R_NilValue;
+
+  }
   else if (!string_command.compare("message-device")) {
 
     if (TYPEOF(data) != VECSXP) return Rf_ScalarLogical(0);
