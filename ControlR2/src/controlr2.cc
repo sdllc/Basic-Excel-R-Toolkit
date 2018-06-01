@@ -27,6 +27,7 @@ uv_timer_t wait_timeout;
 const int32_t Timeout = 100;
 
 int console_client = -1;
+int spreadsheet_client = -1;
 
 typedef struct {
   uint32_t index;
@@ -178,6 +179,13 @@ int SystemCall(BERTBuffers::CallResponse &response, const BERTBuffers::CallRespo
     return SYSTEMCALL_OK; //  break; // no response?
   }
   */
+  else if (!function.compare("spreadsheet")) {
+    if (spreadsheet_client < 0) {
+      spreadsheet_client = pipe_index;
+      std::cout << "set spreadsheet client -> " << pipe_index << std::endl;
+    }
+    else std::cerr << "spreadsheet client already set" << std::endl;
+  }
   else if (!function.compare("console")) {
     if (console_client < 0) {
       console_client = pipe_index;
@@ -367,6 +375,9 @@ int InputStreamRead(const char *prompt, char *buf, int len, int addtohistory, bo
 
 void PushSpreadsheetMessage(google::protobuf::Message &message) {
   std::string framed = MessageUtilities::Frame(message);
+  if (spreadsheet_client >= 0) {
+    Write(framed, clients_[spreadsheet_client]);
+  }
   /*
   if (console_client >= 0) {
     Write(framed, clients_[console_client]);
@@ -375,6 +386,7 @@ void PushSpreadsheetMessage(google::protobuf::Message &message) {
     console_buffer_.push_back(framed);
   }
   */
+  std::cout << "osm" << std::endl;
 }
 
 
@@ -437,12 +449,22 @@ void Read(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
         console_client = -1;
       }
 
+      if (index == spreadsheet_client) {
+        std::cerr << "this was spreadshet client, unsetting" << std::endl;
+        spreadsheet_client = -1;
+      }
+
       // let's clean up the list... first: if console_client > index, 
       // reduce it by 1
 
       if (console_client > index) {
         std::cout << "console client is " << console_client << "; reducing" << std::endl;
         console_client--;
+      }
+
+      if (spreadsheet_client > index) {
+        std::cout << "spreadsheet client is " << spreadsheet_client << "; reducing" << std::endl;
+        spreadsheet_client--;
       }
 
       // now remove this one from the vector and delete it (actually free). 

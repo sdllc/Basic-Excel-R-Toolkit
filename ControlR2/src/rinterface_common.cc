@@ -285,7 +285,7 @@ SEXP VariableToSEXP(const BERTBuffers::Variable &var) {
     break;
 
   case BERTBuffers::Variable::ValueCase::kErr:
-    if (var.err().type() == BERTBuffers::ErrorType::NA) return Rf_ScalarInteger(NA_INTEGER);
+    if (var.err().type() == BERTBuffers::ErrorType::NA) return Rf_ScalarReal(R_NaReal); //  Rf_ScalarInteger(NA_INTEGER);
 
   default:
     return R_NilValue;
@@ -1101,7 +1101,7 @@ SEXP RCallback(SEXP command, SEXP data) {
 
     return ConsoleGraphicsDevice::CreateConsoleDevice(background, width, height, pointsize, type, pointer);
   }
-  else if (!string_command.compare("treb-spreadsheet-device")) {
+  else if (!string_command.compare("message-device")) {
 
     if (TYPEOF(data) != VECSXP) return Rf_ScalarLogical(0);
     if (Rf_length(data) != 7) return Rf_ScalarLogical(0);
