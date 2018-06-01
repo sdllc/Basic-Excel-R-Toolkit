@@ -322,7 +322,10 @@ namespace MessageGraphicsDevice {
   }
 
   void CloseDevice(pDevDesc dd) {
-    if (dd->deviceSpecific) delete (dd->deviceSpecific);
+    if (dd->deviceSpecific) {
+      MessageDeviceData *device_data = (MessageDeviceData*)(dd->deviceSpecific);
+      delete device_data;
+    }
     dd->deviceSpecific = 0;
   }
 

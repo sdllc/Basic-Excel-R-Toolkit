@@ -10,6 +10,7 @@ RLIBS=$(shell R_HOME=; R CMD config --ldflags)
 INCLUDE=-Iinclude -I$(COMMON) -I$(LIBUV)/include -I$(PB) -I$(PROTOBUF)/src $(RINCLUDES)
 MODULES= rinterface_common rinterface_linux \
 	variable.pb message_utilities \
+	message_graphics_device \
 	console_graphics_device controlr2
 
 OBJ_FILES=$(MODULES:%=build/%.o)
