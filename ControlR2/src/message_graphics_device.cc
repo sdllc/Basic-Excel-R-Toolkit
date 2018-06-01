@@ -415,7 +415,10 @@ namespace MessageGraphicsDevice {
     auto iterator = local_device_list.find(key);
     if (iterator != local_device_list.end()) local_device_list.erase(iterator);
 
-    if (dd->deviceSpecific) delete (dd->deviceSpecific);
+    if (dd->deviceSpecific) {
+      MessageDeviceData *device_data = (MessageDeviceData*)(dd->deviceSpecific);
+      delete device_data;
+    }
     dd->deviceSpecific = 0;
   }
 
