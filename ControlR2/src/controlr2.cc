@@ -68,7 +68,9 @@ void Write(const std::string &data, uv_pipe_t *client);
 bool DirectCallback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResponse &response, int32_t client) {
 
   if (client < 0) return false; // fail
-
+  uint32_t id = call.id();
+  
+  int32_t count = pending_messages_.size();
   Write(MessageUtilities::Frame(call), clients_[client]);
 
   // here we hijack the loop until we get a response. FIXME: some error handling, timeouts?
@@ -79,11 +81,19 @@ bool DirectCallback(const BERTBuffers::CallResponse &call, BERTBuffers::CallResp
 
     uv_run(uv_default_loop(), UV_RUN_DEFAULT);
 
-    if (pending_messages_.size()) {
-      auto client_message = pending_messages_[0];
-      pending_messages_.pop_front();
-      response.CopyFrom(client_message.message);
-      return true;
+    if (pending_messages_.size() > count) {
+      auto client_message = pending_messages_[count];
+
+      uint32_t check = client_message.message.id();
+      if (check != id) {
+        std::cout << "ID MISMATCH, " << id << ", " << check << " (...)" << std::endl;
+        count++;
+      }
+      else {
+        pending_messages_.pop_back();
+        response.CopyFrom(client_message.message);
+        return true;
+      }
     }
 
   }

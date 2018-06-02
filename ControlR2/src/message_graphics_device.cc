@@ -39,6 +39,8 @@
 
 #include <unordered_map>
 
+uint32_t atomic_id = 7007;
+
 namespace MessageGraphicsDevice {
 
   std::unordered_map< std::string, void * > local_device_list;
@@ -118,6 +120,8 @@ namespace MessageGraphicsDevice {
       graphics->set_device_name(device_info->name);
       graphics->set_command("get-size");
 
+      message.set_id(atomic_id++);
+
       bool success = SpreadsheetCallback(message, response);
       if (success) {
         if (response.operation_case() == BERTBuffers::CallResponse::OperationCase::kConsole) {
@@ -125,7 +129,7 @@ namespace MessageGraphicsDevice {
           if (graphics.x_size()) dd->right = dd->left + graphics.x(0);
           if (graphics.y_size()) dd->bottom = dd->top + graphics.y(0);
 
-          std::cout << "update dimensions: " << (dd->right - dd->left) << ", " << (dd->bottom - dd->top) << std::endl;
+          // std::cout << "update dimensions: " << (dd->right - dd->left) << ", " << (dd->bottom - dd->top) << std::endl;
 
         }
       }
@@ -200,6 +204,8 @@ namespace MessageGraphicsDevice {
     SetMessageContext(graphics->mutable_context(), gc);
     graphics->set_command("measure-text");
     graphics->set_text(str);
+
+    message.set_id(atomic_id++);
 
     bool success = SpreadsheetCallback(message, response);
     if (success) {
@@ -293,6 +299,8 @@ namespace MessageGraphicsDevice {
     graphics->set_command("font-metrics");
     graphics->set_text(str);
 
+    message.set_id(atomic_id++);
+
     bool success = SpreadsheetCallback(message, response);
     if (success) {
       if (response.operation_case() == BERTBuffers::CallResponse::OperationCase::kConsole) {
@@ -365,40 +373,6 @@ namespace MessageGraphicsDevice {
     if (iterator != local_device_list.end()) {
       pGEDevDesc gd = (pGEDevDesc)(iterator->second);
       if (gd) {
-
-        /*
-        ///////
-
-        int i, xthis, savedDevice, plotok;
-        SEXP theList;
-
-        /* If the device is not registered with the engine (which might
-        happen in a device callback before it has been registered or
-        while it is being killed) we might get the null device and
-        should do nothing.
-        Also do nothing if displayList is empty (which should be the
-        case for the null device).
-        * /
-        xthis = GEdeviceNumber(gd);
-        if (xthis == 0) return;
-        theList = gd->displayList;
-        if (theList == R_NilValue) return;
-
-        /* Get each graphics system to restore state required for
-        * replaying the display list
-        * /
-        for (i = 0; i < MAX_GRAPHICS_SYSTEMS; i++)
-          if (gd->gesd[i] != NULL)
-            (gd->gesd[i]->callback)(GE_RestoreState, gd, theList);
-
-        ////////
-
-
-        pDevDesc dd = gd->dev;
-        dd->right = dd->left + width;
-        dd->bottom = dd->top + height;
-        */
-
         GEplayDisplayList(gd);
       }
     }
