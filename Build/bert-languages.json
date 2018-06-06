@@ -8,7 +8,7 @@
     "prepend_path": "$HOME\\bin\\x64",
     "startup_resource": "startup.r",
     "named_arguments": true,
-    "home": "%BERT_HOME%\\R-3.4.4"
+    "home": "%BERT_HOME%\\R-3.5.0"
   },
   {
     "name": "Julia", 
