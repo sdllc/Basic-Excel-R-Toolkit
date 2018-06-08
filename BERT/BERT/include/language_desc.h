@@ -37,6 +37,9 @@ public:
   uint32_t startup_resource_;
   std::string startup_resource_path_;
   std::string home_;
+
+  std::vector < std::string > home_candidates_;
+
   bool named_arguments_;
   int32_t priority_;
 
@@ -80,6 +83,7 @@ public:
     , startup_resource_(rhs.startup_resource_)
     , startup_resource_path_(rhs.startup_resource_path_)
     , named_arguments_(rhs.named_arguments_)
+    , home_candidates_(rhs.home_candidates_)
   {}
 
 public:

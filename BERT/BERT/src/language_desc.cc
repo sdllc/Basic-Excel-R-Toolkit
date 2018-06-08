@@ -49,6 +49,12 @@ void LanguageDescriptor::FromJSON(const json11::Json& item, const std::string &h
 
   if (!item["command_arguments"].is_null()) command_arguments_ = item["command_arguments"].string_value();
   if (!item["prepend_path"].is_null()) prepend_path_ = item["prepend_path"].string_value();
-  if (!item["home"].is_null()) home_ = item["home"].string_value();
+
+  if (item["home"].is_array()) {
+    for (auto candidate : item["home"].array_items()) {
+      if(candidate.is_string()) home_candidates_.push_back(candidate.string_value());
+    }
+  }
+  else if (!item["home"].is_null()) home_ = item["home"].string_value();
 
 }

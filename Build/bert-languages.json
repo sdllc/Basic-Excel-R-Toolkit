@@ -30,7 +30,11 @@
         "executable": "controlJulia.exe", 
         "prepend_path": "$HOME\\bin",
         "startup_resource": "startup-0.6.jl",
-        "home": "%localappdata%\\Julia-0.6.2",
+        "home": [
+          "%localappdata%\\Julia-0.6.2",
+          "%localappdata%\\Julia-0.6.3",
+          "%localappdata%\\Julia-0.6.4"
+        ],
         "priority": 1
       }
     ]

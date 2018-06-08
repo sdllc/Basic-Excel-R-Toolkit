@@ -130,6 +130,25 @@ LanguageService::LanguageService(CallbackInfo &callback_info, COMObjectMap &obje
     language_descriptor_.home_ = config["BERT"][language_descriptor_.name_]["home"].string_value();
   }
 
+  // we now support an array here, find the latest entry that exists
+
+  if (!language_descriptor_.home_.length() && language_descriptor_.home_candidates_.size()) {
+    for (auto candidate : language_descriptor_.home_candidates_) {
+      DWORD length = ExpandEnvironmentStringsA(candidate.c_str(), 0, 0);
+      if (length > 0) {
+        char *buffer = new char[length];
+        length = ExpandEnvironmentStringsA(candidate.c_str(), buffer, length);
+        if (length > 0) {
+          DWORD attributes = GetFileAttributesA(buffer);
+          if (attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY)) {
+            language_descriptor_.home_ = buffer;
+          }
+        }
+        delete[] buffer;
+      }
+    }
+  }
+
   configured_ = language_descriptor_.home_.length();
   if (!configured_) return;
 
