@@ -400,6 +400,7 @@ bool ReadSourceFile(const std::string &file, bool notify) {
     R_tryEval(Rf_lang2(Rf_install("cat"), Rf_mkString(message.c_str())), R_GlobalEnv, &err);
   }
   R_tryEval(Rf_lang2(Rf_install("source"), Rf_mkString(file.c_str())), R_GlobalEnv, &err);
+
   return !err;
 }
 

@@ -77,13 +77,17 @@ LanguageService::LanguageService(CallbackInfo &callback_info, COMObjectMap &obje
     }
     else {
 
+      // copy first to make sure we don't modify it
+
+      LanguageDescriptor descriptor_copy(language_descriptor_);
+
       // if there's no tag, we order by priority and check for existence of
       // the home directory. 1 is highest priority, then 2, etc. 0 is not used.
       // (neither are negative numbers. we used to use zero).
 
       int32_t priority = 0;
       for (const auto &version : json["versions"].array_items()) {
-        LanguageDescriptor descriptor(language_descriptor_);
+        LanguageDescriptor descriptor(descriptor_copy);
         descriptor.FromJSON(version, home_directory);
 
         // lower priority? we can skip.
@@ -94,20 +98,42 @@ LanguageService::LanguageService(CallbackInfo &callback_info, COMObjectMap &obje
         // FIXME: so how do we know, absent a tag, what version this is? 
         if (override_home.length()) descriptor.home_ = override_home;
 
-        // maybe need to expand
-        DWORD expanded_length = ExpandEnvironmentStringsA(descriptor.home_.c_str(), 0, 0);
-        if (expanded_length) {
-          char *buffer = new char[expanded_length + 1];
-          expanded_length = ExpandEnvironmentStringsA(descriptor.home_.c_str(), buffer, expanded_length + 1);
-          if (expanded_length) descriptor.home_ = buffer;
-          delete[] buffer;
-        }
+        if (descriptor.home_.length()) {
 
-        DWORD attributes = GetFileAttributesA(descriptor.home_.c_str());
-        if (attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY)) {
-          priority = descriptor.priority_;
-          configured_ = true;
-          language_descriptor_ = descriptor;
+          // maybe need to expand
+          DWORD expanded_length = ExpandEnvironmentStringsA(descriptor.home_.c_str(), 0, 0);
+          if (expanded_length) {
+            char *buffer = new char[expanded_length + 1];
+            expanded_length = ExpandEnvironmentStringsA(descriptor.home_.c_str(), buffer, expanded_length + 1);
+            if (expanded_length) descriptor.home_ = buffer;
+            delete[] buffer;
+          }
+
+          DWORD attributes = GetFileAttributesA(descriptor.home_.c_str());
+          if (attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY)) {
+            priority = descriptor.priority_;
+            configured_ = true;
+            language_descriptor_ = descriptor;
+          }
+
+        }
+        else if (descriptor.home_candidates_.size()) {
+          for (auto candidate : descriptor.home_candidates_) {
+            DWORD length = ExpandEnvironmentStringsA(candidate.c_str(), 0, 0);
+            if (length > 0) {
+              char *buffer = new char[length];
+              length = ExpandEnvironmentStringsA(candidate.c_str(), buffer, length);
+              if (length > 0) {
+                DWORD attributes = GetFileAttributesA(buffer);
+                if (attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY)) {
+                  descriptor.home_ = buffer;
+                  configured_ = true;
+                  language_descriptor_ = descriptor;
+                }
+              }
+              delete[] buffer;
+            }
+          }
         }
 
       }
@@ -133,12 +159,14 @@ LanguageService::LanguageService(CallbackInfo &callback_info, COMObjectMap &obje
   // we now support an array here, find the latest entry that exists
 
   if (!language_descriptor_.home_.length() && language_descriptor_.home_candidates_.size()) {
+
     for (auto candidate : language_descriptor_.home_candidates_) {
       DWORD length = ExpandEnvironmentStringsA(candidate.c_str(), 0, 0);
       if (length > 0) {
         char *buffer = new char[length];
         length = ExpandEnvironmentStringsA(candidate.c_str(), buffer, length);
         if (length > 0) {
+
           DWORD attributes = GetFileAttributesA(buffer);
           if (attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY)) {
             language_descriptor_.home_ = buffer;
@@ -208,6 +236,7 @@ void LanguageService::Initialize() {
 
       code->set_startup(true);
       Call(response, call);
+
     }
   }
 
@@ -409,6 +438,7 @@ void LanguageService::ReadSourceFile(const std::string &file) {
   function_call->add_arguments()->set_boolean(true); // notify
 
   Call(response, call);
+
 }
 
 void LanguageService::InterpolateString(std::string &str, const std::vector<std::pair<std::string, std::string>> &additional_replacements){
@@ -525,10 +555,15 @@ void LanguageService::Call(BERTBuffers::CallResponse &response, BERTBuffers::Cal
 
     std::string message_buffer;
 
+    // ::MessageBoxA(0, "Call wait", "CB", MB_OK);
+    Sleep(1000);
+
     while (true) {
       ResetEvent(callback_info_.default_signaled_event_); // set unsignaled
       DWORD signaled = WaitForMultipleObjectsEx(2, handles, FALSE, INFINITE, FALSE);
       if (signaled == WAIT_OBJECT_0) {
+
+        // ::MessageBoxA(0, "Call signaled", "CB", MB_OK);
 
         //DWORD rslt = GetOverlappedResultEx(pipe_handle_, &io_, &bytes, INFINITE, FALSE);
         DWORD rslt = GetOverlappedResult(pipe_handle_, &io_, &bytes, TRUE);
@@ -595,7 +630,7 @@ void LanguageService::Call(BERTBuffers::CallResponse &response, BERTBuffers::Cal
           }
         }
       }
-      else {
+      else if( signaled != WAIT_TIMEOUT) {
         ResetEvent(callback_info_.default_unsignaled_event_);
         DebugOut("other handle signaled, do something\n");
         bert->HandleCallbackOnThread(language_descriptor_.name_);
