@@ -34,6 +34,8 @@ some additional information.
 
 # Release Notes #
 
+2.4.0 -- Update for R 3.5.0 and support Julia 0.6.3.
+
 2.3.0 -- Add support for Julia 0.7. [See our website for details][11].
 Add versioning info to R, Julia. Support horizontal scrolling in R.
 
