@@ -42,6 +42,14 @@
   overflow: scroll;
   flex-grow: 1;
   border: 1px solid #ccc;
+
+  // this list recycles its rows as it scrolls, so the content above the
+  // viewport keeps changing size. chromium's scroll anchoring then corrects
+  // the scroll position to compensate, which fires another scroll event,
+  // which recycles more rows: one notch of the wheel and the list runs away
+  // to the end on its own. anchoring has nothing useful to do here.
+
+  overflow-anchor: none;
 }
 
 .list-inner-body {
@@ -116,14 +124,29 @@
     display: flex;
     flex-direction: row;
 
+    // two columns: a fixed one for the name, the rest for the description.
+    // either can be longer than its column, so both are cut with an ellipsis
+    // rather than pushing the other one out of line. the full text is in the
+    // title, so hovering shows it.
+
     .list-entry-name {
       cursor: default;
       font-weight: 600;
+      flex: 0 0 15em;
+      width: 15em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .list-entry-description {
       cursor: default;
-      padding-left: .5em;
+      padding-left: 1em;
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
   }
 }

@@ -24,3 +24,6 @@ Win32
 *_i.h
 
 
+ARM64
+ARM64EC
+vcpkg_installed

@@ -128,17 +128,29 @@ export class RInterface extends LanguageInterface {
   /** 
    * shows the "select packages" dialog.
    */
+  /**
+   * the CRAN repo, out of whatever getOption("repos") gives us. R holds it
+   * in a named character vector, which reaches us as an object; a vector of
+   * one loses its names on the way and arrives as a plain string, which is
+   * what happens when CRAN is the only repo set.
+   */
+  static CRANRepo(repos:any) : string {
+    if (!repos) return "";
+    if (typeof repos === "string") return repos;
+    if (typeof repos.CRAN === "string") return repos.CRAN;
+    return "";
+  }
+
   async SelectPackages(){
-    
+
     // ensure we have a repo
 
     let repos = await this.pipe_.Internal(`getOption("repos")`);
-    if(!repos || !repos.CRAN || !/^http/.test(repos.CRAN)){
+    if(!/^http/.test(RInterface.CRANRepo(repos))){
       let success = await this.ChooseMirror();
       if(!success) return;
+      repos = await this.pipe_.Internal(`getOption("repos")`);
     }
-
-    repos = await this.pipe_.Internal(`getOption("repos")`);
     
     // ok, show a dialog and then get the list
 
@@ -174,33 +186,43 @@ export class RInterface extends LanguageInterface {
 
       // NOTE: we're not using the package list. use the html list.
 
-      let html_list = await fetch(path.join(repos.CRAN, "web/packages/available_packages_by_name.html"));
-      let html_blob = await html_list.blob();
-      let reader = new FileReader();
+      // the mirror is a URL, so it has to be joined as one. path.join turns
+      // it into a windows path (".\\https:\\cloud.r-project.org\\...")
+      // and the fetch then fails, which left this dialog waiting for a list
+      // that was never coming.
 
-      await new Promise((resolve, reject) => {
-        reader.onloadend = () => {
-          resolve();
-        }
-        reader.onerror = () => {
-          reject();
-        }
-        reader.readAsText(html_blob);
-      });
+      let list_url = RInterface.CRANRepo(repos).replace(/\/+$/, "") + "/web/packages/available_packages_by_name.html";
+      let html:string;
 
-      let html = reader.result;
+      try {
+        let response = await fetch(list_url);
+        if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+        html = await response.text();
+      }
+      catch (e) {
+
+        // say so, rather than sitting on "please wait" for ever
+
+        console.error("could not read the package list from", list_url, e);
+        header_text.textContent = Constants.dialogs.selectPackages.loadFailed;
+        return false;
+      }
       let regex = /<tr>[\s\S]*?<td>[\s\S]*?<a.*?>(.*?)<\/a>[\s\S]*?<\/td>[\s\S]*?<td>([\s\S]*?)<\/td>/g;
       let match;
       
+      // the package name cell now carries markup of its own; CRAN wraps
+      // some names in <span class="CRAN">. strip any tags rather than that
+      // one span, so a later change to the page cannot leak markup into the
+      // completion list.
+
       data = [];
       let index = 0;
       while(match = regex.exec(html)){
-        data.push({name: match[1], description: match[2], index:index++});
+        let name = match[1].replace(/<[^>]*>/g, "").trim();
+        if(!name.length) continue;
+        data.push({name, description: match[2], index:index++});
       }
       DataCache.Store(key, data);
-
-      reader.onerror = null;
-      reader.onloadend = null;
 
     }
     else {
@@ -329,6 +351,12 @@ export class RInterface extends LanguageInterface {
       node.index = data.index;
       node.package_name.innerText = data.name;
       node.package_description.innerHTML = data.description;
+
+      // the columns are fixed width and clip, so keep the full text within
+      // reach of the pointer
+
+      node.package_name.title = data.name;
+      node.package_description.title = node.package_description.textContent;
 
     }
 
@@ -464,7 +492,8 @@ export class RInterface extends LanguageInterface {
 
     let selected_index = -1;
     let first_item = 0;
-    let repo = (repos && repos.CRAN && /^http/i.test(repos.CRAN)) ? repos.CRAN : null;
+    let current = RInterface.CRANRepo(repos);
+    let repo = /^http/i.test(current) ? current : null;
 
     let filtered = indexes.map((index, n) => {
       let url = data.data.URL[index];
@@ -546,7 +575,12 @@ export class RInterface extends LanguageInterface {
         // FIXME: put this on the command line, then exec normally; 
         // this might take a while.
 
-        this.pipe_.Internal(`options(repos=c(CRAN="${url}", CRANextra="${repos.CRANextra}")); cat("${(Constants.dialogs.selectMirror.setRepo||"").replace(/#/, name)}\n")`);
+        // keep CRANextra only when there is one to keep: this used to write
+        // the string "undefined" into the option whenever repos arrived
+        // without it, which is every time CRAN is the only repo set
+
+        let extra = (repos && typeof repos.CRANextra === "string") ? `, CRANextra="${repos.CRANextra}"` : "";
+        this.pipe_.Internal(`options(repos=c(CRAN="${url}"${extra})); cat("${(Constants.dialogs.selectMirror.setRepo||"").replace(/#/, name)}\n")`);
         success = true;
       }
     }

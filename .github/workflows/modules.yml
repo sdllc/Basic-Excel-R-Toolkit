@@ -1,0 +1,84 @@
+name: graphics modules
+
+# BERTModule is compiled against R's graphics engine, and R checks that
+# version whenever a graphics device is created -- so a module built for one R
+# series cannot draw on another, and the install ships one per series.
+#
+# Building them locally means an R installation and its matching Rtools for
+# every series, which is well over a gigabyte of downloads. Runners can do it
+# instead: setup-r installs the right Rtools for each version. Each job
+# uploads its module as an artifact, and Install/build-release.ps1 -FetchModules
+# collects them into Build/module for packaging.
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'Module/**'
+      - '.github/workflows/modules.yml'
+
+jobs:
+
+  module:
+    name: BERTModule for R ${{ matrix.r }}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # one per series BERT supports. old versions are allowed to fail
+        # without failing the run: the toolchains for them are ancient and
+        # may not be installable for ever.
+        r: ['4.6.1', '4.5.2', '4.4.3', '4.3.3', '4.2.3']
+        include:
+          - r: '3.5.3'
+            optional: true
+    continue-on-error: ${{ matrix.optional == true }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.r }}
+          # the matching toolchain; setup-r picks rtools by R version
+          update-rtools: true
+
+      - name: build the module
+        shell: pwsh
+        run: |
+          # the series comes from the matrix, not from asking R: one less
+          # thing to go wrong before anything has been built
+          $series = ("${{ matrix.r }}" -split '\.')[0..1] -join '.'
+          Write-Host "building BERTModule for R $series"
+          "SERIES=$series" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+          Write-Host "R on this runner:"
+          & Rscript --vanilla -e "cat(R.version.string)"
+
+          # a module must never be relinked from objects compiled against
+          # another R. github runs pwsh with ErrorActionPreference=Stop, so
+          # guard the case where there is nothing to clean.
+          if (Test-Path Module/src) {
+            $stale = Get-ChildItem -Path Module/src/* -Include *.o, *.dll -File -ErrorAction Ignore
+            if ($stale) { $stale | Remove-Item -Force }
+          }
+
+          New-Item -ItemType Directory -Force "out/$series" | Out-Null
+          # R.exe, not R: powershell aliases R to Invoke-History, so "& R CMD"
+          # silently runs the wrong thing
+          & R.exe CMD INSTALL --library="out/$series" --no-multiarch Module
+          if ($LASTEXITCODE) { throw "R CMD INSTALL failed for R $series" }
+
+      - name: check what it was built against
+        shell: pwsh
+        run: |
+          $desc = (Get-Content "out/$env:SERIES/BERTModule/DESCRIPTION" | Select-String "^Built:").ToString()
+          Write-Host $desc
+          if ($desc -notmatch "R $([regex]::Escape($env:SERIES))") {
+            throw "module reports '$desc' but should be built for R $env:SERIES"
+          }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BERTModule-${{ env.SERIES }}
+          path: out/${{ env.SERIES }}
+          if-no-files-found: error

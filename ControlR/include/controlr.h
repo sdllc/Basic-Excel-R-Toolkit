@@ -141,3 +141,10 @@ void UpdateSpreadsheetGraphics();
  */
 void RGetVersion(int32_t *major, int32_t *minor, int32_t *patch);
 
+/**
+ * true when the hosted R writes console output in UTF-8. R for Windows
+ * switched its native encoding to UTF-8 in 4.2.0; earlier versions write
+ * in the Windows code page and their output has to be converted before it
+ * is sent to the console. set once at startup from the R version.
+ */
+extern bool r_console_utf8;

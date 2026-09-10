@@ -17,12 +17,8 @@
  * along with BERT.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// we can use this for importing type info, but it will break the 
-// production build. xterm's ts integration is somewhat iffy atm.
-// import {Terminal} from "xterm/src/Terminal";
-
-// for build
-type Terminal = any;
+import { Terminal } from '@xterm/xterm';
+import { GetCellDimensions, GetScreenElement, OnBufferTrim } from './xterm_internals';
 
 /**
  * addon for annotations (html nodes) in xtermjs. the basic idea 
@@ -102,16 +98,17 @@ export class AnnotationManager {
   /** attach to node */
   private node_:HTMLElement;
 
-  /** constructor is private; use factory (via accessor) */
-  private constructor(terminal:Terminal){
+  /** one manager per terminal instance; create it once the terminal is open */
+  constructor(terminal:Terminal){
     this.terminal_ = terminal;
 
-    // hook up events. we're interested in scrolling, but that's not 
-    // implemented (at least not as one would expect). @see #657.
+    // positions depend on the viewport, so follow scrolling and resizing.
+    // when the scrollback fills, lines drop off the top and every line
+    // index shifts; that is what the top offset accounts for.
 
-    (this.terminal_.viewport as any).viewportElement.addEventListener('scroll', e => {
-      this.UpdateAnnotations();
-    });
+    this.terminal_.onScroll(() => this.UpdateAnnotations());
+    this.terminal_.onResize(() => this.UpdateAnnotations());
+    OnBufferTrim(this.terminal_, count => this.Overflow(count));
 
   }
 
@@ -129,14 +126,14 @@ export class AnnotationManager {
     // notified on style chages. is that a thing? OTOH, this is 
     // not expensive. optimize somewhere else.
 
-    let dimensions = this.terminal_.renderer.dimensions;
+    const cell = GetCellDimensions(this.terminal_);
 
     // don't cache this one, though.
 
-    let buffer = this.terminal_.buffer;
+    const buffer = this.terminal_.buffer.active;
 
     if(!this.node_){
-      this.node_ = ((this.terminal_ as any).parent as HTMLElement).querySelector(".xterm-screen");
+      this.node_ = GetScreenElement(this.terminal_);
     }
 
     // update positions
@@ -148,8 +145,8 @@ export class AnnotationManager {
 
       // TAG: switching scaled -> actual to fix highdpi
       
-      let top = (annotation.line - buffer.ydisp - this.top_offset_) * dimensions.actualCellHeight;
-      let left = (annotation.column||0) * dimensions.actualCellWidth; 
+      let top = (annotation.line - buffer.viewportY - this.top_offset_) * cell.height;
+      let left = (annotation.column||0) * cell.width;
 
       if(!annotation.attached){
         annotation.element.style.position = "absolute";
@@ -216,57 +213,5 @@ export class AnnotationManager {
     this.annotations_ = [];
   }
 
-  static apply(terminalConstructor) {
-
-    // NOTE: the business with the top offset is not going to work 
-    // if the instance is not created before scrolling over the end. 
-    // so we will need to create beforehand, which will require 
-    // overloading some method. or you can just be very disciplined 
-    // and call the accessor when you create the thing. 
-    //
-    // [UPDATE: that's what the Init method is for]
-
-    Object.defineProperty(terminalConstructor.prototype, "annotation_manager", {
-
-      // NOTE: don't use an arrow function here as it will rewrite `this`
-
-      get: function(){ 
-        if(!this.annotation_manager_){
-          this.annotation_manager_ = new AnnotationManager(this);
-        }
-        return this.annotation_manager_;
-      }
-
-    });
-
-    // override scroll so we can get clean overflow events.
-
-    let scroll_function = terminalConstructor.prototype.scroll;
-    terminalConstructor.prototype.scroll = function(arg){
-
-      // this test is duplicated from the scroll function, which
-      // checks for overflow
-
-      if ( this.annotation_manager
-        && this.buffer.scrollTop === 0 
-        && (this.buffer.lines.length === this.buffer.lines.maxLength)){
-        this.annotation_manager.Overflow();
-      }
-
-      scroll_function.call(this, arg);      
-    };
-
-    // extend "clear" to remove annotations, reset overflow
-
-    let clear_function = terminalConstructor.prototype.clear;
-    terminalConstructor.prototype.clear = function(){
-      clear_function.call(this);
-      if(this.annotation_manager){
-        this.annotation_manager.RemoveAnnotations();
-        this.annotation_manager.SetTopOffset(); // reset w/ default value
-      }
-    };
-
-  }
 
 }

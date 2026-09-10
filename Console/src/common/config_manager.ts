@@ -72,7 +72,7 @@ class ConfigManager extends Rx.BehaviorSubject<ConfigState> {
 
     this.ReadConfig().then(() => {
       FileWatcher.Watch(this.config_path);
-      FileWatcher.events.filter( x => (x === this.config_path)).subscribe(x => {
+      FileWatcher.events.pipe(Rx.filter(x => (x === this.config_path))).subscribe(x => {
        this.ReadConfig();
       });
     });
@@ -104,7 +104,7 @@ class ConfigManager extends Rx.BehaviorSubject<ConfigState> {
    * 
    */
   private ReadConfig() : Promise<any> {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       fs.readFile(this.config_path, "utf8", (err, json) => {
         if(!err){
           this.raw_config_file_ = json;

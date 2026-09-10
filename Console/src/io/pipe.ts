@@ -57,6 +57,12 @@ export interface ConsoleMessage {
 
 export interface HistoryCallbackType { (options?:any): Promise<string[]> }
 
+/**
+ * the largest frame we will believe. a big response runs to a few hundred
+ * kilobytes; past this the stream is out of step, not merely busy.
+ */
+const MAX_FRAME_LENGTH = 64 * 1024 * 1024;
+
 export class Pipe {
 
   /** id for transactions */
@@ -64,6 +70,13 @@ export class Pipe {
 
   /** current pending transaction(s) */
   private pending_: {[index:number]: QueuedCommand} = {};
+
+  /**
+   * bytes of a frame that has not arrived in full yet. node hands us at most
+   * 64k per read, so a larger response -- a completion list on a loaded
+   * workspace, or a long function list -- arrives in pieces.
+   */
+  private residual_: Buffer = Buffer.alloc(0);
 
   /** queued commands */
   private queue_: QueuedCommand[] = [];
@@ -346,18 +359,53 @@ export class Pipe {
     let resolve = false;
     try {
 
-      let array = new Uint8Array(data.buffer);
+      // a frame can straddle two packets. this used to parse whatever had
+      // arrived, fail, and drop it -- so a response over ~64k never reached
+      // the caller, and the shell waited for a reply that was never coming.
+      // hold the remainder instead, and wait for the rest of it.
+
+      let buffer: Buffer = this.residual_.length ?
+        Buffer.concat([this.residual_, data]) : Buffer.from(data);
+      this.residual_ = Buffer.alloc(0);
+
       let stack = [];
+      let offset = 0;
 
-      // FIXME: there may be partial packets, in that case we need 
-      // to keep a buffer around
+      while (buffer.length - offset >= 4) {
 
-      while (array && array.length) {
-        let byte_length = new Int32Array(array.buffer.slice(0, 4))[0];
-        let response = messages.CallResponse.deserializeBinary(array.slice(4, byte_length + 4));
-        stack.push(response);
-        array = array.slice(byte_length + 4);
+        let byte_length = buffer.readInt32LE(offset);
+
+        // a length we cannot believe means the stream is out of step. there
+        // is no way to resynchronise, so drop what we are holding rather than
+        // grow a buffer for ever.
+
+        if (byte_length < 0 || byte_length > MAX_FRAME_LENGTH) {
+          console.error("dropping console stream: frame length " + byte_length);
+          offset = buffer.length;
+          break;
+        }
+
+        if (buffer.length - offset - 4 < byte_length) break; // the rest is still coming
+
+        let frame = buffer.subarray(offset + 4, offset + 4 + byte_length);
+
+        try {
+          stack.push(messages.CallResponse.deserializeBinary(frame));
+        }
+        catch (e) {
+
+          // a frame the runtime refuses (invalid UTF-8 in a string field,
+          // typically). log it and carry on with the next one, so that a
+          // single bad message does not take the prompt down with it.
+
+          console.error("dropping console frame:", e.message || e,
+            Buffer.from(frame.subarray(0, 260)).toString("hex"));
+        }
+
+        offset += 4 + byte_length;
       }
+
+      if (offset < buffer.length) this.residual_ = Buffer.from(buffer.subarray(offset));
 
       stack.forEach(response => {
 
@@ -460,7 +508,7 @@ export class Pipe {
   }
 
   RegisterConsoleMessages(){
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       // register for console messages
       console.info("calling console");
       this.Control("console").then(() => {
@@ -476,7 +524,7 @@ export class Pipe {
     opts = opts || {};
     this.pipe_name_ = opts.pipe_name || "";
 
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       console.info("Connecting...");
 
       let client = net.createConnection({ path: "\\\\.\\pipe\\" + this.pipe_name_ }, () => {

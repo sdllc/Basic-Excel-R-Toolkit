@@ -265,11 +265,11 @@ void LanguageService::RunCallbackThread() {
   HANDLE callback_pipe_handle = CreateFileA(ss.str().c_str(), GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, 0);
   if (!callback_pipe_handle || callback_pipe_handle == INVALID_HANDLE_VALUE) {
     DWORD err = GetLastError();
-    DebugOut("err opening pipe [1]: %d\n", err);
+    DebugOut("CB: FAILED to open callback pipe %s: error %d\n", ss.str().c_str(), err);
   }
   else {
 
-    DebugOut("Connected to callback pipe\n");
+    DebugOut("CB: connected to callback pipe %s\n", ss.str().c_str());
 
     DWORD mode = PIPE_READMODE_MESSAGE;
     BOOL state = SetNamedPipeHandleState(callback_pipe_handle, &mode, 0, 0);
@@ -305,14 +305,19 @@ void LanguageService::RunCallbackThread() {
             MessageUtilities::Unframe(call, buffer, bytes);
           }
 
+          DebugOut("CB: message from R (%d bytes), wait=%d\n", (int)bytes, (int)call.wait());
+
           bert->HandleCallback(language_descriptor_.name_);
           //DumpJSON(response);
+
+          DebugOut("CB: HandleCallback returned\n");
 
           if (call.wait()) {
             std::string str_response = MessageUtilities::Frame(response);
             WriteFile(callback_pipe_handle, str_response.c_str(), (int32_t)str_response.size(), &bytes, &io);
             //result = GetOverlappedResultEx(callback_pipe_handle, &io, &bytes, INFINITE, FALSE);
             result = GetOverlappedResult(callback_pipe_handle, &io, &bytes, TRUE);
+            DebugOut("CB: response written to R (result %d, %d bytes)\n", (int)result, (int)bytes);
           }
 
           // restart
@@ -537,6 +542,20 @@ void LanguageService::Call(BERTBuffers::CallResponse &response, BERTBuffers::Cal
   std::string framed_message = MessageUtilities::Frame(call);
 
   ResetEvent(io_.hEvent);
+  // the callback thread decides where to handle a callback from the language
+  // by looking at this event: signaled means "no spreadsheet call in flight,
+  // switch context through COM", unsignaled means "the main thread is blocked
+  // in the call below, hand it over". it has to say the right thing before the
+  // language can possibly call back, which means before the call goes out --
+  // it used to be reset a second later (there was a Sleep(1000) further down),
+  // by which time R had already called back and been sent through COM into an
+  // Excel that was busy calculating. that deadlocked both processes, taking
+  // out anything that calls back into Excel: xlfCaller, and so the graphics
+  // device, which uses it for cell=TRUE and to size its shape.
+
+  bool blocking_call = call.wait() && callback_info_.OnMainThread();
+  if (blocking_call) ResetEvent(callback_info_.default_signaled_event_);
+
   bool write_result = WriteFile(pipe_handle_, framed_message.c_str(), (int32_t)framed_message.length(), NULL, &io_);
 
   // wait for the write to complete. FIXME: there's no need to wait if we don't need a 
@@ -555,12 +574,21 @@ void LanguageService::Call(BERTBuffers::CallResponse &response, BERTBuffers::Cal
 
     std::string message_buffer;
 
-    // ::MessageBoxA(0, "Call wait", "CB", MB_OK);
-    Sleep(1000);
+    // (there was a Sleep(1000) here, left over from debugging this by hand)
+
+    DebugOut("CALL: waiting for a reply from %s\n", language_descriptor_.name_.c_str());
 
     while (true) {
-      ResetEvent(callback_info_.default_signaled_event_); // set unsignaled
+
+      // only a call that is blocking Excel's main thread claims the callback
+      // for that thread; a call from the console leaves the event signaled so
+      // its callbacks go through the COM context switch, which is what that
+      // branch is for. this used to depend on the timing of the Sleep above:
+      // whichever branch the clock landed on is the one the callback took.
+
+      if (blocking_call) ResetEvent(callback_info_.default_signaled_event_); // set unsignaled
       DWORD signaled = WaitForMultipleObjectsEx(2, handles, FALSE, INFINITE, FALSE);
+      DebugOut("CALL: woken, signaled=%d (0=pipe, 1=callback event)\n", (int)signaled);
       if (signaled == WAIT_OBJECT_0) {
 
         // ::MessageBoxA(0, "Call signaled", "CB", MB_OK);
@@ -632,8 +660,9 @@ void LanguageService::Call(BERTBuffers::CallResponse &response, BERTBuffers::Cal
       }
       else if( signaled != WAIT_TIMEOUT) {
         ResetEvent(callback_info_.default_unsignaled_event_);
-        DebugOut("other handle signaled, do something\n");
+        DebugOut("CALL: servicing callback on the main thread\n");
         bert->HandleCallbackOnThread(language_descriptor_.name_);
+        DebugOut("CALL: callback serviced, releasing the callback thread\n");
         SetEvent(callback_info_.default_signaled_event_); // signal callback thread
       }
     }

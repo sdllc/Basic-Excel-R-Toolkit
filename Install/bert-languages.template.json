@@ -1,0 +1,42 @@
+[
+  {
+    "name": "R",
+    "executable": "controlR.exe",
+    "prefix": "R",
+    "extensions": ["r", "rsrc", "rscript"],
+    "command_arguments": "-r \"$HOME\"",
+    "prepend_path": "$HOME\\bin\\x64",
+    "startup_resource": "startup.r",
+    "named_arguments": true,
+    "home": ["%BERT_HOME%\\R-3.5.0", "@R_HOME@"]
+  },
+  {
+    "name": "Julia",
+    "prefix": "Jl",
+    "extensions": ["jl", "julia"],
+    "command_arguments": "",
+    "prepend_path": "$HOME\\bin",
+    "named_arguments": false,
+    "versions": [
+      {
+        "tag": "0.7",
+        "executable": "controlJulia07.exe",
+        "startup_resource": "startup-0.7.jl",
+        "home": "%localappdata%\\Julia-0.7.0-DEV",
+        "priority": 2
+      },
+      {
+        "tag": "0.6",
+        "executable": "controlJulia.exe",
+        "prepend_path": "$HOME\\bin",
+        "startup_resource": "startup-0.6.jl",
+        "home": [
+          "%localappdata%\\Julia-0.6.2",
+          "%localappdata%\\Julia-0.6.3",
+          "%localappdata%\\Julia-0.6.4"
+        ],
+        "priority": 1
+      }
+    ]
+  }
+]

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  A starting point, written by the installer only when this file is not
+  already here. The help add-in looks for it as Excel starts and will not
+  pick it up later in that session, so something has to exist before BERT
+  has run once. BERT replaces the whole file with your own functions the
+  first time it registers them.
+-->
+<IntelliSense xmlns="http://schemas.excel-dna.net/intellisense/1.0">
+  <FunctionInfo>
+    <Function Name="R.TestAdd" Description="Adds all of its arguments">
+      <Argument Name="..." Description="the numbers to add" />
+    </Function>
+    <Function Name="R.EigenValues" Description="Eigenvalues of a matrix, as a vector">
+      <Argument Name="mat" Description="a square matrix" />
+    </Function>
+  </FunctionInfo>
+</IntelliSense>

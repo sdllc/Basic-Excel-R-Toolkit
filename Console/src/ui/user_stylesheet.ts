@@ -17,7 +17,8 @@
  * along with BERT.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import * as less from 'less';
+import * as Rx from 'rxjs';
+import less from 'less';
 import * as path from 'path';
 import * as fs from 'fs';
 import { FileWatcher } from '../common/file_watcher'; 
@@ -41,7 +42,7 @@ export class UserStylesheet {
 
       // subscribe to changes
       FileWatcher.Watch(this.stylesheet_path_);
-      FileWatcher.events.filter(x => x === this.stylesheet_path_).subscribe(x => {
+      FileWatcher.events.pipe(Rx.filter(x => x === this.stylesheet_path_)).subscribe(x => {
         this.Load().then(() => {}).catch(err => {
           console.warn(err);
         });
@@ -57,7 +58,7 @@ export class UserStylesheet {
   }
 
   static Load(){
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       fs.readFile(this.stylesheet_path_, "utf8", (err, data) => {
         if(err){
           return reject("user stylesheet not found");

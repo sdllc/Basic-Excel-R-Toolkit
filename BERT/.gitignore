@@ -19,3 +19,6 @@ enc_temp_folder
 
 *.exe
 *.xll
+ARM64
+ARM64EC
+vcpkg_installed

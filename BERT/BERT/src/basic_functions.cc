@@ -29,21 +29,7 @@
 LPXLOPER12 BERTFunctionCall(
 	int index
 	, LPXLOPER12 input_0
-	, LPXLOPER12 input_1
-	, LPXLOPER12 input_2
-	, LPXLOPER12 input_3
-	, LPXLOPER12 input_4
-	, LPXLOPER12 input_5
-	, LPXLOPER12 input_6
-	, LPXLOPER12 input_7
-	, LPXLOPER12 input_8
-	, LPXLOPER12 input_9
-	, LPXLOPER12 input_10
-	, LPXLOPER12 input_11
-	, LPXLOPER12 input_12
-	, LPXLOPER12 input_13
-	, LPXLOPER12 input_14
-	, LPXLOPER12 input_15
+	BERT_ARGUMENTS_AFTER_FIRST(BERT_ARGUMENT_DECLARE)
 ) {
 	static XLOPER12 rslt;
 
@@ -54,9 +40,8 @@ LPXLOPER12 BERTFunctionCall(
 
 	if (index < 0 || index >= bert->function_list_.size()) return &rslt;
 
-	LPXLOPER12 arglist[16] = {
-		input_0, input_1, input_2, input_3, input_4, input_5, input_6, input_7,
-		input_8, input_9, input_10, input_11, input_12, input_13, input_14, input_15
+	LPXLOPER12 arglist[BERT_MAX_ARGUMENTS] = {
+		input_0 BERT_ARGUMENTS_AFTER_FIRST(BERT_ARGUMENT_NAME)
 	};
 
 	BERTBuffers::CallResponse call, response;
@@ -68,10 +53,10 @@ LPXLOPER12 BERTFunctionCall(
   function_call->set_function(function_descriptor->name_);
   function_call->set_flags(function_descriptor->flags_);
 
-	int argcount = 16;
+	int argcount = BERT_MAX_ARGUMENTS;
 	for (; argcount && arglist[argcount - 1]->xltype == xltypeMissing; argcount--);
 
-  int function_arguments = function_descriptor->language_service_->named_arguments() ? 
+  int function_arguments = function_descriptor->language_service_->named_arguments() ?
     function_descriptor->arguments_.size() : 0;
 
 	for (int i = 0; i < argcount; i++) {
@@ -129,10 +114,8 @@ LPXLOPER12 BERT_Exec_Generic(uint32_t language_key, LPXLOPER12 code) {
 }
 
 LPXLOPER12 BERT_Call_Generic(uint32_t language_key, LPXLOPER12 func,
-  LPXLOPER12 arg0, LPXLOPER12 arg1, LPXLOPER12 arg2, LPXLOPER12 arg3,
-  LPXLOPER12 arg4, LPXLOPER12 arg5, LPXLOPER12 arg6, LPXLOPER12 arg7,
-  LPXLOPER12 arg8, LPXLOPER12 arg9, LPXLOPER12 arg10, LPXLOPER12 arg11,
-  LPXLOPER12 arg12, LPXLOPER12 arg13, LPXLOPER12 arg14, LPXLOPER12 arg15) {
+  LPXLOPER12 input_0
+  BERT_ARGUMENTS_AFTER_FIRST(BERT_ARGUMENT_DECLARE)) {
 
   static XLOPER12 rslt; // TLS?
 
@@ -147,12 +130,11 @@ LPXLOPER12 BERT_Call_Generic(uint32_t language_key, LPXLOPER12 func,
   auto function_call = call.mutable_function_call();
   function_call->set_function(Convert::XLOPERToString(func));
 
-  LPXLOPER12 arglist[16] = {
-    arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7,
-    arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15
+  LPXLOPER12 arglist[BERT_MAX_ARGUMENTS] = {
+    input_0 BERT_ARGUMENTS_AFTER_FIRST(BERT_ARGUMENT_NAME)
   };
 
-  int argcount = 16;
+  int argcount = BERT_MAX_ARGUMENTS;
   for (; argcount && arglist[argcount - 1]->xltype == xltypeMissing; argcount--);
 
   for (int i = 0; i < argcount; i++) {

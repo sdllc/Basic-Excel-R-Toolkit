@@ -23,6 +23,10 @@
 
   font-family: Segoe UI;
 
+  // headings line up with the text they head: paragraphs are padded 10px, so
+  // these are too. h2 and h3 used to be 16px, which set them further in than
+  // the body text underneath them.
+
   h1, h2, h3 {
     font-weight: 300;
     padding: 3px 10px;
@@ -40,12 +44,7 @@
   
   h2 {
     font-size: 18px;
-    padding: 3px 16px;
     border-bottom: 1px solid #ddd;
-  }
-
-  h3 {
-    padding: 3px 16px;
   }
 
   & code {
@@ -64,6 +63,37 @@
     padding: 3px 10px;
     code {
       background: #cef;
+    }
+  }
+
+  // a table has no left padding of its own, so without this its first column
+  // starts where the paragraph padding begins -- ten pixels left of the text
+  // above it, which reads as an outdent
+
+  table {
+    margin-left: 10px;
+    border-collapse: collapse;
+
+    th, td {
+      text-align: left;
+      padding: 3px 14px 3px 0;
+      vertical-align: top;
+    }
+
+    th {
+      font-weight: 600;
+      border-bottom: 1px solid #ddd;
+    }
+  }
+
+  // list items read as a run-on without space between them; give them the
+  // same air as paragraphs
+
+  ul, ol {
+    padding-left: 34px;
+
+    li:not(:last-child) {
+      margin-bottom: 1em;   // the same air paragraphs get
     }
   }
 

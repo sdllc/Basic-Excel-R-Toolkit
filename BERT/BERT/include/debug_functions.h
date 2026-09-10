@@ -22,7 +22,11 @@
 #include <iostream>
 #include <sstream>
 
-#ifdef _DEBUG
+// BERT_TRACE builds the DebugOut calls into a release binary, so a stall in
+// the field can be traced with a debug-output viewer. define it in the build
+// (or here, temporarily) when you need the trace; it is off by default.
+
+#if defined(_DEBUG) || defined(BERT_TRACE)
 
 int DebugOut(const char *fmt, ...);
 

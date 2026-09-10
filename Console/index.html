@@ -24,7 +24,7 @@
   <head>
     <meta charset="UTF-8">
     <title>BERT Console</title>
-    <link rel="stylesheet" href="node_modules/xterm/dist/xterm.css">
+    <link rel="stylesheet" href="node_modules/@xterm/xterm/css/xterm.css">
     <link rel="stylesheet" href="ext/icomoon.css">
     <link rel="stylesheet" href="ext/cogs/cogs.css">
     <link rel="stylesheet" href="build/style.css">
@@ -45,7 +45,16 @@
 
     <script>
 
-      // see monaco electron sample for this
+      // load the console before monaco's AMD loader, so node resolves its
+      // modules while there is no global define: a UMD-packaged library
+      // would otherwise register with the loader instead of with node.
+      // monaco itself is loaded later, on demand (see Editor.LoadMonaco).
+
+      require("./build/renderer.js");
+
+      // in an electron renderer the loader keeps node's require for reading
+      // its module files, then replaces the global with its own AMD require.
+      // keep the AMD one under a different name and put node's back.
 
       let cached_require = global.require;
     </script>
@@ -53,7 +62,6 @@
     <script>
       var amd_require = global.require;
       global.require = cached_require;
-      require("./build/renderer.js")
     </script>
 
   </body>

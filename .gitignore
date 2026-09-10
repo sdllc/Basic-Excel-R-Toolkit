@@ -6,3 +6,47 @@ BERTModule_*.gz
 notes.md
 
 yarn-error.log
+
+# ---------------------------------------------------------------------------
+# added on the r4-support branch
+# ---------------------------------------------------------------------------
+
+# vcpkg manifest-mode install trees. these are regenerated from vcpkg.json
+# and vcpkg-configuration.json; they run to hundreds of megabytes each.
+vcpkg_installed/
+
+# R distributions used as build inputs (headers + import libs). these are
+# local installs, not part of the source tree. see docs/BUILDING.md.
+/R-3.5.0/
+/R-4.5.2/
+
+# visual studio per-user and per-machine state
+.vs/
+*.vcxproj.user
+
+# build output directories, all platforms
+[Xx]64/
+Win32/
+ARM64/
+ARM64EC/
+
+# editor-local settings and scratch notes
+.vscode/
+
+# local archives and scratch copies
+*.7z
+Console/generated/variable_pb_new.js
+Console/generated/variable_pb_old.js
+
+# release outputs (Install/build-release.ps1)
+Install/BERT-Installer-*.exe
+Install/BERT-*.zip
+Install/build-log.txt
+
+# R CMD INSTALL byproducts in the module source
+Module/src/*.dll
+Module/src/*.o
+
+# the third-party add-in the optional help feature ships; build-release.ps1
+# downloads and verifies it
+Install/ExcelDna.IntelliSense64.xll

@@ -31,7 +31,13 @@
     // files in this directory will be loaded at startup and reloaded 
     // when changed. the same directory is used for all languages.
 
-    "functionsDirectory": "%userprofile%\\Documents\\BERT2\\functions"
+    "functionsDirectory": "%userprofile%\\Documents\\BERT2\\functions",
+
+    // open the console when Excel starts. worth turning on if you
+    // installed without the ribbon tab, since the console button lives
+    // there; otherwise leave it off and open the console from the tab.
+
+    "openConsole": false
 
   },
 

@@ -1,13 +1,17 @@
 {
-  "files":[
+  "files": [
     "src/renderer.ts"
   ],
   "compilerOptions": {
+    "rootDir": "src",
     "outDir": "build",
-    "target": "es5", 
+    "target": "es2022",
+    "module": "node20",
+    "lib": [ "es2022", "dom" ],
+    "types": [ "node" ],
     "inlineSourceMap": true,
     "inlineSources": true,
-    "moduleResolution": "node",
-    "lib": [ "es2015", "dom", "es5" ]
+    "skipLibCheck": true,
+    "strict": false
   }
 }

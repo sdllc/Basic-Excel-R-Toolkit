@@ -16,12 +16,17 @@
     "untitled": "Untitled",
     "preferences": "Preferences",
     "userStylesheet": "User Stylesheet",
-    "welcome": "Welcome"
+    "welcome": "Welcome",
+    "releaseNotes": "Release Notes"
   },
 
   "editorCommands": {
     "executeBuffer": "Execute Entire Buffer",
-    "executeSelection": "Execute Selection"
+    "executeSelection": "Execute Selection",
+    "cut": "Cut",
+    "copy": "Copy",
+    "paste": "Paste",
+    "selectAll": "Select All"
   },
 
   "shell": {
@@ -39,10 +44,19 @@
       "pleaseWait": "Loading mirror list, please wait...",
       "setRepo": "Set CRAN repo to #"
     },
+    "closeUnsaved": {
+      "title": "Unsaved changes",
+      "message": "$FILE has changes you have not saved.",
+      "save": "Save",
+      "discard": "Don't Save",
+      "cancel": "Cancel"
+    },
+
     "selectPackages": {
       "selectPackagesTitle": "Select Packages",
       "selectPackages": "Select Packages:",
-      "pleaseWait": "Loading package list, please wait...",
+        "pleaseWait": "Loading package list, please wait...",
+      "loadFailed": "Could not load the package list. Check your connection, or choose a different mirror.",
       "pleaseWaitInstalled": "Checking installed packages, please wait...",
       "installed": "installed",
       "filter": "Filter",

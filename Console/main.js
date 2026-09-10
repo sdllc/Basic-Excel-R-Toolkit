@@ -16,18 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with BERT.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-const url = require('url')
 const path = require('path');
-const electron = require('electron')
-// Module to control application life.
-const app = electron.app
-// Module to create native browser window.
-const BrowserWindow = electron.BrowserWindow
-
+const { app, BrowserWindow } = require('electron');
+const remote = require('@electron/remote/main');
 const WindowState = require('electron-window-state');
 
-require('electron-reload')(path.join(__dirname,"build"));
+remote.initialize();
+
+// for automated testing: expose the devtools protocol on this port, so a
+// test can drive the console and read its state without touching the UI
+if (process.env.BERT_CONSOLE_DEBUG_PORT) {
+  app.commandLine.appendSwitch('remote-debugging-port', process.env.BERT_CONSOLE_DEBUG_PORT);
+}
 
 let dev_flags = 0;
 let pipe_list = [];
@@ -35,16 +35,11 @@ let management_pipe = "";
 
 process.env['BERT_CONSOLE_ROOT'] = __dirname;
 
-// we might have (in fact we expect to have) multiple pipes,
-// and we need to keep track of all of them. they're not 
-// specifically identified, we ask the pipe what language
-// it uses.
+// command line: -m <management pipe>, -p <language pipe> (repeated), -d <dev flags>
 
 for( let i = 0; i< process.argv.length; i++ ){
-
   let arg = process.argv[i];
   let more = (i < (process.argv.length - 1));
-
   if( arg === "-p" && more ){
     pipe_list.push(process.argv[++i]);
   }
@@ -65,9 +60,7 @@ if(pipe_list.length){
   process.env['BERT_PIPE_NAME'] = pipe_list.join(";");
 }
 
-// Keep a global reference of the window object, if you don't, the window will
-// be closed automatically when the JavaScript object is garbage collected.
-let mainWindow
+let mainWindow;
 
 function createWindow () {
 
@@ -75,50 +68,45 @@ function createWindow () {
     defaultWidth: 1200, defaultHeight: 800
   });
 
-  // Create the browser window.
-  mainWindow = new BrowserWindow(window_state);
+  // the renderer talks to the add-in over named pipes and reads and watches
+  // files itself, so it runs with node available. that is the architecture
+  // the console has always had; current electron just makes it an explicit
+  // choice instead of the default.
 
+  mainWindow = new BrowserWindow({
+    x: window_state.x,
+    y: window_state.y,
+    width: window_state.width,
+    height: window_state.height,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false
+    }
+  });
+
+  remote.enable(mainWindow.webContents);
   window_state.manage(mainWindow);
 
-  // and load the index.html of the app.
-  mainWindow.loadURL(url.format({
-    pathname: path.join(__dirname, 'index.html'),
-    protocol: 'file:',
-    slashes: true
-  }))
+  mainWindow.loadFile(path.join(__dirname, 'index.html'));
 
-  if(dev_flags) mainWindow.webContents.openDevTools()
+  if(dev_flags) mainWindow.webContents.openDevTools();
 
-  // Emitted when the window is closed.
   mainWindow.on('closed', function () {
-    // Dereference the window object, usually you would store windows
-    // in an array if your app supports multi windows, this is the time
-    // when you should delete the corresponding element.
-    mainWindow = null
-  })
+    mainWindow = null;
+  });
+
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.on('ready', createWindow)
+app.whenReady().then(createWindow);
 
-// Quit when all windows are closed.
 app.on('window-all-closed', function () {
-  // On OS X it is common for applications and their menu bar
-  // to stay active until the user quits explicitly with Cmd + Q
   if (process.platform !== 'darwin') {
-    app.quit()
+    app.quit();
   }
-})
+});
 
 app.on('activate', function () {
-  // On OS X it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
   if (mainWindow === null) {
-    createWindow()
+    createWindow();
   }
-})
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
+});

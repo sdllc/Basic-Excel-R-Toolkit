@@ -1,0 +1,95 @@
+name: CI
+
+# What is built here, and what is not
+#
+# The console and the R-side checks run on every push. Neither native binary
+# is built, for different reasons.
+#
+# The add-in cannot be built at all: XLCALL.H and XLCALL.CPP come from
+# Microsoft's Excel XLL SDK and BERT/.gitignore deliberately keeps them out of
+# the repository, so BERT64.xll is not buildable from a clean checkout by
+# anyone, CI included.
+#
+# The controller can be built, but not yet here. It was tried, and the attempt
+# is worth recording because it found two real faults before it ran out of
+# road -- the vcpkg baseline was pinned for the add-in only, so a standalone
+# controller build resolved a protobuf incompatible with the checked-in
+# generated code; and R_ReadConsole carried R 3.5's signature and compiled
+# locally only because a header in the local R tree had been edited by hand.
+# Both are fixed.
+#
+# What the attempt needed, if anyone picks it up again:
+#
+#   r-lib/actions/setup-r@v2 with r-version 4.5.2  (not 'release': R 4.6
+#     removed Rf_isFrame and changed the ReadConsole callback signature)
+#   BertRHome pointed at that R, for its headers; the import libraries are
+#     checked in, so no .lib generation is needed
+#   vcpkg integrate install, because hosted runners ship vcpkg unintegrated
+#     and manifest mode otherwise restores nothing
+#   /p:PlatformToolset=v143, because the tree targets v145 (VS 2026) and
+#     hosted runners carry VS 2022
+#
+# Where it stops: the link fails with an unresolved __std_rotate out of
+# libprotobuf and abseil, which is a C runtime mismatch -- vcpkg resolves
+# protobuf:x64-windows (dynamic CRT) on the runner while the project links
+# the static CRT. Forcing /p:VcpkgTriplet=x64-windows-static is the obvious
+# next thing to try. It was not pursued: with the add-in unbuildable anyway,
+# a controller-only build earns less than the time it costs, and the native
+# build is exercised locally by Install/build-release.ps1 on every release.
+
+on:
+  push:
+    branches: [master, console-upgrade]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+
+  console:
+    name: console (typescript + styles)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: Console/package-lock.json
+
+      - name: install
+        working-directory: Console
+        run: npm ci
+
+      - name: build
+        working-directory: Console
+        run: npm run build
+
+      - name: the build produced something
+        working-directory: Console
+        shell: pwsh
+        run: |
+          $js = Get-ChildItem build -Recurse -Filter *.js -ErrorAction SilentlyContinue
+          if (-not $js) { throw "no javascript in Console/build" }
+          if (-not (Test-Path build/style.css)) { throw "no build/style.css" }
+          "compiled $($js.Count) files, $([math]::Round((Get-Item build/style.css).Length / 1kb)) kB of css"
+
+  r-checks:
+    name: startup.R on R ${{ matrix.r }}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # the oldest R the controller will start against, the version that
+        # began warning about length-2 conditions, the one that made it an
+        # error, and current
+        r: ['3.6.3', '4.2.3', '4.3.3', 'release']
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.r }}
+
+      - name: startup.R checks
+        run: Rscript tests/startup-guard.R

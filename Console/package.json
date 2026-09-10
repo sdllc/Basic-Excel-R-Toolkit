@@ -1,7 +1,10 @@
 {
-  "version": "2.4.3",
-  "main": "main.js",
   "name": "bert2-console",
+  "version": "2.4.3",
+  "description": "BERT console: an editor and shell for R in Excel",
+  "author": "Structured Data, LLC",
+  "license": "GPL-3.0",
+  "main": "main.js",
   "build": {
     "directories": {
       "output": "../Build/Console"
@@ -21,32 +24,32 @@
   },
   "scripts": {
     "start": "electron .",
-    "clean": "rm -fr build/*",
-    "build": "./node_modules/.bin/less-watch-compiler --run-once && ./node_modules/.bin/tsc",
-    "watch": "./node_modules/.bin/less-watch-compiler & ./node_modules/.bin/tsc --watch &",
-    "package": "./node_modules/.bin/electron-builder",
-    "repackage": "./node_modules/.bin/less-watch-compiler --run-once && ./node_modules/.bin/tsc && ./node_modules/.bin/electron-builder"
+    "clean": "node -e \"require('fs').rmSync('build', {recursive: true, force: true})\"",
+    "build": "lessc style/style.less build/style.css && tsc",
+    "watch": "tsc --watch",
+    "package": "electron-builder",
+    "repackage": "npm run build && electron-builder"
   },
   "devDependencies": {
-    "@types/node": "^8.9.1",
-    "asar": "^0.14.1",
-    "electron": "^1.8.2",
-    "electron-builder": "^19.56.0",
-    "less-watch-compiler": "^1.11.0",
-    "typescript": "^2.7.2"
+    "@types/node": "^22.0.0",
+    "electron": "^44.1.1",
+    "electron-builder": "^26.15.3",
+    "typescript": "^7.0.2"
   },
   "dependencies": {
-    "@types/text-encoding": "^0.0.32",
-    "chokidar": "^2.0.1",
-    "electron-reload": "^1.2.2",
-    "electron-window-state": "^4.1.1",
-    "google-protobuf": "^3.5.0",
-    "js-base64": "^2.4.3",
-    "less": "^3.0.1",
-    "markdown-it": "^8.4.0",
-    "markdown-it-task-lists": "^2.1.0",
-    "monaco-editor": "^0.10.1",
-    "rxjs": "^5.5.6",
-    "xterm": "^3.2.0"
+    "@electron/remote": "^2.1.3",
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/addon-web-links": "^0.12.0",
+    "@xterm/xterm": "^6.0.0",
+    "chokidar": "^4.0.3",
+    "electron-window-state": "^5.0.3",
+    "google-protobuf": "^4.0.2",
+    "js-base64": "^3.9.3",
+    "less": "^4.9.1",
+    "markdown-it": "^15.0.1",
+    "markdown-it-task-lists": "^2.1.1",
+    "monaco-editor": "^0.56.0",
+    "rxjs": "^7.8.2",
+    "wcwidth": "^1.0.1"
   }
 }

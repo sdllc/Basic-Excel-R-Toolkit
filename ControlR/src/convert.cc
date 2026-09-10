@@ -92,19 +92,21 @@ void WindowsCPToUTF8(const char *input_buffer, int input_length, char **output_b
 }
 
 /**
- * alloc-heavy version
+ * the reverse direction, for console input to an R older than 4.2.0,
+ * which expects the windows code page. characters the code page cannot
+ * represent become the system default character.
  */
-std::string WindowsCPToUTF8_2(const char *input_buffer, int input_length) {
-  
-  if (input_length <= 0) input_length = strlen(input_buffer);
+std::string UTF8ToWindowsCP(const std::string &utf8) {
 
-  int wide_size = MultiByteToWideChar(CP_ACP, MB_COMPOSITE, input_buffer, input_length, 0, 0);
-  std::wstring wide_string(wide_size, '\0');
-  MultiByteToWideChar(CP_ACP, MB_COMPOSITE, input_buffer, input_length, &(wide_string[0]), wide_size);
+  if (utf8.empty()) return utf8;
 
-  int narrow_size = WideCharToMultiByte(CP_UTF8, 0, &(wide_string[0]), wide_size, 0, 0, 0, 0);
+  int wide_size = MultiByteToWideChar(CP_UTF8, 0, utf8.data(), (int)utf8.length(), 0, 0);
+  std::wstring wide_string(wide_size, L'\0');
+  MultiByteToWideChar(CP_UTF8, 0, utf8.data(), (int)utf8.length(), &wide_string[0], wide_size);
+
+  int narrow_size = WideCharToMultiByte(CP_ACP, 0, wide_string.data(), wide_size, 0, 0, 0, 0);
   std::string narrow_string(narrow_size, '\0');
-  WideCharToMultiByte(CP_UTF8, 0, &(wide_string[0]), wide_size, &(narrow_string[0]), narrow_size, 0, 0);
+  WideCharToMultiByte(CP_ACP, 0, wide_string.data(), wide_size, &narrow_string[0], narrow_size, 0, 0);
 
   return narrow_string;
 }

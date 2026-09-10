@@ -1,2 +1,10 @@
 x64
 *.vcxproj.user
+ARM64
+ARM64EC
+.vs
+vcpkg_installed
+
+# linker byproducts of lib/RebuildLibs.ps1; the .def and .lib files are
+# checked in, the .exp files are regenerated
+*.exp

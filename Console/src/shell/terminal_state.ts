@@ -21,7 +21,7 @@ import { LanguageInterface } from './language_interface';
 import { ConsoleMessage, ConsoleMessageType } from '../io/pipe';
 
 import * as Rx from 'rxjs';
-import { wcwidth } from 'xterm/lib/CharWidth';
+import { wcwidth } from './wcwidth';
 
 export enum StdIOStream {
   STDIN, STDOUT, STDERR
@@ -262,29 +262,29 @@ export class TerminalState {
     // since we are no longer swapping state in and out, it might be 
     // more efficient to split these back up (at least the stdio streams)
 
-    this.console_messages_ = Rx.Observable.create(observer => {
+    this.console_messages_ = new Rx.Observable(observer => {
       this.language_interface_.pipe_.console_messages.subscribe(observer);
     });
 
     let sources:any[] = [];
     
     if(this.language_interface_.stdout_pipe_){
-      sources.push(this.language_interface_.stdout_pipe_.data.map(text => {
+      sources.push(this.language_interface_.stdout_pipe_.data.pipe(Rx.map(text => {
         return { text, stream:StdIOStream.STDOUT }
-      }));
+      })));
     }
 
     if(this.language_interface_.stderr_pipe_){
-      sources.push(this.language_interface_.stderr_pipe_.data.map(text => {
+      sources.push(this.language_interface_.stderr_pipe_.data.pipe(Rx.map(text => {
         return { text, stream:StdIOStream.STDERR }
-      }));
+      })));
     }
 
     // only create this if necessary, client can test
 
     if(sources.length){
-      this.stdio_ = Rx.Observable.create(observer => {
-        Rx.Observable.merge(...sources).subscribe(observer);
+      this.stdio_ = new Rx.Observable(observer => {
+        Rx.merge(...sources).subscribe(observer);
       });
     }
 

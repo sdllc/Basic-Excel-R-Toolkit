@@ -11,6 +11,11 @@ When it starts, BERT loads functions from the functions directory,
 Documents\BERT2. You should see some example functions installed in Excel 
 called `R.TestAdd` and `R.EigenValues`.
 
+Functions you export can describe themselves to Excel, so the Insert 
+Function dialog says what they do and what each argument is for. Add a 
+`description` attribute in R; there is an example in `functions.R`, in 
+your functions directory.
+
 You can also use BERT with the statistics language Julia. See 
 [this page][3] for more information. 
 

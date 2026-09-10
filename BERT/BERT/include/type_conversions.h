@@ -410,8 +410,16 @@ public:
 
     case BERTBuffers::Variable::ValueCase::kCpx:
     {
+      // Excel has no complex type, so this crosses as text in the a+bi form
+      // its own engineering functions use -- IMREAL, IMABS and the rest read
+      // it directly. Default stream formatting would give six significant
+      // digits, though, so 314159.2653589793+2.718281828459045i arrived as
+      // 314159+2.71828i and the rest was gone with no error. 15 digits is
+      // what Excel itself keeps, and what R prints.
+
       std::stringstream ss;
       auto complex = var.cpx();
+      ss << std::setprecision(15);
       ss << complex.r();
       if (complex.i() >= 0) ss << "+";
       ss << complex.i();

@@ -88,7 +88,7 @@ export class LanguageInterface extends Rx.Subject<LanguageNotification> {
 
     // ugh. use async.
 
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       if(this.management_pipe_){
         // this.management_pipe_.Close(); // no close method?
       }

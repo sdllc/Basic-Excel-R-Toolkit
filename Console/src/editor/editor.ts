@@ -24,11 +24,13 @@ import * as fs from 'fs';
 import * as Rx from 'rxjs';
 import { EEXIST } from 'constants';
 
-import * as MarkdownIt from 'markdown-it';
-import * as MarkdownItTasks from 'markdown-it-task-lists';
+import MarkdownIt from 'markdown-it';
+import MarkdownItTasks from 'markdown-it-task-lists';
 const MD = new MarkdownIt().use(MarkdownItTasks); 
 
-import { remote, clipboard, shell as electron_shell } from 'electron';
+import { shell as electron_shell } from 'electron';
+import { clipboard } from '../common/clipboard';
+import * as remote from '@electron/remote';
 const { Menu, MenuItem, dialog } = remote;
 
 const Constants = require("../../data/constants.json");
@@ -36,6 +38,7 @@ const TabContextMenuData = require("../../data/menus/editor_tab_context_menu.jso
 const SchemaSchema = require("../../data/schemas/schema.schema.json");
 
 import { MenuUtilities } from '../ui/menu_utilities';
+import { AlertManager } from '../ui/alert';
 import { Utilities } from '../common/utilities';
 import { UserStylesheet } from '../ui/user_stylesheet';
 import { TabPanel, TabJustify, TabEventType, TabSpec } from '../ui/tab_panel';
@@ -110,6 +113,9 @@ interface OpenFileOptions {
  */
 export class Editor {
 
+  /** asks about unsaved changes when a file is closing */
+  private alerts_ = new AlertManager();
+
   /** flag for loading, in case we have multiple instances */
   static loaded_ = false;
 
@@ -129,17 +135,37 @@ export class Editor {
 
     if (this.loaded_) return Promise.resolve();
 
-    return new Promise((resolve, reject) => {
+    return new Promise<void>(async (resolve, reject) => {
 
       this.loaded_ = true;
 
-      // see monaco electron sample for this
+      // index.html loads the AMD loader in a script tag after the console's
+      // own code, so it is not there yet if we got here from a promise that
+      // resolved during startup. wait for the page to finish parsing.
+
+      if (typeof amd_require === "undefined") {
+        if (document.readyState !== "loading") {
+          return reject(new Error("monaco loader not found"));
+        }
+        await new Promise<void>(r => document.addEventListener("DOMContentLoaded", () => r(), { once: true }));
+      }
+
+      // see the monaco electron-amd sample for this. hiding node's module
+      // global is the sample's workaround for language contributions that
+      // otherwise mistake the environment.
+
+      // preferScriptTags keeps the loader on <script> tags. without it, an
+      // electron renderer takes monaco's node path, which loads modules
+      // through node's vm module -- and electron warns that vm is
+      // unsupported in a renderer, crashes are likely, and it may be removed.
+      // the loader offers this switch for exactly this case.
 
       amd_require.config({
+        preferScriptTags: true,
         baseUrl: Editor.UriFromPath(path.join(__dirname, '../../node_modules/monaco-editor/min'))
       });
       self['module'] = undefined;
-      self['process'].browser = true;
+      self['process']['browser'] = true;
 
       // this is async
       amd_require(['vs/editor/editor.main'], () => {
@@ -289,15 +315,15 @@ export class Editor {
 
     tabs.addEventListener("contextmenu", event => this.TabContextMenu(event));
 
-    this.tabs_.events.filter(event => event.type === TabEventType.deactivate).subscribe(event => {
+    this.tabs_.events.pipe(Rx.filter(event => event.type === TabEventType.deactivate)).subscribe(event => {
       this.DeactivateTab(event.tab);
     });
 
-    this.tabs_.events.filter(event => event.type === TabEventType.activate).subscribe(event => {
+    this.tabs_.events.pipe(Rx.filter(event => event.type === TabEventType.activate)).subscribe(event => {
       this.ActivateTab(event.tab);
     });
 
-    this.tabs_.events.filter(x => x.type === TabEventType.buttonClick).subscribe(event => {
+    this.tabs_.events.pipe(Rx.filter(x => x.type === TabEventType.buttonClick)).subscribe(event => {
       this.CloseTab(event.tab);
     });
 
@@ -345,7 +371,7 @@ export class Editor {
       }
     });
 
-    MenuUtilities.loaded.filter(x => x).first().subscribe(() => this.UpdateRecentFilesList());
+    MenuUtilities.loaded.pipe(Rx.filter(x => x), Rx.first()).subscribe(() => this.UpdateRecentFilesList());
 
   }
 
@@ -387,11 +413,11 @@ export class Editor {
         break;
       case "tab.close-others":
         copy = this.tabs_.tabs.slice(0);
-        copy.forEach(item => { if(item !== tab) this.CloseTab(item)});
+        this.CloseTabs(copy.filter(item => item !== tab));
         break;
       case "tab.close-all":
         copy = this.tabs_.tabs.slice(0);
-        copy.forEach(item => this.CloseTab(item));
+        this.CloseTabs(copy);
         break;
       case "tab.copy-path":
         clipboard.writeText(document.file_path_);
@@ -489,8 +515,8 @@ export class Editor {
    * ensure that we have loaded config (or initial defaults)
    */
   private EnsureConfig() : Promise<any> {
-    return new Promise(resolve => {
-      ConfigManager.filter(x => x.config).first().subscribe(config => {
+    return new Promise<void>(resolve => {
+      ConfigManager.pipe(Rx.filter(x => x.config), Rx.first()).subscribe(config => {
         this.editor_options_ = config['editor'] || {};
         resolve();
       });
@@ -530,31 +556,54 @@ export class Editor {
 
     this.pending_active_languages_.forEach( id => this.AddExecActions(id));
 
-    // override context menu so it matches regular menus, other context menus
+    // clipboard shortcuts. monaco no longer registers clipboard actions of
+    // its own (see Copy), and since it moved to the EditContext input
+    // surface the browser's own paste no longer reaches the editor, so bind
+    // the keys to the same methods the menus use. binding them here also
+    // stops the browser acting on the same keystroke.
+
+    this.editor_.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyC, () => this.Copy());
+    this.editor_.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyX, () => this.Cut());
+    this.editor_.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyV, () => this.Paste());
+
+    // monaco's own context menu is switched off (contextmenu: false) so that
+    // this one matches the rest of the application. it used to be built by
+    // asking monaco's contextmenu contribution for its entries, but that is
+    // private and its shape changes between versions, so the entries are
+    // listed here. the clipboard entries are ours for the reason given on
+    // Copy, above.
 
     this.editor_.onContextMenu(e => {
 
-      let contribution = this.editor_.getContribution("editor.contrib.contextmenu") as any;
-      let menu_actions = contribution._getMenuActions();
+      let selection = this.editor_.getSelection();
+      let has_selection = !!(selection && !selection.isEmpty());
       let menu = new Menu();
 
-      menu_actions.forEach(action => {
-        if (action.id === "vs.actions.separator") {
-          menu.append(new MenuItem({ type: "separator" }));
-        }
-        else {
-          let keybinding = contribution._keybindingFor(action);
-          let accelerator = keybinding ? keybinding.getLabel() : null;
-          menu.append(new MenuItem({
-            label: action.label,
-            enabled: action.enabled,
-            accelerator: accelerator,
-            click: () => action.run()
-          }));
-        }
-      });
+      // accelerators here are labels only: registering them would take the
+      // keys away from the editor, which handles them itself
 
-      menu.popup(remote.getCurrentWindow());
+      menu.append(new MenuItem({ label: Constants.editorCommands.cut, accelerator: "CmdOrCtrl+X",
+        registerAccelerator: false, enabled: has_selection, click: () => this.Cut() }));
+      menu.append(new MenuItem({ label: Constants.editorCommands.copy, accelerator: "CmdOrCtrl+C",
+        registerAccelerator: false, enabled: has_selection, click: () => this.Copy() }));
+      menu.append(new MenuItem({ label: Constants.editorCommands.paste, accelerator: "CmdOrCtrl+V",
+        registerAccelerator: false, click: () => this.Paste() }));
+      menu.append(new MenuItem({ type: "separator" }));
+      menu.append(new MenuItem({ label: Constants.editorCommands.selectAll, accelerator: "CmdOrCtrl+A",
+        registerAccelerator: false, click: () => this.SelectAll() }));
+
+      // the execute commands this class adds for each language it supports
+      // (see AddExecActions), so the context menu can still run code
+
+      let exec_actions = this.editor_.getSupportedActions().filter(action => /^editor\.exec_/.test(action.id));
+      if (exec_actions.length) {
+        menu.append(new MenuItem({ type: "separator" }));
+        exec_actions.forEach(action => {
+          menu.append(new MenuItem({ label: action.label, click: () => action.run() }));
+        });
+      }
+
+      menu.popup({ window: remote.getCurrentWindow() });
 
     });
 
@@ -576,7 +625,7 @@ export class Editor {
     // why are we including json schema schema? is that just because
     // I was editing the schema in the editor? (...)
 
-    monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+    monaco.json.jsonDefaults.setDiagnosticsOptions({
       validate: true, allowComments: true,
       schemas: [{
         uri: "http://bert-toolkit.com/config-schema",
@@ -747,6 +796,81 @@ export class Editor {
     this.editor_.focus();
   }
 
+  /**
+   * true when the editor holds the keyboard focus. note that opening a
+   * native menu takes focus away from the page, so this is no use for
+   * deciding what a menu command should act on; see renderer.
+   */
+  public HasFocus() {
+    return !!this.editor_ && this.editor_.hasTextFocus();
+  }
+
+  /**
+   * clipboard. monaco no longer registers cut, copy and paste actions of
+   * its own: it registered them only where the old document.execCommand
+   * editing commands were available, and chromium has withdrawn those from
+   * web content. the keyboard shortcuts still work, because the browser
+   * handles those itself on the hidden textarea monaco keeps the selection
+   * in, but anything driven from a menu has to do the work here.
+   */
+  public async Copy() {
+    let text = this.SelectedText();
+    if (text) await clipboard.writeText(text);
+  }
+
+  public async Cut() {
+    if (!this.editor_) return;
+    let selection = this.editor_.getSelection();
+    let text = this.SelectedText();
+    if (!text || !selection) return;
+    await clipboard.writeText(text);
+    this.editor_.executeEdits("cut", [{ range: selection, text: "", forceMoveMarkers: true }]);
+    this.editor_.focus();
+  }
+
+  public async Paste() {
+    if (!this.editor_) return;
+    let text = await clipboard.readText();
+    if (!text) return;
+
+    // the type command replaces the selection and leaves the cursor after
+    // the inserted text, which is what a paste should do
+
+    this.editor_.focus();
+    this.editor_.trigger("clipboard", "type", { text });
+  }
+
+  public SelectAll() {
+    if (!this.editor_) return;
+    let model = this.editor_.getModel();
+    if (model) this.editor_.setSelection(model.getFullModelRange());
+    this.editor_.focus();
+  }
+
+  public Find() { this.RunAction("actions.find"); }
+
+  public Replace() { this.RunAction("editor.action.startFindReplaceAction"); }
+
+  /** text of the current selection, empty if there is none */
+  private SelectedText() {
+    if (!this.editor_) return "";
+    let selection = this.editor_.getSelection();
+    let model = this.editor_.getModel();
+    if (!model || !selection || selection.isEmpty()) return "";
+    return model.getValueInRange(selection);
+  }
+
+  /** runs a monaco action by id, if this build of monaco has it */
+  private RunAction(id: string) {
+    if (!this.editor_) return;
+    let action = this.editor_.getAction(id);
+    if (action) {
+      this.editor_.focus();
+      action.run();
+    }
+    else console.warn("editor action not found:", id);
+  }
+
   /** 
    * ensures the list of open files is synced with open files. this 
    * can get called when a new file is opened or when a file is 
@@ -808,28 +932,70 @@ export class Editor {
         if(!document.type_) document.type_ = unserialized.rendered ? DocumentType.rendered : DocumentType.editor;
 
         document.id_ = entry;
-        
+
         if(document.type_ === "rendered"){
-          document.rendered_content_ = unserialized.text || "";
+
+          // a rendered document is a view of a file nobody edits here -- the
+          // release notes, the welcome page. restoring the text we cached
+          // means showing yesterday's file: after an upgrade the notes would
+          // still be the old version's. read it again if it is still there.
+
+          let current = "";
+          if (unserialized.file_path) {
+            try { current = fs.readFileSync(unserialized.file_path, "utf8"); }
+            catch(e) { current = ""; }
+          }
+          document.rendered_content_ = current || unserialized.text || "";
         }
         else {
+
+          // what we stored is a cache; the file on disk is the document.
+          // it can have moved on while we were not running -- a different
+          // file saved over it, an edit in another editor -- and restoring
+          // our copy would then show text that is quietly wrong. read it
+          // again. unsaved edits are the exception: those exist nowhere
+          // else, so they are kept, still marked dirty.
+
+          let text = unserialized.text || "";
+          let dirty = !!unserialized.dirty;
+
+          if (unserialized.file_path) {
+
+            let current: string = null;
+            try { current = fs.readFileSync(unserialized.file_path, "utf8"); }
+            catch (e) { current = null; }
+
+            if (current === null && !dirty) {
+
+              // the file is gone. a tab showing the last thing we saw of a
+              // file that no longer exists is worse than no tab at all.
+
+              localStorage.removeItem(key);
+              return [undefined, undefined];
+
+            }
+
+            if (current !== null && !dirty) text = current;
+
+          }
+
           if (unserialized.file_path) {
             if (unserialized.overrideLanguage) {
-              document.model_ = monaco.editor.createModel(unserialized.text,
+              document.model_ = monaco.editor.createModel(text,
                 unserialized.overrideLanguage, unserialized.uri || null);
             }
             else {
-              document.model_ = monaco.editor.createModel(unserialized.text, undefined,
+              document.model_ = monaco.editor.createModel(text, undefined,
                 monaco.Uri.file(unserialized.file_path));
             }
           }
           else {
-            document.model_ = monaco.editor.createModel(unserialized.text, "plaintext");
+            document.model_ = monaco.editor.createModel(text, "plaintext");
           }
           document.model_.updateOptions(this.editor_options_);
 
           document.saved_version_ = document.model_.getAlternativeVersionId()
-          document.dirty_ = !!unserialized.dirty;
+          document.dirty_ = dirty;
           document.view_state_ = unserialized.view_state;
 
           if (document.dirty_) document.saved_version_--;
@@ -939,11 +1105,19 @@ export class Editor {
 
         // fixme: parameterize defaults?
 
-        await this.OpenFileInternal(path.join(functions_path, "..", "examples", "excel-scripting.r"), {
-          type:DocumentType.editor, suppress_error:true });
+        // suppress_error only suppresses the dialog; a missing file still
+        // rejects, and neither of these is essential.
 
-        await this.OpenFileInternal(path.join(functions_path, "functions.r"), {
-          type:DocumentType.editor, suppress_error:true });
+        for (const file_path of [
+            path.join(functions_path, "..", "examples", "excel-scripting.r"),
+            path.join(functions_path, "functions.r")]) {
+          try {
+            await this.OpenFileInternal(file_path, { type:DocumentType.editor, suppress_error:true });
+          }
+          catch(e) {
+            console.warn("default file not opened: " + file_path);
+          }
+        }
             
       }
 
@@ -999,6 +1173,13 @@ export class Editor {
 
     this.UpdateOpenFiles();
 
+    // a file dropped above (it no longer exists) counts as removed, so
+    // UpdateOpenFiles has just put it on the unclose list. nothing has been
+    // closed in this session, and unclosing a deleted file does nothing.
+
+    this.closed_tabs_ = [];
+    MenuUtilities.SetEnabled("main.file.unclose-tab", false);
+
   }
 
   /** 
@@ -1034,12 +1215,34 @@ export class Editor {
   }
 
   /**
-   * opens release notes in an editor tab
+   * opens release notes in an editor tab. the changelog is what people
+   * actually want to see on an upgrade; the welcome page is the fallback for
+   * an installation that predates it.
    */
-  public OpenReleaseNotes(){
-    let file_path = path.join(process.env.BERT_HOME, "welcome.md");
+  public async OpenReleaseNotes(){
+
+    let changelog = path.join(process.env.BERT_HOME, "CHANGELOG.md");
+    let file_path = changelog;
+    let label = Constants.files.releaseNotes;
+
+    if (!fs.existsSync(changelog)) {
+      file_path = path.join(process.env.BERT_HOME, "welcome.md");
+      label = Constants.files.welcome;
+    }
+
+    // opening a file that is already open just switches to it, which would
+    // show what we read when the tab was first opened. these notes change
+    // underneath us -- that is the point of them, on an upgrade -- so close
+    // the old tab and read the file again. nothing is lost: a rendered
+    // document cannot be edited.
+
+    let open_already = this.tabs_.tabs.find(tab =>
+      tab.data && ((tab.data as Document).file_path_ === file_path));
+
+    if (open_already) await this.CloseTab(open_already);
+
     return this.OpenFileInternal(file_path, {
-      override_label: Constants.files.welcome,
+      override_label: label,
       add_to_recent_files: false,
       type: DocumentType.rendered
     });
@@ -1071,9 +1274,56 @@ export class Editor {
    * closes tab. called on button click, or via one of the menu
    * items (close, close others, &c).
    */
-  private CloseTab(tab: TabSpec) {
+  /**
+   * a document with unsaved changes is about to close. asks what to do with
+   * them: this is the last chance to keep them.
+   */
+  private async PromptUnsaved(tab: TabSpec) : Promise<"save"|"discard"|"cancel"> {
 
-    // FIXME: warn if dirty
+    let labels = Constants.dialogs.closeUnsaved;
+
+    let result = await this.alerts_.Show({
+      escape: true,
+      title: labels.title,
+      message: (labels.message || "").replace(/\$FILE/, tab.label || ""),
+      buttons: [labels.save, labels.discard, labels.cancel]
+    });
+
+    // escape, or anything we don't recognise, leaves the file open
+
+    if (result.result !== "button") return "cancel";
+    if (result.data === labels.save) return "save";
+    if (result.data === labels.discard) return "discard";
+    return "cancel";
+  }
+
+  /**
+   * closes several tabs, one after the other, so the questions about unsaved
+   * changes come one at a time. stops at the first file the user keeps.
+   */
+  private async CloseTabs(tabs: TabSpec[]) {
+    for (let entry of tabs) {
+      if (!await this.CloseTab(entry)) return;
+    }
+  }
+
+  /**
+   * closes a tab. returns false if the file stayed open, either because the
+   * user cancelled or because a save they asked for did not happen.
+   */
+  private async CloseTab(tab: TabSpec) : Promise<boolean> {
+
+    // unsaved changes used to go without a word
+
+    let closing_document = tab.data as Document;
+    if (closing_document && closing_document.dirty_) {
+      let choice = await this.PromptUnsaved(tab);
+      if (choice === "cancel") return false;
+      if (choice === "save") {
+        let saved = await this.SaveTab(tab);
+        if (!saved) return false;
+      }
+    }
 
     if (tab === this.active_tab_) {
       if (this.tabs_.count > 1) this.tabs_.Previous(); // FIXME: maybe have an MRU order stack? ...
@@ -1095,6 +1345,8 @@ export class Editor {
     }
 
     if(document.file_path_) FileWatcher.Unwatch(document.file_path_);
+
+    return true;
 
   }
 
@@ -1193,7 +1445,7 @@ export class Editor {
     
     // this is just aesthetic? whose aesthetic?
 
-    let language = document.model_['_languageIdentifier'].language;
+    let language = document.model_.getLanguageId();
     switch (language.toLowerCase()) {
       case "json":
       case "js":
@@ -1253,7 +1505,7 @@ export class Editor {
    * force_dialog is for "save as", can also be used in any case you
    * don't necessarily want to overwrite.
    */
-  public SaveTab(tab: TabSpec, save_as_dialog = false) {
+  public SaveTab(tab: TabSpec, save_as_dialog = false) : Promise<boolean> {
 
     let document = tab.data as Document;
     let file_path = document.file_path_;
@@ -1266,29 +1518,50 @@ export class Editor {
 
     if(save_as_dialog) {
 
-      file_path = remote.dialog.showSaveDialog({
-        defaultPath: document.file_path_ || document.label_
+      // a document that has never been saved is offered to the functions
+      // directory, keeping the name it has; one that has a path stays where
+      // it is
+
+      let suggestion = document.file_path_;
+      if (!suggestion) {
+        let functions_directory = this.FunctionsDirectory();
+        suggestion = functions_directory
+          ? path.join(functions_directory, document.label_)
+          : document.label_;
+      }
+
+      file_path = remote.dialog.showSaveDialogSync({
+        defaultPath: suggestion
       });
 
       if(!file_path) {
         console.info("save as canceled");
-        return;
+        return Promise.resolve(false);
       }
 
     }
 
-    if (file_path) {
+    if (!file_path) return Promise.resolve(false);
+
+    // resolves true only once the file is on disk, so a caller closing the
+    // tab knows the changes are safe
+
+    return new Promise<boolean>(resolve => {
 
       if(FileWatcher.IsWatching(file_path)) {
+
         // because the watcher won't unset if we don't get notified
+
         document.save_pending_ = true;
       }
 
       let contents = document.model_.getValue();
+
       fs.writeFile(file_path, contents, "utf8", err => {
         if (err) {
           document.save_pending_ = false;
           console.error(err);
+          resolve(false);
         }
         else {
           tab.dirty = document.dirty_ = false;
@@ -1304,9 +1577,11 @@ export class Editor {
           this.CacheDocument(document);
           this.tabs_.UpdateTab(tab);
           if(save_as_dialog) this.UpdateRecentFiles(file_path, true);
+          resolve(true);
         }
       });
-    }
+
+    });
 
   }
 
@@ -1342,7 +1617,7 @@ export class Editor {
    */
   public RevertFile() { 
 
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
 
       let tab = this.active_tab_;
       let document = tab.data as Document;
@@ -1408,7 +1683,7 @@ export class Editor {
 
   /** shows a fnf alert. FIXME: use our alerts? */
   private OpenFileError(){
-    remote.dialog.showMessageBox({
+    remote.dialog.showMessageBoxSync({
       type: "info", 
       icon: null,
       message: Constants.errors.openFileError
@@ -1444,7 +1719,7 @@ export class Editor {
 
     // not found, open
 
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
 
       fs.readFile(file_path, "utf8", (err, data) => {
 
@@ -1494,17 +1769,49 @@ export class Editor {
     });
   }
 
-  /** 
+  /**
+   * where a file dialog should start: the functions directory, since that is
+   * where the R files BERT loads actually live. undefined if the config has
+   * not loaded, has no functions directory, or names one that isn't there --
+   * the dialog then does whatever it did before.
+   */
+  private FunctionsDirectory(): string {
+
+    try {
+
+      let config = ConfigManager.config;
+      let directory = (config && config.BERT) ? config.BERT.functionsDirectory : null;
+      if (!directory) return undefined;
+
+      // the setting may hold environment variables, as the add-in allows
+      // when it reads the same field
+
+      directory = directory.replace(/%([^%]+)%/g, (match: string, name: string) => {
+        return process.env[name] || match;
+      });
+
+      return fs.existsSync(directory) ? directory : undefined;
+
+    }
+    catch (e) {
+      console.warn(e);
+      return undefined;
+    }
+
+  }
+
+  /**
    * opens file in the editor, in a new tab. if the file is already open,
    * switches to the open buffer. if no path is passed, shows a file chooser.
    */
   public OpenFile(file_path?: string) {
     if (file_path) return this.OpenFileInternal(file_path);
-    let files = remote.dialog.showOpenDialog({
-      properties: ["openFile"]
+    let files = remote.dialog.showOpenDialogSync({
+      properties: ["openFile"],
+      defaultPath: this.FunctionsDirectory()
     });
     if (files && files.length) return this.OpenFileInternal(files[0]);
-    return Promise.reject("no file selected"); 
+    return Promise.reject("no file selected");
   }
 
   /** update layout, should be called after resize */

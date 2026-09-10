@@ -81,7 +81,12 @@ export class MessageUtilities {
         return object;
 
       default:
-        console.info(`UNTRANSLATED (${x.getValueCase()})\n`, x.toObject());
+        // R 4.x sends value types this console does not render, and logging
+        // every one of them floods the devtools console. keep the diagnostic,
+        // but behind an opt-in environment variable.
+        if(process.env.BERT_DEBUG){
+          console.info(`UNTRANSLATED (${x.getValueCase()})\n`, x.toObject());
+        }
         return null;
     }
   }

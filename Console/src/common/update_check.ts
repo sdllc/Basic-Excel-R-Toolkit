@@ -27,6 +27,12 @@ export namespace UpdateCheck {
     });
     */
 
+    // a development build carries a tag after the release number (see
+    // BERT/BERT/include/bert_version.h). it is not a release, so there is
+    // nothing to compare it against; skip the check rather than offer an
+    // older release as an upgrade.
+    if(!/^\d+(\.\d+)*$/.test(process.env.BERT_VERSION || "")) return;
+
     let response = await fetch("https://bert-toolkit.com/version.json", {cache: "no-cache"});
     let version_object = await response.json();
 

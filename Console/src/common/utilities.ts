@@ -36,8 +36,13 @@ export class Utilities {
 
   }
 
+  /**
+   * "2.4.3" -> 2004003. anything after the numeric part, such as the tag a
+   * development build carries ("2.4.3-r4 (built ...)"), is ignored.
+   */
   static VersionToNumber(version_string){
-    return version_string.split(".").reduce((a,x) => a * 1000 + (Number(x)||0));
+    let numeric = ((version_string || "").match(/^\d+(\.\d+)*/) || [""])[0];
+    return numeric.split(".").reduce((a,x) => a * 1000 + (Number(x)||0), 0);
   }
 
 }

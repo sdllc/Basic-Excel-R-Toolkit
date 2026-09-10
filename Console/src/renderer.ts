@@ -18,7 +18,8 @@
  */
 
 import {Pipe, ConsoleMessage, ConsoleMessageType} from './io/pipe';
-import {clipboard, remote, dialog, shell as electron_shell} from 'electron';
+import {shell as electron_shell} from 'electron';
+import * as remote from '@electron/remote';
 
 const {Menu, MenuItem} = remote;
 
@@ -151,6 +152,14 @@ window.addEventListener("beforeunload", event => {
 
 let editor = new Editor("#editor", properties.editor);
 
+// with dev flags set, put the editor where the devtools console can reach
+// it, as the terminal already does for itself (see TerminalImplementation)
+
+if (dev_flags) {
+  window["editor"] = editor;
+  window["menu"] = MenuUtilities;
+}
+
 editor.events.subscribe(event => {
   if( event.type === EditorEventType.Command ){
     switch(event.message){
@@ -172,7 +181,7 @@ let pipe_list = (process.env['BERT_PIPE_NAME']||"").split(";"); // separator?
 // wait until we have read prefs once, then set up.
 // FIXME: is that necessary? we could just repaint.
 
-ConfigManager.filter(x => x.config).first().subscribe(x => {
+ConfigManager.pipe(Rx.filter(x => x.config), Rx.first()).subscribe(x => {
 
   let shell_config = x.config.shell || {};
 
@@ -184,7 +193,7 @@ ConfigManager.filter(x => x.config).first().subscribe(x => {
   // delay? UX)
 
   Promise.all(pipe_list.map(pipe_name => {
-      return new Promise((resolve, reject) => {
+      return new Promise<void>((resolve, reject) => {
         if(pipe_name){
           let pipe = new Pipe();
           let language = "unknown"; // just for reporting
@@ -266,7 +275,7 @@ ConfigManager.subscribe(x => {
 
 // deal with splitter change on drag end 
 
-splitter.events.filter(x => (x === SplitterEvent.EndDrag||x === SplitterEvent.UpdateLayout)).subscribe(x => {
+splitter.events.pipe(Rx.filter(x => (x === SplitterEvent.EndDrag||x === SplitterEvent.UpdateLayout))).subscribe(x => {
   terminals.UpdateLayout();
   editor.UpdateLayout();
   properties.terminal.split = splitter.split;
@@ -292,9 +301,44 @@ MenuUtilities.SetCheck("main.view.show-shell",
   typeof properties.terminal.show_shell === "undefined" || properties.terminal.show_shell);
 
 
+// which pane the Edit menu acts on. opening a native menu takes the focus
+// away from the page, so the pane has to be remembered rather than asked
+// for at the point the menu item is clicked.
+
+let last_focus_pane = "editor";
+
+document.addEventListener("focusin", () => {
+  let active = document.activeElement;
+  if (!active) return;
+  if (active.closest("#terminals")) last_focus_pane = "shell";
+  else if (active.closest("#editor")) last_focus_pane = "editor";
+});
+
 MenuUtilities.events.subscribe(event => {
 
   switch(event.id){
+
+  // edit. the shell has its own clipboard handling, because what is
+  // selected there is xterm's selection rather than a DOM selection, and
+  // cut has no meaning in it.
+
+  case "main.edit.cut":
+    if (last_focus_pane === "editor") editor.Cut();
+    break;
+  case "main.edit.copy":
+    if (last_focus_pane === "editor") editor.Copy();
+    else terminals.SendCommand("copy");
+    break;
+  case "main.edit.paste":
+    if (last_focus_pane === "editor") editor.Paste();
+    else terminals.SendCommand("paste");
+    break;
+  case "main.edit.find":
+    editor.Find();
+    break;
+  case "main.edit.replace":
+    editor.Replace();
+    break;
 
   // dev
 
@@ -302,7 +346,7 @@ MenuUtilities.events.subscribe(event => {
     remote.getCurrentWindow().reload();
     break;
   case "main.view.toggle-developer-tools":
-    remote.getCurrentWindow()['toggleDevTools']();
+    remote.getCurrentWindow().webContents.toggleDevTools();
     break;
 
   // layout
@@ -369,7 +413,7 @@ window.addEventListener("resize", event => {
 
 });
 
-TerminalImplementation.events.filter(x => (x.type === "release-focus")).subscribe(x => {
+TerminalImplementation.events.pipe(Rx.filter(x => (x.type === "release-focus"))).subscribe(x => {
   editor.Focus();
 });
 

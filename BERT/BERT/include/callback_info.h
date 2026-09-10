@@ -29,10 +29,25 @@ public:
   BERTBuffers::CallResponse callback_call_;
   BERTBuffers::CallResponse callback_response_;
 
+  /**
+   * the thread Excel calls spreadsheet functions on, recorded when the add-in
+   * opens. a call made on this thread has Excel blocked waiting for it, so a
+   * callback arriving during that call has to be handled here rather than
+   * through a COM context switch (which Excel will not service while it is
+   * calculating).
+   */
+  DWORD main_thread_id_;
+
 public:
   CallbackInfo() {
     default_signaled_event_ = CreateEvent(0, TRUE, TRUE, 0);
     default_unsignaled_event_ = CreateEvent(0, TRUE, FALSE, 0);
+    main_thread_id_ = 0;
+  }
+
+  /** are we on the thread Excel calls spreadsheet functions on? */
+  bool OnMainThread() const {
+    return main_thread_id_ && (GetCurrentThreadId() == main_thread_id_);
   }
 
   ~CallbackInfo() {

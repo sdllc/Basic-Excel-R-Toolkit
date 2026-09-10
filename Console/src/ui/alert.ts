@@ -75,6 +75,15 @@ export class AlertManager {
   private alert_node_:HTMLElement;
   private timeout_id_;
 
+  /**
+   * the previous alert fades out, and only hides itself when the fade
+   * finishes. if another alert opens in the meantime -- closing several
+   * modified files, one question after another -- that pending fade would
+   * hide the new one, leaving a modal nobody can answer. we hold on to the
+   * listener so the next alert can call it off.
+   */
+  private static pending_hide_: EventListener;
+
   private static EnsureNodes() {
     if (this.container_node_) return;
     this.container_node_ = document.createElement("div");
@@ -108,6 +117,11 @@ export class AlertManager {
     AlertManager.EnsureNodes();
 
     this.alert_node_ = (AlertManager.container_node_.querySelector(".alert_container") as HTMLElement);
+
+    if (AlertManager.pending_hide_) {
+      this.alert_node_.removeEventListener("transitionend", AlertManager.pending_hide_);
+      AlertManager.pending_hide_ = null;
+    }
 
     return new Promise((resolve, reject) => {
 
@@ -184,8 +198,10 @@ export class AlertManager {
     let transition_end = () => {
       AlertManager.container_node_.style.display = "none";
       this.alert_node_.removeEventListener("transitionend", transition_end);
+      if (AlertManager.pending_hide_ === transition_end) AlertManager.pending_hide_ = null;
     };
 
+    AlertManager.pending_hide_ = transition_end;
     this.alert_node_.addEventListener("transitionend", transition_end);
     this.alert_node_.style.opacity = "0";
 

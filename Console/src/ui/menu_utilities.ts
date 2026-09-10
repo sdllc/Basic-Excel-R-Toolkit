@@ -17,7 +17,7 @@
  * along with BERT.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import {remote} from 'electron';
+import * as remote from '@electron/remote';
 const {Menu, MenuItem} = remote;
 
 import * as Rx from 'rxjs';

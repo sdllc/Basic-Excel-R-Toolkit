@@ -21,9 +21,68 @@
 #
 # load module. moved from code.
 #
+# BERTModule carries compiled code that registers the graphics devices, and R
+# checks its graphics engine version whenever a device is created. That
+# version changes between R series -- 4.2 is R_GE_group, 4.5 is R_GE_glyphs,
+# 4.6 is R_GE_fontVar -- so a module built against one series cannot draw on
+# another: it fails with "Graphics API version mismatch". The install ships
+# one module per series in module/<major>.<minor>; load the one that matches
+# the R we are hosted in. The flat module/ directory is the older layout and
+# is kept as a fallback.
+#
+# If there is no module for this R, say so and carry on: functions and the
+# console work without it, only graphics does not.
+#
 #===============================================================================
 
-library(BERTModule, lib.loc=paste0(Sys.getenv("BERT_HOME"), "module"));
+local({
+
+  home <- Sys.getenv("BERT_HOME");
+  series <- paste0(R.version$major, ".", strsplit(R.version$minor, ".", fixed=TRUE)[[1]][1]);
+
+  # the matching module first, then the older flat layout, then any other
+  # series we happen to ship, newest first. a module built for a different
+  # series still loads and still provides the xlReference class and the
+  # helpers -- only drawing fails, and it fails with R's own "Graphics API
+  # version mismatch" when a device is created. that is worth having.
+
+  others <- character(0);
+  module.root <- paste0(home, "module");
+  if (dir.exists(module.root)) {
+    dirs <- list.dirs(module.root, full.names=FALSE, recursive=FALSE);
+    dirs <- dirs[grepl("^[0-9]+[.][0-9]+$", dirs)];
+    if (length(dirs)) {
+      dirs <- dirs[order(numeric_version(dirs), decreasing=TRUE)];
+      others <- file.path(module.root, dirs);
+    }
+  }
+
+  loaded <- FALSE;
+  matched <- FALSE;
+
+  for (lib in unique(c(file.path(module.root, series), module.root, others))) {
+    if (!loaded && dir.exists(file.path(lib, "BERTModule"))) {
+      loaded <- tryCatch({
+        library(BERTModule, lib.loc=lib);
+        matched <- identical(basename(lib), series);
+        TRUE;
+      }, error = function(e) {
+        cat("BERT: BERTModule in", lib, "would not load:", conditionMessage(e), "\n");
+        FALSE;
+      });
+    }
+  }
+
+  if (!loaded) {
+    cat("BERT: no BERTModule could be loaded. R functions and the console will",
+        "work; graphics and Excel references will not.\n");
+  }
+  else if (!matched) {
+    cat("BERT: no BERTModule built for R ", series,
+        "; graphics will not work on this version of R, though everything else will.\n", sep="");
+  }
+
+})
 
 #===============================================================================
 #
@@ -65,7 +124,7 @@ library(BERTModule, lib.loc=paste0(Sys.getenv("BERT_HOME"), "module"));
 
     AddUserButton <- function(label, FUN, image.mso = "R", tip=""){
       id <- .Call("BERT.Callback", "add-user-button", list(label, image.mso, tip), PACKAGE="(embedding)");
-      if(!is.numeric(id) || id == 0){
+      if(!is.numeric(id) || length(id) != 1 || id[1] == 0){
         stop("add button failed");
       }
       .user.button.env[[toString(id)]] = list(label=label, FUN=FUN, image.mso=image.mso, id=id, tip=tip);
@@ -175,7 +234,7 @@ library(BERTModule, lib.loc=paste0(Sys.getenv("BERT_HOME"), "module"));
     # FIXME: are we using this one or the one in the module? and why are there
     # two?
     #
-    .Autocomplete <- function(...){
+    .AutocompleteImpl <- function(...){
       
       ac <- utils:::.win32consoleCompletion(...);
       if( length( utils:::.CompletionEnv$comps) > 0 ){
@@ -191,6 +250,21 @@ library(BERTModule, lib.loc=paste0(Sys.getenv("BERT_HOME"), "module"));
       ac$in.quotes <- utils:::.CompletionEnv$in.quotes;
 
       ac;
+    }
+
+    #
+    # the completion code borrows R's internals (utils:::.CompletionEnv,
+    # .win32consoleCompletion and friends), which are not public API and carry
+    # no promise between versions. if a future R renames or reshapes one, give
+    # up the hints rather than printing an error into the shell on every
+    # keystroke. one wrapper here, not one per candidate: it costs a few
+    # microseconds against the milliseconds the search itself takes.
+    #
+    .Autocomplete <- function(...){
+      tryCatch(.AutocompleteImpl(...), error = function(e){
+        list( comps="", function.signature="", token="", fguess="",
+              start=0, end=0, in.quotes=FALSE );
+      });
     }
 
     #
@@ -294,7 +368,10 @@ library(BERTModule, lib.loc=paste0(Sys.getenv("BERT_HOME"), "module"));
     version.string <- Sys.getenv('BERT_VERSION');
     version <- list();
     version['build.date'] <- Sys.getenv('BERT_BUILD_DATE');
-    parts <- as.numeric(unlist(strsplit(version.string, '\\.')));
+    # a development build carries a tag after the release number, e.g.
+    # "2.4.3-r4 (built ...)"; only the leading numeric part is the version
+    numeric.part <- regmatches(version.string, regexpr('^[0-9]+(\\.[0-9]+)*', version.string));
+    parts <- as.numeric(unlist(strsplit(numeric.part, '\\.')));
     version['major'] <- parts[1];
     version['minor'] <- parts[2];
     version['patch'] <- parts[3];
@@ -333,7 +410,10 @@ library(BERTModule, lib.loc=paste0(Sys.getenv("BERT_HOME"), "module"));
   #
   # update: now delegating file completion to C (probably more to come).
   #
-  .CustomCompleter <- function(.CompletionEnv){
+  # the most completions to offer at once; see where this is applied below
+  .completion.limit <- 500;
+
+  .CustomCompleterImpl <- function(.CompletionEnv){
 
     .fqFunc <- function (line, cursor=-1) 
     {
@@ -391,11 +471,11 @@ library(BERTModule, lib.loc=paste0(Sys.getenv("BERT_HOME"), "module"));
         p <- environment();
         n <- unlist( strsplit( name, "[^\\w\\.,]", F, T ));
         while( length( n ) > 1 ){
-          if( n == "" || !exists( n[1], where=p )) return( NULL );
+          if( n[1] == "" || !exists( n[1], where=p )) return( NULL );
           p <- get( n[1], envir=p );
           n <- n[-1];
         }
-        if( n == "" || !exists( n[1], where=p )) return( NULL );
+        if( n[1] == "" || !exists( n[1], where=p )) return( NULL );
         list( name=n[1], fun=get( n[1], envir=p ));
       }
     
@@ -479,9 +559,30 @@ library(BERTModule, lib.loc=paste0(Sys.getenv("BERT_HOME"), "module"));
           comps <- paste0(prefix, comps)
       }
       comps <- c(fargComps, comps)
+
+      # a token that matches thousands of symbols is no use as a list, and the
+      # answer has to cross a pipe: keep it to something a person can read,
+      # and the shell responsive
+
+      if (length(comps) > .completion.limit) {
+        comps <- comps[seq_len(.completion.limit)];
+      }
+
       .CompletionEnv[["comps"]] <- comps
         }
   };
+
+  #
+  # as above: a completer that breaks on a future R should cost the
+  # completions, not fill the shell with errors
+  #
+  .CustomCompleter <- function(.CompletionEnv){
+    tryCatch(.CustomCompleterImpl(.CompletionEnv), error = function(e){
+      .CompletionEnv[["comps"]] <- character();
+      .CompletionEnv[["function.signature"]] <- "";
+      invisible(NULL);
+    });
+  }
 
   rc.options( custom.completer=.CustomCompleter );
 

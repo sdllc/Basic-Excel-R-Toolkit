@@ -31,4 +31,9 @@ bool ValidUTF8(const char *string, int len);
 
 void WindowsCPToUTF8(const char *input_buffer, int input_length, char **output_buffer, int *output_length);
 
-std::string WindowsCPToUTF8_2(const char *input_buffer, int input_length);
+/**
+ * the reverse direction, for console input to an R older than 4.2.0,
+ * which expects the windows code page. characters the code page cannot
+ * represent become the system default character.
+ */
+std::string UTF8ToWindowsCP(const std::string &utf8);

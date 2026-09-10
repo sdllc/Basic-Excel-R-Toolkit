@@ -38,6 +38,14 @@
 #define CONFIG_FILE_NAME "bert-config.json"
 #define LANGUAGE_CONFIG_FILE_NAME "bert-languages.json"
 
+/**
+ * function descriptions, in the format the Excel-DNA IntelliSense add-in
+ * reads. the name pairs with the carrier add-in BERT-IntelliSense.xlam:
+ * that add-in does nothing except give the IntelliSense add-in something
+ * to find this file beside. see docs/FUNCTION-HELP.md.
+ */
+#define INTELLISENSE_FILE_NAME "BERT-IntelliSense.intellisense.xml"
+
 class BERT {
 
 private:
@@ -62,8 +70,17 @@ private:
   /** marshalled excel pointer for calls from separate threads */
   IStream *stream_pointer_;
 
-  /** excel COM pointer */
-  LPDISPATCH application_dispatch_;
+  /**
+   * excel COM pointer. initialized here because it is read to decide
+   * whether we have one yet -- the constructor never set it, and reading
+   * an uninitialized pointer to test it is undefined even when the ribbon
+   * fills it in a moment later.
+   */
+  LPDISPATCH application_dispatch_ = 0;
+
+  /** true when we acquired the Application pointer ourselves, so we hold a
+    * reference on it and have to give it back */
+  bool owns_application_dispatch_ = false;
 
   /** pointer to ribbon menu */
   LPDISPATCH ribbon_menu_dispatch_;
@@ -178,6 +195,11 @@ public:
 
 public:
 
+  /** the directory this dll is in, which is also where the config lives */
+  const std::string& home_directory() const { return home_directory_; }
+
+public:
+
   /** single static instance of this class */
   static BERT* Instance();
 
@@ -186,7 +208,31 @@ public:
   /** sets COM pointers */
   void SetPointers(ULONG_PTR excel_pointer, ULONG_PTR ribbon_pointer);
 
-  /** 
+  /**
+   * excel's Application object, which drawing into a sheet and the EXCEL
+   * object in R both need.
+   *
+   * the ribbon add-in hands this over as it loads, and used to be the only
+   * source of it: with no ribbon there was no pointer, and graphics quietly
+   * drew nothing. AcquireApplicationDispatch gets one without it.
+   */
+  LPDISPATCH ApplicationDispatch();
+
+  /**
+   * asks excel for the Application pointer directly, the way an add-in with
+   * no COM component of its own has to. does nothing if we already have
+   * one, and returns whether we have one now.
+   *
+   * MUST be called while excel is idle -- from xlAutoOpen, not from a
+   * callback. asking for the object model while a cell is calculating hangs
+   * excel. see docs/XLL-ONLY.md.
+   */
+  bool AcquireApplicationDispatch();
+
+  /** takes an Application pointer, from the ribbon or from excel directly */
+  void UseApplicationDispatch(LPDISPATCH application_dispatch);
+
+  /**
    * tail routine for enum windows proc; hides or shows matching windows
    */
   static BOOL CALLBACK ShowConsoleWindowCallback(HWND hwnd, LPARAM lParam);
@@ -196,10 +242,24 @@ public:
    */
   static BOOL CALLBACK FocusExcelWindowCallback(HWND hwnd, LPARAM lParam);
 
-  /** 
-   * opens the console, creating the process if necessary 
+  /**
+   * opens the console, creating the process if necessary
    */
   void ShowConsole();
+
+  /**
+   * binds CONTROL+SHIFT+R to the console command, with ON.KEY.
+   *
+   * not with xlfRegister's shortcut field: a shortcut registered there does
+   * fire, but excel then resolves the command in workbook scope and reports
+   * "cannot run the macro '!BERT.Console'". ON.KEY sends the name through
+   * the same path as ExecuteExcel4Macro, which is what the ribbon button
+   * uses and which does resolve it. pass false to give the key back.
+   */
+  void BindConsoleKey(bool bind = true);
+
+  /** true if the console process we started is still running */
+  bool ConsoleProcessRunning();
 
   /**
    * hides the console, without actually closing the process

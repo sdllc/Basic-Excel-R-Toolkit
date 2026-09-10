@@ -25,6 +25,30 @@
 
 #include "gdi_graphics_device.h"
 
+// ---------------------------------------------------------------------------
+// encoding. strings from the add-in and the console are UTF-8 on every R
+// version, so they are marked as such when handed to R, and strings taken
+// from R are translated to UTF-8 whatever encoding R holds them in. file
+// paths are the exception: the add-in produces them with the ANSI file
+// APIs, so they are in the windows code page, which is R's own encoding
+// before 4.2.0 and not after (see docs/MODERNISATION.md).
+// ---------------------------------------------------------------------------
+
+/** CHARSXP marked as UTF-8 */
+static inline SEXP UTF8Char(const std::string &text) {
+  return Rf_mkCharLenCE(text.data(), (int)text.length(), CE_UTF8);
+}
+
+/** length-one character vector marked as UTF-8 */
+static inline SEXP UTF8String(const std::string &text) {
+  return Rf_ScalarString(UTF8Char(text));
+}
+
+/** the string value of an R object, as UTF-8 */
+static inline const char *ToUTF8(SEXP sexp) {
+  return Rf_translateCharUTF8(Rf_asChar(sexp));
+}
+
 // try to store fuel now, you jerks
 #undef clear
 #undef length
@@ -39,7 +63,7 @@ void SetNames(SEXP variable, const std::vector<std::string> &names) {
   int len = (int)names.size();
   SEXP names_sexp = Rf_allocVector(STRSXP, len);
   for (int i = 0; i < len; i++) {
-    SET_STRING_ELT(names_sexp, i, Rf_mkChar(names[i].c_str()));
+    SET_STRING_ELT(names_sexp, i, UTF8Char(names[i]));
   }
   Rf_setAttrib(variable, R_NamesSymbol, names_sexp);
 }
@@ -52,7 +76,7 @@ SEXP VariableToSEXP(const BERTBuffers::Variable &var) {
     return R_NilValue;
 
   case BERTBuffers::Variable::ValueCase::kStr:
-    return Rf_mkString(var.str().c_str());
+    return UTF8String(var.str());
 
   case BERTBuffers::Variable::ValueCase::kInteger:
     return Rf_ScalarInteger(var.integer());
@@ -167,7 +191,7 @@ SEXP VariableToSEXP(const BERTBuffers::Variable &var) {
           SET_STRING_ELT(list, i, NA_STRING);
         }
         else {
-          SET_STRING_ELT(list, i, Rf_mkChar(arr.data(i).str().c_str()));
+          SET_STRING_ELT(list, i, UTF8Char(arr.data(i).str()));
         }
       }
     }
@@ -184,7 +208,7 @@ SEXP VariableToSEXP(const BERTBuffers::Variable &var) {
     if (has_names) {
       SEXP names = Rf_allocVector(VECSXP, count);
       for (int i = 0; i < count; i++) {
-        if (arr.data(i).name().length()) SET_VECTOR_ELT(names, i, Rf_mkString(arr.data(i).name().c_str()));
+        if (arr.data(i).name().length()) SET_VECTOR_ELT(names, i, UTF8String(arr.data(i).name()));
       }
       Rf_setAttrib(list, R_NamesSymbol, names);
     }
@@ -206,7 +230,7 @@ SEXP VariableToSEXP(const BERTBuffers::Variable &var) {
     R_RegisterCFinalizerEx(external_pointer, (R_CFinalizer_t)ReleaseExternalPointer, TRUE);
 
     SEXP descriptor = Rf_allocVector(VECSXP, 4);
-    SET_VECTOR_ELT(descriptor, 0, Rf_mkString(com_pointer.interface_name().c_str()));
+    SET_VECTOR_ELT(descriptor, 0, UTF8String(com_pointer.interface_name()));
     SET_VECTOR_ELT(descriptor, 1, external_pointer);
 
     // there's a possibility (in fact a good likelihood) of repeated names,
@@ -239,14 +263,14 @@ SEXP VariableToSEXP(const BERTBuffers::Variable &var) {
       int arguments_len = com_function.arguments_size();
       SEXP r_arguments_list = Rf_allocVector(STRSXP, arguments_len);
       for (int j = 0; j < arguments_len; j++) {
-        SET_STRING_ELT(r_arguments_list, j, Rf_mkChar(com_function.arguments(j).name().c_str()));
+        SET_STRING_ELT(r_arguments_list, j, UTF8Char(com_function.arguments(j).name()));
       }
 
       // function has name, index, type and list of arguments
       SEXP r_function_descriptor = Rf_allocVector(VECSXP, 4);
-      SET_VECTOR_ELT(r_function_descriptor, 0, Rf_mkString(com_function.function().name().c_str()));
+      SET_VECTOR_ELT(r_function_descriptor, 0, UTF8String(com_function.function().name()));
       SET_VECTOR_ELT(r_function_descriptor, 1, Rf_ScalarInteger(com_function.function().index()));
-      SET_VECTOR_ELT(r_function_descriptor, 2, Rf_mkString(call_type.c_str()));
+      SET_VECTOR_ELT(r_function_descriptor, 2, UTF8String(call_type));
       SET_VECTOR_ELT(r_function_descriptor, 3, r_arguments_list);
       SetNames(r_function_descriptor, {"name", "index", "call.type", "arguments"});
 
@@ -321,7 +345,7 @@ SEXP RCallSEXP(const BERTBuffers::CompositeFunctionCall &fc, bool wait, int &err
     // this is a mapped function, use special calling syntax...
 
     SEXP sargs = Rf_allocVector(VECSXP, len+1);
-    SET_VECTOR_ELT(sargs, 0, Rf_mkString(fc.function().c_str()));
+    SET_VECTOR_ELT(sargs, 0, UTF8String(fc.function()));
 
     for (int i = 0; i < len; i++) {
       SET_VECTOR_ELT(sargs, i + 1, VariableToSEXP(fc.arguments(i)));
@@ -378,12 +402,12 @@ SEXP RCallSEXP(const BERTBuffers::CompositeFunctionCall &fc, bool wait, int &err
 
     if (parts.size() > 1) {
       for (int i = 0; !err && i < parts.size() - 1; i++) {
-        SEXP s = R_tryEvalSilent(Rf_lang2(Rf_install("get"), Rf_mkString(parts[i].c_str())), env, &err);
+        SEXP s = R_tryEvalSilent(Rf_lang2(Rf_install("get"), UTF8String(parts[i])), env, &err);
         if (!err && Rf_isEnvironment(s)) env = s;
       }
     }
 
-    SEXP call_result = R_tryEval(Rf_lang3(Rf_install("do.call"), Rf_mkString(parts[parts.size() - 1].c_str()), sargs), env, &err);
+    SEXP call_result = R_tryEval(Rf_lang3(Rf_install("do.call"), UTF8String(parts[parts.size() - 1]), sargs), env, &err);
     UNPROTECT(1);
     return call_result;
 
@@ -397,8 +421,9 @@ bool ReadSourceFile(const std::string &file, bool notify) {
     std::string message = "Loading script file: ";
     message.append(file);
     message.append("\n");
-    R_tryEval(Rf_lang2(Rf_install("cat"), Rf_mkString(message.c_str())), R_GlobalEnv, &err);
+    R_tryEval(Rf_lang2(Rf_install("cat"), UTF8String(message)), R_GlobalEnv, &err);
   }
+  // the path stays in R's native encoding; see the encoding note at the top
   R_tryEval(Rf_lang2(Rf_install("source"), Rf_mkString(file.c_str())), R_GlobalEnv, &err);
 
   return !err;
@@ -428,7 +453,7 @@ __inline bool HandleSimpleTypes(SEXP sexp, int len, int rtype, BERTBuffers::Arra
       int level_count = Rf_length(levels);
       for (int level = 0; level < level_count; level++) {
         SEXP strsxp = STRING_ELT(levels, level);
-        level_strings.push_back(CHAR(Rf_asChar(strsxp)));
+        level_strings.push_back(ToUTF8(strsxp));
       }
     }
 
@@ -488,11 +513,7 @@ __inline bool HandleSimpleTypes(SEXP sexp, int len, int rtype, BERTBuffers::Arra
         ptr->mutable_err()->set_type(BERTBuffers::ErrorType::NA);
       }
       else {
-        const char *sexp_string = CHAR(Rf_asChar(strsxp));
-        if (!ValidUTF8(sexp_string, 0)) {
-          ptr->set_str(WindowsCPToUTF8_2(sexp_string, 0));
-        }
-        else ptr->set_str(sexp_string);
+        ptr->set_str(ToUTF8(strsxp));
       }
     }
   }
@@ -603,7 +624,12 @@ void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector <SEXP> en
     int ncol = 1;
     BERTBuffers::Array *arr = 0;
         
-    if (Rf_isFrame(sexp) && rtype == VECSXP) {
+    // Rf_isFrame was removed in R 4.6, which suggests Rf_isDataFrame -- but
+    // that only arrived in 4.5, and this has to build against 3.5 as well.
+    // Rf_inherits is stable API across all of them, does the same job, and
+    // is what the rest of this file already uses.
+
+    if (Rf_inherits(sexp, "data.frame") && rtype == VECSXP) {
 
       // this is a list of lists; we want to flatten it and we don't want nested 
       // arrays. for this one, columns is the number of entries in the outer 
@@ -637,7 +663,7 @@ void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector <SEXP> en
         int names_len = Rf_length(names);
         if (names && names_len && isString(names)) {
           for (int i = 0; i < names_len; i++) {
-            arr->add_colnames()->assign(CHAR(Rf_asChar(STRING_ELT(names, i))));
+            arr->add_colnames()->assign(ToUTF8(STRING_ELT(names, i)));
           }
         }
       }
@@ -648,7 +674,7 @@ void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector <SEXP> en
         int names_len = Rf_length(names);
         if (names && names_len && isString(names)) {
           for (int i = 0; i < names_len; i++) {
-            arr->add_rownames()->assign(CHAR(Rf_asChar(STRING_ELT(names, i))));
+            arr->add_rownames()->assign(ToUTF8(STRING_ELT(names, i)));
           }
         }
       }
@@ -718,7 +744,7 @@ void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector <SEXP> en
       for (int i = 0; i < len && i < nameslen && i < array_len; i++) {
         auto ref = arr ? arr->mutable_data(i) : var;
         SEXP name = STRING_ELT(names, i);
-        std::string str(CHAR(Rf_asChar(name)));
+        std::string str(ToUTF8(name));
         if (str.length()) { ref->set_name(str); }
 
       }
@@ -732,13 +758,13 @@ void SEXPToVariable(BERTBuffers::Variable *var, SEXP sexp, std::vector <SEXP> en
           auto rownames = arr->mutable_rownames();
           SEXP name_list = VECTOR_ELT(dimnames, 0);
           int nameslen = Rf_length(name_list);
-          for (int i = 0; i < nameslen; i++)  rownames->Add(CHAR(Rf_asChar(STRING_ELT(name_list, i))));
+          for (int i = 0; i < nameslen; i++)  rownames->Add(ToUTF8(STRING_ELT(name_list, i)));
         }
         if (dimnames_length > 1) {
           auto colnames = arr->mutable_colnames();
           SEXP name_list = VECTOR_ELT(dimnames, 1);
           int nameslen = Rf_length(name_list);
-          for (int i = 0; i < nameslen; i++)  colnames->Add(CHAR(Rf_asChar(STRING_ELT(name_list, i))));
+          for (int i = 0; i < nameslen; i++)  colnames->Add(ToUTF8(STRING_ELT(name_list, i)));
         }
         if (dimnames_length > 2) {
           std::cout << " * unhandled dimnames: length is " << dimnames_length << std::endl;
@@ -801,6 +827,14 @@ BERTBuffers::CallResponse& ListScriptFunctions(BERTBuffers::CallResponse &respon
                     for (auto description : attribute.arr().data()) {
                       descriptions.push_back(description.str());
                     }
+                  }
+                  else if (attribute.value_case() == BERTBuffers::Variable::ValueCase::kStr) {
+
+                    // a character vector of length one crosses as a scalar
+                    // rather than an array, so a function described without
+                    // any argument help was dropped here
+
+                    descriptions.push_back(attribute.str());
                   }
                 }
                 else if (attribute.name() == "category") {
@@ -906,7 +940,7 @@ BERTBuffers::CallResponse& RExec(BERTBuffers::CallResponse &rsp, const BERTBuffe
   for (int i = 0; i < count; i++) {
     // temp
     const std::string &line = code.line(i);
-    SET_STRING_ELT(cmds, i, Rf_mkChar(code.line(i).c_str()));
+    SET_STRING_ELT(cmds, i, UTF8Char(code.line(i)));
   }
 
   SEXP parsed = PROTECT(R_ParseVector(cmds, -1, &ps, R_NilValue));
@@ -938,8 +972,8 @@ SEXP COMCallback(SEXP function_name, SEXP call_type, SEXP index, SEXP pointer_ke
   std::string string_name;
   std::string string_type;
 
-  if (isString(function_name)) string_name = (CHAR(Rf_asChar(STRING_ELT(function_name, 0))));
-  if (isString(call_type)) string_type = (CHAR(Rf_asChar(STRING_ELT(call_type, 0))));
+  if (isString(function_name)) string_name = (ToUTF8(STRING_ELT(function_name, 0)));
+  if (isString(call_type)) string_type = (ToUTF8(STRING_ELT(call_type, 0)));
 
   if (!string_name.length()) return R_NilValue;
 
@@ -1056,7 +1090,7 @@ SEXP RCallback(SEXP command, SEXP data) {
   std::string string_command;
 
   if (isString(command)) {
-    string_command = (CHAR(Rf_asChar(STRING_ELT(command, 0))));
+    string_command = (ToUTF8(STRING_ELT(command, 0)));
   }
 
   if (!string_command.length()) {
@@ -1075,11 +1109,11 @@ SEXP RCallback(SEXP command, SEXP data) {
     double width, height, pointsize;
     void *pointer;
 
-    background = CHAR(Rf_asChar(VECTOR_ELT(data, 0)));
+    background = ToUTF8(VECTOR_ELT(data, 0));
     width = Rf_asReal(VECTOR_ELT(data, 1));
     height = Rf_asReal(VECTOR_ELT(data, 2));
     pointsize = Rf_asReal(VECTOR_ELT(data, 3));
-    type = CHAR(Rf_asChar(VECTOR_ELT(data, 4)));
+    type = ToUTF8(VECTOR_ELT(data, 4));
     pointer = R_ExternalPtrAddr(VECTOR_ELT(data, 5));
 
     return ConsoleGraphicsDevice::CreateConsoleDevice(background, width, height, pointsize, type, pointer);
@@ -1094,8 +1128,8 @@ SEXP RCallback(SEXP command, SEXP data) {
     double width, height, pointsize;
     void *pointer;
 
-    name = CHAR(Rf_asChar(VECTOR_ELT(data, 0)));
-    background = CHAR(Rf_asChar(VECTOR_ELT(data, 1)));
+    name = ToUTF8(VECTOR_ELT(data, 0));
+    background = ToUTF8(VECTOR_ELT(data, 1));
     width = Rf_asReal(VECTOR_ELT(data, 2));
     height = Rf_asReal(VECTOR_ELT(data, 3));
     pointsize = Rf_asReal(VECTOR_ELT(data, 4));

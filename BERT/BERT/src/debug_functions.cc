@@ -19,7 +19,7 @@
 
 #include "stdafx.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) || defined(BERT_TRACE)
 
 int DebugOut(const char *fmt, ...)
 {
